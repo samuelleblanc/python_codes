@@ -9,12 +9,13 @@ import numpy as np, h5py
 import math
 import os
 import warnings
+from scipy import interpolate
 warnings.simplefilter('ignore', np.RankWarning)
 
 
-# Create a new class for spectra that returns easy plotting, normalization, parameters, etc.
+# Prepare the different functions require to run the class Sp
 
-# In[3]:
+# In[5]:
 
 def closestindex(a,x):
     " Get the index from a of the closest value from x "
@@ -82,7 +83,9 @@ def param(sp,wvlin):
     return par
 
 
-# In[4]:
+# Create a new class for spectra that returns easy plotting, normalization, parameters, etc.
+
+# In[10]:
 
 class Sp:
     """ 
@@ -102,6 +105,7 @@ class Sp:
             for w in range(dims[0]):
                 for t in range(len(self.tau)):
                     for r in range(len(self.ref)):
+                        print w,t,r
                         par[w,:,0,r,t] = param(sp[w,:,0,r,t],wvl)
         elif sp.ndim == 2:
             for tt in range(len(self.utc)):
@@ -110,6 +114,64 @@ class Sp:
         else: raise LookupError
         self.par = par
         return par
+    
+    def sp_hires(self):
+        " Interpolate the modeled sp to a finer resolution in tau and ref. Only works on modeled data with 5 dimensions"
+        sp = self.sp
+        wvl = self.wvl
+        if sp.ndim !=5:
+            warning('This method cannot be applied to this object, not enough dimensions')
+            return
+        tau_hires = np.arange(self.tau[0],0.9,0.1)+np.arange(1.0,3.5,0.5)+np.arange(4.0,self.tau[-1],1.0)
+        ref_hires = np.arange(self.ref[0],self.ref[-1])
+        ttau = lut.sp[0,0,0,:,:]*0.+lut.tau
+        rref = np.transpose(lut.sp[0,0,0,:,:].T*0.+lut.ref.T)
+        sp_hires = np.zeros([2,len(wvl),2,len(tau_hires),len(ref_hires)])
+        for w in range(len(wvl)):
+            for ph in [0,1]:
+                 print w,ph
+                 fx = interpolate.interp2d(ttau,rref,sp[ph,w,0,:,:])
+                 sp_hires[ph,w,0,:,:] = fx(tau_hires,ref_hires)
+        print('Overwriting the current sp, tau, and ref with the new high resolution values')
+        self.sp = sp_hires
+        self.tau = tau_hires
+        self.res = ref_hires
+        return       
+    
+    def norm_par(self,pcoef={}):
+        """ 
+        Normalize the parameters, if no keyword set, returns the normalized parameter values in self.parn
+        if the keywords are not set, returns the normalized parameter values in self.parn and returns
+        the pcoef dictionary containing the coefficients and additive values used for normalizing each parameter.
+        
+        """
+        npar = self.npar
+        par = self.par
+        parn = zeros_like(self.par)
+        if pceof is not None:
+            # for defined coefficients
+            if self.sp.dim == 5:
+                for ph in [0,1]:
+                    parn[ph,:,0,:,:] = np.transpose(self.par[ph,:,0,:,:]*pcoef['coef'].T-pcoef['add'].T)
+            elif self.sp.dim == 2:
+                for t in range(len(self.utc)):
+                    parn[t,:] = self.par[t,:]*pcoef['coef']-pcoef['add']
+            else:
+                warning('There is a problem with the dimensions of the sp')
+                return
+        else:
+            # for defining its own coefficients
+            pco = np.empty(self.npar)
+            padd = np.empty(self.npar)
+            for p in range(self.npar):
+                pco[p] = 1./(np.nanmax(self.par[:,p,0,:,:])-np.nanmin(self.par[:,p,0,:,:]))
+                padd[p] = np.nanmin(self.par[:,p,0,:,:]*pco[p])
+                for ph in [0,1]:
+                    parn[ph,:,0,:,:] = np.transpose(self.par[ph,:,0,:,:]*pco.T-padd.T)
+            
+            pcoef = {'coef':pco,'add':padd}
+        self.parn = parn
+        return pcoef
     
     def __init__(self,s,**kwargs):
         if 'nm' in s:
