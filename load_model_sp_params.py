@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+# <nbformat>3.0</nbformat>
 
-# coding: utf-8
+# <markdowncell>
 
 # Name:
 #   load_model_sp_params
@@ -30,10 +32,8 @@
 #   - sp_v1_20130219_4STAR.out : modeled spectra output for TCAP in idl save file
 #   - 20130219starzen_rad.mat : special zenith radiance 4star matlab file 
 
-# In[18]:
+# <codecell>
 
-import matplotlib
-get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np, h5py
@@ -43,22 +43,24 @@ import math
 import os
 import warnings
 warnings.simplefilter('ignore', np.RankWarning)
+import Sp_parameters as Sp
 py.sign_in("samuelleblanc", "4y3khh7ld4")
 print 'C:\\Users\\sleblan2\\Research\\python_codes\\file.rc'
-from matplotlib import rc_file
-rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
-
+%matplotlib inline
 #import mpld3
 #mpld3.enable_notbeook()
 
+# <codecell>
 
-# In[3]:
+from matplotlib import rc_file
+rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+
+# <codecell>
 
 # set the basic directory path
 fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
 
-
-# In[4]:
+# <codecell>
 
 # load the idl save file containing the modeled radiances
 s=sio.idl.readsav(fp+'model/sp_v1_20130219_4STAR.out')
@@ -66,15 +68,13 @@ print s.keys()
 print 'sp', s.sp.shape
 print 'sp (wp, wvl, z, re, ta)'
 
-
-# In[5]:
+# <codecell>
 
 # create custom key for sorting via wavelength
 iwvls = np.argsort(s.zenlambda)
 s.zenlambda.sort()
 
-
-# In[6]:
+# <codecell>
 
 # load the matlab file containing the measured TCAP radiances
 m = sio.loadmat(fp+'4STAR/20130219starzen_rad.mat')
@@ -85,10 +85,11 @@ print 'Measured radiance Shape: ', sm.rad.shape
 print np.nanmax(sm.rad[sm.good[100],:])
 sm.good[100]
 
+# <headingcell level=4>
 
-##### Next section loads a few functions that can be used for typical analysis
+# Next section loads a few functions that can be used for typical analysis
 
-# In[7]:
+# <codecell>
 
 def nanmasked(x):
     " Build an array with nans masked out and the mask output"
@@ -108,10 +109,11 @@ time_ref=17.22
 ii = closestindex(sm.utc,time_ref)
 rad,mask = nanmasked(sm.rad[sm.good[ii],:])
 
+# <headingcell level=4>
 
-##### Plotting functions defined
+# Plotting functions defined
 
-# In[8]:
+# <codecell>
 
 # set up plotting of a few of the zenith radiance spectra
 def pltzen(fig=None,ax=None, tit='Zenith spectra'):
@@ -206,17 +208,19 @@ def plot_greys(fig=None,ax=None):
     plt.axvspan(1565,1634,color=cl); #eta15
     
 
+# <headingcell level=3>
 
-#### Plotting iterations
+# Plotting iterations
 
-# In[19]:
+# <codecell>
 
 fig,ax=pltzen()
 
+# <markdowncell>
 
 # Next figure with modeled spectra
 
-# In[20]:
+# <codecell>
 
 # now go through and add the different modeled spectra
 fig,ax=pltzen()
@@ -238,10 +242,11 @@ plt.legend([alow[0],ahigh[0]],
 ax.text(600,0.19,'4STAR Measurement')
 pltzen(fig,ax)
 
+# <headingcell level=3>
 
-#### Next figure with normalized spectra and areas of parameters
+# Next figure with normalized spectra and areas of parameters
 
-# In[21]:
+# <codecell>
 
 fig,ax=norm()
 for names,cmap,iphase,irefs,itau,pos in lines:
@@ -254,25 +259,30 @@ ax.text(600,0.19/0.22,'4STAR Measurement')
 norm(fig,ax)
 plot_greys()
 
+# <headingcell level=3>
 
-#### Now calculate the parameters for the measured spectra
+# Now calculate the parameters for the measured spectra
 
-# In[22]:
+# <codecell>
 
-from Sp_parameters import *
+#import Sp_parameters as Sp
+
+# <codecell>
+
 # first convert measurements to Sp class, with inherent parameters defined
-meas = Sp(m)
+meas = Sp.Sp(m)
 meas.params()
 
+# <markdowncell>
 
 # Plot the parameters for the specified time
 
-# In[23]:
+# <codecell>
 
 fig2,ax2 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax2 = ax2.ravel()
 for i in range(meas.npar-1):
-    ax2[i].plot(meas.utc,smooth(meas.par[:,i],3))
+    ax2[i].plot(meas.utc,Sp.smooth(meas.par[:,i],3))
     ax2[i].set_title('Parameter '+str(i))
     ax2[i].grid()
     ax2[i].set_xlim([17,19])
@@ -282,78 +292,38 @@ for i in range(meas.npar-1):
 fig2.tight_layout()
 plt.show()
 
+# <headingcell level=3>
 
-#### Prepare the LUT for the modeled spectra
+# Prepare the LUT for the modeled spectra
 
-# In[24]:
+# <codecell>
 
-lut = Sp(s)
+lut = Sp.Sp(s)
+warnings.simplefilter('ignore')
+lut.sp_hires()
+
+# <codecell>
+
 lut.params()
+pcoef = lut.norm_par()
+
+# <codecell>
+
+pcoef = lut.norm_par()
+
+# <codecell>
+
+pcoef = meas.norm_par(pcoef=pcoef)
+
+# <codecell>
+
+k = list(set(lut.parn.shape) - set([lut.tau.size,lut.ref.size,2]))[0]
+print k
+print set([lut.tau.size,lut.ref.size,2])
+pp = lut.parn[0,:,:,:]
+print pp.shape
+print np.rollaxis(pp,0,3).shape
+
+# <rawcell>
 
 
-# In[184]:
-
-lut.tau
-lut.ref
-
-
-# In[198]:
-
-r=np.array([[5,10],[8,13],[10,15]])
-
-
-# In[199]:
-
-print r
-
-
-# In[230]:
-
-x = np.array([0,3,5])
-y = np.array([2,4])
-yi = r*0.+y
-print yi
-xi = np.transpose(r.T*0.+x.T)
-print xi
-
-
-# In[231]:
-
-xx = [0,0.5,0.8,1,2,3,4,5]
-yy = [1,2,3,4]
-
-
-# In[232]:
-
-import scipy.interpolate as interp
-
-
-# In[234]:
-
-rr = interp.interp2d(xi,yi,r,bounds_error=False,fill_value=None)
-
-
-# In[272]:
-
-print lut.sp[0,0,0,:,:].shape,lut.ref.shape
-ttau = lut.sp[0,0,0,:,:]*0.+lut.tau
-rref = np.transpose(lut.sp[0,0,0,:,:].T*0.+lut.ref.T)
-print ttau
-
-
-# In[290]:
-
-print lut.par.shape
-po=np.arange(0,16)
-print po.shape
-dd = np.transpose(lut.par[0,:,0,:,:].T*po.T-po.T)
-print dd.shape
-
-
-# In[289]:
-
-dd[1,20,12]
-
-
-                
-                
