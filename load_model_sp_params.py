@@ -34,8 +34,15 @@
 
 # <codecell>
 
+%config InlineBackend.rc = {}
+import matplotlib
+matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+%matplotlib inline
+
+# <codecell>
+
 import numpy as np, h5py
 import plotly.plotly as py
 import scipy.io as sio
@@ -45,15 +52,8 @@ import warnings
 warnings.simplefilter('ignore', np.RankWarning)
 import Sp_parameters as Sp
 py.sign_in("samuelleblanc", "4y3khh7ld4")
-print 'C:\\Users\\sleblan2\\Research\\python_codes\\file.rc'
-%matplotlib inline
 #import mpld3
 #mpld3.enable_notbeook()
-
-# <codecell>
-
-from matplotlib import rc_file
-rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 
 # <codecell>
 
@@ -265,10 +265,6 @@ plot_greys()
 
 # <codecell>
 
-#import Sp_parameters as Sp
-
-# <codecell>
-
 # first convert measurements to Sp class, with inherent parameters defined
 meas = Sp.Sp(m)
 meas.params()
@@ -300,30 +296,75 @@ plt.show()
 
 lut = Sp.Sp(s)
 warnings.simplefilter('ignore')
-lut.sp_hires()
 
 # <codecell>
 
-lut.params()
-pcoef = lut.norm_par()
+import run_kisq_retrieval as rk
+reload(rk)
+import Sp_parameters as Sp
+reload(Sp)
+#del lut
+#del meas
 
 # <codecell>
 
-pcoef = lut.norm_par()
+ (tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
 
 # <codecell>
 
-pcoef = meas.norm_par(pcoef=pcoef)
+plt.figure()
+plt.plot(meas.utc,ki)
 
 # <codecell>
 
-k = list(set(lut.parn.shape) - set([lut.tau.size,lut.ref.size,2]))[0]
-print k
-print set([lut.tau.size,lut.ref.size,2])
-pp = lut.parn[0,:,:,:]
-print pp.shape
-print np.rollaxis(pp,0,3).shape
+num_noise = 200
+noise = np.random.normal(1,0.005,(num_noise,meas.wvl.size))
+print noise.shape
+
+# <codecell>
+
+meansp = meas.mean()
+print meansp.shape
+sp_arr = meansp*noise
+print sp_arr.shape
+
+# <codecell>
+
+plt.figure()
+plt.plot(meas.wvl,meansp)
+for i in range(num_noise):
+    plt.plot(meas.wvl,sp_arr[i,:])
+
+# <codecell>
+
+print Sp.param(meansp,meas.wvl)
+
+# <codecell>
+
+from Sp_parameters import param
+print param(meansp,meas.wvl)
+
+# <codecell>
+
+rr=map(lambda tt:param(sp_arr[tt,:],meas.wvl),xrange(num_noise))
+
+# <codecell>
+
+parss = np.array(rr)
+stdpar = np.nanstd(parss,axis=0)
+
+# <codecell>
+
+print stdpar.shape
+print stdpar
+
+# <codecell>
+
+
+# <codecell>
+
 
 # <rawcell>
 
+#     num_noise = 200
 

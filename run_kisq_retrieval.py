@@ -7,102 +7,109 @@
 
 # <codecell>
 
-def run_retrieval(meas,model):
-    """ A function that uses the Sp class to run through each utc point in meas, and finds the closest model values """
-    import Sp_parameters as Sp
-    assure_input(meas)
-    assure_input(model)
-    # normalize the parameters
-    pcoef = model.par_norm()
-    pcoef = meas.par_norm(pcoef=pcoef)
-    
-    # build the model and measurement error
-    # model.std()
-    # model.std.par_norm(pcoef=pcoef)
-    
-    # build the reshaped model for ice and liquid
-    model.reshape_lut(phase='liq')
-    model.reshape_lut(phase='ice')
-    pcoef_liq = model.liq.par_norm()
-    pcoef_ice = model.ice.par_norm()
-    # meas.std()
-    # meas.std.par_norm(pcoef=pcoef)
-    
-    # build the weights
-    wg,wg_liq,wg_ice = par_weights(meas,model)
-    #start loop over measurement
-    Sp.startprogress('Progress over times')
-    ph = np.zeros_like(meas.utc)
-    ki = np.zeros_like(meas.utc)
-    ta = np.zeros_like(meas.utc)
-    re = np.zeros_like(meas.utc)
-    for tt in xrange(len(meas.utc)):
-        #first get the phase
-        ph[tt] = kisq_phase(meas.parn[tt,:],model,wg[tt,:])
-        if ph[tt] == 0: #liquid
-            goodpi = reject_outofbounds(meas.parn[tt,:],model.liq.lut)
-            ki[tt],ta[tt],re[tt] = kisq(meas.parn[tt,:],model.liq,wg,goodpi)
-        elif ph[tt] == 1: #ice
-            goodpi = reject_outofbounds(meas.parn[tt,:],model.ice.lut)
-            ki[tt],ta[tt],re[tt] = kisq(meas.parn[tt,:],model.ice,wg,goodpi)
-        else:
-            warning('Problem with phase!')
-        Sp.progress(tt/len(meas.utc))
-        
-    Sp.endprogress()
-    
-    #save the file
-    
-    
-
-# <codecell>
-
 def assure_input(sp):
     " A function that checks the input and runs all the required functions to generate parameters"
-    if sp.sp.ndim == 5:
+    import numpy as np
+    if not(sp.hires) and hasattr(sp,'tau'):
         print('Running the interpolation to hi-res')
         sp.sp_hires()
     if not(hasattr(sp,'par')):
         print('Running the params on current class')
         sp.params()        
+    elif (np.isnan(sp.par)).all():
+        print('Running the params on current class')
+        sp.params() 
 
 # <codecell>
 
-def par_weights(meas,model):
+def phase(parn,model,stdparn):
     """
-    A function to combine the standard deviation uncertainty in measurement
-    and model to build a set of weigths for the ki^2 regression.  
+    Function to determine the phase of the measurement by checking if the 
+    measured parameters are within the possible model values.
+    Lists the default parameter boundaries. 
+    **** to be updated ****
     """
-    pstd = np.sqrt(meas.std.parn**2.0+model.std.parn**2.0)
-    return 1./pstd
+    import numpy as np
+    ph = 2 # set default to uncertain
+    if parn[1]-stdparn[1] > np.nanmax(model.ice.parn[:,:,1]):
+        ph = 0
+    if parn[1]+stdparn[1] < np.nanmin(model.liq.parn[:,:,1]):
+        ph = 1
+    if parn[0]+stdparn[0] < np.nanmin(model.liq.parn[:,:,0]):
+        ph = 1
+    if parn[8]-stdparn[8] > np.nanmax(model.liq.parn[:,:,8]):
+        ph = 1
+    if parn[9]-stdparn[9] > np.nanmax(model.liq.parn[:,:,9]):
+        ph = 1
+    return ph
 
 # <codecell>
 
-def kisq_phase(parn,model,weights,goodpi):
-    """
-    Function that first gets the phase from the unique possibilities, 
-    and then calculates the ki^2 value with phase.
-    """
-    ki = -999.9
-    return ki
+def run_retrieval(meas,model):
+    """ A function that uses the Sp class to run through each utc point in meas, and finds the closest model values """
+    import Sp_parameters as Sp
+    import numpy as np
+    import run_kisq_retrieval as rk
+    rk.assure_input(meas)
+    rk.assure_input(model)
+    # normalize the parameters
+    pcoef = model.norm_par()
+    meas.norm_par(pcoef=pcoef)
+    
+    # build the measurement error
+    meas.build_std() #in future must reference a set of measurements to establishe the uncertainty, right now only white noise at 0.5%
+    meas.stdparn = meas.stdpar/pcoef['coef'] #for creating the normalized version of the stdpar
+    
+    # build the reshaped model for ice and liquid
+    model.reshape_lut(phase='liq')
+    model.reshape_lut(phase='ice')
+    
+    # build the normalized measurement parameters based on liquid or ice values
+    meas.norm_par(pcoef=model.ice.pcoef,vartitle='parn_ice')
+    meas.norm_par(pcoef=model.liq.pcoef,vartitle='parn_liq')
+    
+    # build the weights from the stdparn of measurements
+    wg = np.sqrt(meas.stdpar)/pcoef['coef']
+    
+    #start loop over measurement
+    Sp.startprogress('Progress over times')
+    ph = np.zeros_like(meas.utc)*np.nan
+    ki = np.zeros_like(meas.utc)*np.nan
+    ta = np.zeros_like(meas.utc)*np.nan
+    re = np.zeros_like(meas.utc)*np.nan
+    #ki_2ph = np.zeros_like(meas.utc) #kisq with 2 phase
+    for tt in xrange(len(meas.utc)):
+        #first get the phase in first method
+        ph[tt] = rk.phase(meas.parn[tt,:],model,meas.stdparn)
+        if ph[tt] == 2: # undecided, must do the kisq
+            ki_2ph = np.nansum(wg*(meas.parn[tt,:]-model.parn)**2,axis=3)
+            ki_minin = np.unravel_index(np.nanargmin(ki_2ph),model.parn.shape)
+            ph[tt] = ki_minin[0]
+        if ph[tt] == 0: #liquid
+            goodpi = [i for i in range(15) if (meas.parn_liq[tt,i]+meas.stdparn[i]>=0) and (meas.parn_liq[tt,i]-meas.stdparn[i]<=1)]
+            if len(goodpi) < 4:
+                continue
+            ki_arr = np.nansum(wg[goodpi]*(meas.parn_liq[tt,goodpi]-model.liq.parn[:,:,goodpi])**2,axis=2)
+            ki[tt] = np.nanmin(ki_arr)
+            ki_minin = np.unravel_index(np.nanargmin(ki_arr),model.liq.parn.shape)
+            (ta[tt],re[tt]) = (model.liq.tau[ki_minin[1]],model.liq.ref[ki_minin[0]])
+        elif ph[tt] == 1: #ice
+            goodpi = [i for i in range(15) if (meas.parn_ice[tt,i]+meas.stdparn[i]>=0) and (meas.parn_ice[tt,i]-meas.stdparn[i]<=1)]
+            if len(goodpi) < 4:
+                continue
+            ki_arr = np.nansum(wg[goodpi]*(meas.parn_ice[tt,goodpi]-model.ice.parn[:,:,goodpi])**2,axis=2)
+            ki[tt] = np.nanmin(ki_arr)
+            ki_minin = np.unravel_index(np.nanargmin(ki_arr),model.ice.parn.shape)
+            (ta[tt],re[tt]) = (model.ice.tau[ki_minin[1]],model.ice.ref[ki_minin[0]])
+        else:
+            warning('Problem with phase!')
+        Sp.progress(tt/len(meas.utc))
+    Sp.endprogress()
+    
+    #save the file
+    return (ta,re,ph,ki)
+    
 
 # <codecell>
 
-def reject_outofbounds(parn,lut):
-    """
-    functions that builds a mask of bad parameters that are deemed out of bounds of the model luts
-    """
-    maskgood = [1,0]
-    return maskgood
-
-# <codecell>
-
-def kisq(parn,model,wg):
-    """ 
-    function to calculate the ki squared value for a single set of 
-    measured parameter compared to model lut. Returns the tau min and ref min
-    """
-    taumin = -999
-    refmin = -999
-    return taumin,refmin
 

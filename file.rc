@@ -1,12 +1,12 @@
 # rcParams dict
-rcParams['axes.labelsize'] = 9
-rcParams['xtick.labelsize'] = 9
-rcParams['ytick.labelsize'] = 9
-rcParams['legend.fontsize'] = 9
-rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['helvetica']
-rcParams['text.usetex'] = True
-rcParams['figure.figsize'] = 7.3, 4.2
+#rcParams['axes.labelsize'] = 9
+#rcParams['xtick.labelsize'] = 9
+#rcParams['ytick.labelsize'] = 9
+#rcParams['legend.fontsize'] = 9
+#rcParams['font.family'] = 'sans-serif'
+#rcParams['font.sans-serif'] = ['helvetica']
+#rcParams['text.usetex'] = True
+#rcParams['figure.figsize'] = 7.3, 4.2
 
 # matplotlibrc file
 axes.labelsize  : 9.0  # fontsize of the x any y labels

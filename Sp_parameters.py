@@ -141,13 +141,6 @@ class lut:
     lut: look up table class object that is used for specific parameter tables
     Has sub objects similar to Sp class
     """
-    def __init__(self,par,tau,ref,phase=None):
-        self.par = par
-        self.tau = tau
-        self.ref = ref
-        self.npar = list(set(par.shape) - set([tau.size,ref.size,2]))[0] # 2 for the possible 2 phases
-        self.phase = phase
-        
     def norm_par(self,pcoef=None):
         """ 
         Normalize the parameters, if no keyword set, returns the normalized parameter values in self.parn
@@ -158,7 +151,6 @@ class lut:
         import numpy as np
         npar = self.npar
         par = self.par
-        parn = np.zeros_like(self.par)
         if pcoef is not None:
             # for defined coefficients
             if self.phase is 'liq' or 'ice':
@@ -177,6 +169,7 @@ class lut:
             # for defining its own coefficients
             pco = np.empty(self.npar)
             padd = np.empty(self.npar)
+            parn = np.zeros_like(par)*np.nan
             if self.par.ndim == 3:
                 for p in xrange(self.npar):
                     pco[p] = 1./(np.nanmax(self.par[:,:,p])-np.nanmin(self.par[:,:,p]))
@@ -197,6 +190,14 @@ class lut:
             pcoef = {'coef':pco,'add':padd}
         self.parn = parn
         return pcoef
+    
+    def __init__(self,par,tau,ref,phase=None):
+        self.par = par
+        self.tau = tau
+        self.ref = ref
+        self.npar = list(set(par.shape) - set([tau.size,ref.size,2]))[0] # 2 for the possible 2 phases
+        self.phase = phase
+        self.pcoef = self.norm_par()
         
 
 # <markdowncell>
@@ -210,10 +211,10 @@ class Sp:
     Sp: spectrum class object that has all the tools for easy spectra analysis.
     Includes tools for building look up tables
     """    
+    import numpy as np
     def params(self):
         " Runs through each spectrum in the sp array to calculate the parameters"
         from Sp_parameters import param
-        import itertools
         sp = self.sp
         wvl = self.wvl
         if sp.ndim == 5:
@@ -260,13 +261,16 @@ class Sp:
         self.sp = sp_hires
         self.tau = tau_hires
         self.ref = ref_hires
+        self.hires = True
         return       
     
-    def norm_par(self,pcoef=None):
+    def norm_par(self,pcoef=None,std=False,vartitle=None):
         """ 
         Normalize the parameters, if no keyword set, returns the normalized parameter values in self.parn
         if the keywords are not set, returns the normalized parameter values in self.parn and returns
         the pcoef dictionary containing the coefficients and additive values used for normalizing each parameter.
+        Applies the normalization to std if set to true, and requires the pceof to be set and creates stdparn, overrides vartitle
+        Saves to vartitle if vartitle is set.
         
         """
         import numpy as np
@@ -275,17 +279,27 @@ class Sp:
         parn = np.zeros_like(self.par)
         if pcoef is not None:
             # for defined coefficients
-            if self.par.ndim == 4:
-                for ph in [0,1]:
-                    parn[ph,:,:,:] = np.transpose(self.par[ph,:,:,:]*pcoef['coef'].T-pcoef['add'].T)
-            elif self.par.ndim == 2:
-                for t in xrange(len(self.utc)):
-                    parn[t,:] = self.par[t,:]*pcoef['coef']-pcoef['add']
-            elif self.par.ndim == 5:
-                for ph in [0,1]:
-                    parn[ph,:,0,:,:] = np.transpose(self.par[ph,:,0,:,:]*pcoef['coef'].T-pcoef['add'].T)
+            if not std:
+                if self.par.ndim == 4:
+                    for ph in [0,1]:
+                        parn[ph,:,:,:] = np.transpose(self.par[ph,:,:,:]*pcoef['coef'].T-pcoef['add'].T)
+                elif self.par.ndim == 2:
+                    for t in xrange(len(self.utc)):
+                        parn[t,:] = self.par[t,:]*pcoef['coef']-pcoef['add']
+                elif self.par.ndim == 5:
+                    for ph in [0,1]:
+                        parn[ph,:,0,:,:] = np.transpose(self.par[ph,:,0,:,:]*pcoef['coef'].T-pcoef['add'].T)
+                else:
+                    warning('There is a problem with the dimensions of the sp')
+                    return
+                if vartitle is not None:
+                    setattr(self,vartitle,parn)
+                    return
+                else:
+                    self.parn = parn
+                    return
             else:
-                warning('There is a problem with the dimensions of the sp')
+                self.stdparn = self.stdpar*pcoef['coef']-pcoef['add']
                 return
         else:
             # for defining its own coefficients
@@ -304,8 +318,8 @@ class Sp:
                     for ph in [0,1]:
                         parn[ph,p,0,:,:] = self.par[ph,p,0,:,:]*pco[p]-padd[p]
             pcoef = {'coef':pco,'add':padd}
-        self.parn = parn
-        return pcoef
+            self.parn = parn
+            return pcoef
     
     def __init__(self,s,**kwargs):
         import numpy as np
@@ -325,11 +339,18 @@ class Sp:
         if self.sp.ndim > 2:
             self.tau = s['tau']
             self.ref = s['ref']
-       #     self.par = self.params(self.sp,self.wvl,tau=self.tau,ref=self.ref)
         else:
             self.utc = s['utc']
             self.good = s['good']
-        #    self.par = self.params(self.sp,self.wvl,utc=self.utc)
+        # initiate with NANs the values that need to be populated
+        self.npar = np.nan
+        self.par = np.zeros_like(self.sp)*np.nan
+        self.parn = np.zeros_like(self.par)*np.nan
+        self.meansp = np.zeros_like(self.wvl)*np.nan
+        self.stdsp = np.zeros_like(self.wvl)*np.nan
+        self.stdpar = np.zeros((16))*np.nan
+        self.stdparn = np.zeros((16))*np.nan
+        self.hires = False
         
     def wvlsort(self,s):
         "Function to sort spectra along the wavelength axis"
@@ -345,7 +366,7 @@ class Sp:
             print 'in rad'
             print s['rad'].shape, s['rad'].ndim, len(iwvls)
             ui = [i for i in range(s['rad'].ndim) if s['rad'].shape[i] == len(self.wvl)]
-            print ui
+            #print ui
             if 1 in ui:
                 print '1 in ui'
                 sp = s['rad'][:,iwvls]
@@ -377,7 +398,7 @@ class Sp:
                 par = np.rollaxis(self.par[0,:,0,self.ref<=30,:],0,3)
             else:
                 warning('Problem with par dimensions')
-            self.liq = lut(par,tau,ref,phase=phase)
+            self.liq = lut(par,self.tau,ref,phase=phase)
         elif phase is 'ice':
             ref = self.ref[self.ref >= 10]
             if self.par.ndim == 4:
@@ -386,8 +407,48 @@ class Sp:
                 par = np.rollaxis(self.par[1,:,0,self.ref>=10,:],0,3)
             else:
                 warning('Problem with par dimensions')
-            self.ice = lut(par,tau,ref,phase=phase)
+            self.ice = lut(par,self.tau,ref,phase=phase)
         return
+    
+    def mean(self):
+        " function that returns the mean spectra."
+        sp = self.sp
+        notaxis = tuple(np.where(np.array(self.sp.shape) != self.wvl.shape[0])[0])
+        meansp = np.nanmean(sp,axis=notaxis)
+        self.meansp = meansp
+        return meansp
+    
+    def std(self,sp=None):
+        " function that returns the standard deviation spectra."
+        if sp is None:
+            sp = self.sp
+            savetoself = True
+        else:
+            savetoself = False
+        notaxis = tuple(np.where(np.array(self.sp.shape) != self.wvl.shape[0])[0])
+        stdsp = np.nanstd(sp,axis=notaxis)
+        if savetoself:
+            self.stdsp = stdsp
+        return stdsp 
+    
+    def build_std(self):
+        """
+        Function that creates a set of uncertainty for each parameter.
+        Currently just uses white noise (gaussian)
+        """
+        from Sp_parameters import param
+        meansp = self.mean()
+        stdsp = self.std()
+        num_noise = 200
+        noise = np.random.normal(1,0.005,(num_noise,self.wvl.size)) # add 0.5% variance to signal at all wavelengths
+        # should be at every sp in utc, but for now, use mean sp
+        sp_arr = meansp*noise
+        #import code; code.interact(local=locals())
+        par_noisy = np.array(map(lambda tt:param(sp_arr[tt,:],self.wvl),xrange(num_noise)))
+        notaxis = tuple(np.where(par_noisy.shape != self.npar)[0])
+        stdpar = np.nanstd(par_noisy,axis=notaxis)
+        self.stdpar = stdpar
+        return stdpar
             
 
 # <codecell>
