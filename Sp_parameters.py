@@ -36,12 +36,61 @@ def find_closest(A, target):
 def smooth(x, window):
     """Moving average of 'x' with window size 'window'."""
     return np.convolve(x, np.ones(window)/window, 'same')
+
+def deriv(y,x):
+    """
+    Numerical derivative based on IDL's deriv function: returns the derivative of a three-point (quadratic) Lagrangian interpolation:
+    For evenly space: Y'[0] = (–3*Y[0] + 4*Y[1] – Y[2]) / 2
+                      Y'[i] = (Y[i+1] – Y[i–1]) / 2 ; i = 1...N–2
+                      Y'[N–1] = (3*Y[N–1] – 4*Y[N–2] + Y[N–3]) / 2
+    For uneven: for the middle with x = x1:
+              y' = y0x12/(x01x02) + y1(1/x12 – 1/x01) – y2x01/(x02x12)
+            The first point is computed at x = x0:
+              y' = y0(x01 + x02)/(x01x02) – y1x02/(x01x12) + y2x01/(x02x12)
+            The last point is computed at x = x2:
+              y' = –y0x12/(x01x02) + y1x02/(x01x12) – y2(x02 + x12)/(x02x12)
+            with x12 = x1-x2 and x=[x0,x1,x2] (for the 3 neighbors)
+    """
+    import numpy as np
+    d = np.zeros_like(x)*np.nan
+    if len(x) != len(y):
+        print '*** warning x is not the same length as y nothing done ***'
+        return
+    if len(x) < 3:
+        print '*** Not enough points ***'
+        return
+    d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) - \
+           y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) + \
+           y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
+    d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) + \
+            y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) - \
+            y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
+    for i in xrange(1,len(x)-1):
+        d[i] = y[i-1]*(x[i]-x[i+1])/((x[i-1]-x[i])*(x[i-1]-x[i+1])) + \
+               y[i]*(1.0/(x[i]-x[i+1]) - 1.0/(x[i-1]-x[i])) - \
+               y[i+1]*(x[i-1]-x[i])/((x[i-1]-x[i+1])*(x[i]-x[i+1]))
+    return d
         
 def nanmasked(x):
     " Build an array with nans masked out and the mask output"
     mask = ~np.isnan(x)
     maskA = x[mask]
     return (maskA,mask)
+
+def nan_helper(y):
+    """Helper to handle indices and logical indices of NaNs.
+    Input:
+        - y, 1d numpy array with possible NaNs
+    Output:
+        - nans, logical indices of NaNs
+        - index, a function, with signature indices= index(logical_indices),
+          to convert logical indices of NaNs to 'equivalent' indices
+    Example:
+        >>> # linear interpolation of NaNs
+        >>> nans, x= nan_helper(y)
+        >>> y[nans]= np.interp(x(nans), x(~nans), y[~nans])
+    """
+    return np.isnan(y), lambda z: z.nonzero()[0]
 
 def norm2max(x):
     " Returns a spectrum, x, that is normalized by its maximum value, ignores nans "
@@ -50,6 +99,7 @@ def norm2max(x):
 def param(sp,wvlin):
     " Calculates the parameters from a spectrum."
     from linfit import linfit
+    from Sp_parameters import nanmasked, norm2max, smooth, deriv
     spc, mask = nanmasked(sp)
     wvl = wvlin[mask]
     norm = norm2max(spc)
@@ -59,35 +109,35 @@ def param(sp,wvlin):
                                                      610,1565,1634,1193,1198,1236,1248,
                                                      1270,1644,1050,1040,1065,600,870,515]))
     norm2 = spc/spc[i1000]
-    dsp = smooth(np.gradient(norm2,wvl/1000),2)
+    dsp = smooth(deriv(norm2,wvl/1000),2)
     npar = 16
     imaxwvl = np.argmax(spc)
     maxwvl = wvl[mask[imaxwvl]]
     # now calculate each parameter
-    fit0 = np.polyfit(wvl[i1000:i1077],norm2[i1000:i1077],1)
+    fit0 = np.polyfit(np.array([wvl[i1000],wvl[i1077]]),np.array([norm2[i1000],norm2[i1077]]),1)
     fit0_fn = np.poly1d(fit0)
-    fit7 = np.polyfit(wvl[i1493:i1600],norm2[i1493:i1600],1)
+    fit7 = np.polyfit(np.array([wvl[i1493],wvl[i1600]]),np.array([norm2[i1493],norm2[i1600]]),1)
     fit7_fn = np.poly1d(fit7)
     fit8,z = linfit(wvl[i1000:i1077],dsp[i1000:i1077])
     fit9,z = linfit(wvl[i1200:i1300],dsp[i1200:i1300])
     fit10,z = linfit(wvl[i530:i610]/1000,norm[i530:i610])
     fit14,z = linfit(wvl[i1565:i1634],spc[i1565:i1634]/norm[i1565])
-    par = [sum(norm2[i1000:i1077]-fit0_fn(wvl[i1000:i1077])),   # curvature of rad normed to 1000 nm for 1000 nm - 1077 nm
-           dsp[i1193],                                          # deriv of rad normed to 1000 nm at 1193 nm
-           dsp[i1493],                                          # deriv of rad normed to 1000 nm at 1493 nm
-           norm[i1198]/norm[i1236],                             # ratio of normalized rad of 1198 nm / 1236 nm
-           np.nanmean(norm[i1248:i1270]),                       # mean of normalized rad between 1248 nm - 1270 nm
-           np.nanmean(norm[i1565:i1644]),                       # mean of normalized rad between 1565 nm - 1644 nm
-           np.nanmean(norm[i1000:i1050]),                       # mean of normalized rad between 1000 nm - 1050 nm
-           sum(norm2[i1493:i1600]-fit7_fn(wvl[i1493:i1600])),   # curvature of rad normed to 1000 nm for 1493 nm - 1600 nm
-           fit8[1],                                             # slope of deriv of rad normed to 1000 nm, 1000 nm - 1077 nm
-           fit9[1],                                             # slope of deriv of rad normed to 1000 nm, 1200 nm - 1300 nm
-           fit10[1],                                            # slope of normalized radiance between 530 nm - 610 nm
-           norm[i1040],                                         # normalized radiance at 1040 nm
-           norm[i1000]/norm[i1065],                             # ratio of normalized radiance at 1000 nm / 1065 nm
-           norm[i600]/norm[i870],                               # ratio of normalized radiance at 600 nm / 870 nm
-           np.nanmax([0.003,fit14[1]]),                         # slope of radiance / rad at 1565 between 1565 nm - 1634 nm
-           spc[i515]]                                           # radiance at 515 nm
+    par = [sum(norm2[i1000:i1077]-fit0_fn(wvl[i1000:i1077])),   # 1 curvature of rad normed to 1000 nm for 1000 nm - 1077 nm
+           np.nanmin(dsp[i1193:i1193+5]),                       # 2 deriv of rad normed to 1000 nm at minimum near 1193 nm (!=IDL version)
+           dsp[i1493],                                          # 3 deriv of rad normed to 1000 nm at 1493 nm
+           norm[i1198]/norm[i1236],                             # 4 ratio of normalized rad of 1198 nm / 1236 nm
+           np.nanmean(norm[i1248:i1270]),                       # 5 mean of normalized rad between 1248 nm - 1270 nm
+           np.nanmean(norm[i1565:i1644]),                       # 6 mean of normalized rad between 1565 nm - 1644 nm
+           np.nanmean(norm[i1000:i1050]),                       # 7 mean of normalized rad between 1000 nm - 1050 nm
+           sum(norm2[i1493:i1600]-fit7_fn(wvl[i1493:i1600])),   # 8 curvature of rad normed to 1000 nm for 1493 nm - 1600 nm
+           fit8[0],                                             # 9 slope of deriv of rad normed to 1000 nm, 1000 nm - 1077 nm
+           fit9[0],                                             # 10 slope of deriv of rad normed to 1000 nm, 1200 nm - 1300 nm
+           fit10[0],                                            # 11 slope of normalized radiance between 530 nm - 610 nm
+           norm[i1040],                                         # 12 normalized radiance at 1040 nm
+           norm[i1000]/norm[i1065],                             # 13 ratio of normalized radiance at 1000 nm / 1065 nm
+           norm[i600]/norm[i870],                               # 14 ratio of normalized radiance at 600 nm / 870 nm
+           np.nanmax([0.003,fit14[0]]),                         # 15 slope of radiance / rad at 1565 between 1565 nm - 1634 nm
+           spc[i515]]                                           # 16 radiance at 515 nm
     return par
 
 # <markdowncell>
@@ -103,7 +153,7 @@ def startprogress(title):
     """
     global progress_x, title_global
     title_global = title
-    sys.stdout.write(title + ": [" + "-" * 40 + "]")
+    sys.stdout.write(title + ": [" + "-" * 40 + "] 00%%")
     sys.stdout.flush()
     progress_x = 0
 
@@ -116,7 +166,7 @@ def progress(x):
     """
     global progress_x, title_global
     x = int(x * 40 // 100)                      
-    sys.stdout.write("\r" + title_global + ": [" + "#" * x + "-" * (40 - x) + "]")
+    sys.stdout.write("\r" + title_global + ": [" + "#" * x + "-" * (40 - x) + "] %02d%%" %x)
     sys.stdout.flush()
     progress_x = x
 
@@ -127,7 +177,7 @@ def endprogress():
     Write full bar, then move to next line
     """
     global title_global
-    sys.stdout.write("\r" + title_global + ": [" +"#" * 40 + "]\n")
+    sys.stdout.write("\r" + title_global + ": [" +"#" * 40 + "]100% \n")
     sys.stdout.flush()
 
 # <markdowncell>
@@ -233,6 +283,7 @@ class Sp:
         " Interpolate the modeled sp to a finer resolution in tau and ref. Only works on modeled data with 5 dimensions"
         #from Sp_parameters import startprogress, progress, endprogress
         from scipy import interpolate
+        from Sp_parameters import nanmasked
         import numpy as np
         sp = self.sp
         wvl = self.wvl
@@ -251,8 +302,14 @@ class Sp:
         rref = ref
         sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])
         startprogress('Running interpolation')
-        for w in xrange(len(wvl)):
-            for ph in [0,1]:
+        iref_min = [0,5]
+        iref_max = [29,55]
+        for ph in [0,1]:
+            if np.any(np.isnan(sp[ph,:,0,:,:])) or np.any(sp[ph,:,0,:,:]):
+                import pdb; pdb.set_trace()
+                [mask,imask] = nanmasked(sp[ph,:,0,:,:])
+                ijmask = np.unravel_index(imask,np.shape(sp[ph,:,0,:,:]))
+            for w in xrange(len(wvl)):
                 fx = interpolate.RectBivariateSpline(rref,ttau,sp[ph,w,0,:,:],kx=1,ky=1)
                 sp_hires[ph,w,0,:,:] = fx(ref_hires,tau_hires)
             progress(w/len(wvl)*100.0)
@@ -355,6 +412,8 @@ class Sp:
     def wvlsort(self,s):
         "Function to sort spectra along the wavelength axis"
         iwvls = self.iwvls
+        if sorted(iwvls) is iwvls:
+            print '*** wvls are already sorted, there may be a problem! ***'
         if 'sp' in s:
             print 'in sp'
             print s['sp'].shape

@@ -91,19 +91,7 @@ sm.good[100]
 
 # <codecell>
 
-def nanmasked(x):
-    " Build an array with nans masked out and the mask output"
-    mask = ~np.isnan(x)
-    maskA = x[mask]
-    return (maskA,mask)
-
-def closestindex(a,x):
-    " Get the index from a of the closest value from x "
-    return min(range(len(a)), key=lambda i: abs(a[i]-x))
-
-def norm2max(x):
-    " Returns a spectrum, x, that is normalized by its maximum value, ignores nans "
-    return x/np.nanmax(x)
+from Sp_parameters import nanmasked, closestindex, norm2max
     
 time_ref=17.22
 ii = closestindex(sm.utc,time_ref)
@@ -294,8 +282,69 @@ plt.show()
 
 # <codecell>
 
+reload(Sp)
+
+# <codecell>
+
 lut = Sp.Sp(s)
 warnings.simplefilter('ignore')
+lut.params()
+
+# <codecell>
+
+lut.sp_hires()
+lut.params()
+
+# <codecell>
+
+print lut.par.shape
+
+# <markdowncell>
+
+# Now plot the resulting lut of parameters
+
+# <codecell>
+
+fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+ax3 = ax3.ravel()
+for i in range(lut.npar-1):
+    for j in xrange(len(lut.ref)):
+        ax3[i].plot(lut.tau,lut.par[0,j,:,i])
+    ax3[i].set_title('Parameter '+str(i))
+    ax3[i].grid()
+    ax3[i].set_xlim([0,100])
+    if i > 11: 
+        ax3[i].set_xlabel('Tau')
+
+fig3.tight_layout()
+plt.show()
+
+# <codecell>
+
+print lut.sp.shape
+print lut.tau[80]
+
+# <codecell>
+
+plt.figure()
+for i in xrange(30):
+    plt.plot(lut.wvl,lut.sp[0,:,0,i,80])
+
+# <codecell>
+
+all_zeros = not np.any(lut.sp[0,:,0,40,39])
+print all_zeros
+print np.max(lut.sp[0,:,0,20,80]), np.min(lut.sp[0,:,0,20,80])
+print np.any(lut.sp[0,:,0,20,70])
+print lut.ref[28]
+plt.figure()
+for i in xrange(65,75):
+    plt.plot(lut.wvl,lut.sp[0,:,0,28,i])
+
+# <codecell>
+
+print not np.any(lut.sp[0,:,0,28,60])
+print lut.ref[3]
 
 # <codecell>
 
@@ -312,54 +361,13 @@ reload(Sp)
 
 # <codecell>
 
-plt.figure()
-plt.plot(meas.utc,ki)
-
-# <codecell>
-
-num_noise = 200
-noise = np.random.normal(1,0.005,(num_noise,meas.wvl.size))
-print noise.shape
-
-# <codecell>
-
-meansp = meas.mean()
-print meansp.shape
-sp_arr = meansp*noise
-print sp_arr.shape
+print meas.good
+print meas.utc.shape
 
 # <codecell>
 
 plt.figure()
-plt.plot(meas.wvl,meansp)
-for i in range(num_noise):
-    plt.plot(meas.wvl,sp_arr[i,:])
-
-# <codecell>
-
-print Sp.param(meansp,meas.wvl)
-
-# <codecell>
-
-from Sp_parameters import param
-print param(meansp,meas.wvl)
-
-# <codecell>
-
-rr=map(lambda tt:param(sp_arr[tt,:],meas.wvl),xrange(num_noise))
-
-# <codecell>
-
-parss = np.array(rr)
-stdpar = np.nanstd(parss,axis=0)
-
-# <codecell>
-
-print stdpar.shape
-print stdpar
-
-# <codecell>
-
+plt.plot(meas.utc,tau)
 
 # <codecell>
 

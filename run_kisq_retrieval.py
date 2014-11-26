@@ -31,8 +31,11 @@ def phase(parn,model,stdparn):
     """
     import numpy as np
     ph = 2 # set default to uncertain
-    if parn[1]-stdparn[1] > np.nanmax(model.ice.parn[:,:,1]):
-        ph = 0
+    try:
+        if parn[1]-stdparn[1] > np.nanmax(model.ice.parn[:,:,1]):
+            ph = 0
+    except IndexError:
+        import pdb; pdb.set_trace()
     if parn[1]+stdparn[1] < np.nanmin(model.liq.parn[:,:,1]):
         ph = 1
     if parn[0]+stdparn[0] < np.nanmin(model.liq.parn[:,:,0]):
@@ -72,18 +75,18 @@ def run_retrieval(meas,model):
     wg = np.sqrt(meas.stdpar)/pcoef['coef']
     
     #start loop over measurement
-    Sp.startprogress('Progress over times')
+    Sp.startprogress('Retrieval progress over times')
     ph = np.zeros_like(meas.utc)*np.nan
     ki = np.zeros_like(meas.utc)*np.nan
     ta = np.zeros_like(meas.utc)*np.nan
     re = np.zeros_like(meas.utc)*np.nan
     #ki_2ph = np.zeros_like(meas.utc) #kisq with 2 phase
-    for tt in xrange(len(meas.utc)):
+    for tt in meas.good:
         #first get the phase in first method
-        ph[tt] = rk.phase(meas.parn[tt,:],model,meas.stdparn)
+        ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
         if ph[tt] == 2: # undecided, must do the kisq
             ki_2ph = np.nansum(wg*(meas.parn[tt,:]-model.parn)**2,axis=3)
-            ki_minin = np.unravel_index(np.nanargmin(ki_2ph),model.parn.shape)
+            ki_minin = np.unravel_index(np.nanargmin(ki_2ph),ki_2ph.shape)
             ph[tt] = ki_minin[0]
         if ph[tt] == 0: #liquid
             goodpi = [i for i in range(15) if (meas.parn_liq[tt,i]+meas.stdparn[i]>=0) and (meas.parn_liq[tt,i]-meas.stdparn[i]<=1)]
@@ -91,19 +94,23 @@ def run_retrieval(meas,model):
                 continue
             ki_arr = np.nansum(wg[goodpi]*(meas.parn_liq[tt,goodpi]-model.liq.parn[:,:,goodpi])**2,axis=2)
             ki[tt] = np.nanmin(ki_arr)
-            ki_minin = np.unravel_index(np.nanargmin(ki_arr),model.liq.parn.shape)
+            print ki[tt]
+            ki_minin = np.unravel_index(np.nanargmin(ki_arr),ki_arr.shape)
             (ta[tt],re[tt]) = (model.liq.tau[ki_minin[1]],model.liq.ref[ki_minin[0]])
+            #import pdb; pdb.set_trace()
         elif ph[tt] == 1: #ice
             goodpi = [i for i in range(15) if (meas.parn_ice[tt,i]+meas.stdparn[i]>=0) and (meas.parn_ice[tt,i]-meas.stdparn[i]<=1)]
+            print goodpi
             if len(goodpi) < 4:
                 continue
             ki_arr = np.nansum(wg[goodpi]*(meas.parn_ice[tt,goodpi]-model.ice.parn[:,:,goodpi])**2,axis=2)
             ki[tt] = np.nanmin(ki_arr)
-            ki_minin = np.unravel_index(np.nanargmin(ki_arr),model.ice.parn.shape)
+            ki_minin = np.unravel_index(np.nanargmin(ki_arr),ki_arr.shape)
             (ta[tt],re[tt]) = (model.ice.tau[ki_minin[1]],model.ice.ref[ki_minin[0]])
+            print ki[tt]
         else:
             warning('Problem with phase!')
-        Sp.progress(tt/len(meas.utc))
+        #Sp.progress(tt/len(meas.utc)*100.0)
     Sp.endprogress()
     
     #save the file
