@@ -1,9 +1,20 @@
 # -*- coding: utf-8 -*-
 # <nbformat>3.0</nbformat>
 
+# <headingcell level=1>
+
+# Comparing parameters between python and IDL
+
 # <markdowncell>
 
 # Program that is used to test the results of params in the python vs. idl (original)
+# Sets up the different basis for comparison in ipython
+# 
+# Results: 
+#   - python implementation required a special derivative routine to use the 3 point lagrangian derivative method found in idl
+#   - python also required a new method of calculating the linear fit. Previous was slightly off, and was returning absissa instead of slope
+#   - Particularities between smoothing functions nearly not important except for parameter 2, which uses the derivative at a specific    
+#     wavelength, Wavelength adjusted to match better with 4STAR resolution than SSFR's
 
 # <markdowncell>
 
@@ -153,7 +164,7 @@ for a in a1:
     a.grid(True)
 a1[0].plot(lut.wvl,s_0_5_6)
 a1[0].set_xlim([350,1700])
-a1[3].set_xlabel('Wavelength [nm]')
+a1[-1].set_xlabel('Wavelength [nm]')
 a1[1].plot(lut.wvl,snorm)
 a1[2].plot(lut.wvl,norm2)
 a1[3].plot(lut.wvl,dsp)
@@ -163,6 +174,10 @@ a1[1].set_title('normed to max')
 a1[2].set_title('normed to 1000 nm')
 a1[3].set_title('derivative of normed at 1000 nm using gradient')
 a1[4].set_title('another derivative normed at 1000 nm using 3 point lagrangian')
+
+# <markdowncell>
+
+# From above the 3 point lagrangian, adapted from IDL, returns a more 'correct' version of the spectral derivative. There may be some odditites with using the gradient method from numpy.
 
 # <markdowncell>
 
@@ -180,11 +195,15 @@ a1[4].set_title('another derivative normed at 1000 nm using 3 point lagrangian')
 
 # Verify distinct pieces of the derivative plot, and the slope fit to them
 
+# <rawcell>
+
+#  We are now lookign at the linfit routine used in parameters 9, 10, 11, and others
+
 # <codecell>
 
 f2,a2 = plt.subplots(1)
 a2.plot(lut.wvl,dsp2,'b+')
-a2.plot(lut.wvl,dsp2,'b')
+a2.plot(lut.wvl,dsp2,'b',label='Normalized derivative')
 a2.set_xlim([1000,1077])
 a2.set_ylim([-7,2])
 a2.grid(True)
@@ -195,9 +214,16 @@ f,z = linfit(lut.wvl[i1000:i1077],dsp2[i1000:i1077])
 print f
 print z
 print f[1]
-a2.plot(lut.wvl[i1000:i1077],f[1]+f[0]*lut.wvl[i1000:i1077],'r')
+a2.plot(lut.wvl[i1000:i1077],f[1]+f[0]*lut.wvl[i1000:i1077],'r',label='linear fit')
+a2.set_xlabel('Wavelength [nm]')
+a2.set_ylabel('Zenith normalized derivative')
+plt.legend()
 
 #linfit output is [m,b], not [b,m] like previously thought
+
+# <markdowncell>
+
+# Now we look at the derivative at the minimum derivative directly before at 1200 nm. This has to be adjusted for the different wavelength spacing between 4STAR and SSFR.
 
 # <codecell>
 
@@ -208,6 +234,9 @@ a2.set_xlim([1150,1250])
 a2.set_ylim([-5,4])
 a2.plot([1193],[-0.67],'r*')
 a2.grid(True)
+a2.plot([1198],lut.par[0,5,6,1],'r+')
+a2.set_xlabel('Wavelength [nm]')
+a2.set_ylabel('Zenith normalized derivative')
 
 # <codecell>
 
