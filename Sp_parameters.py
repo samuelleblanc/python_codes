@@ -123,7 +123,7 @@ def param(sp,wvlin):
     fit10,z = linfit(wvl[i530:i610]/1000,norm[i530:i610])
     fit14,z = linfit(wvl[i1565:i1634],spc[i1565:i1634]/norm[i1565])
     par = [sum(norm2[i1000:i1077]-fit0_fn(wvl[i1000:i1077])),   # 1 curvature of rad normed to 1000 nm for 1000 nm - 1077 nm
-           np.nanmin(dsp[i1193:i1193+5]),                       # 2 deriv of rad normed to 1000 nm at minimum near 1193 nm (!=IDL version)
+           dsp[i1198],                                          # 2 deriv of rad normed to 1000 nm at 1198 nm (!=IDL version)
            dsp[i1493],                                          # 3 deriv of rad normed to 1000 nm at 1493 nm
            norm[i1198]/norm[i1236],                             # 4 ratio of normalized rad of 1198 nm / 1236 nm
            np.nanmean(norm[i1248:i1270]),                       # 5 mean of normalized rad between 1248 nm - 1270 nm
@@ -136,7 +136,7 @@ def param(sp,wvlin):
            norm[i1040],                                         # 12 normalized radiance at 1040 nm
            norm[i1000]/norm[i1065],                             # 13 ratio of normalized radiance at 1000 nm / 1065 nm
            norm[i600]/norm[i870],                               # 14 ratio of normalized radiance at 600 nm / 870 nm
-           np.nanmax([0.003,fit14[0]]),                         # 15 slope of radiance / rad at 1565 between 1565 nm - 1634 nm
+           np.nanmin([0.003,fit14[0]]),                         # 15 slope of radiance / rad at 1565 between 1565 nm - 1634 nm
            spc[i515]]                                           # 16 radiance at 515 nm
     return par
 
@@ -296,23 +296,21 @@ class Sp:
         ref_hires = np.arange(ref[0],ref[-1]+1.0)
         print tau_hires.shape
         print ref_hires.shape
-        #ttau = sp[0,0,0,:,:]*0.+tau
-        #rref = np.transpose(sp[0,0,0,:,:].T*0.+ref.T)
-        ttau = tau
-        rref = ref
-        sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])
+        import gc; gc.collect()
+        sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
-        iref_min = [0,5]
-        iref_max = [29,55]
+        refranges = (range(0,23),range(3,35))
         for ph in [0,1]:
-            if np.any(np.isnan(sp[ph,:,0,:,:])) or np.any(sp[ph,:,0,:,:]):
-                import pdb; pdb.set_trace()
-                [mask,imask] = nanmasked(sp[ph,:,0,:,:])
-                ijmask = np.unravel_index(imask,np.shape(sp[ph,:,0,:,:]))
+            for tt in xrange(1,len(tau)-1):
+                for rr in refranges[ph]:
+                    #look for NaNs and remove them by interpolating over the neighbors
+                    if np.any(np.isnan(sp[ph,:,0,rr,tt])) or not np.any(sp[ph,:,0,rr,tt]):
+                        fs = interpolate.interp1d([tau[tt-1],tau[tt+1]],[sp[ph,:,0,rr,tt-1],sp[ph,:,0,rr,tt+1]],axis=0)
+                        sp[ph,:,0,rr,tt] = fs(tau[tt])
             for w in xrange(len(wvl)):
-                fx = interpolate.RectBivariateSpline(rref,ttau,sp[ph,w,0,:,:],kx=1,ky=1)
+                fx = interpolate.RectBivariateSpline(ref,tau,sp[ph,w,0,:,:],kx=1,ky=1)
                 sp_hires[ph,w,0,:,:] = fx(ref_hires,tau_hires)
-            progress(w/len(wvl)*100.0)
+                progress((w+len(wvl)*ph)/(len(wvl)*2)*100.0)
         endprogress()
         print('Overwriting the current sp, tau, and ref with the new high resolution values')
         self.sp = sp_hires

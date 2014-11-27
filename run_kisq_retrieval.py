@@ -83,6 +83,7 @@ def run_retrieval(meas,model):
     #ki_2ph = np.zeros_like(meas.utc) #kisq with 2 phase
     for tt in meas.good:
         #first get the phase in first method
+        import pdb; pdb.set_trace()
         ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
         if ph[tt] == 2: # undecided, must do the kisq
             ki_2ph = np.nansum(wg*(meas.parn[tt,:]-model.parn)**2,axis=3)
@@ -94,7 +95,7 @@ def run_retrieval(meas,model):
                 continue
             ki_arr = np.nansum(wg[goodpi]*(meas.parn_liq[tt,goodpi]-model.liq.parn[:,:,goodpi])**2,axis=2)
             ki[tt] = np.nanmin(ki_arr)
-            print ki[tt]
+            #print ki[tt]
             ki_minin = np.unravel_index(np.nanargmin(ki_arr),ki_arr.shape)
             (ta[tt],re[tt]) = (model.liq.tau[ki_minin[1]],model.liq.ref[ki_minin[0]])
             #import pdb; pdb.set_trace()
@@ -107,10 +108,10 @@ def run_retrieval(meas,model):
             ki[tt] = np.nanmin(ki_arr)
             ki_minin = np.unravel_index(np.nanargmin(ki_arr),ki_arr.shape)
             (ta[tt],re[tt]) = (model.ice.tau[ki_minin[1]],model.ice.ref[ki_minin[0]])
-            print ki[tt]
+            #print ki[tt]
         else:
             warning('Problem with phase!')
-        #Sp.progress(tt/len(meas.utc)*100.0)
+        Sp.progress(tt/len(meas.utc)*100.0)
     Sp.endprogress()
     
     #save the file

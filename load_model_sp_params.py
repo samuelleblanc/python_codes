@@ -39,6 +39,7 @@ import matplotlib
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from mpltools import color
 %matplotlib inline
 
 # <codecell>
@@ -72,7 +73,7 @@ print 'sp (wp, wvl, z, re, ta)'
 
 # create custom key for sorting via wavelength
 iwvls = np.argsort(s.zenlambda)
-s.zenlambda.sort()
+s.nm = np.sort(s.zenlambda)
 
 # <codecell>
 
@@ -155,18 +156,18 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
     colors = plt.cm._generate_cmap(cmap,int(len(rf)*2.25))
     for ir in rf:
         if not(normalize):
-            a1 = ax.plot(s.zenlambda,s.sp[iphase,iwvls,0,ir,itau],
+            a1 = ax.plot(s.nm,s.sp[iphase,iwvls,0,ir,itau],
                          color=(0.2,0.2,0.2),
                          lw=1.8*ir/irefs[1])
-            ax.plot(s.zenlambda,s.sp[iphase,iwvls,0,ir,itau],
+            ax.plot(s.nm,s.sp[iphase,iwvls,0,ir,itau],
                      color=colors(ir),
                      lw=1.7*ir/irefs[1])
             ax.text(pos[0],pos[1],names,color=colors(irefs[1]))
         else:
-            a1 = ax.plot(s.zenlambda,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
+            a1 = ax.plot(s.nm,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                          color=(0.2,0.2,0.2),
                          lw=1.8*ir/irefs[1])
-            ax.plot(s.zenlambda,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
+            ax.plot(s.nm,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                      color=colors(ir),
                      lw=1.7*ir/irefs[1])    
             ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
@@ -283,21 +284,30 @@ plt.show()
 # <codecell>
 
 reload(Sp)
+import gc; gc.collect()
 
 # <codecell>
 
 lut = Sp.Sp(s)
-warnings.simplefilter('ignore')
-lut.params()
 
 # <codecell>
 
 lut.sp_hires()
+
+# <codecell>
+
 lut.params()
 
 # <codecell>
 
+print lut.ref
+print lut.sp[0,400,0,23,10]
+print lut.sp[1,400,0,:,10]
+
+# <codecell>
+
 print lut.par.shape
+print lut.
 
 # <markdowncell>
 
@@ -307,6 +317,8 @@ print lut.par.shape
 
 fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
+
+color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.RdBu)
 for i in range(lut.npar-1):
     for j in xrange(len(lut.ref)):
         ax3[i].plot(lut.tau,lut.par[0,j,:,i])
@@ -317,6 +329,66 @@ for i in range(lut.npar-1):
         ax3[i].set_xlabel('Tau')
 
 fig3.tight_layout()
+plt.suptitle('Liquid')
+plt.subplots_adjust(top=0.93)
+plt.show()
+
+# <codecell>
+
+fig4,ax4 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+ax4 = ax4.ravel()
+color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar)
+for i in range(lut.npar-1):
+    for j in xrange(len(lut.tau)):
+        ax4[i].plot(lut.ref,lut.par[0,:,j,i])
+    ax4[i].set_title('Parameter '+str(i))
+    ax4[i].grid()
+    ax4[i].set_xlim([0,30])
+    if i > 11: 
+        ax4[i].set_xlabel('R$_{ef}$ [$\mu$m]')
+
+fig4.tight_layout()
+plt.suptitle('Liquid')
+plt.subplots_adjust(top=0.93)
+plt.show()
+
+# <codecell>
+
+fig5,ax5 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+ax5 = ax5.ravel()
+
+color.cycle_cmap(len(lut.ref),cmap=plt.cm.RdBu)
+for i in range(lut.npar-1):
+    for j in xrange(len(lut.ref)):
+        ax5[i].plot(lut.tau,lut.par[1,j,:,i])
+    ax5[i].set_title('Parameter '+str(i))
+    ax5[i].grid()
+    ax5[i].set_xlim([0,100])
+    if i > 11: 
+        ax5[i].set_xlabel('Tau')
+
+fig5.tight_layout()
+plt.suptitle('Ice')
+plt.subplots_adjust(top=0.93)
+plt.show()
+
+# <codecell>
+
+fig6,ax6 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+ax6 = ax6.ravel()
+color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar)
+for i in range(lut.npar-1):
+    for j in xrange(len(lut.tau)):
+        ax6[i].plot(lut.ref,lut.par[1,:,j,i])
+    ax6[i].set_title('Parameter '+str(i))
+    ax6[i].grid()
+    ax6[i].set_xlim([0,50])
+    if i > 11: 
+        ax6[i].set_xlabel('R$_{ef}$ [$\mu$m]')
+
+fig6.tight_layout()
+plt.suptitle('Ice')
+plt.subplots_adjust(top=0.93)
 plt.show()
 
 # <codecell>
@@ -338,13 +410,41 @@ print np.max(lut.sp[0,:,0,20,80]), np.min(lut.sp[0,:,0,20,80])
 print np.any(lut.sp[0,:,0,20,70])
 print lut.ref[28]
 plt.figure()
-for i in xrange(65,75):
-    plt.plot(lut.wvl,lut.sp[0,:,0,28,i])
+for i in xrange(75,85):
+    plt.plot(lut.wvl,lut.sp[0,:,0,28,i], label="tau:"+str(lut.tau[i]))
+plt.legend()
 
 # <codecell>
 
-print not np.any(lut.sp[0,:,0,28,60])
+plt.figure()
+plt.plot(lut.wvl,lut.sp[0,:,0,28,70])
+
+# <codecell>
+
+print np.any(lut.sp[0,:,0,28,70])
 print lut.ref[3]
+
+# <codecell>
+
+ro = (range(1,20),range(4,50))
+print ro[1]
+print ro[0]
+
+# <codecell>
+
+from scipy import interpolate
+print np.shape([lut.tau[69],lut.tau[71]])
+print np.shape([lut.sp[0,:,0,28,69],lut.sp[0,:,0,28,69]])
+fs = interpolate.interp1d([lut.tau[69],lut.tau[71]],[lut.sp[0,:,0,28,69],lut.sp[0,:,0,28,69]],axis=0)
+sss = fs(lut.tau[70])
+
+# <codecell>
+
+print np.shape(sss)
+plt.figure()
+plt.plot(lut.wvl,sss)
+plt.plot(lut.wvl,lut.sp[0,:,0,28,70],'r')
+print type(sss)
 
 # <codecell>
 
@@ -366,13 +466,16 @@ print meas.utc.shape
 
 # <codecell>
 
-plt.figure()
-plt.plot(meas.utc,tau)
+print meas.good[:,0]
 
 # <codecell>
 
+fig,ax = plt.subplots(4,sharex=True)
+ax[0].plot(meas.utc,tau,'rx')
+ax[1].plot(meas.utc,ref,'g+')
+ax[2].plot(meas.utc,phase,'k.')
+ax[3].plot(meas.utc,ki,)
 
-# <rawcell>
+# <codecell>
 
-#     num_noise = 200
 
