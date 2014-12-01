@@ -138,6 +138,10 @@ def param(sp,wvlin):
            norm[i600]/norm[i870],                               # 14 ratio of normalized radiance at 600 nm / 870 nm
            np.nanmin([0.003,fit14[0]]),                         # 15 slope of radiance / rad at 1565 between 1565 nm - 1634 nm
            spc[i515]]                                           # 16 radiance at 515 nm
+    # do a check for bad points
+    if np.all(np.isnan(par[0:13])): 
+        par[14] = np.nan
+        par[15] = np.nan
     return par
 
 # <markdowncell>
@@ -443,7 +447,7 @@ class Sp:
         return norm
     
     def reshape_lut(self,phase=None):
-        " Function that reformats the lut such that only liquid clouds exist "
+        " Function that reformats the lut such that only liquid or ice clouds values exist "
         if phase is None:
             warning('No phase selected, returning nothing')
             return

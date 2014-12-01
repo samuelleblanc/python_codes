@@ -32,24 +32,28 @@ def phase(parn,model,stdparn):
     import numpy as np
     ph = 2 # set default to uncertain
     try:
-        if parn[1]-stdparn[1] > np.nanmax(model.ice.parn[:,:,1]):
+        if parn[1]-stdparn[1] > np.nanmax(model.parn[1,:,:,1]):
             ph = 0
     except IndexError:
         import pdb; pdb.set_trace()
-    if parn[1]+stdparn[1] < np.nanmin(model.liq.parn[:,:,1]):
+    if parn[1]+stdparn[1] < np.nanmin(model.parn[0,:,:,1]):
         ph = 1
-    if parn[0]+stdparn[0] < np.nanmin(model.liq.parn[:,:,0]):
+    if parn[0]+stdparn[0] < np.nanmin(model.parn[0,:,:,0]):
         ph = 1
-    if parn[8]-stdparn[8] > np.nanmax(model.liq.parn[:,:,8]):
+    if parn[8]-stdparn[8] > np.nanmax(model.parn[0,:,:,8]):
         ph = 1
-    if parn[9]-stdparn[9] > np.nanmax(model.liq.parn[:,:,9]):
+    if parn[9]-stdparn[9] > np.nanmax(model.parn[0,:,:,9]):
         ph = 1
     return ph
 
 # <codecell>
 
-def run_retrieval(meas,model):
-    """ A function that uses the Sp class to run through each utc point in meas, and finds the closest model values """
+def run_retrieval(meas,model,subp=range(15)):
+    """ 
+    A function that uses the Sp class to run through each utc point in meas, 
+    and finds the closest model values, 
+    uses only the subset of parameters defined by subp, which defaults to first 15 parameters
+    """
     import Sp_parameters as Sp
     import numpy as np
     import run_kisq_retrieval as rk
@@ -82,15 +86,17 @@ def run_retrieval(meas,model):
     re = np.zeros_like(meas.utc)*np.nan
     #ki_2ph = np.zeros_like(meas.utc) #kisq with 2 phase
     for tt in meas.good:
+        if np.all(np.isnan(meas.parn[tt,subp])):
+            continue
         #first get the phase in first method
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
         if ph[tt] == 2: # undecided, must do the kisq
-            ki_2ph = np.nansum(wg*(meas.parn[tt,:]-model.parn)**2,axis=3)
+            ki_2ph = np.nansum(wg[subp]*(meas.parn[tt,subp]-model.parn[:,:,:,subp])**2,axis=3)
             ki_minin = np.unravel_index(np.nanargmin(ki_2ph),ki_2ph.shape)
             ph[tt] = ki_minin[0]
         if ph[tt] == 0: #liquid
-            goodpi = [i for i in range(15) if (meas.parn_liq[tt,i]+meas.stdparn[i]>=0) and (meas.parn_liq[tt,i]-meas.stdparn[i]<=1)]
+            goodpi = [i for i in subp if (meas.parn_liq[tt,i]+meas.stdparn[i]>=0) and (meas.parn_liq[tt,i]-meas.stdparn[i]<=1)]
             if len(goodpi) < 4:
                 continue
             ki_arr = np.nansum(wg[goodpi]*(meas.parn_liq[tt,goodpi]-model.liq.parn[:,:,goodpi])**2,axis=2)
@@ -98,10 +104,9 @@ def run_retrieval(meas,model):
             #print ki[tt]
             ki_minin = np.unravel_index(np.nanargmin(ki_arr),ki_arr.shape)
             (ta[tt],re[tt]) = (model.liq.tau[ki_minin[1]],model.liq.ref[ki_minin[0]])
-            #import pdb; pdb.set_trace()
         elif ph[tt] == 1: #ice
-            goodpi = [i for i in range(15) if (meas.parn_ice[tt,i]+meas.stdparn[i]>=0) and (meas.parn_ice[tt,i]-meas.stdparn[i]<=1)]
-            print goodpi
+            goodpi = [i for i in subp if (meas.parn_ice[tt,i]+meas.stdparn[i]>=0) and (meas.parn_ice[tt,i]-meas.stdparn[i]<=1)]
+     #       print goodpi
             if len(goodpi) < 4:
                 continue
             ki_arr = np.nansum(wg[goodpi]*(meas.parn_ice[tt,goodpi]-model.ice.parn[:,:,goodpi])**2,axis=2)
