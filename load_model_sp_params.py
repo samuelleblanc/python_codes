@@ -581,8 +581,10 @@ ax[3].set_xlim([17,19.05])
 # <codecell>
 
 import datetime
-doy = datetime.datetime(2012,2,19)
+doy = datetime.datetime(2013,2,19)
 print doy.timetuple().tm_yday
+dd = datetime.datetime(2014,9,19)
+print dd.timetuple().tm_yday
 
 # <markdowncell>
 
@@ -590,9 +592,7 @@ print doy.timetuple().tm_yday
 
 # <codecell>
 
-from pyhdf.SD import SD,SDC
 from mpl_toolkits.basemap import Basemap,cm
-from osgeo import gdal
 
 # <codecell>
 
@@ -607,107 +607,8 @@ print os.path.isfile(myd06_file)
 
 # <codecell>
 
-myd_geo = gdal.Open(myd03_file)
-myd_geo_sub = myd_geo.GetSubDatasets()
-for i in range(len(myd_geo_sub)):
-    print str(i)+': '+myd_geo_sub[i][1]
-
-# <codecell>
-
-latsds = gdal.Open(myd_geo_sub[12][0],gdal.GA_ReadOnly)
-lonsds = gdal.Open(myd_geo_sub[13][0],gdal.GA_ReadOnly)
-szasds = gdal.Open(myd_geo_sub[21][0],gdal.GA_ReadOnly)
-
-# <codecell>
-
-print latsds.RasterCount # verify that only one raster exists
-lat = latsds.ReadAsArray()
-lon = lonsds.ReadAsArray()
-sza = szasds.ReadAsArray()
-print lon.shape
-
-# <markdowncell>
-
-# Now load the specific data files:
-
-# <codecell>
-
-myd_dat = gdal.Open(myd06_file)
-myd_dat_sub = myd_dat.GetSubDatasets()
-for i in range(len(myd_dat_sub)):
-    print str(i)+': '+myd_dat_sub[i][1]
-
-# <codecell>
-
-print myd_dat_sub[118]
-retfsds = gdal.Open(myd_dat_sub[118][0])
-
-# <codecell>
-
-for key,value in myd_dat.GetMetadata_Dict().items():
-    print key,value
-
-# <markdowncell>
-
-# Load the different modis values:
-
-# <codecell>
-
-modis_values = (('cloud_top',57),
-                ('phase',53),
-                ('cloud_top_temp',58),
-                ('ref',66),
-                ('tau',72),
-                ('cwp',82),
-                ('eref',90),
-                ('etau',93),
-                ('ecwp',96),
-                ('multi_layer',105),
-                ('qa',123),
-                ('cloud_mask',110)
-                )
-
-# <markdowncell>
-
-# Testing the metadata dictionary
-
-# <codecell>
-
-gdal.Open(myd_dat_sub[53][0]).GetMetadata()
-
-# <codecell>
-
-mm = dict()
-mm['one'] = gdal.Open(myd_dat_sub[72][0]).GetMetadata()
-mm['two'] = gdal.Open(myd_dat_sub[74][0]).GetMetadata()
-mm['two']['_FillValue']
-
-# <codecell>
-
-from Sp_parameters import startprogress, progress, endprogress
-import gc; gc.collect()
-
-# <codecell>
-
-tuple(i[0] for i in modis_values).index('etau')
-
-# <codecell>
-
-modis = dict()
-modis_dicts = dict()
-startprogress('Running through modis values')
-for i,j in modis_values:
-    sds = gdal.Open(myd_dat_sub[j][0])
-    modis_dicts[i] = sds.GetMetadata()
-    modis[i] = np.array(sds.ReadAsArray())*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
-    modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
-    progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
-endprogress()
-
-# <codecell>
-
-print modis.keys()
-print modis_dicts.keys()
+from load_modis import load_modis
+modis,modis_dicts = load_modis(myd03_file,myd06_file)
 
 # <markdowncell>
 
@@ -715,17 +616,24 @@ print modis_dicts.keys()
 
 # <codecell>
 
+#set up a easy plotting function
+def tcap_map(ax=plt.gca()):
+    m = Basemap(projection='stere',lon_0=-70,lat_0=42,
+            llcrnrlon=-72, llcrnrlat=40,
+            urcrnrlon=-66, urcrnrlat=45,resolution='h',ax=ax)
+    m.drawcoastlines()
+    #m.fillcontinents(color='#AAAAAA')
+    m.drawstates()
+    m.drawcountries()
+    m.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+    return m
+
+# <codecell>
+
 figm = plt.figure()
 axm = figm.add_axes([0.1,0.1,0.8,0.8])
-m = Basemap(projection='stere',lon_0=-70,lat_0=42,
-            llcrnrlon=-72, llcrnrlat=40,
-            urcrnrlon=-66, urcrnrlat=45,resolution='h')
-m.drawcoastlines()
-m.fillcontinents(color='#AAAAAA')
-m.drawstates()
-m.drawcountries()
-m.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
-m.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+m = tcap_map(axm)
 x,y = m(lon,lat)
 clevels = np.linspace(0,25,25)
 cs = m.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
@@ -736,27 +644,10 @@ axm.set_title('MODIS - AQUA Cloud optical Thickness')
 # <codecell>
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
-m1 = Basemap(projection='stere',lon_0=-70,lat_0=42,
-            llcrnrlon=-72, llcrnrlat=40,
-            urcrnrlon=-66, urcrnrlat=45,resolution='h',ax=axm2[0])
-m1.drawcoastlines()
-#m1.fillcontinents(color='#AAAAAA')
-m1.drawstates()
-m1.drawcountries()
-m1.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
-m1.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+m1 = tcap_map(axm2[0])
+m2 = tcap_map(axm2[1])
 x,y = m1(lon,lat)
 clevels = np.linspace(0,25,25)
-
-m2 = Basemap(projection='stere',lon_0=-70,lat_0=42,
-            llcrnrlon=-72, llcrnrlat=40,
-            urcrnrlon=-66, urcrnrlat=45,resolution='h',ax=axm2[1])
-m2.drawcoastlines()
-#m2.fillcontinents(color='#AAAAAA')
-m2.drawstates()
-m2.drawcountries()
-m2.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
-m2.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
 
 cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
 cbar = m1.colorbar(cs1)
@@ -768,6 +659,57 @@ cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
+figm2.subplots_adjust(wspace=0.5)
+plt.show()
+
+# <markdowncell>
+
+# Now load the aircraft telemetry onto the plot
+
+# <codecell>
+
+def load_ict(fname):
+    from datetime import datetime
+    f = open(fname,'r')
+    first = f.readline()
+    num2skip = int(first.strip().split(',')[0])
+    f.close()
+    def mktime(txt):
+        return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
+    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={'Date_Time':mktime})
+    return data
+
+# <codecell>
+
+iwg = load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
+print iwg.dtype.names
+print iwg.dtype.names.index('Date_Time')
+print iwg['Date_Time'][0]
+print type(iwg['Date_Time'][0])
+iwg['Lat']
+
+# <codecell>
+
+ii = iwg['Date_Time'][0]
+
+# <codecell>
+
+ii.microsecond
+
+# <codecell>
+
+iwg_utch = np.array([i.hour+i.minute/60.+i.second/3600.+i.microsecond/3600000. for i in iwg['Date_Time']])
+
+# <codecell>
+
+fig = plt.figure()
+ax = plt.plot(iwg_utch,iwg['Lat'])
+plt.ylabel('Latitude')
+plt.xlabel('UTC [hours]')
+plt.title('flight path')
+
+# <codecell>
+
 
 # <codecell>
 
