@@ -34,11 +34,24 @@
 #   
 # Dependencies:
 # 
-#     see below imports
+#     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
+#     - run_kisq_retrieval.py : for the retrieval functions
+#     - matplotlib
+#     - mpltools
+#     - numpy
+#     - plotly : optional
+#     - scipy : for saving and reading
+#     - math
+#     - os
+#     - gc
+#     - pdb
+#     - datetime
+#     - pyhdf
+#     - mpl_toolkits
+#     - gdal (from osgeo)
 #   
 # Needed Files:
 # 
-#   - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #   - file.rc : for consistent creation of look of matplotlib figures
 #   - sp_v1_20130219_4STAR.out : modeled spectra output for TCAP in idl save file
 #   - 20130219starzen_rad.mat : special zenith radiance 4star matlab file 
@@ -560,6 +573,201 @@ ax[3].set_xlim([17,19.05])
 # <headingcell level=3>
 
 # Now load the results from MODIS to compare
+
+# <markdowncell>
+
+# Check the day of year
+
+# <codecell>
+
+import datetime
+doy = datetime.datetime(2012,2,19)
+print doy.timetuple().tm_yday
+
+# <markdowncell>
+
+# Now import the hdf files of MODIS
+
+# <codecell>
+
+from pyhdf.SD import SD,SDC
+from mpl_toolkits.basemap import Basemap,cm
+from osgeo import gdal
+
+# <codecell>
+
+myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
+myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
+print os.path.isfile(myd03_file) #check if it exists
+print os.path.isfile(myd06_file)
+
+# <markdowncell>
+
+# Load the geolocated data:
+
+# <codecell>
+
+myd_geo = gdal.Open(myd03_file)
+myd_geo_sub = myd_geo.GetSubDatasets()
+for i in range(len(myd_geo_sub)):
+    print str(i)+': '+myd_geo_sub[i][1]
+
+# <codecell>
+
+latsds = gdal.Open(myd_geo_sub[12][0],gdal.GA_ReadOnly)
+lonsds = gdal.Open(myd_geo_sub[13][0],gdal.GA_ReadOnly)
+szasds = gdal.Open(myd_geo_sub[21][0],gdal.GA_ReadOnly)
+
+# <codecell>
+
+print latsds.RasterCount # verify that only one raster exists
+lat = latsds.ReadAsArray()
+lon = lonsds.ReadAsArray()
+sza = szasds.ReadAsArray()
+print lon.shape
+
+# <markdowncell>
+
+# Now load the specific data files:
+
+# <codecell>
+
+myd_dat = gdal.Open(myd06_file)
+myd_dat_sub = myd_dat.GetSubDatasets()
+for i in range(len(myd_dat_sub)):
+    print str(i)+': '+myd_dat_sub[i][1]
+
+# <codecell>
+
+print myd_dat_sub[118]
+retfsds = gdal.Open(myd_dat_sub[118][0])
+
+# <codecell>
+
+for key,value in myd_dat.GetMetadata_Dict().items():
+    print key,value
+
+# <markdowncell>
+
+# Load the different modis values:
+
+# <codecell>
+
+modis_values = (('cloud_top',57),
+                ('phase',53),
+                ('cloud_top_temp',58),
+                ('ref',66),
+                ('tau',72),
+                ('cwp',82),
+                ('eref',90),
+                ('etau',93),
+                ('ecwp',96),
+                ('multi_layer',105),
+                ('qa',123),
+                ('cloud_mask',110)
+                )
+
+# <markdowncell>
+
+# Testing the metadata dictionary
+
+# <codecell>
+
+gdal.Open(myd_dat_sub[53][0]).GetMetadata()
+
+# <codecell>
+
+mm = dict()
+mm['one'] = gdal.Open(myd_dat_sub[72][0]).GetMetadata()
+mm['two'] = gdal.Open(myd_dat_sub[74][0]).GetMetadata()
+mm['two']['_FillValue']
+
+# <codecell>
+
+from Sp_parameters import startprogress, progress, endprogress
+import gc; gc.collect()
+
+# <codecell>
+
+tuple(i[0] for i in modis_values).index('etau')
+
+# <codecell>
+
+modis = dict()
+modis_dicts = dict()
+startprogress('Running through modis values')
+for i,j in modis_values:
+    sds = gdal.Open(myd_dat_sub[j][0])
+    modis_dicts[i] = sds.GetMetadata()
+    modis[i] = np.array(sds.ReadAsArray())*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
+    modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
+    progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
+endprogress()
+
+# <codecell>
+
+print modis.keys()
+print modis_dicts.keys()
+
+# <markdowncell>
+
+# Now plot the resulting imagery
+
+# <codecell>
+
+figm = plt.figure()
+axm = figm.add_axes([0.1,0.1,0.8,0.8])
+m = Basemap(projection='stere',lon_0=-70,lat_0=42,
+            llcrnrlon=-72, llcrnrlat=40,
+            urcrnrlon=-66, urcrnrlat=45,resolution='h')
+m.drawcoastlines()
+m.fillcontinents(color='#AAAAAA')
+m.drawstates()
+m.drawcountries()
+m.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
+m.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+x,y = m(lon,lat)
+clevels = np.linspace(0,25,25)
+cs = m.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
+cbar = m.colorbar(cs)
+cbar.set_label('$\\tau$')
+axm.set_title('MODIS - AQUA Cloud optical Thickness')
+
+# <codecell>
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
+m1 = Basemap(projection='stere',lon_0=-70,lat_0=42,
+            llcrnrlon=-72, llcrnrlat=40,
+            urcrnrlon=-66, urcrnrlat=45,resolution='h',ax=axm2[0])
+m1.drawcoastlines()
+#m1.fillcontinents(color='#AAAAAA')
+m1.drawstates()
+m1.drawcountries()
+m1.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
+m1.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+x,y = m1(lon,lat)
+clevels = np.linspace(0,25,25)
+
+m2 = Basemap(projection='stere',lon_0=-70,lat_0=42,
+            llcrnrlon=-72, llcrnrlat=40,
+            urcrnrlon=-66, urcrnrlat=45,resolution='h',ax=axm2[1])
+m2.drawcoastlines()
+#m2.fillcontinents(color='#AAAAAA')
+m2.drawstates()
+m2.drawcountries()
+m2.drawmeridians(np.linspace(-66,-72,6),labels=[0,0,0,1])
+m2.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
+
+clevels2 = np.linspace(0,50,25)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
+cbar = m2.colorbar(cs2)
+cbar.set_label('R$_{ef}$ [$\\mu$m]')
+axm2[1].set_title('MODIS - AQUA Cloud effective radius')
 
 # <codecell>
 
