@@ -110,6 +110,7 @@ print 'Measured radiance Shape: ', sm.rad.shape
 
 print np.nanmax(sm.rad[sm.good[100],:])
 sm.good[100]
+print sm.good.shape, sm.good.max()
 
 # <headingcell level=4>
 
@@ -771,25 +772,38 @@ plt.show()
 
 # <codecell>
 
-from math import radians, cos, sin, asin, sqrt
-def haversine(lon1, lat1, lon2, lat2):
-    """
-    Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees)
-    """
-    # convert decimal degrees to radians 
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-    # haversine formula 
-    dlon = lon2 - lon1 
-    dlat = lat2 - lat1 
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a)) 
-    km = 6367 * c
-    return km
+from Sp_parameters import closestindex,startprogress,progress,endprogress
+import scipy.spatial
 
 # <codecell>
 
-from Sp_parameters import closestindex,startprogress,progress,endprogress
+print len(meas.good)
+print meas.utc.size
+print len(meas.lon)
+print meas.sp.size
+print meas.good.max()
+plt.figure()
+plt.plot(meas.good)
+
+# <codecell>
+
+imodis = np.logical_and(np.logical_and(modis['lon']>min(meas.lon[meas.good]) , modis['lon']<max(meas.lon[meas.good])),
+                        np.logical_and(modis['lat']>min(meas.lat[meas.good]) , modis['lat']<max(meas.lat[meas.good])))
+
+# <codecell>
+
+print np.shape(np.where(imodis))
+
+# <codecell>
+
+N1 = modis['lon'][imodis].size
+modis_grid = np.hstack([modis['lon'][imodis].reshape((N1,1)),modis['lat'][imodis].reshape((N1,1))])
+print N1
+#measurement
+N2 = len(meas.good)
+print N2
+meas_grid = np.hstack([np.array(meas.lon[meas.good]).reshape((N2,1)),np.array(meas.lat[meas.good]).reshape((N2,1))])
+d = scipy.spatial.distance.cdist(modis_grid, meas_grid, 'euclidean')
 
 # <codecell>
 
@@ -804,12 +818,6 @@ endprogress()
 
 print meas.ind.shape
 print meas.ind.astype(int)
-
-# <codecell>
-
-
-# <codecell>
-
 
 # <codecell>
 
