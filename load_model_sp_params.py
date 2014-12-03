@@ -36,6 +36,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
+#     - load_modis.py : for loading modis files
 #     - matplotlib
 #     - mpltools
 #     - numpy
@@ -331,7 +332,6 @@ print lut.sp[1,400,0,:,10]
 # <codecell>
 
 print lut.par.shape
-print lut.
 
 # <markdowncell>
 
@@ -543,6 +543,10 @@ reload(Sp)
 
 # <codecell>
 
+del lut
+
+# <codecell>
+
 print meas.utc.shape
 print len(meas.good)
 
@@ -601,13 +605,22 @@ myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
 print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
+# <codecell>
+
+from load_modis import load_modis
+
 # <markdowncell>
 
 # Load the geolocated data:
 
 # <codecell>
 
+#del modis
+#del load_modis
 from load_modis import load_modis
+#reload(load_modis)
+print 'after import'
+import gc; gc.collect()
 modis,modis_dicts = load_modis(myd03_file,myd06_file)
 
 # <markdowncell>
@@ -634,7 +647,7 @@ def tcap_map(ax=plt.gca()):
 figm = plt.figure()
 axm = figm.add_axes([0.1,0.1,0.8,0.8])
 m = tcap_map(axm)
-x,y = m(lon,lat)
+x,y = m(modis['lon'],modis['lat'])
 clevels = np.linspace(0,25,25)
 cs = m.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
 cbar = m.colorbar(cs)
@@ -646,7 +659,7 @@ axm.set_title('MODIS - AQUA Cloud optical Thickness')
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
 m2 = tcap_map(axm2[1])
-x,y = m1(lon,lat)
+x,y = m1(modis['lon'],modis['lat'])
 clevels = np.linspace(0,25,25)
 
 cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
@@ -659,7 +672,7 @@ cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
-figm2.subplots_adjust(wspace=0.5)
+figm2.subplots_adjust(wspace=0.3)
 plt.show()
 
 # <markdowncell>
@@ -681,20 +694,13 @@ def load_ict(fname):
 
 # <codecell>
 
+# load the ict file and check out the results
 iwg = load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
 print iwg.dtype.names
 print iwg.dtype.names.index('Date_Time')
 print iwg['Date_Time'][0]
 print type(iwg['Date_Time'][0])
 iwg['Lat']
-
-# <codecell>
-
-ii = iwg['Date_Time'][0]
-
-# <codecell>
-
-ii.microsecond
 
 # <codecell>
 
@@ -708,8 +714,162 @@ plt.ylabel('Latitude')
 plt.xlabel('UTC [hours]')
 plt.title('flight path')
 
+# <markdowncell>
+
+# interpolate the lat and lons and alts to retrieved values
+
 # <codecell>
 
+from scipy import interpolate
+
+# <codecell>
+
+flat = interpolate.interp1d(iwg_utch,iwg['Lat'])
+meas.lat = flat(meas.utc)
+
+# <codecell>
+
+flon = interpolate.interp1d(iwg_utch,iwg['Lon'])
+meas.lon = flon(meas.utc)
+
+# <codecell>
+
+falt = interpolate.interp1d(iwg_utch,iwg['GPS_MSL_Alt'])
+meas.alt = falt(meas.utc)
+
+# <markdowncell>
+
+# Now plot on top of the maps
+
+# <codecell>
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
+m1 = tcap_map(axm2[0])
+m2 = tcap_map(axm2[1])
+x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,25,25)
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
+x1,y1 = m1(meas.lon,meas.lat)
+m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,s=meas.utc/17.5*5,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+
+clevels2 = np.linspace(0,50,25)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
+cbar = m2.colorbar(cs2)
+cbar.set_label('R$_{ef}$ [$\\mu$m]')
+axm2[1].set_title('MODIS - AQUA Cloud effective radius')
+m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,s=meas.utc/17.5*5,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+figm2.subplots_adjust(wspace=0.3)
+plt.show()
+
+# <markdowncell>
+
+# Now find the modis points along flight track that match the most
+
+# <codecell>
+
+from math import radians, cos, sin, asin, sqrt
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    km = 6367 * c
+    return km
+
+# <codecell>
+
+from Sp_parameters import closestindex,startprogress,progress,endprogress
+
+# <codecell>
+
+meas.ind = meas.good
+startprogress('Running through flight track')
+for i in xrange(len(meas.good)):
+    meas.ind[i] = closestindex(modis['lon']**2+modis['lat']**2,meas.lon[meas.good[i]]**2+meas.lat[meas.good[i]]**2)
+    progress(float(i)/len(meas.good)*100)
+endprogress()
+
+# <codecell>
+
+print meas.ind.shape
+print meas.ind.astype(int)
+
+# <codecell>
+
+
+# <codecell>
+
+
+# <codecell>
+
+np.argmin(np.abs(meas.lon[meas.good[100]]))
+
+# <codecell>
+
+len(meas.lon)
+
+# <codecell>
+
+meas.lon.shape
+
+# <codecell>
+
+print modis['lon'].shape
+print np.array(modis['lon']**2).shape
+print modis['lon'][200,200]
+print np.array(modis['lon']**2)[200,200]
+print (-71.9349)**2
+
+# <markdowncell>
+
+# Now plot MODIS and the retrieval result
+
+# <codecell>
+
+fig,ax = plt.subplots(4,sharex=True)
+ax[0].set_title('Retrieval results time trace')
+ax[0].plot(meas.utc,tau,'rx')
+#ax[0].plot(meas.utc[meas.good[:,0]],smooth(tau[meas.good[:,0],0],20),'k')
+ax[0].plot(meas.utc[meas.good],modis['tau'].ravel()[meas.ind.astype(int)],'m+')
+ax[0].set_ylabel('$\\tau$')
+ax[0].set_ylim([0,50])
+ax[1].plot(meas.utc,ref,'g+')
+ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
+ax[1].plot(meas.utc[meas.good],modis['ref'].ravel()[meas.ind.astype(int)],'m+')
+ax[1].set_ylim([0,60])
+#ax[1].plot(meas.utc[meas.good[:,0]],smooth(ref[meas.good[:,0],0],20),'k')
+ax[2].plot(meas.utc,phase,'k.')
+ax[2].set_ylabel('Phase')
+ax[2].set_ylim([-0.5,1.5])
+ax[2].set_yticks([0,1])
+ax[2].set_yticklabels(['liq','ice'])
+ax[2].plot(meas.utc[meas.good],modis['phase'].ravel()[meas.ind.astype(int)],'m+')
+ax[3].plot(meas.utc,ki)
+ax[3].set_ylabel('$\\chi^{2}$')
+ax[3].set_xlabel('UTC [Hours]')
+ax[3].set_xlim([17,19.05])
+
+# <markdowncell>
+
+# plot onto a map the points that were selected
+
+# <codecell>
+
+figr,axr = plt.subplots(1)
+mr = tcap_map(axr)
+xr,yr = mr(modis['lon'].ravel()[meas.ind.astype(int)],modis['lat'].ravel()[meas.ind.astype(int)])
+mr.plot(xr,yr,'r+')
 
 # <codecell>
 

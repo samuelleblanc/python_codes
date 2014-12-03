@@ -3,6 +3,11 @@
 
 # <codecell>
 
+def __init__():
+    pass
+
+# <codecell>
+
 def load_modis(geofile,datfile):
     """
     Name:
@@ -62,40 +67,41 @@ def load_modis(geofile,datfile):
     latsds = gdal.Open(geosub[12][0],gdal.GA_ReadOnly)
     lonsds = gdal.Open(geosub[13][0],gdal.GA_ReadOnly)
     szasds = gdal.Open(geosub[21][0],gdal.GA_ReadOnly)
-    lat = latsds.ReadAsArray()
-    lon = lonsds.ReadAsArray()
-    sza = szasds.ReadAsArray()
-    print lon.shape
+    modis = dict()
+    modis['lat'] = latsds.ReadAsArray()
+    modis['lon'] = lonsds.ReadAsArray()
+    modis['sza'] = szasds.ReadAsArray()
+    print modis['lon'].shape
     meta = datsds.GetMetadata() 
-    modis_values = (('cloud_top',57),
+    modis_values = (#('cloud_top',57),
                     ('phase',53),
-                    ('cloud_top_temp',58),
+          #          ('cloud_top_temp',58),
                     ('ref',66),
                     ('tau',72),
-                    ('cwp',82),
+           #         ('cwp',82),
                     ('eref',90),
                     ('etau',93),
-                    ('ecwp',96),
+            #        ('ecwp',96),
                     ('multi_layer',105),
                     ('qa',123),
-                    ('cloud_mask',110)
+             #       ('cloud_mask',110)
                     )
     import gc; gc.collect()
-    modis = dict()
     modis_dicts = dict()
     startprogress('Running through modis values')
     for i,j in modis_values:
         sds = gdal.Open(datsub[j][0])
         modis_dicts[i] = sds.GetMetadata()
-        modis[i] = np.array(sds.ReadAsArray())*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
+        modis[i] = nd.array(sds.ReadAsArray())
         modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
+        modis[i] = modis[i]*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
-    modis['lat'] = lat
-    modis['lon'] = lon
-    modis['sza'] = sza
     print modis.keys()
     return modis,modis_dicts
+
+# <codecell>
+
 
 # <markdowncell>
 
