@@ -66,9 +66,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
 %matplotlib inline
-
-# <codecell>
-
 import numpy as np, h5py
 import plotly.plotly as py
 import scipy.io as sio
@@ -93,9 +90,6 @@ s=sio.idl.readsav(fp+'model/sp_v1_20130219_4STAR.out')
 print s.keys()
 print 'sp', s.sp.shape
 print 'sp (wp, wvl, z, re, ta)'
-
-# <codecell>
-
 # create custom key for sorting via wavelength
 iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
@@ -205,7 +199,7 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
 
 def plot_greys(fig=None,ax=None):
     " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
-    cl = '#CCCCCC'
+    cl = '#BBBBBB'
     plt.axvspan(1000,1077,color=cl) #eta1
     plt.axvspan(1192,1194,color=cl) #eta2
     plt.axvspan(1492,1494,color=cl) #eta3
@@ -277,6 +271,10 @@ plot_greys()
 # <headingcell level=3>
 
 # Now calculate the parameters for the measured spectra
+
+# <codecell>
+
+map(lambda x:x*x,[-1,1,24])
 
 # <codecell>
 
@@ -983,7 +981,26 @@ plt.hist(meastau, bins=30, histtype='stepfilled', normed=True, color='r',alpha=0
 plt.legend()
 plt.title('Optical Thickness histogram')
 plt.ylabel('Normed probability')
-plt.xlabel('$//tau$')
+plt.xlabel('$\\tau$')
+
+# <markdowncell>
+
+# Now for Ref
+
+# <codecell>
+
+mref,rmask = nanmasked(modis['ref'][meas.ind[0,:],meas.ind[1,:]])
+measref,rrmask = nanmasked(ref[meas.good[rmask]].ravel())
+
+# <codecell>
+
+plt.figure()
+plt.hist(mref[rrmask], bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
+plt.hist(measref, bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.7, label='4STAR')
+plt.legend()
+plt.title('Optical Thickness histogram')
+plt.ylabel('Normed probability')
+plt.xlabel('R$_{ef}$ [$\\mu$m]')
 
 # <codecell>
 

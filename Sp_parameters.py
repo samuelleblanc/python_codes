@@ -268,27 +268,34 @@ class Sp:
     import numpy as np
     def params(self):
         " Runs through each spectrum in the sp array to calculate the parameters"
+        useezmap = False
         from Sp_parameters import param
         import warnings
-        import ezmap
-        from ezmap import map
+        if useezmap:
+            import ezmap
+            from ezmap import map as zmap
         warnings.filterwarnings("ignore",category=RuntimeWarning,module="param")
         warnings.filterwarnings("ignore",category=RuntimeWarning,module="Sp_parameters.normsp")
         sp = self.sp
         wvl = self.wvl
         if sp.ndim == 5:
             w,r,t = np.mgrid[0:2,0:len(self.ref),0:len(self.tau)]
-            applypar = lambda w,r,t:param(sp[w,:,0,r,t],wvl)
-            gx = lambda a:param(sp[a[0],:,0,a[1],a[2]],wvl)
-            args = ((aw,ar,at) for aw in w.ravel() for ar in r.ravel() for at in t.ravel())
-            partemp = map(gx,args,progress=True,ncpu=2)
-            #partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
+            if useezmap:
+                gx = lambda a:param(sp[a[0],:,0,a[1],a[2]],wvl)
+                args = ((aw,ar,at) for aw in w.ravel() for ar in r.ravel() for at in t.ravel())
+                partemp = zmap(gx,args,progress=True,ncpu=2)
+            else:
+                applypar = lambda w,r,t:param(sp[w,:,0,r,t],wvl)
+                partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
             par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
             self.npar = par.shape[3]
         elif sp.ndim == 2:
             applypartime = lambda tt:param(sp[tt,:],wvl)
-            #par = np.array(map(applypartime,xrange(len(self.utc))))
-            par = np.array(map(applypartime,xrange(len(self.utc)),ncpu=2,progress=True))
+            if useezmap:
+                par = np.array(zmap(applypartime,xrange(len(self.utc)),ncpu=2,progress=True))
+            else:
+                part = map(applypartime,xrange(len(self.utc)))
+                par = np.array(part)
             self.npar = par.shape[1]
         else: raise LookupError
         self.par = par
