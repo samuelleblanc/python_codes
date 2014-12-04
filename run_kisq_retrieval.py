@@ -116,7 +116,7 @@ def run_retrieval(meas,model,subp=range(15)):
             #print ki[tt]
         else:
             warning('Problem with phase!')
-        Sp.progress(tt/len(meas.utc)*100.0)
+        Sp.progress(float(tt)/len(meas.utc)*100.0)
     Sp.endprogress()
     
     #save the file

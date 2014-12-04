@@ -138,7 +138,7 @@ def pltzen(fig=None,ax=None, tit='Zenith spectra'):
         doaxes = True
     else:
         doaxes = False
-    ax.plot(sm.wv[mask],rad,lw=2, c='k', label='4STAR measured at: '+str(time_ref))
+    ax.plot(sm.nm[mask],rad,lw=2, c='k', label='4STAR measured at: '+str(time_ref))
     if doaxes:
         plt.title(tit)
         plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
@@ -156,7 +156,7 @@ def norm(fig=None,ax=None):
         doaxes = True
     else:
         doaxes = False
-    ax.plot(sm.wv[mask],norm2max(rad),lw=2, c='k', label='4STAR measured at: '+str(time_ref))
+    ax.plot(sm.nm[mask],norm2max(rad),lw=2, c='k', label='4STAR measured at: '+str(time_ref))
     if doaxes:
         plt.title('Zenith spectra')
         plt.ylabel('Normalized Radiance')
@@ -280,6 +280,13 @@ plot_greys()
 
 # <codecell>
 
+reload(Sp)
+if 'meas' in locals():
+    del meas
+    import gc; gc.collect()
+
+# <codecell>
+
 # first convert measurements to Sp class, with inherent parameters defined
 meas = Sp.Sp(m)
 meas.params()
@@ -310,7 +317,9 @@ plt.show()
 # <codecell>
 
 reload(Sp)
-import gc; gc.collect()
+if 'lut' in locals():
+    del lut
+    import gc; gc.collect()
 
 # <codecell>
 
@@ -525,7 +534,7 @@ plt.title('Liquid water cloud with R$_{ef}$ = '+str(lut.ref[28])+' interpolated 
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
-# <markdowncell>
+# <headingcell level=2>
 
 # Now run through the retrieval scheme
 
@@ -540,6 +549,10 @@ reload(Sp)
 
 # <codecell>
 
+print max(meas.good)
+
+# <codecell>
+
  (tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
 
 # <codecell>
@@ -549,7 +562,7 @@ del lut
 # <codecell>
 
 print meas.utc.shape
-print len(meas.good)
+print len(meas.good), max(meas.good)
 
 # <codecell>
 
@@ -608,7 +621,12 @@ print os.path.isfile(myd06_file)
 
 # <codecell>
 
-from load_modis import load_modis
+import load_modis as lm
+reload(lm)
+if 'modis' in locals():
+    del modis, modis_dicts
+    import gc; gc.collect()
+    
 
 # <markdowncell>
 
@@ -616,13 +634,9 @@ from load_modis import load_modis
 
 # <codecell>
 
-#del modis
-#del load_modis
-from load_modis import load_modis
-#reload(load_modis)
 print 'after import'
 import gc; gc.collect()
-modis,modis_dicts = load_modis(myd03_file,myd06_file)
+modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 # <markdowncell>
 
@@ -682,21 +696,12 @@ plt.show()
 
 # <codecell>
 
-def load_ict(fname):
-    from datetime import datetime
-    f = open(fname,'r')
-    first = f.readline()
-    num2skip = int(first.strip().split(',')[0])
-    f.close()
-    def mktime(txt):
-        return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
-    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={'Date_Time':mktime})
-    return data
+reload(lm)
 
 # <codecell>
 
 # load the ict file and check out the results
-iwg = load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
+iwg = lm.load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
 print iwg.dtype.names
 print iwg.dtype.names.index('Date_Time')
 print iwg['Date_Time'][0]
@@ -710,12 +715,19 @@ iwg_utch = np.array([i.hour+i.minute/60.+i.second/3600.+i.microsecond/3600000. f
 # <codecell>
 
 fig = plt.figure()
+fig.add_subplot(3,1,1)
 ax = plt.plot(iwg_utch,iwg['Lat'])
 plt.ylabel('Latitude')
-plt.xlabel('UTC [hours]')
 plt.title('flight path')
+fig.add_subplot(3,1,2)
+plt.plot(iwg_utch,iwg['Lon'])
+plt.ylabel('Longitude')
+fig.add_subplot(3,1,3)
+plt.plot(iwg_utch,iwg['GPS_MSL_Alt'])
+plt.xlabel('UTC [hours]')
+plt.ylabel('Altitude')
 
-# <markdowncell>
+# <headingcell level=2>
 
 # interpolate the lat and lons and alts to retrieved values
 
@@ -727,14 +739,8 @@ from scipy import interpolate
 
 flat = interpolate.interp1d(iwg_utch,iwg['Lat'])
 meas.lat = flat(meas.utc)
-
-# <codecell>
-
 flon = interpolate.interp1d(iwg_utch,iwg['Lon'])
 meas.lon = flon(meas.utc)
-
-# <codecell>
-
 falt = interpolate.interp1d(iwg_utch,iwg['GPS_MSL_Alt'])
 meas.alt = falt(meas.utc)
 
@@ -755,14 +761,14 @@ cbar = m1.colorbar(cs1)
 cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
 x1,y1 = m1(meas.lon,meas.lat)
-m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,s=meas.utc/17.5*5,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
 
 clevels2 = np.linspace(0,50,25)
 cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
-m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,s=meas.utc/17.5*5,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
 plt.show()
 
@@ -777,6 +783,8 @@ import scipy.spatial
 
 # <codecell>
 
+if max(meas.good) > meas.utc.size:
+    meas.good = sm.good
 print len(meas.good)
 print meas.utc.size
 print len(meas.lon)
@@ -787,12 +795,24 @@ plt.plot(meas.good)
 
 # <codecell>
 
-imodis = np.logical_and(np.logical_and(modis['lon']>min(meas.lon[meas.good]) , modis['lon']<max(meas.lon[meas.good])),
-                        np.logical_and(modis['lat']>min(meas.lat[meas.good]) , modis['lat']<max(meas.lat[meas.good])))
+imodis = np.logical_and(np.logical_and(modis['lon']>min(meas.lon[meas.good])-0.02 , modis['lon']<max(meas.lon[meas.good])+0.02),
+                        np.logical_and(modis['lat']>min(meas.lat[meas.good])-0.02 , modis['lat']<max(meas.lat[meas.good])+0.02))
 
 # <codecell>
 
-print np.shape(np.where(imodis))
+wimodis = np.where(imodis)
+print np.shape(wimodis)
+
+# <codecell>
+
+def spherical_dist(pos1, pos2, r=3958.75):
+    pos1 = pos1 * np.pi / 180
+    pos2 = pos2 * np.pi / 180
+    cos_lat1 = np.cos(pos1[..., 0])
+    cos_lat2 = np.cos(pos2[..., 0])
+    cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
+    cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
+    return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
 
 # <codecell>
 
@@ -803,45 +823,82 @@ print N1
 N2 = len(meas.good)
 print N2
 meas_grid = np.hstack([np.array(meas.lon[meas.good]).reshape((N2,1)),np.array(meas.lat[meas.good]).reshape((N2,1))])
-d = scipy.spatial.distance.cdist(modis_grid, meas_grid, 'euclidean')
+meas_in = meas_grid.astype(int)
+print len(meas_grid[0])
+
+# <markdowncell>
+
+# Test if the spherical dist works for one point along the track
 
 # <codecell>
 
-meas.ind = meas.good
+d = spherical_dist(meas_grid[0],modis_grid)
+print d.shape
+print np.argmin(d)
+print len(wimodis[0])
+print len(wimodis[1])
+print wimodis[0][np.argmin(d)]
+print wimodis[1][np.argmin(d)]
+
+# <codecell>
+
+print meas.lat[0]
+print meas.lon[0]
+print modis['lon'][292,891]
+print modis['lat'][292,891]
+
+# <codecell>
+
+meas.ind = np.array([meas.good.ravel()*0,meas.good.ravel()*0])
+print np.shape(meas.ind)
+meas.ind[0,0] = 2
+meas.ind[1,0] = 3
+print meas.ind[:,0]
+
+# <markdowncell>
+
+# The spherical distance works for one point along track, now loop through all values
+
+# <codecell>
+
 startprogress('Running through flight track')
-for i in xrange(len(meas.good)):
-    meas.ind[i] = closestindex(modis['lon']**2+modis['lat']**2,meas.lon[meas.good[i]]**2+meas.lat[meas.good[i]]**2)
+for i in xrange(meas.good.size):
+    d = spherical_dist(meas_grid[i],modis_grid)
+    meas.ind[0,i] = wimodis[0][np.argmin(d)]
+    meas.ind[1,i] = wimodis[1][np.argmin(d)]
     progress(float(i)/len(meas.good)*100)
 endprogress()
 
 # <codecell>
 
-print meas.ind.shape
-print meas.ind.astype(int)
+print modis['tau'].shape
+print np.shape(modis['tau'][meas.ind])
+print modis['tau'][meas.ind[0,:],meas.ind[1,:]]
+print meas.utc[meas.good].ravel().shape
+print meas.good.shape
 
-# <codecell>
-
-np.argmin(np.abs(meas.lon[meas.good[100]]))
-
-# <codecell>
-
-len(meas.lon)
-
-# <codecell>
-
-meas.lon.shape
-
-# <codecell>
-
-print modis['lon'].shape
-print np.array(modis['lon']**2).shape
-print modis['lon'][200,200]
-print np.array(modis['lon']**2)[200,200]
-print (-71.9349)**2
-
-# <markdowncell>
+# <headingcell level=2>
 
 # Now plot MODIS and the retrieval result
+
+# <codecell>
+
+fig = plt.figure()
+plt.plot(modis['lat'][meas.ind[0,:],meas.ind[1,:]],modis['lon'][meas.ind[0,:],meas.ind[1,:]])
+plt.title('Nearest MODIS points')
+plt.ylabel('Latitude')
+plt.xlabel('longitude')
+
+# <codecell>
+
+fig = plt.figure()
+plt.plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]])
+plt.title('raw tau values')
+plt.xlabel('UTC [Hours]')
+
+# <codecell>
+
+modis_dicts['phase']
 
 # <codecell>
 
@@ -849,12 +906,12 @@ fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
 ax[0].plot(meas.utc,tau,'rx')
 #ax[0].plot(meas.utc[meas.good[:,0]],smooth(tau[meas.good[:,0],0],20),'k')
-ax[0].plot(meas.utc[meas.good],modis['tau'].ravel()[meas.ind.astype(int)],'m+')
+ax[0].plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]],'m+')
 ax[0].set_ylabel('$\\tau$')
 ax[0].set_ylim([0,50])
 ax[1].plot(meas.utc,ref,'g+')
 ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
-ax[1].plot(meas.utc[meas.good],modis['ref'].ravel()[meas.ind.astype(int)],'m+')
+ax[1].plot(meas.utc[meas.good].ravel(),modis['ref'][meas.ind[0,:],meas.ind[1,:]],'m+')
 ax[1].set_ylim([0,60])
 #ax[1].plot(meas.utc[meas.good[:,0]],smooth(ref[meas.good[:,0],0],20),'k')
 ax[2].plot(meas.utc,phase,'k.')
@@ -862,7 +919,7 @@ ax[2].set_ylabel('Phase')
 ax[2].set_ylim([-0.5,1.5])
 ax[2].set_yticks([0,1])
 ax[2].set_yticklabels(['liq','ice'])
-ax[2].plot(meas.utc[meas.good],modis['phase'].ravel()[meas.ind.astype(int)],'m+')
+ax[2].plot(meas.utc[meas.good].ravel(),modis['phase'][meas.ind[0,:],meas.ind[1,:]]-1,'m+')
 ax[3].plot(meas.utc,ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
@@ -874,10 +931,59 @@ ax[3].set_xlim([17,19.05])
 
 # <codecell>
 
-figr,axr = plt.subplots(1)
-mr = tcap_map(axr)
-xr,yr = mr(modis['lon'].ravel()[meas.ind.astype(int)],modis['lat'].ravel()[meas.ind.astype(int)])
-mr.plot(xr,yr,'r+')
+figs2,axs2 = plt.subplots(1,2,figsize=(13,13))
+ma1 = tcap_map(axs2[0])
+ma2 = tcap_map(axs2[1])
+xr,yr = ma1(modis['lon'][meas.ind[0,:],meas.ind[1,:]],modis['lat'][meas.ind[0,:],meas.ind[1,:]])
+xi,yi = ma1(meas.lon[meas.good].ravel(),meas.lat[meas.good].ravel()+0.03)
+axs2[0].set_title('Optical thickness')
+ma1.scatter(xr,yr,c=modis['tau'][meas.ind[0,:],meas.ind[1,:]],
+            cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],
+            vmax=clevels[-1],alpha=0.5,edgecolors='#999999',linewidth=0.15)
+ma1.scatter(xi,yi,c=tau[meas.good],
+            cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],
+            vmax=clevels[-1],alpha=0.5,edgecolors='#FFFFFF',linewidth=0.15)
+
+axs2[1].set_title('Effective Radius')
+ma2.scatter(xr,yr,c=modis['ref'][meas.ind[0,:],meas.ind[1,:]],
+            cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],
+            vmax=clevels2[-1],alpha=0.5,edgecolors='#999999',linewidth=0.15)
+ma2.scatter(xi,yi,c=ref[meas.good],
+            cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],
+            vmax=clevels2[-1],alpha=0.5,edgecolors='#FFFFFF',linewidth=0.15)
+
+# <headingcell level=2>
+
+# Build the comparison of histograms
+
+# <markdowncell>
+
+# build a filter for only showing 1-1 plots
+
+# <codecell>
+
+from Sp_parameters import nanmasked
+mtau,tmask = nanmasked(modis['tau'][meas.ind[0,:],meas.ind[1,:]])
+
+# <codecell>
+
+print tmask.shape
+print meas.good.shape
+print tmask
+
+# <codecell>
+
+meastau,ttmask = nanmasked(tau[meas.good[tmask]].ravel())
+
+# <codecell>
+
+plt.figure()
+plt.hist(mtau[ttmask], bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
+plt.hist(meastau, bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.7, label='4STAR')
+plt.legend()
+plt.title('Optical Thickness histogram')
+plt.ylabel('Normed probability')
+plt.xlabel('$//tau$')
 
 # <codecell>
 

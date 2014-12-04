@@ -92,16 +92,33 @@ def load_modis(geofile,datfile):
     for i,j in modis_values:
         sds = gdal.Open(datsub[j][0])
         modis_dicts[i] = sds.GetMetadata()
-        modis[i] = nd.array(sds.ReadAsArray())
-        modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
+        modis[i] = np.array(sds.ReadAsArray())
+        bad_points = np.where(modis[i] == float(modis_dicts[i]['_FillValue']))
         modis[i] = modis[i]*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
+        modis[i][bad_points] = np.nan
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
     print modis.keys()
+    del geosds, datsds,sds,lonsds,latsds,geosub,datsub
     return modis,modis_dicts
 
 # <codecell>
 
+def load_ict(fname):
+    """
+    Simple ict file loader
+    created specifically to load the files from the iwg1 on oard the G1 during TCAP, may work with others...
+    """
+    from datetime import datetime
+    import numpy as np
+    f = open(fname,'r')
+    first = f.readline()
+    num2skip = int(first.strip().split(',')[0])
+    f.close()
+    def mktime(txt):
+        return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
+    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={'Date_Time':mktime})
+    return data
 
 # <markdowncell>
 
@@ -109,41 +126,45 @@ def load_modis(geofile,datfile):
 
 # <codecell>
 
-import os
-import numpy as np
-from osgeo import gdal
+if __name__ == "__main__":
 
 # <codecell>
 
-fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
+    import os
+    import numpy as np
+    from osgeo import gdal
 
 # <codecell>
 
-myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
-myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
-print os.path.isfile(myd03_file) #check if it exists
-print os.path.isfile(myd06_file)
+    fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
 
 # <codecell>
 
-myd_geo = gdal.Open(myd03_file)
-myd_geo_sub = myd_geo.GetSubDatasets()
-for i in range(len(myd_geo_sub)):
-    print str(i)+': '+myd_geo_sub[i][1]
+    myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
+    myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
+    print os.path.isfile(myd03_file) #check if it exists
+    print os.path.isfile(myd06_file)
 
 # <codecell>
 
-latsds = gdal.Open(myd_geo_sub[12][0],gdal.GA_ReadOnly)
-lonsds = gdal.Open(myd_geo_sub[13][0],gdal.GA_ReadOnly)
-szasds = gdal.Open(myd_geo_sub[21][0],gdal.GA_ReadOnly)
+    myd_geo = gdal.Open(myd03_file)
+    myd_geo_sub = myd_geo.GetSubDatasets()
+    for i in range(len(myd_geo_sub)):
+        print str(i)+': '+myd_geo_sub[i][1]
 
 # <codecell>
 
-print latsds.RasterCount # verify that only one raster exists
-lat = latsds.ReadAsArray()
-lon = lonsds.ReadAsArray()
-sza = szasds.ReadAsArray()
-print lon.shape
+    latsds = gdal.Open(myd_geo_sub[12][0],gdal.GA_ReadOnly)
+    lonsds = gdal.Open(myd_geo_sub[13][0],gdal.GA_ReadOnly)
+    szasds = gdal.Open(myd_geo_sub[21][0],gdal.GA_ReadOnly)
+
+# <codecell>
+
+    print latsds.RasterCount # verify that only one raster exists
+    lat = latsds.ReadAsArray()
+    lon = lonsds.ReadAsArray()
+    sza = szasds.ReadAsArray()
+    print lon.shape
 
 # <markdowncell>
 
@@ -151,20 +172,20 @@ print lon.shape
 
 # <codecell>
 
-myd_dat = gdal.Open(myd06_file)
-myd_dat_sub = myd_dat.GetSubDatasets()
-for i in range(len(myd_dat_sub)):
-    print str(i)+': '+myd_dat_sub[i][1]
+    myd_dat = gdal.Open(myd06_file)
+    myd_dat_sub = myd_dat.GetSubDatasets()
+    for i in range(len(myd_dat_sub)):
+        print str(i)+': '+myd_dat_sub[i][1]
 
 # <codecell>
 
-print myd_dat_sub[118]
-retfsds = gdal.Open(myd_dat_sub[118][0])
+    print myd_dat_sub[118]
+    retfsds = gdal.Open(myd_dat_sub[118][0])
 
 # <codecell>
 
-for key,value in myd_dat.GetMetadata_Dict().items():
-    print key,value
+    for key,value in myd_dat.GetMetadata_Dict().items():
+        print key,value
 
 # <markdowncell>
 
@@ -172,19 +193,19 @@ for key,value in myd_dat.GetMetadata_Dict().items():
 
 # <codecell>
 
-modis_values = (('cloud_top',57),
-                ('phase',53),
-                ('cloud_top_temp',58),
-                ('ref',66),
-                ('tau',72),
-                ('cwp',82),
-                ('eref',90),
-                ('etau',93),
-                ('ecwp',96),
-                ('multi_layer',105),
-                ('qa',123),
-                ('cloud_mask',110)
-                )
+    modis_values = (('cloud_top',57),
+                    ('phase',53),
+                    ('cloud_top_temp',58),
+                    ('ref',66),
+                    ('tau',72),
+                    ('cwp',82),
+                    ('eref',90),
+                    ('etau',93),
+                    ('ecwp',96),
+                    ('multi_layer',105),
+                    ('qa',123),
+                    ('cloud_mask',110)
+                    )
 
 # <markdowncell>
 
@@ -192,39 +213,39 @@ modis_values = (('cloud_top',57),
 
 # <codecell>
 
-gdal.Open(myd_dat_sub[53][0]).GetMetadata()
+    gdal.Open(myd_dat_sub[53][0]).GetMetadata()
 
 # <codecell>
 
-mm = dict()
-mm['one'] = gdal.Open(myd_dat_sub[72][0]).GetMetadata()
-mm['two'] = gdal.Open(myd_dat_sub[74][0]).GetMetadata()
-mm['two']['_FillValue']
+    mm = dict()
+    mm['one'] = gdal.Open(myd_dat_sub[72][0]).GetMetadata()
+    mm['two'] = gdal.Open(myd_dat_sub[74][0]).GetMetadata()
+    mm['two']['_FillValue']
 
 # <codecell>
 
-from Sp_parameters import startprogress, progress, endprogress
-import gc; gc.collect()
+    from Sp_parameters import startprogress, progress, endprogress
+    import gc; gc.collect()
 
 # <codecell>
 
-tuple(i[0] for i in modis_values).index('etau')
+    tuple(i[0] for i in modis_values).index('etau')
 
 # <codecell>
 
-modis = dict()
-modis_dicts = dict()
-startprogress('Running through modis values')
-for i,j in modis_values:
-    sds = gdal.Open(myd_dat_sub[j][0])
-    modis_dicts[i] = sds.GetMetadata()
-    modis[i] = np.array(sds.ReadAsArray())*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
-    modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
-    progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
-endprogress()
+    modis = dict()
+    modis_dicts = dict()
+    startprogress('Running through modis values')
+    for i,j in modis_values:
+        sds = gdal.Open(myd_dat_sub[j][0])
+        modis_dicts[i] = sds.GetMetadata()
+        modis[i] = np.array(sds.ReadAsArray())*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
+        modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
+        progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
+    endprogress()
 
 # <codecell>
 
-print modis.keys()
-print modis_dicts.keys()
+    print modis.keys()
+    print modis_dicts.keys()
 
