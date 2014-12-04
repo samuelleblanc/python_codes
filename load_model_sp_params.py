@@ -178,18 +178,18 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
         if not(normalize):
             a1 = ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                          color=(0.2,0.2,0.2),
-                         lw=1.8*ir/irefs[1])
+                         lw=2.0*ir/irefs[1])
             ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                      color=colors(ir),
-                     lw=1.7*ir/irefs[1])
+                     lw=1.9*ir/irefs[1])
             ax.text(pos[0],pos[1],names,color=colors(irefs[1]))
         else:
             a1 = ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                          color=(0.2,0.2,0.2),
-                         lw=1.8*ir/irefs[1])
+                         lw=2.0*ir/irefs[1])
             ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                      color=colors(ir),
-                     lw=1.7*ir/irefs[1])    
+                     lw=1.9*ir/irefs[1])    
             ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
         if ir == rf[0]:
             alow = a1
@@ -199,7 +199,7 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
 
 def plot_greys(fig=None,ax=None):
     " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
-    cl = '#BBBBBB'
+    cl = '#DDDDDD'
     plt.axvspan(1000,1077,color=cl) #eta1
     plt.axvspan(1192,1194,color=cl) #eta2
     plt.axvspan(1492,1494,color=cl) #eta3
@@ -248,12 +248,16 @@ plt.legend([alow[0],ahigh[0]],
            lbl,
            frameon=False,
            loc=7)
-ax.text(600,0.19,'4STAR Measurement')
+ax.text(600,0.19,'4STAR Measurement from TCAP')
 pltzen(fig,ax)
 
 # <headingcell level=3>
 
 # Next figure with normalized spectra and areas of parameters
+
+# <codecell>
+
+plt.rcParams['savefig.dpi'] = 600
 
 # <codecell>
 
@@ -264,9 +268,11 @@ plt.legend([alow[0],ahigh[0]],
            lbl,
            frameon=False,
            loc=7)
-ax.text(600,0.19/0.22,'4STAR Measurement')
+ax.text(600,0.19/0.22,'4STAR Measurement from TCAP')
 norm(fig,ax)
 plot_greys()
+plt.savefig(fp+'plots/zen_spectra_model.png')
+#plt.savefig(fp+'plots/zen_spectra_model.svg')
 
 # <headingcell level=3>
 
