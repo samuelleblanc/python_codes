@@ -178,18 +178,18 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
         if not(normalize):
             a1 = ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                          color=(0.2,0.2,0.2),
-                         lw=2.0*ir/irefs[1])
+                         lw=2.0*float(ir)/irefs[1])
             ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                      color=colors(ir),
-                     lw=1.9*ir/irefs[1])
+                     lw=1.9*float(ir)/irefs[1])
             ax.text(pos[0],pos[1],names,color=colors(irefs[1]))
         else:
             a1 = ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                          color=(0.2,0.2,0.2),
-                         lw=2.0*ir/irefs[1])
+                         lw=2.0*float(ir)/irefs[1])
             ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                      color=colors(ir),
-                     lw=1.9*ir/irefs[1])    
+                     lw=1.9*float(ir)/irefs[1])    
             ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
         if ir == rf[0]:
             alow = a1
@@ -328,23 +328,23 @@ if 'lut' in locals():
 # <codecell>
 
 lut = Sp.Sp(s)
-
-# <codecell>
-
+lut.params()
+lut.param_hires()
 lut.sp_hires()
 
 # <codecell>
 
-lut.params()
+print lut.tau.shape
+print lut.ref.shape
+print lut.sp.ndim
+print lut.par.size
+print lut.par.shape
 
 # <codecell>
 
 print lut.ref
 print lut.sp[0,400,0,23,10]
 print lut.sp[1,400,0,:,10]
-
-# <codecell>
-
 print lut.par.shape
 
 # <markdowncell>
@@ -468,6 +468,14 @@ plt.show()
 
 print lut.sp.shape
 print lut.tau[80]
+
+# <codecell>
+
+print meas.par.shape
+
+# <codecell>
+
+print meas.par[meas.good[200],13]
 
 # <codecell>
 

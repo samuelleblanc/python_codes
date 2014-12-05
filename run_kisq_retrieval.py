@@ -10,15 +10,16 @@
 def assure_input(sp):
     " A function that checks the input and runs all the required functions to generate parameters"
     import numpy as np
-    if not(sp.hires) and hasattr(sp,'tau'):
+    if not sp.parhires and hasattr(sp,'tau'):
         print('Running the interpolation to hi-res')
-        sp.sp_hires()
+        sp.param_hires()
     if not(hasattr(sp,'par')):
         print('Running the params on current class')
         sp.params()        
     elif (np.isnan(sp.par)).all():
         print('Running the params on current class')
         sp.params() 
+        sp.param_hires()
 
 # <codecell>
 
@@ -115,7 +116,8 @@ def run_retrieval(meas,model,subp=range(15)):
             (ta[tt],re[tt]) = (model.ice.tau[ki_minin[1]],model.ice.ref[ki_minin[0]])
             #print ki[tt]
         else:
-            warning('Problem with phase!')
+            print('Problem with phase!')
+            return
         Sp.progress(float(tt)/len(meas.utc)*100.0)
     Sp.endprogress()
     

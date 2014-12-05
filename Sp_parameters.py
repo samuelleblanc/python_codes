@@ -301,6 +301,45 @@ class Sp:
         self.par = par
         return par
     
+    def param_hires(self):
+        " Runs through the parameter space and interpolates to create a hires res version, should be run instead of sp_hires "
+        from Sp_parameters import param
+        from scipy import interpolate
+        if np.all(np.isnan(self.par)):
+            print 'Run params() before'
+            return
+        tau = self.tau
+        ref = self.ref
+        par = self.par
+        if self.sp.ndim == 5:
+            tau_hires = np.concatenate((np.arange(self.tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,self.tau[-1]+1.0,1.0)))
+            ref_hires = np.arange(self.ref[0],self.ref[-1]+1.0)
+            print tau_hires.shape
+            print ref_hires.shape
+            import gc; gc.collect()
+            par_hires = np.zeros([2,len(ref_hires),len(tau_hires),self.npar])*np.nan
+            startprogress('Running interpolation on params')
+            refranges = (range(0,23),range(3,35))
+            for ph in [0,1]:
+                for tt in xrange(1,self.tau.size-1):
+                    for rr in refranges[ph]:
+                        #look for NaNs and remove them by interpolating over the neighbors
+                        if np.any(np.isnan(par[ph,rr,tt,:])) or not np.any(par[ph,rr,tt,:]):
+                            fs = interpolate.interp1d([tau[tt-1],tau[tt+1]],[par[ph,rr,tt-1,:],par[ph,rr,tt+1,:]],axis=0)
+                            par[ph,rr,tt,:] = fs(tau[tt])
+                for pp in xrange(self.npar):
+                    fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,par[ph,refranges[ph],:,pp],kx=1,ky=1)
+                    par_hires[ph,:,:,pp] = fx(ref_hires,tau_hires)
+                    progress(float(pp+self.npar*ph)/(self.npar*2)*100.0)
+            endprogress()
+        self.par = par_hires
+        self.tausp = tau
+        self.refsp = ref
+        self.tau = tau_hires
+        self.ref = ref_hires
+        self.parhires = True
+        return
+    
     def sp_hires(self):
         " Interpolate the modeled sp to a finer resolution in tau and ref. Only works on modeled data with 5 dimensions"
         #from Sp_parameters import startprogress, progress, endprogress
@@ -309,10 +348,17 @@ class Sp:
         import numpy as np
         sp = self.sp
         wvl = self.wvl
-        tau = self.tau
-        ref = self.ref
+        if self.parhires:
+            tau = self.tausp
+            ref = self.refsp
+        else:
+            tau = self.tau
+            ref = self.ref
         if sp.ndim !=5:
-            warning('This method cannot be applied to this object, not enough dimensions')
+            print('This method cannot be applied to this object, not enough dimensions')
+            return
+        if self.sphires:
+            print('sp is already hires')
             return
         tau_hires = np.concatenate((np.arange(tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,tau[-1]+1.0,1.0)))
         ref_hires = np.arange(ref[0],ref[-1]+1.0)
@@ -427,7 +473,8 @@ class Sp:
         self.stdsp = np.zeros_like(self.wvl)*np.nan
         self.stdpar = np.zeros((16))*np.nan
         self.stdparn = np.zeros((16))*np.nan
-        self.hires = False
+        self.sphires = False
+        self.parhires = False
         
     def wvlsort(self,s):
         "Function to sort spectra along the wavelength axis"
