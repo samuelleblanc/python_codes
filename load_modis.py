@@ -54,25 +54,6 @@ def load_modis(geofile,datfile):
     import numpy as np
     from osgeo import gdal
     from Sp_parameters import startprogress, progress, endprogress
-    geosds = gdal.Open(geofile)
-    datsds = gdal.Open(datfile)
-    geosub = geosds.GetSubDatasets()
-    datsub = datsds.GetSubDatasets()
-    print 'Outputting the Geo subdatasets:'
-    for i in range(len(geosub)):
-        print str(i)+': '+geosub[i][1]
-    print 'Outputting the Data subdatasets:'
-    for i in range(len(datsub)):
-        print str(i)+': '+datsub[i][1]
-    latsds = gdal.Open(geosub[12][0],gdal.GA_ReadOnly)
-    lonsds = gdal.Open(geosub[13][0],gdal.GA_ReadOnly)
-    szasds = gdal.Open(geosub[21][0],gdal.GA_ReadOnly)
-    modis = dict()
-    modis['lat'] = latsds.ReadAsArray()
-    modis['lon'] = lonsds.ReadAsArray()
-    modis['sza'] = szasds.ReadAsArray()
-    print modis['lon'].shape
-    meta = datsds.GetMetadata() 
     modis_values = (#('cloud_top',57),
                     ('phase',53),
           #          ('cloud_top_temp',58),
@@ -86,6 +67,28 @@ def load_modis(geofile,datfile):
                     ('qa',123),
              #       ('cloud_mask',110)
                     )
+    geosds = gdal.Open(geofile)
+    datsds = gdal.Open(datfile)
+    geosub = geosds.GetSubDatasets()
+    datsub = datsds.GetSubDatasets()
+    print 'Outputting the Geo subdatasets:'
+    for i in range(len(geosub)):
+        print str(i)+': '+geosub[i][1]
+    print 'Outputting the Data subdatasets:'
+    for i in range(len(datsub)):
+        if any(i in val for val in modis_values):
+            print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+        else:
+            print str(i)+': '+datsub[i][1]
+    latsds = gdal.Open(geosub[12][0],gdal.GA_ReadOnly)
+    lonsds = gdal.Open(geosub[13][0],gdal.GA_ReadOnly)
+    szasds = gdal.Open(geosub[21][0],gdal.GA_ReadOnly)
+    modis = dict()
+    modis['lat'] = latsds.ReadAsArray()
+    modis['lon'] = lonsds.ReadAsArray()
+    modis['sza'] = szasds.ReadAsArray()
+    print modis['lon'].shape
+    meta = datsds.GetMetadata() 
     import gc; gc.collect()
     modis_dicts = dict()
     startprogress('Running through modis values')
@@ -93,9 +96,18 @@ def load_modis(geofile,datfile):
         sds = gdal.Open(datsub[j][0])
         modis_dicts[i] = sds.GetMetadata()
         modis[i] = np.array(sds.ReadAsArray())
+        makenan = True
         bad_points = np.where(modis[i] == float(modis_dicts[i]['_FillValue']))
-        modis[i] = modis[i]*float(modis_dicts[i]['scale_factor'])+float(modis_dicts[i]['add_offset'])
-        modis[i][bad_points] = np.nan
+        scale = float(modis_dicts[i]['scale_factor'])
+        offset = float(modis_dicts[i]['add_offset'])
+       # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+        if scale.is_integer():
+            scale = int(scale)
+            makenan = False
+        if scale != 1 and offset == 0:
+            modis[i] = modis[i]*scale+offset
+        if makenan:
+            modis[i][bad_points] = np.nan
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
     print modis.keys()
@@ -119,6 +131,19 @@ def load_ict(fname):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
     data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={'Date_Time':mktime})
     return data
+
+# <codecell>
+
+def modis_qa(qa_array):
+    """
+    modis qa data parser.
+    input of qa numpy array
+    output structure of qa arrays
+    """
+    bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
+    
+    
+    
 
 # <markdowncell>
 

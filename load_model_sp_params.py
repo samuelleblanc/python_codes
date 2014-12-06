@@ -71,12 +71,15 @@ import plotly.plotly as py
 import scipy.io as sio
 import math
 import os
-import warnings
-warnings.simplefilter('ignore', np.RankWarning)
 import Sp_parameters as Sp
 py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
+
+# <codecell>
+
+import IPython
+IPython.InteractiveShell.cache_size = 0
 
 # <codecell>
 
@@ -178,18 +181,18 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
         if not(normalize):
             a1 = ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                          color=(0.2,0.2,0.2),
-                         lw=2.0*float(ir)/irefs[1])
+                         lw=1.0+1.4*float(ir)/irefs[1])
             ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
                      color=colors(ir),
-                     lw=1.9*float(ir)/irefs[1])
+                     lw=1.0+1.3*float(ir)/irefs[1])
             ax.text(pos[0],pos[1],names,color=colors(irefs[1]))
         else:
             a1 = ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                          color=(0.2,0.2,0.2),
-                         lw=2.0*float(ir)/irefs[1])
+                         lw=1.0+1.4*float(ir)/irefs[1])
             ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
                      color=colors(ir),
-                     lw=1.9*float(ir)/irefs[1])    
+                     lw=1.0+1.3*float(ir)/irefs[1])    
             ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
         if ir == rf[0]:
             alow = a1
@@ -236,7 +239,7 @@ fig,ax=pltzen()
 
 lines = [('Liquid Cloud Model, COD=0.5','Reds',0,[0,13],1,[420,0.01]),
          ('Ice Cloud Model, COD=0.5','Greens',1,[13,34],1,[380,0.02]),
-         ('Liquid Cloud Model, COD=10','Purples',0,[0,13],9,[700,0.16]),
+         ('Liquid Cloud Model, COD=10','RdPu',0,[0,13],9,[700,0.16]),
          ('Ice Cloud Model, COD=10','Blues',1,[13,34],9,[750,0.15])]
 
 for names,cmap,iphase,irefs,itau,pos in lines:
@@ -257,10 +260,6 @@ pltzen(fig,ax)
 
 # <codecell>
 
-plt.rcParams['savefig.dpi'] = 600
-
-# <codecell>
-
 fig,ax=norm()
 for names,cmap,iphase,irefs,itau,pos in lines:
     [alow,ahigh] = plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
@@ -271,8 +270,8 @@ plt.legend([alow[0],ahigh[0]],
 ax.text(600,0.19/0.22,'4STAR Measurement from TCAP')
 norm(fig,ax)
 plot_greys()
-plt.savefig(fp+'plots/zen_spectra_model.png')
-#plt.savefig(fp+'plots/zen_spectra_model.svg')
+plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600)
+plt.savefig(fp+'plots/zen_spectra_model.eps')
 
 # <headingcell level=3>
 
@@ -330,6 +329,15 @@ if 'lut' in locals():
 lut = Sp.Sp(s)
 lut.params()
 lut.param_hires()
+
+# <codecell>
+
+import gc; gc.collect()
+import sys
+print sys.version
+
+# <codecell>
+
 lut.sp_hires()
 
 # <codecell>
@@ -565,7 +573,7 @@ print max(meas.good)
 
 # <codecell>
 
- (tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
+(tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
 
 # <codecell>
 
@@ -578,6 +586,7 @@ print len(meas.good), max(meas.good)
 
 # <codecell>
 
+reload(Sp)
 from Sp_parameters import smooth
 
 # <codecell>
@@ -599,6 +608,21 @@ ax[3].plot(meas.utc,ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([17,19.05])
+plt.savefig(fp+'plots/TCAP_retri_results.png',dpi=600)
+plt.savefig(fp+'plots/TCAP_retri_results.eps')
+
+# <markdowncell>
+
+# Now save the smoothed values
+
+# <codecell>
+
+print tau.shape
+
+# <codecell>
+
+tau[meas.good[:,0],0] = smooth(tau[meas.good[:,0],0],20)
+ref[meas.good[:,0],0] = smooth(ref[meas.good[:,0],0],20)
 
 # <headingcell level=3>
 
@@ -650,6 +674,43 @@ print 'after import'
 import gc; gc.collect()
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
+# <codecell>
+
+print modis_dicts['qa']['description']
+
+# <codecell>
+
+modis['qa'].shape
+
+# <codecell>
+
+bb = modis['qa'][100,100,:]
+print bb
+bb.dtype
+print bb.astype('ubyte')
+def bin(x):
+    return ''.join(x & (1 << i) and '1' or '0' for i in range(7,-1,-1))
+bin(bb[0])
+
+# <codecell>
+
+bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
+
+# <codecell>
+
+mqa = modis['qa']
+
+# <codecell>
+
+for i in mqa:
+    print i
+
+# <codecell>
+
+if bin8(bb[1])[-4]:
+    print 'yes'
+bin8(bb[1])[-4]
+
 # <markdowncell>
 
 # Now plot the resulting imagery
@@ -683,6 +744,10 @@ axm.set_title('MODIS - AQUA Cloud optical Thickness')
 
 # <codecell>
 
+plt.savefig?
+
+# <codecell>
+
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
 m2 = tcap_map(axm2[1])
@@ -701,6 +766,8 @@ cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
 figm2.subplots_adjust(wspace=0.3)
 plt.show()
+plt.savefig(fp+'plots/modis_only_tau_ref_comp.png',dpi=600)
+plt.savefig(fp+'plots/modis_only_tau_ref_comp.pdf',bbox='tight')
 
 # <markdowncell>
 
@@ -737,7 +804,7 @@ plt.ylabel('Longitude')
 fig.add_subplot(3,1,3)
 plt.plot(iwg_utch,iwg['GPS_MSL_Alt'])
 plt.xlabel('UTC [hours]')
-plt.ylabel('Altitude')
+plt.ylabel('Altitude [m]')
 
 # <headingcell level=2>
 
@@ -773,16 +840,18 @@ cbar = m1.colorbar(cs1)
 cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
 x1,y1 = m1(meas.lon,meas.lat)
-m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 
 clevels2 = np.linspace(0,50,25)
 cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
-m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='g',linewidth=0.15)
+m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
 plt.show()
+plt.savefig(fp+'plots/modis_g1_tau_ref_comp.png',dpi=600)
+plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
 
 # <markdowncell>
 
@@ -916,15 +985,17 @@ modis_dicts['phase']
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
-ax[0].plot(meas.utc,tau,'rx')
+ax[0].plot(meas.utc,tau,'rx',label='4STAR')
 #ax[0].plot(meas.utc[meas.good[:,0]],smooth(tau[meas.good[:,0],0],20),'k')
-ax[0].plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]],'m+')
+ax[0].plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]],'m+',label='MODIS')
 ax[0].set_ylabel('$\\tau$')
 ax[0].set_ylim([0,50])
-ax[1].plot(meas.utc,ref,'g+')
+ax[0].legend()
+ax[1].plot(meas.utc,ref,'g+',label='4STAR')
 ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
-ax[1].plot(meas.utc[meas.good].ravel(),modis['ref'][meas.ind[0,:],meas.ind[1,:]],'m+')
+ax[1].plot(meas.utc[meas.good].ravel(),modis['ref'][meas.ind[0,:],meas.ind[1,:]],'m+',label='MODIS')
 ax[1].set_ylim([0,60])
+ax[1].legend()
 #ax[1].plot(meas.utc[meas.good[:,0]],smooth(ref[meas.good[:,0],0],20),'k')
 ax[2].plot(meas.utc,phase,'k.')
 ax[2].set_ylabel('Phase')
@@ -936,6 +1007,8 @@ ax[3].plot(meas.utc,ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([17,19.05])
+plt.savefig(fp+'plots/modis_4star_time_comp.png',dpi=600)
+plt.savefig(fp+'plots/modis_4star_time_comp.pdf',bbox='tight')
 
 # <markdowncell>
 
@@ -974,28 +1047,37 @@ ma2.scatter(xi,yi,c=ref[meas.good],
 
 # <codecell>
 
-from Sp_parameters import nanmasked
-mtau,tmask = nanmasked(modis['tau'][meas.ind[0,:],meas.ind[1,:]])
+utc = meas.utc[meas.good].ravel()
+print utc.shape
+ut = (utc > 17.25) & (utc < 17.75)
 
 # <codecell>
 
-print tmask.shape
-print meas.good.shape
-print tmask
+reload(Sp)
+from Sp_parameters import doublenanmask
+mtau,meastau = doublenanmask(modis['tau'][meas.ind[0,ut],meas.ind[1,ut]],tau[meas.good[ut]].ravel())
 
 # <codecell>
 
-meastau,ttmask = nanmasked(tau[meas.good[tmask]].ravel())
+print len(meastau)
+print len(mtau)
 
 # <codecell>
 
 plt.figure()
-plt.hist(mtau[ttmask], bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
-plt.hist(meastau, bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.7, label='4STAR')
-plt.legend()
+plt.hist(mtau, bins=10, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
+plt.hist(meastau, bins=40, histtype='stepfilled', normed=True, color='r',alpha=0.7, label='4STAR')
 plt.title('Optical Thickness histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
+plt.axvline(np.nanmean(mtau),color='k')
+plt.axvline(np.nanmean(meastau),color='k',label='Mean')
+plt.axvline(np.median(meastau),color='k',linestyle='--',label='Median')
+plt.axvline(np.median(mtau),color='k',linestyle='--')
+plt.legend(frameon=False)
+plt.xlim([0,15])
+plt.savefig(fp+'plots/hist_modis_4star_tau.png',dpi=600)
+plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
 # <markdowncell>
 
@@ -1003,19 +1085,21 @@ plt.xlabel('$\\tau$')
 
 # <codecell>
 
-mref,rmask = nanmasked(modis['ref'][meas.ind[0,:],meas.ind[1,:]])
-measref,rrmask = nanmasked(ref[meas.good[rmask]].ravel())
+mref,measref = doublenanmask(modis['ref'][meas.ind[0,ut],meas.ind[1,ut]],ref[meas.good[ut]].ravel())
 
 # <codecell>
 
 plt.figure()
-plt.hist(mref[rrmask], bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
-plt.hist(measref, bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.7, label='4STAR')
-plt.legend()
-plt.title('Optical Thickness histogram')
+plt.hist(mref, bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
+plt.hist(measref, bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.7, label='4STAR')
+plt.title('Effective Radius histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('R$_{ef}$ [$\\mu$m]')
-
-# <codecell>
-
+plt.axvline(np.nanmean(mref),color='k')
+plt.axvline(np.nanmean(measref),color='k',label='Mean')
+plt.axvline(np.median(measref),color='k',linestyle='--')
+plt.axvline(np.median(mref),color='k',linestyle='--',label='Median')
+plt.legend(frameon=False)
+plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600)
+plt.savefig(fp+'plots/hist_modis_4star_ref.pdf',bbox='tight')
 

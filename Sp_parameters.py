@@ -33,9 +33,22 @@ def find_closest(A, target):
     idx -= target - left < right - target
     return idx
 
-def smooth(x, window):
-    """Moving average of 'x' with window size 'window'."""
-    return np.convolve(x, np.ones(window)/window, 'same')
+def smooth(x, window,nan=True):
+    """
+    Moving average of 'x' with window size 'window'.
+    If the nan keyword is set to True (default), the array is returned with the nans removed and substituted by an interpolated value
+    """
+    if nan:
+        from Sp_parameters import nanmasked
+        from scipy import interpolate
+        ix = np.arange(len(x))
+        xmasked, mask = nanmasked(x)
+        fx = interpolate.interp1d(ix[mask],xmasked)
+        xinterp = fx(ix)
+        xout = np.convolve(xinterp, np.ones(window)/window, 'same')
+    else:
+        xout = np.convolve(x, np.ones(window)/window, 'same')
+    return xout
 
 def deriv(y,x):
     """
@@ -77,6 +90,14 @@ def nanmasked(x):
     maskA = x[mask]
     return (maskA,mask)
 
+def doublenanmask(x,y):
+    "Build two arrays that have no nans, in either. Returns smaller array"
+    if len(x) != len(y):
+        print "The two arrays don't match sizes, returning"
+        return
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    return x[mask],y[mask]
+
 def nan_helper(y):
     """Helper to handle indices and logical indices of NaNs.
     Input:
@@ -94,12 +115,15 @@ def nan_helper(y):
 
 def norm2max(x):
     " Returns a spectrum, x, that is normalized by its maximum value, ignores nans "
+    import warnings
+    warnings.simplefilter("ignore",RuntimeWarning)
     return x/np.nanmax(x)    
     
 def param(sp,wvlin):
     " Calculates the parameters from a spectrum."
     from linfit import linfit
     from Sp_parameters import nanmasked, norm2max, smooth, deriv
+    npar = 16
     spc, mask = nanmasked(sp)
     wvl = wvlin[mask]
     norm = norm2max(spc)
@@ -108,9 +132,11 @@ def param(sp,wvlin):
      i1050,i1040,i1065,i600,i870,i515] = find_closest(wvl,np.array([1000,1077,1493,1600,1200,1300,530,
                                                      610,1565,1634,1193,1198,1236,1248,
                                                      1270,1644,1050,1040,1065,600,870,515]))
+    if np.isnan(spc[i1000]) or not spc[i1000]:
+        par = np.zeros(npar)*np.nan
+        return par
     norm2 = spc/spc[i1000]
     dsp = smooth(deriv(norm2,wvl/1000),2)
-    npar = 16
     imaxwvl = np.argmax(spc)
     maxwvl = wvl[mask[imaxwvl]]
     # now calculate each parameter
@@ -157,7 +183,7 @@ def startprogress(title):
     """
     global progress_x, title_global
     title_global = title
-    sys.stdout.write(title + ": [" + "-" * 40 + "] 00%%")
+    sys.stdout.write(title + ": [" + "-" * 40 + "] 00% ")
     sys.stdout.flush()
     progress_x = 0
 
@@ -299,7 +325,7 @@ class Sp:
             self.npar = par.shape[1]
         else: raise LookupError
         self.par = par
-        return par
+        return
     
     def param_hires(self):
         " Runs through the parameter space and interpolates to create a hires res version, should be run instead of sp_hires "
@@ -504,6 +530,8 @@ class Sp:
     def normsp(self,sp):
         " Function to return the normalized spectra list"
         import numpy as np
+        import warnings
+        warnings.simplefilter("ignore",RuntimeWarning)
         idxwvl = [i for i in range(sp.ndim) if sp.shape[i] == len(self.wvl)]
         if sp.ndim == 2:
             norm = sp/np.nanmax(sp,axis=idxwvl[0])[:,None]
