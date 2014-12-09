@@ -122,11 +122,15 @@ def norm2max(x):
 def param(sp,wvlin):
     " Calculates the parameters from a spectrum."
     from linfit import linfit
-    from Sp_parameters import nanmasked, norm2max, smooth, deriv
+    from Sp_parameters import nanmasked, norm2max, smooth, deriv, find_closest
     npar = 16
     spc, mask = nanmasked(sp)
     wvl = wvlin[mask]
-    norm = norm2max(spc)
+    try:
+        norm = norm2max(spc)
+    except ValueError:
+        par = np.zeros(npar)*np.nan
+        return par
     [i1000,i1077,i1493,i1600,i1200,i1300,i530,i610,
      i1565,i1634,i1193,i1198,i1236,i1248,i1270,i1644,
      i1050,i1040,i1065,i600,i870,i515] = find_closest(wvl,np.array([1000,1077,1493,1600,1200,1300,530,
@@ -136,7 +140,7 @@ def param(sp,wvlin):
         par = np.zeros(npar)*np.nan
         return par
     norm2 = spc/spc[i1000]
-    dsp = smooth(deriv(norm2,wvl/1000),2)
+    dsp = smooth(deriv(norm2,wvl/1000),2,nan=False)
     imaxwvl = np.argmax(spc)
     maxwvl = wvl[mask[imaxwvl]]
     # now calculate each parameter
@@ -366,29 +370,48 @@ class Sp:
         self.parhires = True
         return
     
-    def sp_hires(self):
-        " Interpolate the modeled sp to a finer resolution in tau and ref. Only works on modeled data with 5 dimensions"
+    def sp_hires(self,doirrad=False):
+        """
+        Interpolate the modeled sp to a finer resolution in tau and ref. 
+        Only works on modeled data with 5 dimensions
+        When doirrad is set to True, run the interpolation of reflectance at z=1
+        """
         #from Sp_parameters import startprogress, progress, endprogress
         from scipy import interpolate
         from Sp_parameters import nanmasked
         import numpy as np
-        sp = self.sp
+        import warnings
+        if doirrad:
+            if not self.irrad:
+                warnings.warn("Irradiance was not set when first intializing the Sp object")
+                return
+            sp = self.sp_irrup/self.sp_irrdn
+            z = 1
+        else:
+            sp = self.sp
+            z = 0
         wvl = self.wvl
         if self.parhires:
+            tau = self.tausp
+            ref = self.refsp
+        elif self.irradhires and not self.sphires:
             tau = self.tausp
             ref = self.refsp
         else:
             tau = self.tau
             ref = self.ref
+        if doirrad and self.sphires:
+            tau = self.tausp
+            ref = self.refsp
         if sp.ndim !=5:
-            print('This method cannot be applied to this object, not enough dimensions')
+            warnings.warn('This method cannot be applied to this object, not enough dimensions')
             return
-        if self.sphires:
+        if self.sphires and not doirrad:
             print('sp is already hires')
             return
         tau_hires = np.concatenate((np.arange(tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,tau[-1]+1.0,1.0)))
         ref_hires = np.arange(ref[0],ref[-1]+1.0)
-        print tau_hires.shape
+        print tau_hires.shape 
         print ref_hires.shape
         import gc; gc.collect()
         sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
@@ -398,20 +421,28 @@ class Sp:
             for tt in xrange(1,len(tau)-1):
                 for rr in refranges[ph]:
                     #look for NaNs and remove them by interpolating over the neighbors
-                    if np.any(np.isnan(sp[ph,:,0,rr,tt])) or not np.any(sp[ph,:,0,rr,tt]):
-                        fs = interpolate.interp1d([tau[tt-1],tau[tt+1]],[sp[ph,:,0,rr,tt-1],sp[ph,:,0,rr,tt+1]],axis=0)
-                        sp[ph,:,0,rr,tt] = fs(tau[tt])
+                    if np.any(np.isnan(sp[ph,:,z,rr,tt])) or not np.any(sp[ph,:,z,rr,tt]):
+                        fs = interpolate.interp1d([tau[tt-1],tau[tt+1]],[sp[ph,:,z,rr,tt-1],sp[ph,:,z,rr,tt+1]],axis=0)
+                        sp[ph,:,z,rr,tt] = fs(tau[tt])
             for w in xrange(len(wvl)):
-                fx = interpolate.RectBivariateSpline(ref,tau,sp[ph,w,0,:,:],kx=1,ky=1)
-                sp_hires[ph,w,0,:,:] = fx(ref_hires,tau_hires)
+                fx = interpolate.RectBivariateSpline(ref,tau,sp[ph,w,z,:,:],kx=1,ky=1)
+                sp_hires[ph,w,z,:,:] = fx(ref_hires,tau_hires)
                 progress((w+len(wvl)*ph)/(len(wvl)*2)*100.0)
         endprogress()
-        print('Overwriting the current sp, tau, and ref with the new high resolution values')
-        self.sp = sp_hires
+        if doirrad:
+            print('Creating reflect spectra with tau, and ref of the new high resolution values')
+            self.reflect = sp_hires
+            self.hiresirrad = True
+            self.tausp = tau
+            self.refsp = ref
+        else:
+            print('Overwriting the current sp, tau, and ref with the new high resolution values')
+            self.sp = sp_hires
+            self.sphires = True
+            self.tausp = tau
+            self.refsp = ref
         self.tau = tau_hires
-        self.ref = ref_hires
-        self.hires = True
-        return       
+        self.ref = ref_hires  
     
     def norm_par(self,pcoef=None,std=False,vartitle=None):
         """ 
@@ -439,7 +470,7 @@ class Sp:
                     for ph in [0,1]:
                         parn[ph,:,0,:,:] = np.transpose(self.par[ph,:,0,:,:]*pcoef['coef'].T-pcoef['add'].T)
                 else:
-                    warning('There is a problem with the dimensions of the sp')
+                    import warnings; warnings.warn('There is a problem with the dimensions of the sp')
                     return
                 if vartitle is not None:
                     setattr(self,vartitle,parn)
@@ -470,19 +501,22 @@ class Sp:
             self.parn = parn
             return pcoef
     
-    def __init__(self,s,**kwargs):
+    def __init__(self,s,irrad=False):
         import numpy as np
         if 'nm' in s:
-            self.wvl = [item for sublist in s['nm'] for item in sublist]
+            self.wvl = np.array([item for sublist in s['nm'] for item in sublist])
         if 'zenlambda' in s:
             self.wvl = s['zenlambda']
         if 'wvl' in s:
-            self.wvl = [item for sublist in s['wvl'] for item in sublist]
+            self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
+        if 'w' in s:
+            self.wvl = np.array([item for sublist in s['w'] for item in sublist])
+        if self.wvl[0] < 100.0:
+            self.wvl = self.wvl*1000.0
         self.iwvls = np.argsort(self.wvl)
         print len(self.iwvls), len(self.wvl)
         self.wvl = np.sort(self.wvl)
-        self.nwvl = len(self.wvl)
-        self.sp = self.wvlsort(s)
+        self.wvlsort(s,irrad)
         self.norm = self.normsp(self.sp)
         print self.sp.shape
         if self.sp.ndim > 2:
@@ -490,7 +524,16 @@ class Sp:
             self.ref = s['ref']
         else:
             self.utc = s['utc']
-            self.good = s['good']
+            if isinstance(s['good'],tuple):
+                self.good = s['good'][0]
+            else:
+                self.good = s['good']
+            if 'Alt' in s:
+                self.alt = s['Alt']
+            if 'Lat' in s:
+                self.lat = s['Lat']
+            if 'Lon' in s:
+                self.lon = s['Lon']
         # initiate with NANs the values that need to be populated
         self.npar = np.nan
         self.par = np.zeros_like(self.sp)*np.nan
@@ -501,8 +544,11 @@ class Sp:
         self.stdparn = np.zeros((16))*np.nan
         self.sphires = False
         self.parhires = False
+        self.hiresirrad = False
+        self.irrad = irrad
+        self.reflect = np.zeros_like(self.sp)*np.nan
         
-    def wvlsort(self,s):
+    def wvlsort(self,s,irrad):
         "Function to sort spectra along the wavelength axis"
         iwvls = self.iwvls
         if sorted(iwvls) is iwvls:
@@ -513,7 +559,8 @@ class Sp:
             ui = [i for i in range(s['sp'].ndim) if s['sp'].shape[i] == len(self.wvl)]
             if 1 in ui:
                 sp = s['sp'][:,iwvls,:,:,:]
-            else: raise LookupError
+            else: 
+                raise LookupError
         if 'rad' in s:
             print 'in rad'
             print s['rad'].shape, s['rad'].ndim, len(iwvls)
@@ -525,7 +572,15 @@ class Sp:
             else: 
                 print 'not 1 in ui'
                 sp = s['rad'][iwvls,:]
-        return sp
+        if irrad:
+            print 'in irrad'
+            ui = [i for i in range(s['sp_irrdn'].ndim) if s['sp_irrdn'].shape[i] == len(self.wvl)]
+            if 1 in ui:
+                self.sp_irrdn = s['sp_irrdn'][:,iwvls,:,:,:]
+                self.sp_irrup = s['sp_irrup'][:,iwvls,:,:,:]
+            else: 
+                raise LookupError
+        self.sp = sp
     
     def normsp(self,sp):
         " Function to return the normalized spectra list"

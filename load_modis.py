@@ -50,6 +50,11 @@ def load_modis(geofile,datfile):
     Example:
 
         ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2014-12-08, NASA Ames
+        
     """
     import numpy as np
     from osgeo import gdal
@@ -129,7 +134,10 @@ def load_ict(fname):
     f.close()
     def mktime(txt):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
-    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={'Date_Time':mktime})
+    def utctime(seconds_utc):
+        return float(seconds_utc)/3600.
+    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={"Date_Time":mktime, "UTC":utctime})
+    print data.dtype.names
     return data
 
 # <codecell>
@@ -144,6 +152,132 @@ def modis_qa(qa_array):
     
     
     
+
+# <codecell>
+
+def mat2py_time(matlab_datenum):
+    "convert a matlab datenum to a python datetime object. Works on numpy arrays of datenum"
+    from datetime import datetime, timedelta
+    #matlab_datenum = 731965.04835648148
+    m2ptime = lambda tmat: datetime.fromordinal(int(tmat)) + timedelta(days=tmat%1) - timedelta(days = 366)
+    try:
+        python_datetime = m2ptim2(matlab_datenum)
+    except:
+        import numpy as np
+        python_datetime = np.array([m2ptime(matlab_datenum.flatten()[i]) for i in xrange(matlab_datenum.size)])
+    return python_datetime
+
+# <codecell>
+
+def toutc(pydatetime):
+    "Convert python datetime to utc fractional hours"
+    utc_fx = lambda x: float(x.hour)+float(x.minute)/60.0+float(x.second)/3600.0+float(x.microsecond)/360000000.0
+    try: 
+        return utc_fx(pydatetime)
+    except:
+        import numpy as np
+        return np.array([utc_fx(pydatetime.flatten()[i])+(pydatetime.flatten()[i].day-pydatetime.flatten()[0].day)*24.0 \
+                         for i in xrange(pydatetime.size)]) 
+
+# <codecell>
+
+def load_emas(datfile):
+    """
+    Name:
+
+        load_emas
+    
+    Purpose:
+
+        to compile functions required to load emas files
+        from within another script.
+        Similar to load_modis
+    
+    Calling Sequence:
+
+        emas,emas_dict = load_emas(datfile) 
+    
+    Input: 
+  
+        datfile name (hdf files)
+    
+    Output:
+
+        emas dictionary with tau, ref, etau, eref, phase, qa
+        emas_dicts : metadate for each of the variables
+    
+    Keywords: 
+
+        none
+    
+    Dependencies:
+
+        gdal
+        numpy
+        gc: for clearing the garbage
+    
+    Required files:
+   
+        dat files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2014-12-08, NASA Ames
+    """
+    import numpy as np
+    from osgeo import gdal
+    from Sp_parameters import startprogress, progress, endprogress
+    emas_values = (#('cloud_top',57),
+                    ('phase',53),
+          #          ('cloud_top_temp',58),
+                    ('ref',66),
+                    ('tau',72),
+           #         ('cwp',82),
+                    ('eref',90),
+                    ('etau',93),
+            #        ('ecwp',96),
+                    ('multi_layer',105),
+                    ('qa',123),
+             #       ('cloud_mask',110)
+                    )
+    datsds = gdal.Open(datfile)
+    datsub = datsds.GetSubDatasets()
+    print 'Outputting the Data subdatasets:'
+    for i in range(len(datsub)):
+        if any(i in val for val in emas_values):
+            print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+        else:
+            print str(i)+': '+datsub[i][1]
+    emas = dict()
+    meta = datsds.GetMetadata() 
+    import gc; gc.collect()
+    emas_dicts = dict()
+    startprogress('Running through modis values')
+    for i,j in emas_values:
+        sds = gdal.Open(datsub[j][0])
+        emas_dicts[i] = sds.GetMetadata()
+        emas[i] = np.array(sds.ReadAsArray())
+        makenan = True
+        bad_points = np.where(emas[i] == float(emas_dicts[i]['_FillValue']))
+        scale = float(emas_dicts[i]['scale_factor'])
+        offset = float(emas_dicts[i]['add_offset'])
+       # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+        if scale.is_integer():
+            scale = int(scale)
+            makenan = False
+        if scale != 1 and offset == 0:
+            emas[i] = emas[i]*scale+offset
+        if makenan:
+            emas[i][bad_points] = np.nan
+        progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
+    endprogress()
+    print emas.keys()
+    del datsds,sds,datsub
+    return emas,emas_dicts
 
 # <markdowncell>
 

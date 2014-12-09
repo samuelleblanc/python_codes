@@ -51,9 +51,57 @@ def phase(parn,model,stdparn):
 
 def run_retrieval(meas,model,subp=range(15)):
     """ 
-    A function that uses the Sp class to run through each utc point in meas, 
-    and finds the closest model values, 
-    uses only the subset of parameters defined by subp, which defaults to first 15 parameters
+    Name:
+
+        run_retrieval
+    
+    Purpose:
+
+        A function that uses the Sp class to run through each utc point in meas, 
+        and finds the closest model values, 
+        uses only the subset of parameters defined by subp, which defaults to first 15 parameters
+    
+    Calling Sequence:
+
+        (ta,re,ph,ki) = run_retrieval(meas,model,subp=range(15))
+    
+    Input: 
+  
+        meas : Sp object (from Sp_parameters) of measurement spectra
+        model: Sp object (from Sp_paramters) of modeled spectra, also considered the look-up-table (lut) object
+        subp: (optional) array of parameters to use for retrieval
+     
+    Output:
+
+        ta: array of cloud optical thickness
+        re: array of cloud particle effective radius
+        ph: array of cloud thermodynamic phase (ph=0 for liquid, ph=1 for ice)
+        ki: array of minimal ki^2 values 
+    
+    Keywords: 
+
+        none
+    
+    Dependencies:
+
+        Sp_parameters
+        numpy
+        gc: for clearing the garbage
+        run_kisq_retrieval (this file)
+        pdb: for debugging when there is an error
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2014-11-08, NASA Ames
+
     """
     import Sp_parameters as Sp
     import numpy as np
@@ -87,8 +135,11 @@ def run_retrieval(meas,model,subp=range(15)):
     re = np.zeros_like(meas.utc)*np.nan
     #ki_2ph = np.zeros_like(meas.utc) #kisq with 2 phase
     for tt in meas.good:
-        if np.all(np.isnan(meas.parn[tt,subp])):
-            continue
+        try:
+            if np.all(np.isnan(meas.parn[tt,subp])):
+                continue
+        except:
+            import pdb; pdb.set_trace()
         #first get the phase in first method
         #import pdb; pdb.set_trace()
         ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
