@@ -136,7 +136,8 @@ def load_ict(fname):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
     def utctime(seconds_utc):
         return float(seconds_utc)/3600.
-    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters={"Date_Time":mktime, "UTC":utctime})
+    conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime}
+    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters=conv)
     print data.dtype.names
     return data
 

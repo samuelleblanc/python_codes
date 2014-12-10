@@ -301,6 +301,7 @@ class Sp:
         useezmap = False
         from Sp_parameters import param
         import warnings
+        print('Running Parameters')
         if useezmap:
             import ezmap
             from ezmap import map as zmap
@@ -335,6 +336,7 @@ class Sp:
         " Runs through the parameter space and interpolates to create a hires res version, should be run instead of sp_hires "
         from Sp_parameters import param
         from scipy import interpolate
+        print('Running parameter hires')
         if np.all(np.isnan(self.par)):
             print 'Run params() before'
             return
@@ -425,7 +427,7 @@ class Sp:
                         fs = interpolate.interp1d([tau[tt-1],tau[tt+1]],[sp[ph,:,z,rr,tt-1],sp[ph,:,z,rr,tt+1]],axis=0)
                         sp[ph,:,z,rr,tt] = fs(tau[tt])
             for w in xrange(len(wvl)):
-                fx = interpolate.RectBivariateSpline(ref,tau,sp[ph,w,z,:,:],kx=1,ky=1)
+                fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,sp[ph,w,z,refranges[ph],:],kx=1,ky=1)
                 sp_hires[ph,w,z,:,:] = fx(ref_hires,tau_hires)
                 progress((w+len(wvl)*ph)/(len(wvl)*2)*100.0)
         endprogress()
@@ -534,6 +536,8 @@ class Sp:
                 self.lat = s['Lat']
             if 'Lon' in s:
                 self.lon = s['Lon']
+        if 'sza' in s:
+            self.sza = s['sza']
         # initiate with NANs the values that need to be populated
         self.npar = np.nan
         self.par = np.zeros_like(self.sp)*np.nan
