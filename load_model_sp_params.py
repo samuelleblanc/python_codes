@@ -67,12 +67,12 @@ import matplotlib.colors as colors
 from mpltools import color
 %matplotlib inline
 import numpy as np, h5py
-import plotly.plotly as py
+#import plotly.plotly as py
 import scipy.io as sio
 import math
 import os
 import Sp_parameters as Sp
-py.sign_in("samuelleblanc", "4y3khh7ld4")
+#py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
 
@@ -155,7 +155,7 @@ def norm(fig=None,ax=None):
         doaxes = False
     ax.plot(sm.nm[mask],norm2max(rad),lw=2, c='k', label='4STAR measured at: '+str(time_ref))
     if doaxes:
-        plt.title('Zenith spectra')
+        plt.title('Zenith radiance spectra')
         plt.ylabel('Normalized Radiance')
         plt.xlabel('Wavelength [nm]')
         plt.xlim([350,1700])
@@ -249,8 +249,7 @@ lbl=["Small R$_{eff}$ (Ice=" + str(s.ref[34]) + " $\mu m$, Liquid=" + str(s.ref[
      "Large R$_{eff}$ (Ice=" + str(s.ref[13]) + " $\mu m$, Liquid=" + str(s.ref[0]) + " $\mu m$)"]
 plt.legend([alow[0],ahigh[0]],
            lbl,
-           frameon=False,
-           loc=7)
+           frameon=False,loc=7,prop={'size':10})
 ax.text(600,0.19,'4STAR Measurement from TCAP')
 pltzen(fig,ax)
 
@@ -263,15 +262,14 @@ pltzen(fig,ax)
 fig,ax=norm()
 for names,cmap,iphase,irefs,itau,pos in lines:
     [alow,ahigh] = plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
-plt.legend([alow[0],ahigh[0]],
-           lbl,
-           frameon=False,
-           loc=7)
-ax.text(600,0.19/0.22,'4STAR Measurement from TCAP')
+plt.legend([alow[0],ahigh[0]],lbl,
+           frameon=False,loc=7,prop={'size':10})
+ax.text(600,0.19/0.22,'4STAR Measurement')
 norm(fig,ax)
+plt.axvspan(350,1700,color='#FFFFFF')
 plot_greys()
-plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600)
-plt.savefig(fp+'plots/zen_spectra_model.eps')
+plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/zen_spectra_model.eps')
 
 # <headingcell level=3>
 

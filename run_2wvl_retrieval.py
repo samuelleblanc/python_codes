@@ -88,7 +88,7 @@ def run_2wvl_retrieval(meas,model,wvls=[500.0,1600.0],sza_norm=True):
     meas.good = np.where((np.isfinite(meas.Rvis)) & (meas.Rvis > 0) & (np.isfinite(meas.Rnir)) & (meas.Rnir > 0))[0]
     for tt in meas.good:
         for ph in [0,1]:
-            ki_ref_tau = (meas.Rvis[tt]-model.lut_2wvl[ph,0,:,:])**2+(meas.Rnir[tt]-model.lut_2wvl[ph,1,:,:])**2
+            ki_ref_tau = ((meas.Rvis[tt]-model.lut_2wvl[ph,0,:,:])/meas.Rvis[tt])**2+((meas.Rnir[tt]-model.lut_2wvl[ph,1,:,:])/meas.Rnir[tt])**2
             try:
                 ki_minin = np.unravel_index(np.nanargmin(ki_ref_tau),ki_ref_tau.shape)
             except:

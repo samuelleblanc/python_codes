@@ -85,7 +85,11 @@ def deriv(y,x):
     return d
         
 def nanmasked(x):
-    " Build an array with nans masked out and the mask output"
+    """
+    Build an array with nans masked out and the mask output
+    Input: x=array to be masked
+    Output: maskedarray,maskindices
+    """
     mask = ~np.isnan(x)
     maskA = x[mask]
     return (maskA,mask)
@@ -211,7 +215,7 @@ def endprogress():
     Write full bar, then move to next line
     """
     global title_global
-    sys.stdout.write("\r" + title_global + ": [" +"#" * 40 + "]100% \n")
+    sys.stdout.write("\r" + title_global + ": [" +"#" * 40 + "]100% -- Done! \n")
     sys.stdout.flush()
 
 # <markdowncell>

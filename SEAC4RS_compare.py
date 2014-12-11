@@ -247,13 +247,17 @@ plt.show()
 
 import load_modis
 reload(load_modis)
-from load_modis import mat2py_time, toutc
+from load_modis import mat2py_time, toutc, load_ict
+
+# <codecell>
+
+dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')
 
 # <codecell>
 
 # load the matlab file containing the measured TCAP radiances
-m = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
-m.keys()
+mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
+mea.keys()
 
 # <markdowncell>
 
@@ -261,25 +265,25 @@ m.keys()
 
 # <codecell>
 
-print m['t']
-tt = mat2py_time(m['t'])
-m['utc'] = toutc(tt)
+print mea['t']
+tt = mat2py_time(mea['t'])
+mea['utc'] = toutc(tt)
 
 # <codecell>
 
-m['good'] = np.where((m['utc']>18.5) & (m['utc']<19.75) & (m['Str'].flatten()!=0) & (m['sat_time'].flatten()==0))
+mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 # <codecell>
 
 plt.figure()
-plt.plot(m['utc'],abs(m['rad'][:,1024]-m['rad'][:,1068]))
+plt.plot(mea['utc'],abs(mea['rad'][:,1024]-mea['rad'][:,1068]))
 plt.xlabel('UTC [Hours]')
 plt.ylabel('difference in radiance at 1024 nm')
 
 # <codecell>
 
 plt.figure()
-plt.plot(m['utc'],m['rad'][:,400]/1000.)
+plt.plot(mea['utc'],mea['rad'][:,400]/1000.)
 plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
@@ -290,7 +294,7 @@ if 'meas' in locals():
     del meas
     import gc; gc.collect()
 # first convert measurements to Sp class, with inherent parameters defined
-meas = Sp.Sp(m)
+meas = Sp.Sp(mea)
 meas.params()
 
 # <headingcell level=2>
@@ -305,9 +309,9 @@ reload(rk)
 # <codecell>
 
 print max(meas.good)
-print type(m['good'])
-print isinstance(m['good'],tuple)
-print type(m['good'][0])
+print type(mea['good'])
+print isinstance(mea['good'],tuple)
+print type(mea['good'][0])
 
 # <codecell>
 
@@ -340,6 +344,15 @@ ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([18.5,19.05])
 plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results.png',dpi=600)
 plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results.pdf',bbox='tight')
+
+# <markdowncell>
+
+# Smooth out the retrieved 4STAR data
+
+# <codecell>
+
+meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
+meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # <headingcell level=2>
 
@@ -376,7 +389,7 @@ print np.shape(ssfr_idl['sat'])
 class object():
     pass
 ssfr = object()
-if True:
+if False:
     ssfr.utc = ssfr_er2['UTC']
     ssfr.Rvis = ssfr_er2['UP500']/ssfr_er2['DN500']
     ssfr.Rnir = ssfr_er2['UP1600']/ssfr_er2['DN1600']
@@ -386,13 +399,10 @@ if True:
     ssfr.Rvis[ssfr_er2['UP500']<=0] = np.nan
     print np.max(er2['Start_UTC'])
     print np.max(ssfr.utc)
-
-# <codecell>
-
-if False:
+else:
     ssfr.utc = ssfr_idl['tmhrs']
     i500 = np.argmin(abs(ssfr_idl['zenlambda']-500.0))
-    i1650 = np.argmin(abs(ssfr_idl['zenlambda']-1650.0))
+    i1650 = np.argmin(abs(ssfr_idl['zenlambda']-1700.0))
     ssfr.Rvis = ssfr_idl['zspectra'][:,i500]/ssfr_idl['nspectra'][:,i500]
     ssfr.Rnir = ssfr_idl['zspectra'][:,i1650]/ssfr_idl['nspectra'][:,i1650-1]
     ssfr.Rvis[ssfr.Rvis<0] = np.nan
@@ -402,15 +412,49 @@ if False:
 
 # <codecell>
 
-print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
+print i500, i1650
+i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
 
 # <codecell>
 
+iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
+iu2 = np.argmin(abs(ssfr_er2['UTC']-18.5))
+print iu,iu2
+
+# <codecell>
+
+print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
+print ssfr_er2['DN500'][iu2+200], ssfr_idl['nspectra'][iu+200,i500], ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
+print ssfr_er2['UTC'][iu2+200]
+print ssfr_idl['tmhrs'][iu+200]
+print ssfr_idl['nspectra'][iu+200,i500]
+rup500 = ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
+rdn500 = ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
+
+# <codecell>
+
+print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
+print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
+print ssfr_er2['UTC'][iu2+200]
+print ssfr_idl['tmhrs'][iu+200]
+print ssfr_idl['nspectra'][iu+200,i500]
+rup1600 = ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
+rdn1600 = ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
+
+# <codecell>
+
+print rup500/rdn500
+
+# <codecell>
+
+ssfr.Rvis = ssfr.Rvis*rup500/rdn500
+ssfr.Rnir = ssfr.Rnir*rup1600/rdn1600
+
+# <codecell>
+
+print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
 print ssfr_idl['nadlambda'][i1650-2]
 print i500, i1650
-
-# <codecell>
-
 print len(ssfr.utc), len(ssfr.Rvis)
 
 # <codecell>
@@ -506,13 +550,12 @@ if 'rw' in locals():
 
 # <codecell>
 
-(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1650.0])
+(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1700.0])
 
 # <codecell>
 
-plt.figure()
-plt.plot(ssfr.tau[:,1])
-print ssfr.tau.shape
+ssfr.tau[ssfr.ref==60] = np.nan
+ssfr.ref[ssfr.ref==60] = np.nan
 
 # <codecell>
 
@@ -560,73 +603,59 @@ modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 #set up a easy plotting function
 def seac_map(ax=plt.gca()):
     m = Basemap(projection='stere',lon_0=-89,lat_0=20,
-            llcrnrlon=-97, llcrnrlat=18,
-            urcrnrlon=-89, urcrnrlat=23,resolution='h',ax=ax)
+            llcrnrlon=-98, llcrnrlat=18,
+            urcrnrlon=-85, urcrnrlat=32,resolution='h',ax=ax)
     m.drawcoastlines()
     #m.fillcontinents(color='#AAAAAA')
     m.drawstates()
     m.drawcountries()
-    m.drawmeridians(np.linspace(-89,-97,9),labels=[0,0,0,1])
-    m.drawparallels(np.linspace(18,23,5),labels=[1,0,0,0])
+    m.drawmeridians(np.linspace(-85,-99,8),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(18,32,8),labels=[1,0,0,0])
     return m
 
 # <codecell>
 
-figm = plt.figure()
-axm = figm.add_axes([0.1,0.1,0.8,0.8])
-ma = seac_map(axm)
-x,y = ma(modis['lon'],modis['lat'])
-clevels = np.linspace(0,80,40)
-cs = ma.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
-cbar = ma.colorbar(cs)
-cbar.set_label('$\\tau$')
-axm.set_title('MODIS - AQUA Cloud optical Thickness')
-
-# <codecell>
-
-figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
+figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
+xt,yt = m1(-95.3831,29.7628)
+axm2[0].text(xt,yt,'+')
+axm2[0].text(xt,yt,'Houston, TX',horizontalalignment='right',verticalalignment='top')
+xh,yh = m1(-95.3,19.1)
+axm2[0].text(xh,yh,'+')
+axm2[0].text(xh,yh,'Tropical Storm Ingrid',horizontalalignment='left',verticalalignment='bottom')
 m2 = seac_map(axm2[1])
 x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,80,41)
 
-cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
-cbar = m1.colorbar(cs1)
-cbar.set_label('$\\tau$')
-axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
-
-clevels2 = np.linspace(0,60,30)
-cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
-cbar = m2.colorbar(cs2)
-cbar.set_label('R$_{ef}$ [$\\mu$m]')
-axm2[1].set_title('MODIS - AQUA Cloud effective radius')
-figm2.subplots_adjust(wspace=0.3)
-plt.show()
-plt.savefig(fp+'plots/modis_only_tau_ref_comp.png',dpi=600)
-plt.savefig(fp+'plots/modis_only_tau_ref_comp.pdf',bbox='tight')
-
-# <codecell>
-
-figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
-m1 = seac_map(axm2[0])
-m2 = seac_map(axm2[1])
-x,y = m1(modis['lon'],modis['lat'])
-
-cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar,extend='max')
 cbar = m1.colorbar(cs1)
 cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
 x1,y1 = m1(meas.lon,meas.lat)
-m1.scatter(x1,y1,c=meas.tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+xer2,yer2 = m1(er2['Longitude'],er2['Latitude'])
+xdc8,ydc8 = m1(dc8['G_LONG']/100000.0,dc8['G_LAT']/100000.0)
+#m1.plot(xer2,yer2,'r',lw=2.0)
+#m1.plot(xdc8,ydc8,'b',lw=2.0)
+xx1,yy1 = m1(-93.8,27.8)
+xx2,yy2 = m1(-96.5,28)
+#plt.text(xx1,yy1,'ER2',color='r')
+#plt.text(xx2,yy2,'DC8',color='b')
+m1.scatter(x1,y1,c=meas.tau,cmap=plt.cm.jet,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 
-cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
+clevels2 = np.linspace(0,60,31)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
+m2.plot(xer2,yer2,'r',lw=2)
+m2.plot(xdc8,ydc8,'b',lw=2)
+plt.text(xx1,yy1,'ER2',color='r')
+plt.text(xx2,yy2,'DC8',color='b')
 m2.scatter(x1,y1,c=meas.ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
+plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
 plt.show()
-plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.png',dpi=600)
-plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
 
 # <headingcell level=2>
 
@@ -636,7 +665,7 @@ plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
 
 if 'lm' in locals():
     reload(lm)
-from load_modis import load_emas
+from load_modis import load_emas, load_hdf
 
 # <codecell>
 
@@ -645,7 +674,236 @@ print os.path.isfile(emas_file)
 
 # <codecell>
 
-emas,emad_dicts = load_emas(emas_file)
+emas,emas_dicts = load_hdf(emas_file)
+
+# <codecell>
+
+emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
+emas,emas_dicts = load_hdf(emas_file,values=emas_values)
+
+# <codecell>
+
+plt.figure()
+plt.plot(emas['tau'])
+
+# <codecell>
+
+reload(lm)
+from load_modis import map_ind
+dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
+
+# <codecell>
+
+reload(lm)
+from load_modis import map_ind
+dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
+
+# <headingcell level=2>
+
+# Load the cloud probe data
+
+# <codecell>
+
+prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
+probes = np.genfromtxt(prb_file,skip_header=2)
+
+# <codecell>
+
+print probes.shape
+print probes[:,7]
+plt.figure()
+plt.hist(probes[:,7])
+
+# <headingcell level=2>
+
+# Calculate the histogram for each comparisons
+
+# <codecell>
+
+from Sp_parameters import nanmasked
+modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis])
+emas_tau,ie = nanmasked(emas['tau'][dc8_ind])
+modis_ref,im = nanmasked(modis['ref'][dc8_ind_modis])
+emas_ref,ie = nanmasked(emas['ref'][dc8_ind])
+star_tau,ist = nanmasked(meas.tau[meas.good])
+star_ref,ist = nanmasked(meas.ref[meas.good])
+ssfr.good = np.where((ssfr.utc>17.8)&(ssfr.utc<19.2))
+ssfr_tau,iss = nanmasked(ssfr.tau[ssfr.good[0],1])
+ssfr_ref,iss = nanmasked(ssfr.ref[ssfr.good[0],1])
+
+# <codecell>
+
+print meas.utc[ist]
+
+# <codecell>
+
+def plot_median_mean(x,lbl=False,color='k'):
+    "plot the vertical median and mean over a histogram, if lbl set to true, sets the labels of the lines,default color='k'"
+    if lbl:
+        llm = 'Mean'
+        lld = 'Median'
+    else:
+        llm = None
+        lld = None
+    plt.axvline(np.nanmean(x),color='k',label=llm,c=color)
+    plt.axvline(np.median(x),color='k',linestyle='--',label=lld,c=color)
+
+# <codecell>
+
+plt.figure()
+plt.hist(modis_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis',range=(0,40))
+plt.hist(emas_tau,bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS',range=(0,40))
+plt.hist(ssfr_tau,bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR',range=(0,40))
+plt.hist(star_tau,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR',range=(0,40))
+plt.title('Optical Thickness histogram')
+plt.ylabel('Normed probability')
+plt.xlabel('$\\tau$')
+plot_median_mean(modis_tau,color='m')
+plot_median_mean(emas_tau,color='b')
+plot_median_mean(ssfr_tau,color='g')
+plot_median_mean(star_tau,lbl=True,color='r')
+plt.legend(frameon=False)
+plt.xlim([0,40])
+plt.savefig(fp+'plots/hist_modis_4star_tau.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
+
+# <codecell>
+
+plt.figure()
+plt.axvspan(0,60,color='#FFFFFF')
+plt.hist(modis_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
+plt.hist(emas_ref,bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+plt.hist(ssfr_ref,bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
+plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
+plt.hist(probes[:,7],bins=20, histtype='stepfilled', normed=True, color='y',alpha=0.6, label='Cloud probes (Insitu)',range=(0,59))
+plt.title('Cloud particle effective radius histogram')
+plt.ylabel('Normed probability')
+plt.xlabel('R$_{eff}$ [$\\mu$m]')
+plot_median_mean(modis_ref,color='m')
+plot_median_mean(emas_ref,color='b')
+plot_median_mean(ssfr_ref,color='g')
+plot_median_mean(probes[:,7],color='y')
+plot_median_mean(star_ref,lbl=True,color='r')
+plt.legend(frameon=False,loc='upper left')
+plt.xlim([0,60])
+plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Find the mean tau and ref for each instrument
+
+# <codecell>
+
+means = object()
+means.tau = object()
+means.ref = object()
+means.tau.modis = np.nanmean(modis_tau)
+means.ref.modis = np.nanmean(modis_ref)
+means.tau.emas = np.nanmean(emas_tau)
+means.ref.emas = np.nanmean(emas_ref)
+means.tau.ssfr = np.nanmean(ssfr_tau)
+means.ref.ssfr = np.nanmean(ssfr_ref)
+means.tau.star = np.nanmean(star_tau)
+means.ref.star = np.nanmean(star_ref)
+means.ref.probes = np.nanmean(probes[:,7])
+
+# <codecell>
+
+print lut
+
+# <codecell>
+
+print lut.sp_irrdn.shape
+print lut.tausp.shape
+print lut.refsp.shape
+print lut.wvl.shape
+
+# <markdowncell>
+
+# interpolate the modeled irradiance at z=0 (dc8 altitude) to the retrieved values of tau and ref
+
+# <codecell>
+
+from scipy import interpolate
+#fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,sp[ph,w,z,refranges[ph],:],kx=1,ky=1)
+#sp_hires[ph,w,z,:,:] = fx(ref_hires,tau_hires)
+
+# <codecell>
+
+def interpirr(ta,re):
+    "interpolate over irradiance to get the spectrum at ta and re"
+    sp = np.zeros(lut.wvl.size)
+    for w in xrange(lut.wvl.size):
+        irrdnfx = interpolate.RectBivariateSpline(lut.refsp[lut.refsp>5],lut.tausp,lut.sp_irrdn[1,w,0,lut.refsp>5,:],kx=1,ky=1)
+        sp[w] = irrdnfx(re,ta)
+    return sp*10.0
+
+# <codecell>
+
+sp_modis = interpirr(means.ref.modis,means.tau.modis)
+sp_emas = interpirr(means.ref.emas,means.tau.emas)
+sp_ssfr = interpirr(means.ref.ssfr,means.tau.ssfr)
+sp_star = interpirr(means.ref.star,means.tau.star)
+
+# <markdowncell>
+
+# Load the SSFR from the DC8
+
+# <codecell>
+
+ssfr_dc8 = sio.idl.readsav(fp+'dc8/20130913/20130913_calibspcs.out')
+print ssfr_dc8.keys()
+iutc185 = np.nanargmin(abs(ssfr_dc8['tmhrs']-18.5))
+iutc192 = np.nanargmin(abs(ssfr_dc8['tmhrs']-19.2))
+
+# <codecell>
+
+print ssfr_dc8['zspectra'].shape
+dn = np.nanmean(ssfr_dc8['zspectra'][iutc185:iutc192,:],axis=0)
+print dn.shape
+plt.figure()
+plt.plot(ssfr_dc8['zenlambda'],ssfr_dc8['zspectra'][iutc192,:],label='SSFR Measurement',c='k')
+plt.plot(lut.wvl,sp_modis,c='m',label='Modis')
+plt.plot(lut.wvl,sp_emas,c='b',label='eMAS')
+plt.plot(lut.wvl,sp_ssfr,c='g',label='SSFR (reflected)')
+plt.plot(lut.wvl,sp_modis,c='r',label='4STAR')
+plt.title('Downwelling Irradiance')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Irradiance [Wm$^{-2}$nm$^{-1}$]')
+plt.xlim([350,1700])
+
+# <headingcell level=2>
+
+# Get GOES - Problematic now...
+
+# <codecell>
+
+goes_file = fp+'er2/20130913/G13V04.0.CONUS.2013256.2045.PX.04K.NC'
+goes,goes_dicts = load_hdf(goes_file)
+
+# <codecell>
+
+goes_values = (('lat',6),('lon',7),('tau',19),('ref',20))
+goes,goes_dicts = load_hdf(goes_file,values=goes_values)
+
+# <codecell>
+
+print goes['lat']
+
+# <codecell>
+
+figmg = plt.figure()
+axmg = figm.add_axes([0.1,0.1,0.8,0.8])
+mg = Basemap(projection='stere',lon_0=-87,lat_0=20,
+        llcrnrlon=-100, llcrnrlat=15,
+        urcrnrlon=-85, urcrnrlat=25,resolution='h',ax=axmg)
+mg.drawcoastlines()
+#m.fillcontinents(color='#AAAAAA')
+mg.drawstates()
+mg.drawcountries()
+figmg.show()
+x,y = mg(goes['lon'],goes['lat'])
+csg = mg.contourf(x,y,goes['tau'],clevels,cmap=plt.cm.gist_ncar)
 
 # <codecell>
 

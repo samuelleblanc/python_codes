@@ -264,21 +264,173 @@ def load_emas(datfile):
         emas[i] = np.array(sds.ReadAsArray())
         makenan = True
         bad_points = np.where(emas[i] == float(emas_dicts[i]['_FillValue']))
-        scale = float(emas_dicts[i]['scale_factor'])
-        offset = float(emas_dicts[i]['add_offset'])
-       # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
-        if scale.is_integer():
-            scale = int(scale)
-            makenan = False
-        if scale != 1 and offset == 0:
-            emas[i] = emas[i]*scale+offset
+        try:
+            scale = float(emas_dicts[i]['scale_factor'])
+            offset = float(emas_dicts[i]['add_offset'])
+            # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+            if scale.is_integer():
+               scale = int(scale)
+               makenan = False
+            if scale != 1 and offset == 0:
+               emas[i] = emas[i]*scale+offset
+        except:
+            if issubclass(emas[i].dtype.type, np.integer):
+                makenan = False
         if makenan:
             emas[i][bad_points] = np.nan
-        progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
+        progress(float(tuple(i[0] for i in emas_values).index(i))/len(emas_values)*100.)
     endprogress()
     print emas.keys()
     del datsds,sds,datsub
     return emas,emas_dicts
+
+# <codecell>
+
+def load_hdf(datfile,values=None):
+    """
+    Name:
+
+        load_hdf
+    
+    Purpose:
+
+        to compile functions required to load emas files
+        from within another script.
+        Similar to load_modis
+    
+    Calling Sequence:
+
+        hdf_dat,hdf_dict = load_hdf(datfile,Values=None) 
+    
+    Input: 
+  
+        datfile name (hdf files)
+    
+    Output:
+
+        hdf_dat dictionary with the names of values saved, with associated dictionary values
+        hdf_dicts : metadate for each of the variables
+    
+    Keywords: 
+
+        values: if ommitted, only outputs the names of the variables in file
+                needs to be a tuple of 2 element tuples (first element name of variable, second number of record)
+                example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
+    
+    Dependencies:
+
+        gdal
+        numpy
+        gc: for clearing the garbage
+        Sp_parameters for progress issuer
+    
+    Required files:
+   
+        dat files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2014-12-10, NASA Ames
+    """
+    import numpy as np
+    from osgeo import gdal
+    from Sp_parameters import startprogress, progress, endprogress
+    
+    datsds = gdal.Open(datfile)
+    datsub = datsds.GetSubDatasets()
+    print 'Outputting the Data subdatasets:'
+    for i in range(len(datsub)):
+        if values:
+            if any(i in val for val in values):
+                print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+            else:
+                print str(i)+': '+datsub[i][1]
+        else:
+            print str(i)+': '+datsub[i][1]
+    if not values:
+        print 'Done going through file... Please supply pairs of name and index for reading file'
+        print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
+        print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
+        return None, None
+    hdf = dict()
+    meta = datsds.GetMetadata() 
+    import gc; gc.collect()
+    hdf_dicts = dict()
+    startprogress('Running through modis values')
+    for i,j in values:
+        sds = gdal.Open(datsub[j][0])
+        hdf_dicts[i] = sds.GetMetadata()
+        hdf[i] = np.array(sds.ReadAsArray())
+        if not hdf[i]:
+            import pdb; pdb.set_trace()
+        try:
+            bad_points = np.where(hdf[i] == float(hdf_dicts[i]['_FillValue']))
+            makenan = True
+        except KeyError:
+            makenan = False
+        try:
+            scale = float(hdf_dicts[i]['scale_factor'])
+            offset = float(hdf_dicts[i]['add_offset'])
+            # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+            if scale.is_integer():
+               scale = int(scale)
+               makenan = False
+            if scale != 1 and offset == 0:
+               hdf[i] = hdf[i]*scale+offset
+        except:
+            if issubclass(hdf[i].dtype.type, np.integer):
+                makenan = False
+        if makenan:
+            hdf[i][bad_points] = np.nan
+        progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
+    endprogress()
+    print hdf.keys()
+    del datsds,sds,datsub
+    return hdf,hdf_dicts
+
+# <codecell>
+
+def spherical_dist(pos1, pos2, r=3958.75):
+    "Calculate the distance, in km, from one point to another (can use arrays)"
+    import numpy as np
+    pos1 = pos1 * np.pi / 180
+    pos2 = pos2 * np.pi / 180
+    cos_lat1 = np.cos(pos1[..., 0])
+    cos_lat2 = np.cos(pos2[..., 0])
+    cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
+    cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
+    return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
+
+# <codecell>
+
+def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
+    """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
+    from load_modis import spherical_dist
+    from Sp_parameters import startprogress, progress, endprogress
+    import numpy as np
+    if not any(meas_good):
+        meas_good = np.where(meas_lon)
+    imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
+                            np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
+    wimodis = np.where(imodis)
+    N1 = mod_lon[imodis].size
+    modis_grid = np.hstack([mod_lon[imodis].reshape((N1,1)),mod_lat[imodis].reshape((N1,1))])
+    N2 = len(meas_good)
+    meas_grid = np.hstack([np.array(meas_lon[meas_good]).reshape((N2,1)),np.array(meas_lat[meas_good]).reshape((N2,1))])
+    meas_in = meas_grid.astype(int)
+    meas_ind = np.array([meas_good.ravel()*0,meas_good.ravel()*0])
+    startprogress('Running through flight track')
+    for i in xrange(meas_good.size):
+        d = spherical_dist(meas_grid[i],modis_grid)
+        meas_ind[0,i] = wimodis[0][np.argmin(d)]
+        meas_ind[1,i] = wimodis[1][np.argmin(d)]
+        progress(float(i)/len(meas_good)*100)
+    endprogress()
+    return meas_ind
 
 # <markdowncell>
 
