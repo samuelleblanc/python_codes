@@ -260,6 +260,10 @@ pltzen(fig,ax)
 # <codecell>
 
 fig,ax=norm()
+lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
+         ('Ice Cloud Model, $\\tau$=0.5','Greens',1,[13,34],1,[380,0.02]),
+         ('Liquid Cloud Model, $\\tau$=10','RdPu',0,[0,13],9,[700,0.16]),
+         ('Ice Cloud Model, $\\tau$=10','Blues',1,[13,34],9,[750,0.15])]
 for names,cmap,iphase,irefs,itau,pos in lines:
     [alow,ahigh] = plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
 plt.legend([alow[0],ahigh[0]],lbl,
@@ -607,7 +611,7 @@ ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([17,19.05])
 plt.savefig(fp+'plots/TCAP_retri_results.png',dpi=600)
-plt.savefig(fp+'plots/TCAP_retri_results.eps')
+#plt.savefig(fp+'plots/TCAP_retri_results.eps')
 
 # <markdowncell>
 
@@ -847,9 +851,9 @@ cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
 m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
-plt.show()
-plt.savefig(fp+'plots/modis_g1_tau_ref_comp.png',dpi=600)
+plt.savefig(fp+'plots/modis_g1_tau_ref_comp.png',dpi=600,transparent=True)
 plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
+plt.show()
 
 # <markdowncell>
 

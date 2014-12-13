@@ -471,8 +471,19 @@ fig = plt.figure()
 fig.add_subplot(1,2,1)
 plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500])
 plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,i500],'r')
+plt.xlim([17.8,19.2])
 fig.add_subplot(1,2,2)
 plt.plot(ssfr.utc,ssfr.Rvis,'b',ssfr.utc,ssfr.Rnir,'r')
+plt.xlim([17.8,19.2])
+#plt.ylim([0.22,0.32])
+
+# <codecell>
+
+rad = np.linspace(0,pi,50)
+plt.plot(rad,np.cos(rad))
+plt.plot(rad,np.cos(rad).cumsum()/np.cos(rad).cumsum().max())
+print rad.cumsum()
+print np.sum(np.cos(rad[0:24]))/np.sum(np.cos(rad))
 
 # <headingcell level=5>
 
@@ -550,7 +561,7 @@ if 'rw' in locals():
 
 # <codecell>
 
-(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1700.0])
+(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1600.0])
 
 # <codecell>
 
@@ -569,6 +580,7 @@ axsr[1].set_ylabel('R$_{e}$ [$\\mu$m]')
 axsr[1].set_ylim([0,61])
 axsr[2].set_ylabel('$\\chi^{2}$')
 axsr[0].set_title('SSFR ER-2 Retrieval results')
+axsr[2].set_xlim([18.0,19.2])
 
 # <headingcell level=2>
 
@@ -645,7 +657,7 @@ m1.scatter(x1,y1,c=meas.tau,cmap=plt.cm.jet,marker='o',vmin=clevels[0],vmax=clev
 clevels2 = np.linspace(0,60,31)
 cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
 cbar = m2.colorbar(cs2)
-cbar.set_label('R$_{ef}$ [$\\mu$m]')
+cbar.set_label('R$_{eff}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
 m2.plot(xer2,yer2,'r',lw=2)
 m2.plot(xdc8,ydc8,'b',lw=2)
@@ -669,7 +681,7 @@ from load_modis import load_emas, load_hdf
 
 # <codecell>
 
-emas_file = fp+'er2/20130913/EMASL2_13965_11_20130913_1832_1845_V00.hdf'
+emas_file = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
 print os.path.isfile(emas_file)
 
 # <codecell>
@@ -691,6 +703,26 @@ plt.plot(emas['tau'])
 reload(lm)
 from load_modis import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
+
+# <codecell>
+
+print np.shape(dc8_ind)
+
+# <codecell>
+
+print dc8_ind[0,-1],dc8_ind[1,-1]
+print emas['lon'][388,715],emas['lat'][388,715]
+print emas['lon'][388,714],emas['lat'][388,714]
+
+sdist= lambda lon1,lat1,lon2,lat2:1000.0 * 3958.75 * np.arccos(np.cos(np.radians(lat1)-np.radians(lat2)) - np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * (1 - np.cos(np.radians(lon1)-np.radians(lon2))))
+
+# <codecell>
+
+print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][385,714],emas['lat'][385,714])
+
+# <markdowncell>
+
+# Do the mods calculations
 
 # <codecell>
 
@@ -716,24 +748,62 @@ plt.hist(probes[:,7])
 
 # <headingcell level=2>
 
+# Load RSP results
+
+# <codecell>
+
+rsp = load_ict(fp+'er2/20130913/SEAC4RS-RSP-ICECLD_ER2_20130913_R2.ict')
+print rsp['Phase']
+rsp_good = np.where((rsp['UTC']>17.8) & (rsp['UTC']<19.2) & (rsp['Phase']==0) & (rsp['COT']>0) & (rsp['R_eff159']>0))
+print np.shape(rsp_good)
+print len(rsp_good[0])
+
+# <codecell>
+
+plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff159'][rsp_good[0]])
+
+# <codecell>
+
+print rsp_good[0][-1]
+
+# <codecell>
+
+# get the distance between two points for RSP
+from load_modis import spherical_dist
+print rsp['Lat'][rsp_good[0][-1]], rsp['Lon'][rsp_good[0][-1]]
+print rsp['Lat'][rsp_good[0][-2]], rsp['Lon'][rsp_good[0][-2]]
+print spherical_dist(np.array(rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0][-1]]),
+                     np.array(rsp['Lat'][rsp_good[0][-2]],rsp['Lon'][rsp_good[0][-2]]))
+
+# <headingcell level=2>
+
 # Calculate the histogram for each comparisons
 
 # <codecell>
 
 from Sp_parameters import nanmasked
-modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis])
-emas_tau,ie = nanmasked(emas['tau'][dc8_ind])
-modis_ref,im = nanmasked(modis['ref'][dc8_ind_modis])
-emas_ref,ie = nanmasked(emas['ref'][dc8_ind])
+modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
+emas_tau,ie = nanmasked(emas['tau'][dc8_ind[0,:],dc8_ind[1,:]])
+modis_ref,im = nanmasked(modis['ref'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
+emas_ref,ie = nanmasked(emas['ref'][dc8_ind[0,:],dc8_ind[1,:]])
 star_tau,ist = nanmasked(meas.tau[meas.good])
 star_ref,ist = nanmasked(meas.ref[meas.good])
 ssfr.good = np.where((ssfr.utc>17.8)&(ssfr.utc<19.2))
 ssfr_tau,iss = nanmasked(ssfr.tau[ssfr.good[0],1])
 ssfr_ref,iss = nanmasked(ssfr.ref[ssfr.good[0],1])
+rsp_tau,irs = nanmasked(rsp['COT'][rsp_good[0]])
+rsp_ref,irs = nanmasked(rsp['R_eff159'][rsp_good[0]])
 
 # <codecell>
 
-print meas.utc[ist]
+star_g = np.where((meas.utc>19.0)&(meas.utc<19.2)&isfinite(meas.tau))
+print '4STAR',meas.tau[star_g[0][0]], meas.ref[star_g[0][0]]
+ssfr_g = np.where((ssfr.utc>19.0)&(ssfr.utc<19.2)&isfinite(ssfr.tau[:,1]))
+print 'ssfr reflect',ssfr.tau[ssfr_g[0][0],1],ssfr.ref[ssfr_g[0][0],1]
+rsp_g = np.where((rsp['UTC']>19.0)&(rsp['UTC']<19.2)&isfinite(rsp['COT']))
+print 'rsp',rsp['COT'][rsp_g[0][0]],rsp['R_eff159'][rsp_g[0][0]]
+print 'emas',emas['tau'][dc8_ind[0,0],dc8_ind[1,0]],emas['ref'][dc8_ind[0,0],dc8_ind[1,0]]
+print 'modis',modis['tau'][dc8_ind_modis[0,0],dc8_ind_modis[1,0]],modis['ref'][dc8_ind_modis[0,0],dc8_ind_modis[1,0]] 
 
 # <codecell>
 
@@ -745,52 +815,76 @@ def plot_median_mean(x,lbl=False,color='k'):
     else:
         llm = None
         lld = None
-    plt.axvline(np.nanmean(x),color='k',label=llm,c=color)
-    plt.axvline(np.median(x),color='k',linestyle='--',label=lld,c=color)
+    plt.axvline(np.nanmean(x),color='k',label=llm,c=color,lw=2)
+    plt.axvline(np.median(x),color='k',linestyle='--',label=lld,c=color,lw=2)
+
+# <markdowncell>
+
+# Now we present the histogram of retrieved cloud properties for each instrument
+# The instruments have different cross sectional area at cloud height that they sample
+# These are:, with the ratio of smoothing:
+#  - MODIS : 500m : 6
+#  - emas : 50m : 60
+#  - SSFR(reflectance) : 3000m : 1
+#  - RSP: 42 m : 70
+#  - 4STAR: 70 m : 40
 
 # <codecell>
 
-plt.figure()
-plt.hist(modis_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis',range=(0,40))
-plt.hist(emas_tau,bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS',range=(0,40))
-plt.hist(ssfr_tau,bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR',range=(0,40))
-plt.hist(star_tau,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR',range=(0,40))
+plt.figure(figsize=(9,6))
+plt.axvspan(0,80,color='#FFFFFF')
+plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
+plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
+plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
+plt.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
 plt.title('Optical Thickness histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
-plot_median_mean(modis_tau,color='m')
-plot_median_mean(emas_tau,color='b')
-plot_median_mean(ssfr_tau,color='g')
-plot_median_mean(star_tau,lbl=True,color='r')
+plot_median_mean(smooth(modis_tau,6),color='m')
+plot_median_mean(smooth(emas_tau,60),color='b')
+plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
+plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
+plot_median_mean(smooth(rsp_tau,70),color='c')
 plt.legend(frameon=False)
-plt.xlim([0,40])
+plt.xlim([0,60])
 plt.savefig(fp+'plots/hist_modis_4star_tau.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
 # <codecell>
 
-plt.figure()
-plt.axvspan(0,60,color='#FFFFFF')
-plt.hist(modis_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
-plt.hist(emas_ref,bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
-plt.hist(ssfr_ref,bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
+plt.figure(figsize=(9,6))
+plt.axvspan(0,80,color='#FFFFFF')
+plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
+plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+plt.hist(smooth(ssfr_ref,2),bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
+plt.hist(smooth(rsp_ref,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,79))
 plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
-plt.hist(probes[:,7],bins=20, histtype='stepfilled', normed=True, color='y',alpha=0.6, label='Cloud probes (Insitu)',range=(0,59))
+plt.hist(probes[:,7],bins=20, histtype='stepfilled', normed=True, color='y',alpha=0.6, label='Cloud probes (In Situ)',range=(0,79))
 plt.title('Cloud particle effective radius histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('R$_{eff}$ [$\\mu$m]')
-plot_median_mean(modis_ref,color='m')
-plot_median_mean(emas_ref,color='b')
-plot_median_mean(ssfr_ref,color='g')
+plot_median_mean(smooth(modis_ref,6),color='m')
+plot_median_mean(smooth(emas_ref,60),color='b')
+plot_median_mean(smooth(ssfr_ref,2),color='g')
+plot_median_mean(smooth(rsp_ref,70),color='c')
 plot_median_mean(probes[:,7],color='y')
 plot_median_mean(star_ref,lbl=True,color='r')
-plt.legend(frameon=False,loc='upper left')
-plt.xlim([0,60])
+plt.legend(frameon=False,loc='upper right')
+plt.xlim([10,80])
 plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
 # Find the mean tau and ref for each instrument
+
+# <codecell>
+
+print np.nanmean(modis_ref)
+
+# <codecell>
+
+print np.shape(modis_tau)
 
 # <codecell>
 
@@ -806,6 +900,8 @@ means.ref.ssfr = np.nanmean(ssfr_ref)
 means.tau.star = np.nanmean(star_tau)
 means.ref.star = np.nanmean(star_ref)
 means.ref.probes = np.nanmean(probes[:,7])
+means.tau.rsp = np.nanmean(rsp_tau)
+means.ref.rsp = np.nanmean(rsp_ref)
 
 # <codecell>
 
@@ -830,13 +926,14 @@ from scipy import interpolate
 
 # <codecell>
 
-def interpirr(ta,re):
+def interpirr(re,ta):
     "interpolate over irradiance to get the spectrum at ta and re"
     sp = np.zeros(lut.wvl.size)
+    print re,ta
     for w in xrange(lut.wvl.size):
         irrdnfx = interpolate.RectBivariateSpline(lut.refsp[lut.refsp>5],lut.tausp,lut.sp_irrdn[1,w,0,lut.refsp>5,:],kx=1,ky=1)
         sp[w] = irrdnfx(re,ta)
-    return sp*10.0
+    return smooth(sp,20)
 
 # <codecell>
 
@@ -844,6 +941,30 @@ sp_modis = interpirr(means.ref.modis,means.tau.modis)
 sp_emas = interpirr(means.ref.emas,means.tau.emas)
 sp_ssfr = interpirr(means.ref.ssfr,means.tau.ssfr)
 sp_star = interpirr(means.ref.star,means.tau.star)
+sp_rsp = interpirr(means.ref.rsp,means.tau.rsp)
+
+# <codecell>
+
+print list(enumerate(lut.refsp))
+print list(enumerate(lut.tausp))
+print lut.sp_irrdn.shape
+
+# <codecell>
+
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,13,13]*10.0,'m',label='modis')
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,10,12]*10.0,'b',label='emas')
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,29,17]*10.0,'g',label='SSFR')
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,24,11]*10.0,'r',label='RSP')
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,9,13]*10.0,'c',label='4STAR')
+plt.plot(ssfr_dc8[''])
+plt.legend(frameon=False)
+
+# <codecell>
+
+
+# <codecell>
+
+print sp_rsp
 
 # <markdowncell>
 
@@ -855,22 +976,61 @@ ssfr_dc8 = sio.idl.readsav(fp+'dc8/20130913/20130913_calibspcs.out')
 print ssfr_dc8.keys()
 iutc185 = np.nanargmin(abs(ssfr_dc8['tmhrs']-18.5))
 iutc192 = np.nanargmin(abs(ssfr_dc8['tmhrs']-19.2))
-
-# <codecell>
-
 print ssfr_dc8['zspectra'].shape
 dn = np.nanmean(ssfr_dc8['zspectra'][iutc185:iutc192,:],axis=0)
 print dn.shape
-plt.figure()
-plt.plot(ssfr_dc8['zenlambda'],ssfr_dc8['zspectra'][iutc192,:],label='SSFR Measurement',c='k')
-plt.plot(lut.wvl,sp_modis,c='m',label='Modis')
-plt.plot(lut.wvl,sp_emas,c='b',label='eMAS')
-plt.plot(lut.wvl,sp_ssfr,c='g',label='SSFR (reflected)')
-plt.plot(lut.wvl,sp_modis,c='r',label='4STAR')
-plt.title('Downwelling Irradiance')
-plt.xlabel('Wavelength [nm]')
-plt.ylabel('Irradiance [Wm$^{-2}$nm$^{-1}$]')
-plt.xlim([350,1700])
+
+# <codecell>
+
+ssfr_dc8_ict = load_ict(fp+'dc8/20130913/SEAC4RS-SSFR_DC8_20130913_R0.ict')
+
+# <codecell>
+
+iutc185tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-18.5))
+iutc192tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-19.2))
+iutc190tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-19.0))
+ssfr_dc8_ict_good = np.where((ssfr_dc8_ict['UTC']>19.0) & (ssfr_dc8_ict['UTC']<19.2) & (ssfr_dc8_ict['DN500']>0))
+
+# <codecell>
+
+s500 = np.nanmean(ssfr_dc8_ict['DN500'][ssfr_dc8_ict_good[0]])
+print s500
+plt.plot(ssfr_dc8_ict['UTC'][ssfr_dc8_ict_good[0]],ssfr_dc8_ict['DN500'][ssfr_dc8_ict_good[0]])
+
+# <codecell>
+
+idc500 = np.nanargmin(abs(ssfr_dc8['zenlambda']-500.0))
+r500 = s500/dn[idc500]
+print r500
+fssp = interpolate.interp1d(ssfr_dc8['zenlambda'],dn*r500,bounds_error=False)
+ssp = fssp(lut.wvl)
+
+# <codecell>
+
+plt.figure(figsize=(13,10))
+f0,a0 = plt.subplots(2,1,sharex=True)
+a0[0].plot(lut.wvl,ssp,label='SSFR Measurement',c='k')
+a0[0].axvspan(350,1700,color='#FFFFFF')
+a0[1].axvspan(350,1700,color='#FFFFFF')
+a0[0].plot(lut.wvl,sp_modis,c='m',label='Modis')
+a0[0].plot(lut.wvl,sp_emas,c='b',label='eMAS')
+a0[0].plot(lut.wvl,sp_ssfr,c='g',label='SSFR (reflected)')
+a0[0].plot(lut.wvl,sp_rsp/10.0,c='c',label='RSP')
+a0[0].plot(lut.wvl,sp_modis,c='r',label='4STAR')
+a0[0].legend(frameon=False,prop={'size':10})
+a0[0].set_title('Below cloud downwelling irradiance')
+a0[1].set_xlabel('Wavelength [nm]')
+a0[0].set_ylabel('Irradiance\n[Wm$^{-2}$nm$^{-1}$]')
+a0[0].set_xlim([400,1700])
+a0[1].plot(lut.wvl,(ssp-sp_modis)/ssp*100.0,c='m',label='Modis')
+a0[1].plot(lut.wvl,(ssp-sp_emas)/ssp*100.0,c='b',label='eMAS')
+a0[1].plot(lut.wvl,(ssp-sp_ssfr)/ssp*100.0,c='g',label='SSFR (reflected)')
+a0[1].plot(lut.wvl,(ssp-sp_rsp/10.0)/ssp*100.0,c='c',label='RSP')
+a0[1].plot(lut.wvl,(ssp-sp_modis)/ssp*100.0,c='r',label='4STAR')
+a0[1].axhline(0,linestyle='--',c='k')
+a0[1].set_ylabel('Irradiance difference\n[$\%$]')
+a0[1].set_ylim([-40,100])
+plt.savefig(fp+'plots/sp_compare_mod_meas.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
