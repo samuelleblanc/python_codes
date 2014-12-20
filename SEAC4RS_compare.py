@@ -874,6 +874,13 @@ plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
 plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600,transparent=True)
 
+# <headingcell level=1>
+
+# 1:1 relationship
+
+# <codecell>
+
+
 # <headingcell level=2>
 
 # Find the mean tau and ref for each instrument
