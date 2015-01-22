@@ -365,7 +365,7 @@ def load_hdf(datfile,values=None):
         sds = gdal.Open(datsub[j][0])
         hdf_dicts[i] = sds.GetMetadata()
         hdf[i] = np.array(sds.ReadAsArray())
-        if not hdf[i]:
+        if not hdf[i].any():
             import pdb; pdb.set_trace()
         try:
             bad_points = np.where(hdf[i] == float(hdf_dicts[i]['_FillValue']))

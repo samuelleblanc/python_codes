@@ -378,6 +378,17 @@ print np.min(er2['Solar_Zenith_Angle'])
 
 # <codecell>
 
+plt.figure()
+feet2meter=0.3048
+plt.plot(er2['Start_UTC'],er2['GPS_Altitude'],label="GPS",color='b')
+plt.plot(er2['Start_UTC'],er2['Pressure_Altitude']*feet2meter,label="Pressure",color='g')
+plt.grid(True)
+plt.xlabel('Time [UTC]')
+plt.ylabel('ER-2 Altitude [m]')
+plt.legend(frameon=False)
+
+# <codecell>
+
 ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
 ssfr_idl = sio.idl.readsav(ssfr_idl_file)
 print ssfr_idl.keys()
@@ -697,6 +708,25 @@ emas,emas_dicts = load_hdf(emas_file,values=emas_values)
 
 plt.figure()
 plt.plot(emas['tau'])
+
+# <markdowncell>
+
+# Now Redo the load of emas data, but with the new V01 files, which includes the newest calibration as of 20150122, which is considered final for SEAC4RS. thermal band revisions (3.7 um and higher) may still occur.  
+# 
+# From Tom Arnold 20150120: While the calibration for the V01 data is considered final, some minor revision may still be made to the themal band (3.7um and higher) radiance data for two or three of the tracks I have given you. Separate from the calibration process, filtering (for a coherent noise problem) has been applied to all the eMAS thermal bands (bands 26-38).  Evaluation of the quality of the filtering has shown for some eMAS tracks, some additional filtering is still required (and will likely affect two or three of the tracks I have given you).  I will make that data available when it is completed for the tracks you need, though for the thick cirrus in the tracks you are interested in,  I don’t expect much impact to the cloud retrievals (most impact will be relatively small adjustment to some of the cloud top property data - such as cloud top temperature or pressure). I expect the re-filtered data to be available in the next couple weeks.
+
+# <codecell>
+
+emas_file_v1 = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
+print os.path.isfile(emas_file_v1)
+
+# <codecell>
+
+emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
+
+# <codecell>
+
+emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 # <codecell>
 
