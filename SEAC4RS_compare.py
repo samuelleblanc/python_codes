@@ -814,8 +814,10 @@ print spherical_dist(np.array(rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0]
 from Sp_parameters import nanmasked
 modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
 emas_tau,ie = nanmasked(emas['tau'][dc8_ind[0,:],dc8_ind[1,:]])
+emas_tau_v1,ie1 = nanmasked(emas_v1['tau'][dc8_ind[0,:],dc8_ind[1,:]])
 modis_ref,im = nanmasked(modis['ref'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
 emas_ref,ie = nanmasked(emas['ref'][dc8_ind[0,:],dc8_ind[1,:]])
+emas_ref_v1,ie1 = nanmasked(emas_v1['ref'][dc8_ind[0,:],dc8_ind[1,:]])
 star_tau,ist = nanmasked(meas.tau[meas.good])
 star_ref,ist = nanmasked(meas.ref[meas.good])
 ssfr.good = np.where((ssfr.utc>17.8)&(ssfr.utc<19.2))
@@ -833,6 +835,7 @@ print 'ssfr reflect',ssfr.tau[ssfr_g[0][0],1],ssfr.ref[ssfr_g[0][0],1]
 rsp_g = np.where((rsp['UTC']>19.0)&(rsp['UTC']<19.2)&isfinite(rsp['COT']))
 print 'rsp',rsp['COT'][rsp_g[0][0]],rsp['R_eff159'][rsp_g[0][0]]
 print 'emas',emas['tau'][dc8_ind[0,0],dc8_ind[1,0]],emas['ref'][dc8_ind[0,0],dc8_ind[1,0]]
+print 'emas_v1',emas_v1['tau'][dc8_ind[0,0],dc8_ind[1,0]],emas_v1['ref'][dc8_ind[0,0],dc8_ind[1,0]]
 print 'modis',modis['tau'][dc8_ind_modis[0,0],dc8_ind_modis[1,0]],modis['ref'][dc8_ind_modis[0,0],dc8_ind_modis[1,0]] 
 
 # <codecell>
@@ -865,6 +868,7 @@ plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,40))
 plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
 plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
 plt.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
@@ -873,6 +877,7 @@ plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
 plot_median_mean(smooth(modis_tau,6),color='m')
 plot_median_mean(smooth(emas_tau,60),color='b')
+plot_median_mean(smooth(emas_tau_v1,60),color='b')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
 plot_median_mean(smooth(rsp_tau,70),color='c')
@@ -887,6 +892,7 @@ plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
 plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,59))
 plt.hist(smooth(ssfr_ref,2),bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
 plt.hist(smooth(rsp_ref,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,79))
 plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
@@ -896,6 +902,7 @@ plt.ylabel('Normed probability')
 plt.xlabel('R$_{eff}$ [$\\mu$m]')
 plot_median_mean(smooth(modis_ref,6),color='m')
 plot_median_mean(smooth(emas_ref,60),color='b')
+plot_median_mean(smooth(emas_ref_v1,60),color='b')
 plot_median_mean(smooth(ssfr_ref,2),color='g')
 plot_median_mean(smooth(rsp_ref,70),color='c')
 plot_median_mean(probes[:,7],color='y')
@@ -904,12 +911,40 @@ plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
 plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600,transparent=True)
 
+# <headingcell level=2>
+
+# eMAX V00 and V01 comparison
+
+# <codecell>
+
+emas_v1.keys()
+
+# <codecell>
+
+plt.figure();
+plt.plot(emas_v1['lon'][dc8_ind[0,:],dc8_ind[1,:]],emas_tau_v1,label='V01')
+plt.plot(emas['lon'][dc8_ind[0,:],dc8_ind[1,:]], emas_tau,label='V00')
+
+
 # <headingcell level=1>
 
 # 1:1 relationship
 
 # <codecell>
 
+plt.figure()
+plt.plot(emas_tau_v1,emas_tau,'+')
+plt.title('eMAS version differences')
+plt.xlabel('eMAS V1 tau')
+plt.ylabel('eMAS V0 tau')
+
+# <codecell>
+
+plt.figure()
+plt.plot(emas_ref_v1,emas_ref,'+')
+plt.title('eMAS version differences')
+plt.xlabel('eMAS V1 ref')
+plt.ylabel('eMAS V0 ref')
 
 # <headingcell level=2>
 
