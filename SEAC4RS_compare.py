@@ -730,6 +730,10 @@ emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 # <codecell>
 
+emas_dicts_v1['tau']
+
+# <codecell>
+
 reload(lm)
 from load_modis import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -933,18 +937,38 @@ plt.plot(emas['lon'][dc8_ind[0,:],dc8_ind[1,:]], emas_tau,label='V00')
 # <codecell>
 
 plt.figure()
-plt.plot(emas_tau_v1,emas_tau,'+')
-plt.title('eMAS version differences')
-plt.xlabel('eMAS V1 tau')
-plt.ylabel('eMAS V0 tau')
+plt.plot(emas_tau_v1,emas_tau,'+',label=r'eMAS $\tau$')
+plt.plot([10,35],[10,35],'k--',label='one-to-one')
+plt.title(r'eMAS version comparison along DC8 flight track on 2013-09-13')
+plt.xlabel(r'eMAS V01 $\tau$')
+plt.ylabel(r'eMAS V00 $\tau$')
+plt.legend(frameon=False,loc=4)
+plt.savefig(fp+'plots/emas_v00_compare_v01_tau.png',dpi=600,transparent=True)
 
 # <codecell>
 
 plt.figure()
-plt.plot(emas_ref_v1,emas_ref,'+')
-plt.title('eMAS version differences')
-plt.xlabel('eMAS V1 ref')
-plt.ylabel('eMAS V0 ref')
+plt.hist(emas_tau_v1-emas_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS tau difference',range=(-1,1))
+plt.xlabel(r'$\tau$ difference')
+np.max(emas_tau_v1-emas_tau)
+
+# <codecell>
+
+plt.figure()
+plt.plot(emas_ref_v1,emas_ref,'+',label='eMAS $r_{ef}$')
+plt.plot([22,36],[22,36],'k--', label='one-to-one')
+plt.title('eMAS version comparison along DC8 flight track on 2013-09-13')
+plt.xlabel('eMAS V01 $r_{ef}$ [$\mu$m]')
+plt.ylabel('eMAS V00 $r_{ef}$ [$\mu$m]')
+plt.legend(frameon=False,loc=4)
+plt.savefig(fp+'plots/emas_v00_compare_v01_ref.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.figure()
+plt.hist(emas_ref_v1-emas_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS Ref difference',range=(-1,1))
+plt.xlabel('r$_{ef}$ difference [$\mu$m]')
+np.max(emas_ref_v1-emas_ref)
 
 # <headingcell level=2>
 
