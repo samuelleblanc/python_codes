@@ -717,8 +717,13 @@ plt.plot(emas['tau'])
 
 # <codecell>
 
-emas_file_v1 = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
+emas_file_v1 = fp+'emas/20130913/EMASL2_13965_13_20130913_1905_1918_V01.hdf'
 print os.path.isfile(emas_file_v1)
+
+# <codecell>
+
+print fp
+print emas_file_v1
 
 # <codecell>
 
@@ -872,7 +877,7 @@ plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
-plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,40))
+plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,40))
 plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
 plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
 plt.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
@@ -881,7 +886,7 @@ plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
 plot_median_mean(smooth(modis_tau,6),color='m')
 plot_median_mean(smooth(emas_tau,60),color='b')
-plot_median_mean(smooth(emas_tau_v1,60),color='b')
+plot_median_mean(smooth(emas_tau_v1,60),color='k')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
 plot_median_mean(smooth(rsp_tau,70),color='c')
@@ -896,7 +901,7 @@ plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
 plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
-plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,59))
+plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,59))
 plt.hist(smooth(ssfr_ref,2),bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
 plt.hist(smooth(rsp_ref,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,79))
 plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
@@ -906,7 +911,7 @@ plt.ylabel('Normed probability')
 plt.xlabel('R$_{eff}$ [$\\mu$m]')
 plot_median_mean(smooth(modis_ref,6),color='m')
 plot_median_mean(smooth(emas_ref,60),color='b')
-plot_median_mean(smooth(emas_ref_v1,60),color='b')
+plot_median_mean(smooth(emas_ref_v1,60),color='k')
 plot_median_mean(smooth(ssfr_ref,2),color='g')
 plot_median_mean(smooth(rsp_ref,70),color='c')
 plot_median_mean(probes[:,7],color='y')
@@ -939,6 +944,9 @@ plt.plot(emas['lon'][dc8_ind[0,:],dc8_ind[1,:]], emas_tau,label='V00')
 plt.figure()
 plt.plot(emas_tau_v1,emas_tau,'+',label=r'eMAS $\tau$')
 plt.plot([10,35],[10,35],'k--',label='one-to-one')
+from linfit import linfit
+emas_fit,z = linfit(emas_tau_v1,emas_tau)
+plt.plot(np.linspace(10,39), emas_fit[1]+emas_fit[0]*np.linspace(10,39),'r--',label='Linear fit:\n y='+str('%.3f' % emas_fit[0])+'x+'+str('%.3f' % emas_fit[1]))
 plt.title(r'eMAS version comparison along DC8 flight track on 2013-09-13')
 plt.xlabel(r'eMAS V01 $\tau$')
 plt.ylabel(r'eMAS V00 $\tau$')
@@ -947,9 +955,17 @@ plt.savefig(fp+'plots/emas_v00_compare_v01_tau.png',dpi=600,transparent=True)
 
 # <codecell>
 
+print emas_tau_v1, emas_tau
+print linfit(emas_tau_v1,emas_tau)
+
+# <codecell>
+
 plt.figure()
-plt.hist(emas_tau_v1-emas_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS tau difference',range=(-1,1))
+plt.hist(emas_tau_v1-emas_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS tau difference',range=(-5,5))
 plt.xlabel(r'$\tau$ difference')
+plt.ylabel('Normed probability')
+plt.title(r'eMAS $\tau$ difference (V01 - V00)')
+plt.savefig(fp+'plots/emas_diff_histogram_v01_v00_tau.png',dpi=600,transparent=True)
 np.max(emas_tau_v1-emas_tau)
 
 # <codecell>
@@ -966,7 +982,7 @@ plt.savefig(fp+'plots/emas_v00_compare_v01_ref.png',dpi=600,transparent=True)
 # <codecell>
 
 plt.figure()
-plt.hist(emas_ref_v1-emas_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS Ref difference',range=(-1,1))
+plt.hist(emas_ref_v1-emas_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS Ref difference',range=(-5,5))
 plt.xlabel('r$_{ef}$ difference [$\mu$m]')
 np.max(emas_ref_v1-emas_ref)
 
