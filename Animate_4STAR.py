@@ -86,7 +86,11 @@ star['utc'] = toutc(mat2py_time(star['t']))
 
 # <codecell>
 
-star['good'] = np.where((star['utc']>20.0667) & (star['utc']<20.4667) & (star['Str'].flatten()!=0) & (star['sat_time'].flatten()==0))[0]
+star['good'] = np.where((star['utc']>20.0667) & 
+                        (star['utc']<20.4667) & 
+                        (star['Str'].flatten()!=0) & 
+                        (star['sat_time'].flatten()==0) & 
+                        (np.isfinite(star['tau_aero'][:,319])))[0]
 len(star['good'])
 
 # <headingcell level=2>
@@ -129,9 +133,10 @@ def display_animation(anim):
 from tempfile import NamedTemporaryFile
 
 def anim_to_html(anim):
+    #mywriter = animation.FFMpegWriter(fps=10)
     if not hasattr(anim, '_encoded_video'):
-        with NamedTemporaryFile(suffix='.mp4') as f:
-            anim.save(f.name, fps=20, extra_args=['-vcodec', 'libx264'])
+        with NamedTemporaryFile(suffix='.gif') as f:
+            anim.save(f.name, fps=5)
             video = open(f.name, "rb").read()
         anim._encoded_video = video.encode("base64")
     
@@ -149,11 +154,14 @@ line, = ax.plot([], [], lw=2)
 # initialization function: plot the background of each frame
 def init():
     line.set_data([], [])
+    plt.xlabel('Wavelength [$\mu$m]')
+    plt.ylabel('AOD')
+    plt.grid()
     return line,
 
 # animation function.  This is called sequentially
 def animate(i):
-    line.set_data(star['w'][0], star['tau_aero'][star['good']])
+    line.set_data(star['w'][0], star['tau_aero'][star['good'][i]])
     return line,
 
 # call the animator.  blit=True means only re-draw the parts that have changed.
@@ -161,6 +169,54 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=len(star['good']), interval=10, blit=True)
 
 # call our new function to display the animation
+#display_animation(anim)
+
+# <codecell>
+
+print star['tau_aero'][star['good'][0]]
+print star['w'][0]
+
+# <codecell>
+
+def animate(i):
+    plt.cla()
+    plt.plot(star['w'][0],star['tau_aero'][star['good'][i]])
+    plt.ylim(0,1)
+    plt.xlim(0.35,1.75)
+    plt.grid()
+    plt.xlabel('Wavelength [$\mu$m]')
+    plt.ylabel('AOD')
+    plt.title(str('UTC: %2.4f' % star['utc'][star['good'][i]]))
+    plt.tight_layout()
+
+fig = plt.figure(figsize=(5,4))
+
+anim = animation.FuncAnimation(fig, animate, frames=len(star['good']))
+#anim.save(fp+datestr+filesep+'AOD_sp_anim.gif', writer=animation.ImageMagickWriter(), fps=4);
+anim.save(fp+datestr+filesep+'AOD_sp_anim.mp4', writer=animation.FFMpegWriter(), fps=4);
+
+# <codecell>
+
+import base64
+with open(fp+datestr+filesep+'AOD_sp_anim.mp4', "rb") as image_file:
+    encoded_string = base64.b64encode(image_file.read())
+VIDEO_TAG = """<video controls>
+ <source src="data:video/x-m4v;base64,{0}" type="video/mp4">
+ Your browser does not support the video tag.
+</video>"""
+HTML(VIDEO_TAG.format(encoded_string))
+
+# <codecell>
+
+u = video.encode('base64')
+
+# <codecell>
+
+HTML(data='<video controls><source src="data:video/x-m4v;base64,'+u+'" type="video/mp4"></video>')
+
+# <codecell>
+
+from JSAnimation.IPython_display import display_animation
 display_animation(anim)
 
 # <codecell>
