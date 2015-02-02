@@ -182,7 +182,7 @@ def animate(i):
     plt.cla()
     plt.plot(star['w'][0],star['tau_aero'][star['good'][i]])
     plt.ylim(0,1)
-    plt.xlim(0.35,1.75)
+    plt.xlim(0.30,1.75)
     plt.grid()
     plt.xlabel('Wavelength [$\mu$m]')
     plt.ylabel('AOD')
@@ -192,13 +192,13 @@ def animate(i):
 fig = plt.figure(figsize=(5,4))
 
 anim = animation.FuncAnimation(fig, animate, frames=len(star['good']))
-#anim.save(fp+datestr+filesep+'AOD_sp_anim.gif', writer=animation.ImageMagickWriter(), fps=4);
-anim.save(fp+datestr+filesep+'AOD_sp_anim.mp4', writer=animation.FFMpegWriter(), fps=4);
+anim.save(fp+datestr+filesep+'AOD_sp_anim.gif', writer=animation.ImageMagickWriter(), fps=4);
+#anim.save(fp+datestr+filesep+'AOD_sp_anim.mp4', writer=animation.FFMpegWriter(), fps=10,extra_args=['-vcodec', 'libx264']);
 
 # <codecell>
 
 import base64
-with open(fp+datestr+filesep+'AOD_sp_anim.mp4', "rb") as image_file:
+with open(fp+datestr+filesep+'AOD_sp_anim.m4v', "rb") as image_file:
     encoded_string = base64.b64encode(image_file.read())
 VIDEO_TAG = """<video controls>
  <source src="data:video/x-m4v;base64,{0}" type="video/mp4">
@@ -216,8 +216,156 @@ HTML(data='<video controls><source src="data:video/x-m4v;base64,'+u+'" type="vid
 
 # <codecell>
 
+def video(fname, mimetype):
+    """Load the video in the file `fname`, with given mimetype, and display as HTML5 video.
+    """
+    from IPython.display import HTML
+    video_encoded = open(fname, "rb").read().encode("base64")
+    video_tag = '<video controls alt="test" src="data:video/{0};base64,{1}">'.format(mimetype, video_encoded.decode('ascii'))
+    return HTML(data=video_tag)
+
+# <codecell>
+
+u = open(fp+datestr+filesep+'AOD_sp_anim.m4',"rb").read()
+
+# <codecell>
+
+print len(u)
+
+# <codecell>
+
+video(fp+datestr+filesep+'AOD_sp_anim.m4v','x-m4v')
+
+# <codecell>
+
 from JSAnimation.IPython_display import display_animation
 display_animation(anim)
+
+# <headingcell level=2>
+
+# Prepare of saving specific variables to netcdf
+
+# <codecell>
+
+wvl = star['w'][0]
+aod = star['tau_aero'][star['good']]
+utc = star['utc'][star['good']]
+lat = star['Lat'][star['good']]
+lon = star['Lon'][star['good']]
+alt = star['Alt'][star['good']]
+sza = star['sza'][star['good']]
+
+# <codecell>
+
+print wvl.shape
+print wvl
+
+# <codecell>
+
+print aod.shape
+print aod
+
+# <codecell>
+
+print utc.shape
+print utc
+
+# <headingcell level=2>
+
+# Save to netcdf
+
+# <codecell>
+
+from scipy.io import netcdf
+f = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','w')
+f.history = 'Created by Samuel LeBlanc on 2015-01-30, 14:54 PST'
+f.createDimension('UTC',len(utc))
+f.createDimension('Wavelength',len(wvl))
+utc_nc = f.createVariable('UTC', 'd',('UTC',))
+utc_nc[:] = utc
+utc_nc.units = 'Hours since midnight'
+aod_nc = f.createVariable('AOD', 'd',('UTC','Wavelength'))
+aod_nc[:] = aod
+aod_nc.units = 'unitless'
+wavelength_nc = f.createVariable('Wavelength', 'd', ('Wavelength',))
+wavelength_nc[:] = wvl
+wavelength_nc.units = 'microns'
+lat_nc = f.createVariable('Latitude', 'd',('UTC',))
+lat_nc[:] = lat[:,0]
+lat_nc.units = 'Degrees North'
+lon_nc = f.createVariable('Longitude', 'd',('UTC',))
+lon_nc[:] = lon[:,0]
+lon_nc.units = 'Degrees'
+sza_nc = f.createVariable('SZA', 'd',('UTC',))
+sza_nc[:] = sza[:,0]
+sza_nc.units = 'Degrees'
+f.close()
+
+# <codecell>
+
+fo = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','r')
+
+# <codecell>
+
+g = fo.variables['AOD']
+
+# <codecell>
+
+print g.units
+
+# <codecell>
+
+fp+datestr+filesep+'20130823_4STAR_AOD.ncf'
+
+# <headingcell level=2>
+
+# Prepare for testing PCA analysis of aod spectra
+
+# <codecell>
+
+from sklearn.decomposition import PCA
+
+# <codecell>
+
+aod.shape
+
+# <codecell>
+
+aod_fl = where(np.isfinite(aod[:,0]))
+
+# <codecell>
+
+np.isfinite(aod[155:200,4:]).all()
+
+# <codecell>
+
+pca = PCA(n_components=10)
+pca.fit(aod[0:152,4:])
+evals = pca.explained_variance_ratio_
+
+# <codecell>
+
+plt.plot(evals)
+plt.plot(evals.cumsum(),'r')
+
+# <codecell>
+
+coms = pca.components_
+
+# <codecell>
+
+print coms.shape
+
+# <codecell>
+
+fig3,ax3 = plt.subplots(5,2,sharex=True,figsize=(15,15))
+ax3 = ax3.ravel()
+for i in range(10):
+    ax3[i].plot(wvl[4:],coms[i,:])
+    ax3[i].set_title('pca %d' % i)
+    ax3[i].grid()
+    if i >7:
+        ax3[i].set_xlabel('Wavelength [$\mu$m]')
 
 # <codecell>
 
