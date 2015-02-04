@@ -69,5 +69,5 @@ def version_set(v_tag,program_version):
     user = getpass.getuser()
     
     pro_version = {'Filename':current_file_name,'Version':v_tag,'creation':lc,'modified':lm,'Run by':user}
-    return (program_version,pro_version)
+    return program_version+pro_version
 
