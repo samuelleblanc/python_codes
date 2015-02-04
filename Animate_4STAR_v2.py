@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # <nbformat>3.0</nbformat>
 
-# <rawcell>
+# <markdowncell>
 
 # Name:  
 # 
@@ -70,7 +70,7 @@ print filesep
 
 # <codecell>
 
-file_name = fp+'20141002_ARISE_Flight_16\\20141002flt16star.mat'
+file_name = fp+'20141002_ARISE_Flight_16\\20141002flt16starsun.mat' #'20141002_ARISE_Flight_16\\20141002flt16star.mat'
 
 # <headingcell level=2>
 
@@ -83,15 +83,11 @@ star.keys()
 
 # <codecell>
 
-star['vis_sun'].dtype
-
-# <codecell>
-
-star['vis_sun']['t'][0][0]
-
-# <codecell>
-
-star['utc'] = toutc(mat2py_time(star['vis_sun']['t'][0][0]))
+if 't' in star.keys():
+    star['utc'] = toutc(mat2py_time(star['t']))
+else:
+    star['utc'] = toutc(mat2py_time(star['vis_sun']['t'][0][0]))
+#star['vis_sun']['t'][0][0]
 
 # <codecell>
 
@@ -101,8 +97,15 @@ star['good'] = np.where((star['utc']>25.0) &
                         #(star['sat_time'].flatten()==0) & 
                         #(np.isfinite(star['tau_aero'][:,319])))[0]
 len(star['good'])
-raw_vis = star['vis_sun']['raw'][0][0][star['good'],:]
-print raw_vis.shape
+
+# <codecell>
+
+if 't' in star.keys():
+    rate = star['rateaero'][star['good'],:]
+    print rate.shape
+else:
+    raw_vis = star['vis_sun']['raw'][0][0][star['good'],:]
+    print raw_vis.shape
 
 # <headingcell level=2>
 
@@ -279,7 +282,6 @@ print aod
 # <codecell>
 
 print utc.shape
-print utc
 
 # <headingcell level=2>
 
@@ -330,7 +332,7 @@ fp+datestr+filesep+'20130823_4STAR_AOD.ncf'
 
 # <headingcell level=2>
 
-# Prepare for testing PCA analysis of aod spectra
+# Prepare for testing PCA analysis of raw spectra
 
 # <codecell>
 
@@ -338,26 +340,71 @@ from sklearn.decomposition import PCA
 
 # <codecell>
 
-print raw_vis.shape
-raw_fl = where(np.isfinite(raw_vis[:,0]))
-
-# <codecell>
-
-np.isfinite(raw_vis[:,4:]).all()
-
-# <codecell>
-
-wvl = np.genfromtxt('C:\\Users\\sleblan2\\Research\\4STAR\\vis_4STAR_wvl.dat')
+if 'rate' in locals():
+    print rate.shape
+    rate_fl = where(np.isfinite(rate[:,0]))
+    wvl = star['w'][0]
+else:
+    print raw_vis.shape
+    raw_fl = where(np.isfinite(raw_vis[:,0]))
+    wvl = np.genfromtxt('C:\\Users\\sleblan2\\Research\\4STAR\\vis_4STAR_wvl.dat')
 
 # <codecell>
 
 wvl.shape
 
+# <markdowncell>
+
+# Get the log of the rate
+
 # <codecell>
 
-pca = PCA(n_components=20)
-pca.fit(raw_vis)
-evals = pca.explained_variance_ratio_
+ratel = np.log(rate)
+
+# <codecell>
+
+print ratel.shape
+
+# <codecell>
+
+print isfinite(ratel[:,400]).all()
+
+# <codecell>
+
+wflrate = [isfinite(ratel).any(0)][0]
+print where(~wflrate)
+wflrate = range(4,1530)
+
+# <codecell>
+
+flrate = [isfinite(ratel[:,wflrate]).all(1)][0]
+print flrate.shape
+print where(~flrate)
+
+# <codecell>
+
+ratel1 = ratel[flrate,:]
+print ratel1.shape
+ratel2 = ratel1[:,wflrate]
+print ratel2.shape
+if len(wvl) != len(wflrate):
+    wvl = wvl[wflrate]
+
+# <codecell>
+
+print isfinite(ratel2).all()
+
+# <codecell>
+
+if 'rate' in locals():
+    ratel1 = ratel[flrate,:]
+    pca = PCA(n_components=20)
+    pca.fit(ratel2)
+    evals = pca.explained_variance_ratio_
+else:
+    pca = PCA(n_components=20)
+    pca.fit(raw_vis)
+    evals = pca.explained_variance_ratio_
 
 # <codecell>
 
@@ -389,11 +436,36 @@ for i in range(10):
     ax3[i].plot(wvl, coms[i,:])
     ax3[i].set_title('pca %d' % i)
     ax3[i].grid()
+    #ax3[i].set_xlim([0.3,1.75])
+    if i >7:
+        ax3[i].set_xlabel('Wavelength [$\mu$m]')
+plt.savefig(fp+datestr+'_langley_pca_log.png',dpi=600)
+
+# <codecell>
+
+print coms[0,:]
+
+# <codecell>
+
+
+# <codecell>
+
+pca2 = PCA(n_components=10)
+pca2.fit(np.log(raw_vis))
+evals2 = pca2.explained_variance_ratio_
+coms2 = pca2.components_
+
+# <codecell>
+
+fig3,ax3 = plt.subplots(5,2,figsize=(15,11))
+plt.tight_layout()
+ax3 = ax3.ravel()
+for i in range(10):
+    ax3[i].plot(wvl, coms[i,:])
+    ax3[i].set_title('pca %d' % i)
+    ax3[i].grid()
     ax3[i].set_xlim([0.3,1.05])
     if i >7:
         ax3[i].set_xlabel('Wavelength [$\mu$m]')
 plt.savefig(fp+datestr+'_langley_pca.png',dpi=600)
-
-# <codecell>
-
 
