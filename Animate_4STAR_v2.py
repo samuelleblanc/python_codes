@@ -102,6 +102,8 @@ len(star['good'])
 
 if 't' in star.keys():
     rate = star['rateaero'][star['good'],:]
+    raw = star['rawcorr'][star['good'],:]
+    m_aero = star['m_aero'][star['good']]
     print rate.shape
 else:
     raw_vis = star['vis_sun']['raw'][0][0][star['good'],:]
@@ -244,91 +246,7 @@ u = open(fp+datestr+filesep+'AOD_sp_anim.m4',"rb").read()
 
 # <codecell>
 
-print len(u)
-
-# <codecell>
-
 video(fp+datestr+filesep+'AOD_sp_anim.m4v','x-m4v')
-
-# <codecell>
-
-from JSAnimation.IPython_display import display_animation
-display_animation(anim)
-
-# <headingcell level=2>
-
-# Prepare of saving specific variables to netcdf
-
-# <codecell>
-
-wvl = star['w'][0]
-aod = star['tau_aero'][star['good']]
-utc = star['utc'][star['good']]
-lat = star['Lat'][star['good']]
-lon = star['Lon'][star['good']]
-alt = star['Alt'][star['good']]
-sza = star['sza'][star['good']]
-
-# <codecell>
-
-print wvl.shape
-print wvl
-
-# <codecell>
-
-print aod.shape
-print aod
-
-# <codecell>
-
-print utc.shape
-
-# <headingcell level=2>
-
-# Save to netcdf
-
-# <codecell>
-
-from scipy.io import netcdf
-f = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','w')
-f.history = 'Created by Samuel LeBlanc on 2015-01-30, 14:54 PST'
-f.createDimension('UTC',len(utc))
-f.createDimension('Wavelength',len(wvl))
-utc_nc = f.createVariable('UTC', 'd',('UTC',))
-utc_nc[:] = utc
-utc_nc.units = 'Hours since midnight'
-aod_nc = f.createVariable('AOD', 'd',('UTC','Wavelength'))
-aod_nc[:] = aod
-aod_nc.units = 'unitless'
-wavelength_nc = f.createVariable('Wavelength', 'd', ('Wavelength',))
-wavelength_nc[:] = wvl
-wavelength_nc.units = 'microns'
-lat_nc = f.createVariable('Latitude', 'd',('UTC',))
-lat_nc[:] = lat[:,0]
-lat_nc.units = 'Degrees North'
-lon_nc = f.createVariable('Longitude', 'd',('UTC',))
-lon_nc[:] = lon[:,0]
-lon_nc.units = 'Degrees'
-sza_nc = f.createVariable('SZA', 'd',('UTC',))
-sza_nc[:] = sza[:,0]
-sza_nc.units = 'Degrees'
-f.close()
-
-# <codecell>
-
-fo = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','r')
-
-# <codecell>
-
-g = fo.variables['AOD']
-
-# <codecell>
-
-print g.units
-
-# <codecell>
-
-fp+datestr+filesep+'20130823_4STAR_AOD.ncf'
 
 # <headingcell level=2>
 
@@ -360,20 +278,24 @@ wvl.shape
 # <codecell>
 
 ratel = np.log(rate)
+rate_m = ratel/m_aero
 
 # <codecell>
 
+print rate_m.shape
+print m_aero.shape
 print ratel.shape
 
 # <codecell>
 
+print ratel.shape
 print isfinite(ratel[:,400]).all()
 
 # <codecell>
 
 wflrate = [isfinite(ratel).any(0)][0]
 print where(~wflrate)
-wflrate = range(4,1530)
+wflrate = range(210,1020)+range(1050,1530)
 
 # <codecell>
 
@@ -388,11 +310,18 @@ print ratel1.shape
 ratel2 = ratel1[:,wflrate]
 print ratel2.shape
 if len(wvl) != len(wflrate):
-    wvl = wvl[wflrate]
+    wvl = star['w'][0][wflrate]
 
 # <codecell>
 
 print isfinite(ratel2).all()
+
+# <codecell>
+
+raw1 = raw[flrate,:]
+raw2 = raw1[:,wflrate]
+rate_m1 = rate_m[flrate,:]
+rate_m2 = rate_m1[:,wflrate]
 
 # <codecell>
 
@@ -401,10 +330,21 @@ if 'rate' in locals():
     pca = PCA(n_components=20)
     pca.fit(ratel2)
     evals = pca.explained_variance_ratio_
+    pca_r = PCA(n_components=20)
+    pca_r.fit(raw2)
+    evals_r = pca_r.explained_variance_ratio_
+    pca_m = PCA(n_components=20)
+    pca_m.fit(rate_m2)
+    evals_m = pca_m.explained_variance_ratio_
 else:
     pca = PCA(n_components=20)
     pca.fit(raw_vis)
     evals = pca.explained_variance_ratio_
+
+# <codecell>
+
+plt.plot(evals_r)
+plt.plot(evals_r.cumsum(),'r')
 
 # <codecell>
 
@@ -414,32 +354,99 @@ plt.plot(evals.cumsum(),'r')
 # <codecell>
 
 print evals.cumsum()
-
-# <codecell>
-
 print evals
-
-# <codecell>
-
 coms = pca.components_
+print coms.shape
+coms_r = pca_r.components_
+coms_m = pca_m.components_
 
 # <codecell>
 
-print coms.shape
+fig2,ax2 = plt.subplots(5,2,figsize=(15,11))
+ax2 = ax2.ravel()
+for i in range(10):
+    if i ==0 :
+        ax2[i].plot(wvl, coms_r[i,:]*(-1.0))
+    else:
+        ax2[i].plot(wvl, coms_r[i,:])
+    ax2[i].set_title('pca %d' % i)
+    ax2[i].grid()
+    #ax3[i].set_xlim([0.3,1.75])
+    if i >7:
+        ax2[i].set_xlabel('Wavelength [$\mu$m]')
+plt.suptitle('Raw counts')
+plt.tight_layout()
+plt.savefig(fp+datestr+'_langley_pca_raw.png',dpi=600)
+
+# <codecell>
+
+for i,j in list(enumerate(wvl)): 
+    print i,j
 
 # <codecell>
 
 fig3,ax3 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
 ax3 = ax3.ravel()
+yli = ([-0.2,0.00001],
+       [-0.05,0.02],
+       [-0.045,0.015],
+       [-0.05,0.03],
+       [-0.01,0.01],
+       [-0.03,0.04],
+       [-0.03,0.02],
+       [-0.02,0.02],
+       [-0.025,0.009],
+       [-0.025,0.04])
 for i in range(10):
     ax3[i].plot(wvl, coms[i,:])
     ax3[i].set_title('pca %d' % i)
     ax3[i].grid()
     #ax3[i].set_xlim([0.3,1.75])
+    if i < 10: 
+        ax3[i].set_ylim(yli[i])
     if i >7:
         ax3[i].set_xlabel('Wavelength [$\mu$m]')
+plt.savefig(fp+datestr+'_langley_pca_log_zoom.png',dpi=600)
+
+# <codecell>
+
+fig4,ax4 = plt.subplots(5,2,figsize=(15,11))
+plt.tight_layout()
+ax4 = ax4.ravel()
+for i in range(10):
+    ax4[i].plot(wvl, coms[i,:])
+    ax4[i].set_title('pca %d' % i)
+    ax4[i].grid()
+    if i >7:
+        ax4[i].set_xlabel('Wavelength [$\mu$m]')
 plt.savefig(fp+datestr+'_langley_pca_log.png',dpi=600)
+
+# <codecell>
+
+fig5,ax5 = plt.subplots(5,2,figsize=(15,11))
+plt.tight_layout()
+ax5 = ax5.ravel()
+yli = ([-0.025,0.0],
+       [-0.030,-0.020],
+       [-0.010,0.01],
+       [0.015,0.03],
+       [-0.03,0.03],
+       [0.00,0.013],
+       [-0.01,0.05],
+       [-0.015,0.01],
+       [-0.005,0.008],
+       [-0.005,0.002])
+for i in range(10):
+    ax5[i].plot(wvl, coms[i,:])
+    ax5[i].set_title('pca %d' % i)
+    ax5[i].grid()
+    ax5[i].set_xlim([0.3,0.65])
+    if i < 10: 
+        ax5[i].set_ylim(yli[i])
+    if i >7:
+        ax5[i].set_xlabel('Wavelength [$\mu$m]')
+plt.savefig(fp+datestr+'_langley_pca_log_vis_430nm.png',dpi=600)
 
 # <codecell>
 
@@ -447,25 +454,122 @@ print coms[0,:]
 
 # <codecell>
 
-
-# <codecell>
-
-pca2 = PCA(n_components=10)
-pca2.fit(np.log(raw_vis))
-evals2 = pca2.explained_variance_ratio_
-coms2 = pca2.components_
-
-# <codecell>
-
-fig3,ax3 = plt.subplots(5,2,figsize=(15,11))
+fig6,ax6 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
-ax3 = ax3.ravel()
+ax6 = ax6.ravel()
+yli = ([-0.05,0.01],
+       [-0.045,0.015],
+       [-0.04,0.02],
+       [-0.02,0.015],
+       [-0.04,0.04],
+       [-0.09,0.05],
+       [-0.05,0.08],
+       [-0.03,0.02],
+       [-0.025,0.01],
+       [-0.015,0.015])
 for i in range(10):
-    ax3[i].plot(wvl, coms[i,:])
-    ax3[i].set_title('pca %d' % i)
-    ax3[i].grid()
-    ax3[i].set_xlim([0.3,1.05])
+    ax6[i].plot(wvl, coms_m[i,:])
+    ax6[i].set_title('pca %d' % i)
+    ax6[i].grid()
+    #ax3[i].set_xlim([0.3,1.75])
+    if i < 10: 
+        ax6[i].set_ylim(yli[i])
     if i >7:
-        ax3[i].set_xlabel('Wavelength [$\mu$m]')
-plt.savefig(fp+datestr+'_langley_pca.png',dpi=600)
+        ax6[i].set_xlabel('Wavelength [$\mu$m]')
+plt.savefig(fp+datestr+'_langley_pca_log_airmass.png',dpi=600)
+
+# <headingcell level=2>
+
+# Use PCA to decompose and recompose the spectra
+
+# <codecell>
+
+pca_r_low = PCA(n_components=0.999)
+pca_r_low.fit(raw2)
+evals_r_low = pca_r_low.explained_variance_ratio_
+print pca_r_low.n_components
+
+# <codecell>
+
+traw2 = pca_r_low.transform(raw2)
+newraw2 = pca_r_low.inverse_transform(traw2)
+
+# <codecell>
+
+print raw2.shape
+scores_r = pca_r.transform(raw2)
+print scores_r.shape
+new_raw2 = pca_r.inverse_transform(scores_r)
+print coms_r.shape
+print new_raw2.shape
+
+# <markdowncell>
+
+# Run PCA on rate_aero
+
+# <codecell>
+
+rate1 = rate[flrate,:]
+rate2 = rate1[:,wflrate[1:]]
+print np.isfinite(rate2).shape
+print np.isfinite(rate2).all()
+print rate2.shape
+print np.isfinite(rate2[0,:]).all()
+
+# <codecell>
+
+pp = np.mean(rate2,0)
+
+# <codecell>
+
+print pp.shape
+
+# <codecell>
+
+print where(~np.isfinite(pp))
+
+# <codecell>
+
+print pp
+
+# <codecell>
+
+pca_rate = PCA(n_components=5,whiten=True)
+pca_rate.fit(rate2)
+print pca_rate.n_components
+
+# <codecell>
+
+trate2 = pca_rate.transform(rate2)
+newrate2 = pca_rate.inverse_transform(trate2)
+
+# <codecell>
+
+print rate2.shape
+print trate2.shape
+print newrate2.shape
+
+# <codecell>
+
+plt.plot(rate2[:,500])
+plt.plot(newrate2[:,500],'r')
+
+# <codecell>
+
+plt.plot(rate2[:,900])
+plt.plot(newrate2[:,900],'r')
+
+# <codecell>
+
+plt.plot(rate2[500,:])
+plt.plot(newrate2[500,:],'r')
+coms_r2 = pca_rate.components_
+plt.plot()
+
+# <codecell>
+
+print wvl[180:]
+
+# <codecell>
+
 
