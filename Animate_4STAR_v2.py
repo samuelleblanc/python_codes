@@ -92,11 +92,12 @@ else:
 # <codecell>
 
 star['good'] = np.where((star['utc']>25.0) & 
-                        (star['utc']<27.6))[0]# & 
-                        #(star['Str'].flatten()!=0) & 
-                        #(star['sat_time'].flatten()==0) & 
-                        #(np.isfinite(star['tau_aero'][:,319])))[0]
-len(star['good'])
+                        (star['utc']<27.6) & 
+                        (star['Str'].flatten()!=0) & 
+                        (star['sat_time'].flatten()==0) & 
+                        (np.isfinite(star['tau_aero'][:,319])))[0]
+print len(star['good'])
+print star['good'][0]
 
 # <codecell>
 
@@ -433,7 +434,7 @@ yli = ([-0.025,0.0],
        [0.015,0.03],
        [-0.03,0.03],
        [0.00,0.013],
-       [-0.01,0.05],
+       [-0.01,0.1],
        [-0.015,0.01],
        [-0.005,0.008],
        [-0.005,0.002])
@@ -519,24 +520,44 @@ print np.isfinite(rate2[0,:]).all()
 # <codecell>
 
 pp = np.mean(rate2,0)
-
-# <codecell>
-
 print pp.shape
-
-# <codecell>
-
 print where(~np.isfinite(pp))
-
-# <codecell>
-
 print pp
 
 # <codecell>
 
-pca_rate = PCA(n_components=5,whiten=True)
+fll = range(0,1842)+range(1844,2836)+range(2861,5159)+range(5161,6753)+range(6792,len(rate2[:,500]))
+r2_vis = rate2[fll,0:809]
+r2_nir = rate2[fll,809:]
+wvl_vis = wvl[0:809]
+wvl_nir = wvl[810:]
+
+# <codecell>
+
+pca_vis = PCA(n_components=0.999)
+pca_vis.fit(r2_vis)
+tr2_vis = pca_vis.transform(r2_vis)
+n2_vis = pca_vis.inverse_transform(tr2_vis)
+pca_nir = PCA(n_components=0.995)
+pca_nir.fit(r2_nir)
+tr2_nir = pca_nir.transform(r2_nir)
+n2_nir = pca_nir.inverse_transform(tr2_nir)
+
+# <codecell>
+
+print pca_vis.n_components
+print pca_nir.n_components
+
+# <codecell>
+
+pca_rate = PCA(n_components=5)
 pca_rate.fit(rate2)
 print pca_rate.n_components
+
+# <codecell>
+
+print wvl[800:850]
+print wvl[809]
 
 # <codecell>
 
@@ -556,19 +577,58 @@ plt.plot(newrate2[:,500],'r')
 
 # <codecell>
 
-plt.plot(rate2[:,900])
-plt.plot(newrate2[:,900],'r')
+plt.plot(r2_vis[:,500])
+plt.plot(n2_vis[:,500],'r')
 
 # <codecell>
 
-plt.plot(rate2[500,:])
-plt.plot(newrate2[500,:],'r')
-coms_r2 = pca_rate.components_
-plt.plot()
+plt.plot(r2_nir[:,300])
+plt.plot(n2_nir[:,300],'r')
 
 # <codecell>
 
-print wvl[180:]
+print wvl_vis.shape
+print r2_vis[500,:].shape
+print wvl_nir.shape
+print r2_nir[500,:].shape
+
+# <codecell>
+
+plt.plot(wvl_vis,r2_vis[500,:])
+plt.plot(wvl_nir,r2_nir[500,:])
+plt.plot(wvl_vis,n2_vis[500,:],'r')
+plt.plot(wvl_nir,n2_nir[500,:],'r')
+
+# <codecell>
+
+ff, axs = plt.subplots(5,figsize=(15,9))
+for a in range(5):
+    axs[a].plot(coms_r2[a]*trate2[500,a]+pca_rate.mean_)
+    axs[a].set_title('component %d' % a)
+
+#plt.plot(coms_r2[0]*trate2[500,0])
+print trate2[500,0]
+
+# <codecell>
+
+print m_aero.shape
+print n2_vis[:,300].shape
+
+# <codecell>
+
+maero = m_aero[flrate]
+mm = maero[fll]
+print mm.shape
+
+# <codecell>
+
+plt.plot(mm,np.log(r2_vis[:,300]),label='before pca smoothing',color='r',linestyle=':')
+plt.plot(mm,np.log(n2_vis[:,300]),label='after pca smoothing',linewidth=0.5)
+plt.title('Langley plot for one wavelength')
+plt.xlabel('Airmass')
+plt.ylabel('Log (Rate of counts)')
+plt.legend(frameon=False)
+plt.savefig(fp+datestr+'_langley_smooth.png',dpi=600)
 
 # <codecell>
 
