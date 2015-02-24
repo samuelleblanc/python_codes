@@ -134,6 +134,53 @@ plt.ylim([0,0.05])
 plt.legend(bbox_to_anchor=[1,0.1],loc=3)
 plt.savefig(fp+datestr+'_AOD_time.png',dpi=600)
 
+# <codecell>
+
+plt.figure()
+plt.plot(star['w'].T,star['tau_aero'][star['good'][100],:])
+plt.ylim([0,0.3])
+plt.xlim([0.3,1.75])
+plt.xlabel('Wavelength [$\mu$m]')
+plt.ylabel('AOD')
+plt.title('AOD at single time point')
+plt.savefig(fp+datestr+'_AOD_spectrum.png',dpi=600)
+
+# <codecell>
+
+fi,ax = plt.subplots(figsize=(8,13))
+aodlevels = np.linspace(0,0.1,26)
+cs = plt.contourf(star['w'][0,:],star['utc'][star['good']],star['tau_aero'][star['good'],:],aodlevels,cmap=plt.cm.gist_ncar,extend='both')
+cbar = plt.colorbar(cs,pad=0.15)
+cbar.set_label('AOD')
+cbar.ax.set_aspect(30)
+ax.set_xlabel('Wavelength [$\mu$m]')
+ax.set_ylabel('UTC [h]')
+ax.set_title('AOD for Langley flight (2014-10-02)')
+ax2 = ax.twinx()
+ax2.set_ylabel('airmass')
+ax1Ys = ax.get_yticks()
+ax2Ys = []
+for Y in ax1Ys:
+    ax2Ys.append('%4.1f' % star['m_aero'][(np.abs(star['utc']-Y)).argmin()][0])
+ax2.set_yticks(ax1Ys)
+ax2.set_ybound(ax.get_ybound())
+ax2.set_yticklabels(ax2Ys)
+plt.draw()
+plt.savefig(fp+datestr+'_AOD_time_spectrum.png',dpi=600)
+
+# <codecell>
+
+plt.figure(figsize=(8,13))
+aodlevels = np.linspace(0.015,0.035,26)
+cs = plt.contourf(star['w'][0,:],star['utc'][star['good']],star['tau_aero'][star['good'],:],aodlevels,cmap=plt.cm.gist_ncar,extend='both')
+cbar = plt.colorbar(cs)
+cbar.set_label('AOD')
+plt.xlabel('Wavelength [$\mu$m]')
+plt.xlim([0.4,0.5])
+plt.ylabel('UTC [h]')
+plt.title('AOD for Langley flight near 430 nm (2014-10-02)')
+plt.savefig(fp+datestr+'_AOD_time_spectrum_zoom.png',dpi=600)
+
 # <headingcell level=2>
 
 # Prepare for testing PCA analysis of raw spectra
@@ -521,6 +568,22 @@ plt.savefig(fp+datestr+'_single_spectrum_reconstructed.png',dpi=600)
 
 # <codecell>
 
+figw,axw = plt.subplots(1,2,figsize=(15,5))
+plt.tight_layout()
+axw = axw.ravel()
+axw[0].plot(wvl_vis,(r2_vis[500,:]-n2_vis[500,:])/r2_vis[500,:]*100.0)
+axw[1].plot(wvl_nir,(r2_nir[500,:]-n2_nir[500,:])/r2_nir[500,:]*100.0)
+
+for i in range(2):
+    axw[i].set_xlabel('Wavelength [$\mu$m]')
+    axw[i].set_ylabel('Rate counts difference [$\%$]')
+
+plt.suptitle('Single spectrum difference between original and reconstructed from PCA')
+plt.tight_layout()
+plt.savefig(fp+datestr+'_single_spectrum_reconstructed_difference.png',dpi=600)
+
+# <codecell>
+
 ff, axs = plt.subplots(5,figsize=(15,9))
 for a in range(5):
     axs[a].plot(coms_r2[a]*trate2[500,a]+pca_rate.mean_)
@@ -546,15 +609,15 @@ figl,axl = plt.subplots(1,2,figsize=(15,5))
 plt.tight_layout()
 axl = axl.ravel()
 
-axl[0].plot(mm,np.log(r2_vis[:,300]),label='before pca smoothing',color='b',linestyle=':')
-axl[0].plot(mm,np.log(n2_vis[:,300]),label='after pca smoothing',color='r',linewidth=0.5)
+axl[0].plot(mm,np.log(r2_vis[:,300]),label='Original signal',color='b',linestyle=':')
+axl[0].plot(mm,np.log(n2_vis[:,300]),label='After pca reconstruction with %s componenents' %pca_vis.n_components,color='r',linewidth=0.5)
 axl[0].set_title('Langley plot at %s $\mu$m' % wvl_vis[300])
 axl[0].set_xlabel('Airmass')
 axl[0].set_ylabel('Log (Rate of counts)')
 axl[0].legend(frameon=False)
 
-axl[1].plot(mm,np.log(r2_nir[:,300]),label='before pca smoothing',color='b',linestyle=':')
-axl[1].plot(mm,np.log(n2_nir[:,300]),label='after pca smoothing',color='r',linewidth=0.5)
+axl[1].plot(mm,np.log(r2_nir[:,300]),label='Original signal',color='b',linestyle=':')
+axl[1].plot(mm,np.log(n2_nir[:,300]),label='After pca reconstruction with %s componenents' %pca_nir.n_components,color='r',linewidth=0.5)
 axl[1].set_title('Langley plot at %s $\mu$m' % wvl_nir[300])
 axl[1].set_xlabel('Airmass')
 axl[1].set_ylabel('Log (Rate of counts)')
