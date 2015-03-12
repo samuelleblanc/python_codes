@@ -255,6 +255,19 @@ dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')
 
 # <codecell>
 
+plt.figure()
+plt.plot(dc8['TIME_UTC']/3600.0,dc8['G_ALT'])
+plt.xlabel('UTC [h]')
+plt.ylabel('GPS Altitude [m]')
+plt.title('DC8 Altitude on 2013-09-13')
+
+# <codecell>
+
+print dc8['TIME_UTC'][12000]/3600.0
+print dc8['G_ALT'][12000]
+
+# <codecell>
+
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
 mea.keys()
@@ -386,6 +399,12 @@ plt.grid(True)
 plt.xlabel('Time [UTC]')
 plt.ylabel('ER-2 Altitude [m]')
 plt.legend(frameon=False)
+
+# <codecell>
+
+print er2['Start_UTC'][12000]
+print er2['GPS_Altitude'][12000]
+print er2['Pressure_Altitude'][12000]
 
 # <codecell>
 
@@ -871,6 +890,23 @@ def plot_median_mean(x,lbl=False,color='k'):
 #  - RSP: 42 m : 70
 #  - 4STAR: 70 m : 40
 
+# <headingcell level=2>
+
+# Run thourhg data and convolve to get the same area
+
+# <markdowncell>
+
+# ER-2 Altitude: 19018 m
+# DC8 Altitude: 8047 m
+# Cloud base height: 
+# Cloud top height: 
+#  - Modis: 500 m
+#  
+
+# <headingcell level=2>
+
+# Plot histogram of different tau and ref comparison
+
 # <codecell>
 
 plt.figure(figsize=(9,6))
@@ -922,7 +958,7 @@ plt.savefig(fp+'plots/hist_modis_4star_ref.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
-# eMAX V00 and V01 comparison
+# eMAS V00 and V01 comparison
 
 # <codecell>
 
