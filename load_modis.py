@@ -432,6 +432,98 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     endprogress()
     return meas_ind
 
+# <codecell>
+
+def load_cpl_layers(datfile,values=None):
+    """
+    Name:
+
+        load_cpl_layers
+    
+    Purpose:
+
+        Function to load cpl files of layer properties 'layers_'
+        This funciton is called from another script
+    
+    Calling Sequence:
+
+        cpl_layers = load_cpl_layers(datfile) 
+    
+    Input: 
+  
+        datfile name (layers text files)
+    
+    Output:
+
+        cpl_layers: dictionary with associated properties such as time, A/C altitude, latitude, longitude, and roll
+                    number of layers, Ground height (GH) in meters above MSL, top and bottom altitude of each layer, and type of layer
+    
+    Keywords: 
+
+        none
+    
+    Dependencies:
+
+        os
+        numpy
+        re : for regular experessions
+    
+    Required files:
+   
+        layers text files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-03-24, NASA Ames
+    """
+    import os
+    if not(os.path.isfile(datfile)):
+        error('File not found!')
+    import numpy as np
+    import re
+
+    # set variables to read
+    num_lines = sum(1 for line in open(datfile))
+    head_lines = 14
+    d = np.empty(num_lines-head_lines,dtype=[('hh','i4'),
+                                             ('mm','i4'),
+                                             ('ss','i4'),
+                                             ('lat','f8'),
+                                             ('lon','f8'),
+                                             ('alt','f8'),
+                                             ('rol','f8'),
+                                             ('num','i4'),
+                                             ('gh','f8'),
+                                             ('top','f8',(10)),
+                                             ('bot','f8',(10)),
+                                             ('type','i4',(10)),
+                                             ('utc','f8')])
+    d[:] = np.NAN
+    header = ''
+    with open(datfile) as fp:
+        for iline, line in enumerate(fp):
+            if iline<head_lines:
+                header = header + line
+            else:
+                i = iline-head_lines
+                line = line.strip()
+                temp = filter(None, re.split(r"[ :()]",line))
+                d['hh'][i], d['mm'][i], d['ss'][i] = temp[0], temp[1], temp[2]
+                d['lat'][i], d['lon'][i], d['alt'][i] = temp[3], temp[4], temp[5]
+                d['rol'][i], d['num'][i], d['gh'][i] = temp[6], temp[7], temp[8]
+                for n in range(d['num'][i]):
+                    try:
+                        d['top'][i][n], d['bot'][i][n], d['type'][i][n] = temp[9+3*n], temp[9+3*n+1], temp[9+3*n+2]
+                    except:
+                        import pdb; pdb.set_trace()
+                d['utc'][i] = float(d['hh'][i])+float(d['mm'][i])/60.0+float(d['ss'][i])/3600.0
+                
+    return d
+
 # <markdowncell>
 
 # Testing of the script:
