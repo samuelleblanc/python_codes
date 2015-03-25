@@ -842,17 +842,54 @@ cbar = m1.colorbar(cs1)
 cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
 x1,y1 = m1(meas.lon,meas.lat)
-m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+#m1.scatter(x1,y1,c=tau,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.25)
+xt1, yt1 = m1(-70.5,42.2)
+m1.plot(x1,y1,'k',lw=2)
+axm2[0].text(xt1,yt1,'G-1',color='k')
 
 clevels2 = np.linspace(0,50,25)
 cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
 cbar = m2.colorbar(cs2)
 cbar.set_label('R$_{ef}$ [$\\mu$m]')
 axm2[1].set_title('MODIS - AQUA Cloud effective radius')
-m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+#m2.scatter(x1,y1,c=ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.25)
+xt2, yt2 = m2(-70.5,42.2)
+axm2[1].text(xt2,yt2,'G-1',color='k')
+m2.plot(x1,y1,'k',lw=2)
+figm2.subplots_adjust(wspace=0.3)
+plt.savefig(fp+'plots/modis_g1_tau_ref_path.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
+#plt.show()
+
+# <codecell>
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
+m1 = tcap_map(axm2[0])
+m2 = tcap_map(axm2[1])
+x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,25,25)
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar)
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
+x1,y1 = m1(meas.lon,meas.lat)
+m1.scatter(x1,y1,c=tau-3.0,cmap=plt.cm.gist_ncar,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.25)
+xt1, yt1 = m1(-70.5,42.2)
+plt.text(xt1,yt1,'G-1',color='k')
+
+clevels2 = np.linspace(0,50,25)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth)
+cbar = m2.colorbar(cs2)
+cbar.set_label('R$_{ef}$ [$\\mu$m]')
+axm2[1].set_title('MODIS - AQUA Cloud effective radius')
+m2.scatter(x1,y1,c=ref-3.0,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.25)
+xt2, yt2 = m2(-70.5,42.2)
+plt.text(xt2,yt2,'G-1',color='k')
+
 figm2.subplots_adjust(wspace=0.3)
 plt.savefig(fp+'plots/modis_g1_tau_ref_comp.png',dpi=600,transparent=True)
-plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
+#plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
 plt.show()
 
 # <markdowncell>
@@ -1011,6 +1048,39 @@ ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([17,19.05])
 plt.savefig(fp+'plots/modis_4star_time_comp.png',dpi=600)
 plt.savefig(fp+'plots/modis_4star_time_comp.pdf',bbox='tight')
+
+# <markdowncell>
+
+# Redo plot above, but with only tau and ref for comparison
+
+# <codecell>
+
+fig,ax = plt.subplots(2,sharex=True)
+ax[0].set_title('Retrieval results time trace')
+ax[0].plot(meas.utc,tau,'rx',label='4STAR')
+#ax[0].plot(meas.utc[meas.good[:,0]],smooth(tau[meas.good[:,0],0],20),'k')
+ax[0].plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]],'m+',label='MODIS')
+ax[0].set_ylabel('$\\tau$')
+ax[0].set_ylim([0,15])
+ax[0].legend()
+ax[1].plot(meas.utc,ref,'g+',label='4STAR')
+ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
+ax[1].plot(meas.utc[meas.good].ravel(),modis['ref'][meas.ind[0,:],meas.ind[1,:]],'m+',label='MODIS')
+ax[1].set_ylim([0,60])
+ax[1].legend()
+#ax[1].plot(meas.utc[meas.good[:,0]],smooth(ref[meas.good[:,0],0],20),'k')
+#ax[2].plot(meas.utc,phase,'k.')
+#ax[2].set_ylabel('Phase')
+#ax[2].set_ylim([-0.5,1.5])
+#ax[2].set_yticks([0,1])
+#ax[2].set_yticklabels(['liq','ice'])
+#ax[2].plot(meas.utc[meas.good].ravel(),modis['phase'][meas.ind[0,:],meas.ind[1,:]]-1,'m+')
+#ax[3].plot(meas.utc,ki)
+#ax[3].set_ylabel('$\\chi^{2}$')
+ax[1].set_xlabel('UTC [Hours]')
+ax[1].set_xlim([17.25,19.05])
+plt.savefig(fp+'plots/modis_4star_time_comp_tau_ref.png',dpi=600)
+#plt.savefig(fp+'plots/modis_4star_time_comp_tau_ref.pdf',bbox='tight')
 
 # <markdowncell>
 

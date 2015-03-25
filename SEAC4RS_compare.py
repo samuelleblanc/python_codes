@@ -581,7 +581,7 @@ plt.show()
 
 # <headingcell level=3>
 
-# Now run the retrieval
+# Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
 # <codecell>
 
@@ -611,6 +611,21 @@ axsr[1].set_ylim([0,61])
 axsr[2].set_ylabel('$\\chi^{2}$')
 axsr[0].set_title('SSFR ER-2 Retrieval results')
 axsr[2].set_xlim([18.0,19.2])
+
+# <headingcell level=2>
+
+# Load data from CPL to caompare flight profiles of DC8 and ER2 to cloud layers
+
+# <codecell>
+
+cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
+import load_modis as lm
+reload(lm)
+from load_modis import load_cpl_layers
+cpl_layers = load_cpl_layers(cpl_layer_file)
+
+# <codecell>
+
 
 # <headingcell level=2>
 
@@ -892,7 +907,7 @@ def plot_median_mean(x,lbl=False,color='k'):
 
 # <headingcell level=2>
 
-# Run thourhg data and convolve to get the same area
+# Run through data and convolve to get the same area
 
 # <markdowncell>
 
@@ -901,6 +916,7 @@ def plot_median_mean(x,lbl=False,color='k'):
 # Cloud base height: 
 # Cloud top height: 
 #  - Modis: 500 m
+#  - eMAS: 50m or 2.5 mrad FOV ()
 #  
 
 # <headingcell level=2>
@@ -912,8 +928,8 @@ def plot_median_mean(x,lbl=False,color='k'):
 plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
-plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
-plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,40))
+#plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
 plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
 plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
 plt.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
@@ -921,7 +937,7 @@ plt.title('Optical Thickness histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
 plot_median_mean(smooth(modis_tau,6),color='m')
-plot_median_mean(smooth(emas_tau,60),color='b')
+#plot_median_mean(smooth(emas_tau ,60),color='b')
 plot_median_mean(smooth(emas_tau_v1,60),color='k')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
@@ -936,8 +952,8 @@ plt.savefig(fp+'plots/hist_modis_4star_tau.png',dpi=600,transparent=True)
 plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
-plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
-plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS v1 (Reflected)',range=(0,59))
+#plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
 plt.hist(smooth(ssfr_ref,2),bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
 plt.hist(smooth(rsp_ref,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,79))
 plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
@@ -946,7 +962,7 @@ plt.title('Cloud particle effective radius histogram')
 plt.ylabel('Normed probability')
 plt.xlabel('R$_{eff}$ [$\\mu$m]')
 plot_median_mean(smooth(modis_ref,6),color='m')
-plot_median_mean(smooth(emas_ref,60),color='b')
+#plot_median_mean(smooth(emas_ref,60),color='b')
 plot_median_mean(smooth(emas_ref_v1,60),color='k')
 plot_median_mean(smooth(ssfr_ref,2),color='g')
 plot_median_mean(smooth(rsp_ref,70),color='c')
@@ -1212,7 +1228,4 @@ mg.drawcountries()
 figmg.show()
 x,y = mg(goes['lon'],goes['lat'])
 csg = mg.contourf(x,y,goes['tau'],clevels,cmap=plt.cm.gist_ncar)
-
-# <codecell>
-
 
