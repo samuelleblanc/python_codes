@@ -626,6 +626,43 @@ cpl_layers = load_cpl_layers(cpl_layer_file)
 
 # <codecell>
 
+cpl_layers.dtype
+
+# <codecell>
+
+
+# <codecell>
+
+fig,ax = plt.subplots(1,1)
+ax2 = ax.twinx()
+ax2.set_yticks([0,1000,2000,3000])
+ax2.set_yticklabels(['None','PBL','Aerosol','Cloud'])
+ax2.set_ylim([-200,20000])
+for i in xrange(10):
+    ax.vlines(cpl_layers['utc'],cpl_layers['bot'][:,i],cpl_layers['top'][:,i],lw=0.1,color=plt.cm.gist_rainbow(i/10.0))
+    ax2.plot(cpl_layers['utc'],cpl_layers['type'][:,i]*1000,'+',color=plt.cm.gist_rainbow(i/10.0))
+plt.title('Cloud layers from CPL')
+ax.set_xlabel('UTC [H]')
+ax.set_ylabel('Altitude [m]')
+#plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
+plt.savefig(fp+'plots/20130913_cpl_layers.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig,ax = plt.subplots(1,1)
+ax2 = ax.twinx()
+ax2.set_yticks([0,1000,2000,3000])
+ax2.set_yticklabels(['None','PBL','Aerosol','Cloud'])
+ax2.set_ylim([-200,20000])
+for i in xrange(10):
+    ax.vlines(cpl_layers['utc'],cpl_layers['bot'][:,i],cpl_layers['top'][:,i],lw=0.1,color=plt.cm.gist_rainbow(i/10.0))
+    ax2.plot(cpl_layers['utc'],cpl_layers['type'][:,i]*1000,'+',color=plt.cm.gist_rainbow(i/10.0))
+plt.title('Cloud layers from CPL')
+ax.set_xlabel('UTC [H]')
+ax.set_ylabel('Altitude [m]')
+ax.set_xlim([18.5,19.2])
+#plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
+plt.savefig(fp+'plots/20130913_cpl_layers_zoom.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
