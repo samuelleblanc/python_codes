@@ -256,7 +256,7 @@ dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')
 # <codecell>
 
 plt.figure()
-plt.plot(dc8['TIME_UTC']/3600.0,dc8['G_ALT'])
+plt.plot(dc8['TIME_UTC'],dc8['G_ALT'])
 plt.xlabel('UTC [h]')
 plt.ylabel('GPS Altitude [m]')
 plt.title('DC8 Altitude on 2013-09-13')
@@ -630,9 +630,6 @@ cpl_layers.dtype
 
 # <codecell>
 
-
-# <codecell>
-
 fig,ax = plt.subplots(1,1)
 ax2 = ax.twinx()
 ax2.set_yticks([0,1000,2000,3000])
@@ -663,6 +660,26 @@ ax.set_ylabel('Altitude [m]')
 ax.set_xlim([18.5,19.2])
 #plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
 plt.savefig(fp+'plots/20130913_cpl_layers_zoom.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig,ax = plt.subplots(1,1)
+ax2 = ax.twinx()
+ax2.set_yticks([0,1000,2000,3000])
+ax2.set_yticklabels(['None','PBL','Aerosol','Cloud'])
+ax2.set_ylim([-200,20000])
+for i in xrange(10):
+    ax.vlines(cpl_layers['utc'],cpl_layers['bot'][:,i],cpl_layers['top'][:,i],lw=0.1,color=plt.cm.gist_rainbow(i/10.0))
+    ax2.plot(cpl_layers['utc'],cpl_layers['type'][:,i]*1000,'+',color=plt.cm.gist_rainbow(i/10.0))
+plt.title('Cloud layers from CPL')
+ax.set_xlabel('UTC [H]')
+ax.set_ylabel('Altitude [m]')
+ax.set_xlim([18.5,19.2])
+ax.plot(er2['Start_UTC'],er2['GPS_Altitude'],label="ER-2",color='b')
+ax.plot(dc8['TIME_UTC'],dc8['G_ALT'],label="DC8",color='k')
+ax.legend(frameon=False)
+#plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
+plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 

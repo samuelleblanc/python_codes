@@ -124,21 +124,32 @@ def load_modis(geofile,datfile):
 def load_ict(fname):
     """
     Simple ict file loader
-    created specifically to load the files from the iwg1 on oard the G1 during TCAP, may work with others...
+    created specifically to load the files from the iwg1 on board the G1 during TCAP, may work with others...
     """
     from datetime import datetime
     import numpy as np
     f = open(fname,'r')
-    first = f.readline()
+    lines = f.readlines()
+    first = lines[0]
     num2skip = int(first.strip().split(',')[0])
+    header = lines[0:num2skip]
+    factor = map(float,header[10].strip().split(','))
     f.close()
+    if any([i!=1 for i in factor]):
+        print('Some Scaling factors are not equal to one, Please check the factors:')
+        print factor
     def mktime(txt):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
     def utctime(seconds_utc):
         return float(seconds_utc)/3600.
-    conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime}
-    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,dtype=None,converters=conv)
+    conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime, "TIME_UTC":utctime}
+    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,converters=conv)
     print data.dtype.names
+    #scale the values by using the scale factors
+    for i,name in enumerate(data.dtype.names):
+        if i>0:
+            if factor[i-1]!=float(1):
+                data[name] = data[name]*factor[i-1]    
     return data
 
 # <codecell>
