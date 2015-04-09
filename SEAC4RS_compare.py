@@ -971,7 +971,10 @@ def plot_median_mean(x,lbl=False,color='k'):
 # Cloud top height: 
 #  - Modis: 500 m
 #  - eMAS: 50m or 2.5 mrad FOV ()
-#  
+#  - RSP: 14 mrad FOV
+#  - 4STAR: 2 degree, 0.0349 rads
+#  - GOES: 1km
+#  - SSFR: 180 degrees, Pi rads
 
 # <headingcell level=2>
 
