@@ -322,6 +322,15 @@ reload(rk)
 
 # <codecell>
 
+subp = [1,2,4,5,6,10,11,13]
+subp = [2,3,5,6,7,11,12,14]
+
+# <codecell>
+
+subp = [0,1,3,4,5,6,7,10,11,13,14]
+
+# <codecell>
+
 print max(meas.good)
 print type(mea['good'])
 print isinstance(mea['good'],tuple)
@@ -329,12 +338,35 @@ print type(mea['good'][0])
 
 # <codecell>
 
-(meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
+(meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut,subp)
 
 # <codecell>
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
+
+# <codecell>
+
+from Sp_parameters import smooth
+fig,ax = plt.subplots(4,sharex=True)
+ax[0].set_title('Retrieval results time trace')
+ax[0].plot(meas.utc,meas.tau,'rx')
+ax[0].plot(meas.utc[meas.good],smooth(meas.tau[meas.good],20),'k')
+ax[0].set_ylabel('$\\tau$')
+ax[1].plot(meas.utc,meas.ref,'g+')
+ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
+ax[1].plot(meas.utc[meas.good],smooth(meas.ref[meas.good],20),'k')
+ax[2].plot(meas.utc,meas.phase,'k.')
+ax[2].set_ylabel('Phase')
+ax[2].set_ylim([-0.5,1.5])
+ax[2].set_yticks([0,1])
+ax[2].set_yticklabels(['liq','ice'])
+ax[3].plot(meas.utc,meas.ki)
+ax[3].set_ylabel('$\\chi^{2}$')
+ax[3].set_xlabel('UTC [Hours]')
+ax[3].set_xlim([18.5,19.05])
+plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.png',dpi=600)
+plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
 
 # <codecell>
 
@@ -675,7 +707,7 @@ for i in xrange(10):
 plt.title('Cloud layers from CPL')
 ax.set_xlabel('UTC [H]')
 ax.set_ylabel('Altitude [m]')
-ax.set_xlim([18.5,19.2])
+ax.set_xlim([18.0,19.5])
 ax.plot(er2['Start_UTC'],er2['GPS_Altitude'],label="ER-2",color='b')
 ax.plot(dc8['TIME_UTC'],dc8['G_ALT'],label="DC8",color='k')
 ax.legend(frameon=False)
@@ -869,10 +901,49 @@ probes = np.genfromtxt(prb_file,skip_header=2)
 
 # <codecell>
 
+print probes[:,1]
+print probes[:,2]
+
+# <codecell>
+
 print probes.shape
 print probes[:,7]
 plt.figure()
 plt.hist(probes[:,7])
+
+# <headingcell level=2>
+
+# Load 2DS data for effective radius at specific times
+
+# <codecell>
+
+twoDS = load_ict(fp+'dc8/20130913/seac4rs-2DS_DC8_20130913_R0.ict')
+
+# <codecell>
+
+plt.figure
+plt.plot(twoDS['Start_UTC'],twoDS['effectiveD']/2.0)
+plt.plot(twoDS['Start_UTC'],smooth(twoDS['effectiveD']/2.0,60),'r')
+plt.ylim([0,100])
+plt.xlabel('UTC [h]')
+plt.ylabel('Effective radius [$\\mu$m]')
+plt.title('2DS effective radius from 2013-09-13')
+
+# <codecell>
+
+len(twoDS['Start_UTC'])
+
+# <codecell>
+
+len(dc8['G_ALT'])
+
+# <codecell>
+
+plt.figure
+plt.plot(twoDS['effectiveD'][1:]/2.0,dc8['G_ALT'])
+plt.xlim([0,100])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
 
 # <headingcell level=2>
 
