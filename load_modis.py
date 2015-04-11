@@ -297,7 +297,7 @@ def load_emas(datfile):
 
 # <codecell>
 
-def load_hdf(datfile,values=None):
+def load_hdf(datfile,values=None,verbose=True):
     """
     Name:
 
@@ -311,7 +311,7 @@ def load_hdf(datfile,values=None):
     
     Calling Sequence:
 
-        hdf_dat,hdf_dict = load_hdf(datfile,Values=None) 
+        hdf_dat,hdf_dict = load_hdf(datfile,Values=None,verbose=True) 
     
     Input: 
   
@@ -327,6 +327,7 @@ def load_hdf(datfile,values=None):
         values: if ommitted, only outputs the names of the variables in file
                 needs to be a tuple of 2 element tuples (first element name of variable, second number of record)
                 example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
+        verbose: if true (default), then everything is printed. if false, nothing is printed
     
     Dependencies:
 
@@ -346,6 +347,8 @@ def load_hdf(datfile,values=None):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2014-12-10, NASA Ames
+        Modified (v1.1): Samuel LeBlanc, 2015-04-10, NASA Ames
+                        - added verbose keyword
     """
     import numpy as np
     from osgeo import gdal
@@ -353,25 +356,28 @@ def load_hdf(datfile,values=None):
     
     datsds = gdal.Open(datfile)
     datsub = datsds.GetSubDatasets()
-    print 'Outputting the Data subdatasets:'
-    for i in range(len(datsub)):
-        if values:
-            if any(i in val for val in values):
-                print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+    if verbose: 
+        print 'Outputting the Data subdatasets:'
+        for i in range(len(datsub)):
+            if values:
+                if any(i in val for val in values):
+                    print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+                else:
+                    print str(i)+': '+datsub[i][1]
             else:
                 print str(i)+': '+datsub[i][1]
-        else:
-            print str(i)+': '+datsub[i][1]
     if not values:
-        print 'Done going through file... Please supply pairs of name and index for reading file'
-        print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
-        print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
+        if verbose:
+            print 'Done going through file... Please supply pairs of name and index for reading file'
+            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
+            print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
         return None, None
     hdf = dict()
     meta = datsds.GetMetadata() 
     import gc; gc.collect()
     hdf_dicts = dict()
-    startprogress('Running through modis values')
+    if verbose:
+        startprogress('Running through data values')
     for i,j in values:
         sds = gdal.Open(datsub[j][0])
         hdf_dicts[i] = sds.GetMetadata()
@@ -397,9 +403,11 @@ def load_hdf(datfile,values=None):
                 makenan = False
         if makenan:
             hdf[i][bad_points] = np.nan
-        progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
-    endprogress()
-    print hdf.keys()
+        if verbose:
+            progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
+    if verbose:
+        endprogress()
+        print hdf.keys()
     del datsds,sds,datsub
     return hdf,hdf_dicts
 
@@ -534,6 +542,110 @@ def load_cpl_layers(datfile,values=None):
                 d['utc'][i] = float(d['hh'][i])+float(d['mm'][i])/60.0+float(d['ss'][i])/3600.0
                 
     return d
+
+# <codecell>
+
+def load_apr(datfiles):
+    """
+    Name:
+
+        load_apr
+    
+    Purpose:
+
+        Function to load apr values of zenith dbz from the various files in the datfiles list
+    
+    Calling Sequence:
+
+        aprout = load_apr(datfiles) 
+    
+    Input: 
+  
+        datfiles name (list of .h4 files to combine)
+    
+    Output:
+
+        aprout: dbz, zenith radar reflectivity
+                latz, latitude of the zenith reflectivity
+                lonz, longitude of the "
+                altflt, actual altitude in the atmosphere of the radar refl.
+                utc, time of measurement in utc fractional hours
+                
+    
+    Keywords: 
+
+        none
+    
+    Dependencies:
+
+        os
+        numpy
+        load_modis
+        datetime
+    
+    Required files:
+   
+        hdf APR-2 files from SEAC4RS
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-04-10, NASA Ames
+    """
+    import os
+    import numpy as np
+    from load_modis import load_hdf, remove_field_name
+    import datetime
+    
+    first = True
+    for f in datfiles:
+        print 'Running file: ',f
+        if not(os.path.isfile(f)):
+            print 'Problem with file:', f
+            print ' ... Skipping'
+            continue
+        
+        apr_value = (('lat',16),('lon',17),('alt',15),('time',14),('dbz',0),('lat3d',30),('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
+        apr,aprdicts = load_hdf(f,values=apr_value,verbose=False)
+        # transform the 3d latitudes, longitudes, and altitudes to usable values
+        apr['latz'] = apr['lat3d']/apr['lat3d_s']+apr['lat3d_o']
+        apr['lonz'] = apr['lon3d']/apr['lon3d_s']+apr['lon3d_o']
+        apr['altz'] = apr['alt3d']/apr['alt3d_s']+apr['alt3d_o']
+        apr['altflt'] = np.copy(apr['altz'])
+        for z in range(apr['altz'].shape[0]):
+            apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+        izen = apr['altz'][:,0,0].argmax() #get the index of zenith
+        if first:
+            aprout = np.
+            aprout['dbz'] = apr['dbz'][izen,:,:]
+            aprout['altflt'] = apr['altz'][izen,:,:]+apr['alt'][izen,:]
+            aprout['latz'] = apr['latz'][izen,:,:]
+            aprout['lonz'] = apr['lonz'][izen,:,:]
+            v = datetime.datetime.utcfromtimestamp(apr['time'][11,0])
+            aprout['utc'] = (apr['time'][11,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
+            first = False
+        else:
+            aprout['dbz'] = np.concatenate((aprout['dbz'].T,apr['dbz'][izen,:,:].T)).T
+            aprout['altflt'] = np.concatenate((aprout['altflt'].T,(apr['altz'][izen,:,:]+apr['alt'][izen,:]).T)).T
+            aprout['latz'] = np.concatenate((aprout['latz'].T,apr['latz'][izen,:,:].T)).T
+            aprout['lonz'] = np.concatenate((aprout['lonz'].T,apr['lonz'][izen,:,:].T)).T
+            v = datetime.datetime.utcfromtimestamp(apr['time'][11,0])
+            utc = (apr['time'][11,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
+            aprout['utc'] = np.concatenate((aprout['utc'].T,utc.T)).T
+        aprout = remove_feld_name(aprout,'lat3d')
+    return aprout        
+
+# <codecell>
+
+def remove_field_name(a, name):
+    names = list(a.dtype.names)
+    if name in names:
+        names.remove(name)
+    b = a[names]
+    return b
 
 # <markdowncell>
 

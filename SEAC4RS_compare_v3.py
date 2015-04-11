@@ -892,6 +892,67 @@ dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_goo
 
 # <headingcell level=2>
 
+# Load APR-2 HDF files for DC8 radar images
+
+# <codecell>
+
+fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
+fe = '_R23.h4'
+files = ['180527','181019','182329','184933','190145','192149','194031']
+aprfiles = [fa+s+fe for s in files]
+
+# <codecell>
+
+aprfiles
+
+# <codecell>
+
+reload(lm)
+from load_modis import load_apr
+apr = load_apr(aprfiles)
+
+# <codecell>
+
+aprfile = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913181019_R23.h4'
+apr,aprdicts = load_hdf(aprfile)
+
+# <codecell>
+
+apr['time'][11,:]
+
+# <codecell>
+
+plt.figure
+plt.plot(apr['latz'][0,0,:],apr['lonz'][0,0,:])
+plt.plot(apr['lat'][0,:],apr['lon'][0,:],'r')
+for i in range(24):
+    plt.plot(apr['latz'][i,0,:],apr['lonz'][i,0,:])
+
+# <codecell>
+
+# get the max value of the 'looks' for zenith measurements
+print 'Use index for zenith values',apr['altz'][:,0,0].argmax()
+plt.figure;
+plt.plot(apr['altz'][:,0,0])
+plt.xlabel('Ray (or look) number')
+plt.ylabel('Altitude [m]')
+
+# <codecell>
+
+levels = np.arange(0,10000,30)
+plt.figure
+csz = plt.contourf(apr['lonz'][11,:,:],apr['altz'][11,:,:],apr['dbz'][11,:,:],levels,cmap=plt.cm.jet)
+plt.colorbar(csz)
+
+# <codecell>
+
+plt.figure
+plt.plot(apr['dbz'][11,:,0],apr['altz'][11,:,0]+apr['alt'][11,0])
+plt.xlim([0,8000])
+plt.ylim([0,20000])
+
+# <headingcell level=2>
+
 # Load the cloud probe data
 
 # <codecell>
@@ -931,16 +992,22 @@ plt.title('2DS effective radius from 2013-09-13')
 
 # <codecell>
 
-len(twoDS['Start_UTC'])
+plt.figure
+plt.plot(twoDS['effectiveD'][1:]/2.0,dc8['G_ALT'])
+plt.xlim([0,100])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
 
 # <codecell>
 
-len(dc8['G_ALT'])
+# filter the data and only show a part
+twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
+fl = np.where((twoDS['Start_UTC'] > 18.025) & (twoDS['Start_UTC'] < 19.45))
 
 # <codecell>
 
 plt.figure
-plt.plot(twoDS['effectiveD'][1:]/2.0,dc8['G_ALT'])
+plt.plot(twoDS['effectiveD'][fl]/2.0,dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
 plt.xlim([0,100])
 plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
@@ -1100,6 +1167,19 @@ plot_median_mean(star_ref,lbl=True,color='r')
 plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
 plt.savefig(fp+'plots/hist_modis_4star_ref_v3.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Combine the vertical information into one figure
+
+# <codecell>
+
+plt.figure
+plt.plot(twoDS['effectiveD'][fl]/2.0,dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+plt.plot(cpl_layers['top'][meas.good,0],emas_ref_v1)
+plt.xlim([0,100])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
 
 # <headingcell level=2>
 
