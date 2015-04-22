@@ -4,6 +4,17 @@
 # <codecell>
 
 def __init__():
+    """
+       Collection of codes to load and analyze various data
+       
+           - modis 
+           - emas 
+           - cpl_layers text file
+           - apr2 files
+           - hdf files
+           
+        details are in the info of each module
+    """
     pass
 
 # <codecell>
@@ -413,46 +424,6 @@ def load_hdf(datfile,values=None,verbose=True):
 
 # <codecell>
 
-def spherical_dist(pos1, pos2, r=3958.75):
-    "Calculate the distance, in km, from one point to another (can use arrays)"
-    import numpy as np
-    pos1 = pos1 * np.pi / 180
-    pos2 = pos2 * np.pi / 180
-    cos_lat1 = np.cos(pos1[..., 0])
-    cos_lat2 = np.cos(pos2[..., 0])
-    cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
-    cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
-    return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
-
-# <codecell>
-
-def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
-    """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
-    from load_modis import spherical_dist
-    from Sp_parameters import startprogress, progress, endprogress
-    import numpy as np
-    if not any(meas_good):
-        meas_good = np.where(meas_lon)
-    imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
-                            np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
-    wimodis = np.where(imodis)
-    N1 = mod_lon[imodis].size
-    modis_grid = np.hstack([mod_lon[imodis].reshape((N1,1)),mod_lat[imodis].reshape((N1,1))])
-    N2 = len(meas_good)
-    meas_grid = np.hstack([np.array(meas_lon[meas_good]).reshape((N2,1)),np.array(meas_lat[meas_good]).reshape((N2,1))])
-    meas_in = meas_grid.astype(int)
-    meas_ind = np.array([meas_good.ravel()*0,meas_good.ravel()*0])
-    startprogress('Running through flight track')
-    for i in xrange(meas_good.size):
-        d = spherical_dist(meas_grid[i],modis_grid)
-        meas_ind[0,i] = wimodis[0][np.argmin(d)]
-        meas_ind[1,i] = wimodis[1][np.argmin(d)]
-        progress(float(i)/len(meas_good)*100)
-    endprogress()
-    return meas_ind
-
-# <codecell>
-
 def load_cpl_layers(datfile,values=None):
     """
     Name:
@@ -597,7 +568,7 @@ def load_apr(datfiles):
     """
     import os
     import numpy as np
-    from load_modis import load_hdf, remove_field_name
+    from load_modis import load_hdf
     import datetime
     
     first = True
@@ -608,34 +579,42 @@ def load_apr(datfiles):
             print ' ... Skipping'
             continue
         
-        apr_value = (('lat',16),('lon',17),('alt',15),('time',14),('dbz',0),('lat3d',30),('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
+        apr_value = (('lat',16),('lon',17),('alt',15),('time',13),('dbz',0),('lat3d',30),('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
         apr,aprdicts = load_hdf(f,values=apr_value,verbose=False)
         # transform the 3d latitudes, longitudes, and altitudes to usable values
         apr['latz'] = apr['lat3d']/apr['lat3d_s']+apr['lat3d_o']
         apr['lonz'] = apr['lon3d']/apr['lon3d_s']+apr['lon3d_o']
         apr['altz'] = apr['alt3d']/apr['alt3d_s']+apr['alt3d_o']
         apr['altflt'] = np.copy(apr['altz'])
-        for z in range(apr['altz'].shape[0]):
-            apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+        try:
+            for z in range(apr['altz'].shape[0]):
+                apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+        except:
+            print 'Problem with file: ',f
+            print ' ... dimensions do not agree'
+            print ' ... Skipping'
+            continue
         izen = apr['altz'][:,0,0].argmax() #get the index of zenith
         if first:
-            aprout = np.
+            aprout = dict()
             aprout['dbz'] = apr['dbz'][izen,:,:]
             aprout['altflt'] = apr['altz'][izen,:,:]+apr['alt'][izen,:]
             aprout['latz'] = apr['latz'][izen,:,:]
             aprout['lonz'] = apr['lonz'][izen,:,:]
-            v = datetime.datetime.utcfromtimestamp(apr['time'][11,0])
-            aprout['utc'] = (apr['time'][11,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
+            v = datetime.datetime.utcfromtimestamp(apr['time'][izen,0])
+            aprout['utc'] = (apr['time'][izen,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
             first = False
         else:
             aprout['dbz'] = np.concatenate((aprout['dbz'].T,apr['dbz'][izen,:,:].T)).T
             aprout['altflt'] = np.concatenate((aprout['altflt'].T,(apr['altz'][izen,:,:]+apr['alt'][izen,:]).T)).T
             aprout['latz'] = np.concatenate((aprout['latz'].T,apr['latz'][izen,:,:].T)).T
             aprout['lonz'] = np.concatenate((aprout['lonz'].T,apr['lonz'][izen,:,:].T)).T
-            v = datetime.datetime.utcfromtimestamp(apr['time'][11,0])
-            utc = (apr['time'][11,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
+            v = datetime.datetime.utcfromtimestamp(apr['time'][izen,0])
+            utc = (apr['time'][izen,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
             aprout['utc'] = np.concatenate((aprout['utc'].T,utc.T)).T
-        aprout = remove_feld_name(aprout,'lat3d')
+            
+    print aprout.keys()
+    print 'Loaded data points: ', aprout['utc'].shape
     return aprout        
 
 # <codecell>
