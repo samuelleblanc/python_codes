@@ -52,6 +52,8 @@
 #     - pyhdf
 #     - mpl_toolkits
 #     - gdal (from osgeo)
+#     - plotting_utils (user defined plotting routines)
+#     - map_utils, dependent on geopy
 #   
 # Needed Files:
 # 
@@ -95,7 +97,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 # <codecell>
 
 # load the idl save file containing the modeled radiances
-s=sio.idl.readsav(fp+'model\\sp_v3_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
+s=sio.idl.readsav(fp+'model\\sp_v2_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 print s.keys()
 print 'sp', s.sp.shape
 print 'sp (wp, wvl, z, re, ta)'
@@ -323,11 +325,11 @@ reload(rk)
 # <codecell>
 
 subp = [1,2,4,5,6,10,11,13]
-subp = [2,3,5,6,7,11,12,14]
+#subp = [2,3,5,6,7,11,12,14]
 
 # <codecell>
 
-subp = [0,1,3,4,5,6,7,10,11,13,14]
+#subp = [0,1,3,4,5,6,7,10,11,13,14]
 
 # <codecell>
 
@@ -338,7 +340,7 @@ print type(mea['good'][0])
 
 # <codecell>
 
-(meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut,subp)
+(meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 # <codecell>
 
@@ -532,21 +534,17 @@ print ssfr.utc[17000], ssfr.sza[17000]
 
 fig = plt.figure()
 fig.add_subplot(1,2,1)
-plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500])
-plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,i500],'r')
+plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500],label='Zenith 500 nm')
+plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,i500],'r', label='Nadir 500 nm')
+plt.title('SSFR Irradiance')
+plt.xlabel('UTC [h]')
+plt.ylabel('Irradiance [$Wm^{-2}nm^{-1}sr^{-1}$]')
+plt.legend(frameon=False)
 plt.xlim([17.8,19.2])
 fig.add_subplot(1,2,2)
 plt.plot(ssfr.utc,ssfr.Rvis,'b',ssfr.utc,ssfr.Rnir,'r')
 plt.xlim([17.8,19.2])
 #plt.ylim([0.22,0.32])
-
-# <codecell>
-
-rad = np.linspace(0,pi,50)
-plt.plot(rad,np.cos(rad))
-plt.plot(rad,np.cos(rad).cumsum()/np.cos(rad).cumsum().max())
-print rad.cumsum()
-print np.sum(np.cos(rad[0:24]))/np.sum(np.cos(rad))
 
 # <headingcell level=5>
 
@@ -714,6 +712,33 @@ ax.legend(frameon=False)
 #plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
 plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath.png',dpi=600,transparent=True)
 
+# <codecell>
+
+fig,ax = plt.subplots(1,1)
+#ax2 = ax.twinx()
+#ax2.set_yticks([0,1000,2000,3000])
+#ax2.set_yticklabels(['None','PBL','Aerosol','Cloud'])
+#ax2.set_ylim([-200,20000])
+for i in xrange(10):
+    ax.vlines(cpl_layers['utc'],cpl_layers['bot'][:,i],cpl_layers['top'][:,i],lw=0.1,color=plt.cm.Greys(200))
+    #ax2.plot(cpl_layers['utc'],cpl_layers['type'][:,i]*1000,'+',color=plt.cm.gist_rainbow(i/10.0))
+plt.title('Cloud layers from CPL')
+ax.set_xlabel('UTC [H]')
+ax.set_ylabel('Altitude [m]')
+ax.set_xlim([18.0,19.5])
+ax.set_ylim([0,25000])
+ax.plot(er2['Start_UTC'],er2['GPS_Altitude'],label="ER-2",color='r')
+ax.plot(dc8['TIME_UTC'],dc8['G_ALT'],label="DC8",color='b')
+ax.legend(frameon=False)
+#plt.tick_params(axis='y', which='both', labelleft='on', labelright='on')
+plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath_grey.png',dpi=600,transparent=True)
+
+# <codecell>
+
+ia = abs(cpl_layers['utc']-19.03).argmin()
+print cpl_layers['top'][ia,0]
+print cpl_layers['bot'][ia,:]
+
 # <headingcell level=2>
 
 # Get the data from MODIS to compare
@@ -777,7 +802,7 @@ cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
 x1,y1 = m1(meas.lon,meas.lat)
 xer2,yer2 = m1(er2['Longitude'],er2['Latitude'])
-xdc8,ydc8 = m1(dc8['G_LONG']/100000.0,dc8['G_LAT']/100000.0)
+xdc8,ydc8 = m1(dc8['G_LONG'],dc8['G_LAT'])
 #m1.plot(xer2,yer2,'r',lw=2.0)
 #m1.plot(xdc8,ydc8,'b',lw=2.0)
 xx1,yy1 = m1(-93.8,27.8)
@@ -860,8 +885,7 @@ emas_dicts_v1['tau']
 
 # <codecell>
 
-reload(lm)
-from load_modis import map_ind
+from map_utils import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
 
 # <codecell>
@@ -886,8 +910,7 @@ print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][38
 
 # <codecell>
 
-reload(lm)
-from load_modis import map_ind
+from map_utils import map_ind
 dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
 
 # <headingcell level=2>
@@ -913,36 +936,71 @@ apr = load_apr(aprfiles)
 
 # <codecell>
 
-aprfile = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913181019_R23.h4'
-apr,aprdicts = load_hdf(aprfile)
+levels = np.arange(0,7000,30)
+plt.figure
+csz = plt.contourf(apr['lonz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
+plt.colorbar(csz)
 
 # <codecell>
 
-apr['time'][11,:]
+apr['utcz'] = apr['lonz']*0.0
+for i in xrange(len(apr['utc'])):
+    apr['utcz'][:,i] = apr['utc'][i]
+
+# <codecell>
+
+levels = np.arange(0,7000,30)
 
 # <codecell>
 
 plt.figure
-plt.plot(apr['latz'][0,0,:],apr['lonz'][0,0,:])
-plt.plot(apr['lat'][0,:],apr['lon'][0,:],'r')
-for i in range(24):
-    plt.plot(apr['latz'][i,0,:],apr['lonz'][i,0,:])
-
-# <codecell>
-
-# get the max value of the 'looks' for zenith measurements
-print 'Use index for zenith values',apr['altz'][:,0,0].argmax()
-plt.figure;
-plt.plot(apr['altz'][:,0,0])
-plt.xlabel('Ray (or look) number')
+csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.Greys)
+plt.colorbar(csz)
+plt.xlabel('UTC [h]')
 plt.ylabel('Altitude [m]')
 
 # <codecell>
 
-levels = np.arange(0,10000,30)
+it = np.abs(apr['utc']-19.1).argmin()
+
+# <codecell>
+
 plt.figure
-csz = plt.contourf(apr['lonz'][11,:,:],apr['altz'][11,:,:],apr['dbz'][11,:,:],levels,cmap=plt.cm.jet)
-plt.colorbar(csz)
+for i in xrange(len()):
+
+# <codecell>
+
+plt.figure
+plt.plot(apr['dbz'][:,it],apr['altflt'][:,it])
+plt.xlim([0,8000])
+plt.xlabel('dbZ')
+plt.ylabel('Altitude [m]')
+plt.title('APR2 Zenith radar reflectivity at: %f2.2',apr['utc'][it])
+
+# <codecell>
+
+plt.figure
+plt.plot(apr['dbz'][:,0],apr['altflt'][:,0],'+')
+plt.ylim([6000,8000])
+
+# <codecell>
+
+inoisezone = apr['dbz'][:,2000].argmax()
+inoisezone
+
+# <codecell>
+
+apr['dbz'][:,]
+
+# <codecell>
+
+plt.figure
+plt.plot(apr['dbz'][:,1000],apr['altflt'][:,1000],'+')
+plt.ylim([6000,10000])
+
+# <codecell>
+
+apr['altflt'][:,0]
 
 # <codecell>
 
@@ -950,6 +1008,40 @@ plt.figure
 plt.plot(apr['dbz'][11,:,0],apr['altz'][11,:,0]+apr['alt'][11,0])
 plt.xlim([0,8000])
 plt.ylim([0,20000])
+
+# <codecell>
+
+fig,ax = plt.subplots(1,1)
+ax2 = ax.twinx()
+ax2.set_yticks([0,1000,2000,3000])
+ax2.set_yticklabels(['None','PBL','Aerosol','Cloud'])
+ax2.set_ylim([-200,20000])
+csz = ax.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.Greys)
+for i in xrange(10):
+    ax.vlines(cpl_layers['utc'],cpl_layers['bot'][:,i],cpl_layers['top'][:,i],lw=0.1,color=plt.cm.gist_rainbow(i/10.0))
+    ax2.plot(cpl_layers['utc'],cpl_layers['type'][:,i]*1000,'+',color=plt.cm.gist_rainbow(i/10.0))
+plt.title('Cloud layers from CPL')
+ax.set_xlabel('UTC [H]')
+ax.set_ylabel('Altitude [m]')
+ax.set_xlim([18.0,19.5])
+ax.plot(er2['Start_UTC'],er2['GPS_Altitude'],label="ER-2",color='b')
+ax.plot(dc8['TIME_UTC'],dc8['G_ALT'],label="DC8",color='k')
+ax.legend(frameon=False)
+
+# <codecell>
+
+it = np.abs(apr['utc']-19.19).argmin()
+inoisezone = apr['dbz'][:,it].argmax()
+i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
+
+# <codecell>
+
+plt.figure
+plt.plot(smooth(apr['dbz'][i,it],10),apr['altflt'][i,it],'k')
+plt.xlim([0,8000])
+plt.xlabel('dbZ')
+plt.ylabel('Altitude [m]')
+#plt.title('APR2 Zenith radar reflectivity at: ',apr['utc'][it])
 
 # <headingcell level=2>
 
@@ -1002,12 +1094,20 @@ plt.ylabel('Altitude [m]')
 
 # filter the data and only show a part
 twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
-fl = np.where((twoDS['Start_UTC'] > 18.025) & (twoDS['Start_UTC'] < 19.45))
+fl = np.where((twoDS['Start_UTC'] > 18.025) & (twoDS['Start_UTC'] < 19.45) & (twoDS['effectiveD'] > 28.0))
 
 # <codecell>
 
 plt.figure
 plt.plot(twoDS['effectiveD'][fl]/2.0,dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+plt.xlim([0,100])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
+
+# <codecell>
+
+plt.figure
+plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
 plt.xlim([0,100])
 plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
@@ -1035,7 +1135,7 @@ print rsp_good[0][-1]
 # <codecell>
 
 # get the distance between two points for RSP
-from load_modis import spherical_dist
+from map_utils import spherical_dist
 print rsp['Lat'][rsp_good[0][-1]], rsp['Lon'][rsp_good[0][-1]]
 print rsp['Lat'][rsp_good[0][-2]], rsp['Lon'][rsp_good[0][-2]]
 print spherical_dist(np.array(rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0][-1]]),
@@ -1106,14 +1206,21 @@ def plot_median_mean(x,lbl=False,color='k'):
 
 # ER-2 Altitude: 19018 m
 # DC8 Altitude: 8047 m
-# Cloud base height: 
-# Cloud top height: 
+# Cloud base height: 13610 m
+# Cloud top height: 16489 m
 #  - Modis: 500 m
 #  - eMAS: 50m or 2.5 mrad FOV ()
 #  - RSP: 14 mrad FOV
 #  - 4STAR: 2 degree, 0.0349 rads
 #  - GOES: 1km
 #  - SSFR: 180 degrees, Pi rads
+
+# <codecell>
+
+cld_base = 13610.0
+cld_top = 16489.0
+er2_hgt = 19018.0
+dc8_hgt = 8047.0
 
 # <headingcell level=2>
 
@@ -1174,12 +1281,49 @@ plt.savefig(fp+'plots/hist_modis_4star_ref_v3.png',dpi=600,transparent=True)
 
 # <codecell>
 
+meas.good.shape
+
+# <codecell>
+
+it = np.abs(apr['utc']-19.19).argmin()
+inoisezone = apr['dbz'][:,it].argmax()
+i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
+
+# <codecell>
+
 plt.figure
-plt.plot(twoDS['effectiveD'][fl]/2.0,dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
-plt.plot(cpl_layers['top'][meas.good,0],emas_ref_v1)
+plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+plt.plot(emas_ref_v1,cpl_layers['top'][dc8_ind[0,ie1],0],'k+',label='eMAS')
+plt.plot(rsp_ref,cpl_layers['top'][rsp_good[0][irs],0],'c+',label='RSP')
+plt.plot(ssfr_ref,cpl_layers['top'][ssfr.good[0][iss],0],'g+',label='SSFR')
+plt.plot(modis_ref,cpl_layers['top'][dc8_ind_modis[0,im],0],'m+',label='MODIS')
+plt.plot(star_ref,dc8['G_ALT'][meas.good[ist]],'r+',label='4STAR')
+#plt.plot(smooth(apr['dbz'][i,it],10)/50.0,apr['altflt'][i,it],'k',label='APR-2 Reflectivity')
+plt.legend(frameon=False)
 plt.xlim([0,100])
+plt.ylim([4000,18000])
 plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
+plt.title('Vertical profile of Effective radius')
+plt.savefig(fp+'plots/ref_profile_seac4rs.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.figure
+plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+plt.plot(emas_ref_v1,cpl_layers['top'][dc8_ind[0,ie1],0],'k+',label='eMAS')
+plt.plot(rsp_ref,cpl_layers['top'][rsp_good[0][irs],0],'c+',label='RSP')
+plt.plot(ssfr_ref,cpl_layers['top'][ssfr.good[0][iss],0],'g+',label='SSFR')
+plt.plot(modis_ref,cpl_layers['top'][dc8_ind_modis[0,im],0],'m+',label='MODIS')
+plt.plot(star_ref,dc8['G_ALT'][meas.good[ist]],'r+',label='4STAR')
+plt.plot(smooth(apr['dbz'][i,it],10)/50.0,apr['altflt'][i,it],'k',label='APR-2 Reflectivity')
+plt.legend(frameon=False)
+plt.xlim([0,100])
+plt.ylim([4000,18000])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
+plt.title('Vertical profile of Effective radius')
+plt.savefig(fp+'plots/ref_profile_seac4rs_radar.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
@@ -1278,6 +1422,19 @@ means.ref.rsp = np.nanmean(rsp_ref)
 
 # <codecell>
 
+sttaumod = np.nanstd(modis_tau)
+strefmod = np.nanstd(modis_ref)
+sttauemas = np.nanstd(emas_tau)
+strefemas = np.nanstd(emas_ref)
+sttaussfr = np.nanstd(ssfr_tau)
+strefssfr = np.nanstd(ssfr_ref)
+sttaursp = np.nanstd(rsp_tau)
+strefrsp = np.nanstd(rsp_ref)
+sttaustar = np.nanstd(star_tau)
+strefstar = np.nanstd(star_ref)
+
+# <codecell>
+
 print lut
 
 # <codecell>
@@ -1310,11 +1467,56 @@ def interpirr(re,ta):
 
 # <codecell>
 
+def interpirr_up(re,ta):
+    "interpolate over irradiance to get the spectrum at ta and re"
+    sp = np.zeros(lut.wvl.size)
+    print re,ta
+    for w in xrange(lut.wvl.size):
+        irrupfx = interpolate.RectBivariateSpline(lut.refsp[lut.refsp>5],lut.tausp,lut.sp_irrup[1,w,0,lut.refsp>5,:],kx=1,ky=1)
+        sp[w] = irrupfx(re,ta)
+    return smooth(sp,20)
+
+# <codecell>
+
 sp_modis = interpirr(means.ref.modis,means.tau.modis)
 sp_emas = interpirr(means.ref.emas,means.tau.emas)
 sp_ssfr = interpirr(means.ref.ssfr,means.tau.ssfr)
 sp_star = interpirr(means.ref.star,means.tau.star)
 sp_rsp = interpirr(means.ref.rsp,means.tau.rsp)
+sp_modis_no = interpirr(means.ref.modis,means.tau.modis*0.0)
+sp_emas_no = interpirr(means.ref.emas,means.tau.emas*0.0)
+sp_ssfr_no = interpirr(means.ref.ssfr,means.tau.ssfr*0.0)
+sp_star_no = interpirr(means.ref.star,means.tau.star*0.0)
+sp_rsp_no = interpirr(means.ref.rsp,means.tau.rsp*0.0)
+
+# <codecell>
+
+sp_modisp = interpirr(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
+sp_emasp = interpirr(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
+sp_ssfrp = interpirr(means.ref.ssfr+sttaussfr,means.tau.ssfr+sttaussfr)
+sp_starp = interpirr(means.ref.star+sttaustar,means.tau.star+sttaustar)
+sp_rspp = interpirr(means.ref.rsp+sttaursp,means.tau.rsp+sttaursp)
+
+# <codecell>
+
+sp_modisp_up = interpirr_up(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
+sp_emasp_up = interpirr_up(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
+sp_ssfrp_up = interpirr_up(means.ref.ssfr+sttaussfr,means.tau.ssfr+sttaussfr)
+sp_starp_up = interpirr_up(means.ref.star+sttaustar,means.tau.star+sttaustar)
+sp_rspp_up = interpirr_up(means.ref.rsp+sttaursp,means.tau.rsp+sttaursp)
+
+# <codecell>
+
+sp_modis_up = interpirr_up(means.ref.modis,means.tau.modis)
+sp_emas_up = interpirr_up(means.ref.emas,means.tau.emas)
+sp_ssfr_up = interpirr_up(means.ref.ssfr,means.tau.ssfr)
+sp_star_up = interpirr_up(means.ref.star,means.tau.star)
+sp_rsp_up = interpirr_up(means.ref.rsp,means.tau.rsp)
+sp_modis_no_up = interpirr_up(means.ref.modis,means.tau.modis*0.0)
+sp_emas_no_up = interpirr_up(means.ref.emas,means.tau.emas*0.0)
+sp_ssfr_no_up = interpirr_up(means.ref.ssfr,means.tau.ssfr*0.0)
+sp_star_no_up = interpirr_up(means.ref.star,means.tau.star*0.0)
+sp_rsp_no_up = interpirr_up(means.ref.rsp,means.tau.rsp*0.0)
 
 # <codecell>
 
@@ -1377,6 +1579,45 @@ ssp = fssp(lut.wvl)
 
 # <codecell>
 
+plt.figure
+plt.plot(lut.wvl,(sp_modis-sp_modis_up)-(sp_modis_no-sp_modis_no_up),c='m',label='Modis')
+plt.plot(lut.wvl,(sp_emas-sp_emas_up)-(sp_emas_no-sp_emas_no_up),c='b',label='eMAS')
+plt.plot(lut.wvl,(sp_ssfr-sp_ssfr_up)-(sp_ssfr_no-sp_ssfr_no_up),c='g',label='SSFR (reflected)')
+plt.plot(lut.wvl,(sp_rsp-sp_rsp_up)-(sp_rsp_no-sp_rsp_no_up),c='c',label='RSP')
+plt.plot(lut.wvl,(sp_star-sp_star_up)-(sp_star_no-sp_star_no_up),c='r',label='4STAR')
+plt.xlim([400,1700])
+plt.legend(frameon=False,prop={'size':10},loc=4)
+plt.title('Spectral radiative effect')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Change in net irradiance [$Wm^{-2}nm^{-1}$]')
+plt.savefig(fp+'plots/sp_rad_effect.png',dpi=600,transparent=True)
+
+# <codecell>
+
+radeff_modis = np.sum((sp_modis-sp_modis_up)-(sp_modis_no-sp_modis_no_up)*lut.wvl/1000.0)
+radeff_emas = np.sum((sp_emas-sp_emas_up)-(sp_emas_no-sp_emas_no_up)*lut.wvl/1000.0)
+radeff_ssfr = np.sum((sp_ssfr-sp_ssfr_up)-(sp_ssfr_no-sp_ssfr_no_up)*lut.wvl/1000.0)
+radeff_rsp = np.sum((sp_rsp-sp_rsp_up)-(sp_rsp_no-sp_rsp_no_up)*lut.wvl/1000.0)
+radeff_star = np.sum((sp_star-sp_star_up)-(sp_star_no-sp_star_no_up)*lut.wvl/1000.0)
+
+# <codecell>
+
+radeff_modisp = np.sum((sp_modisp-sp_modisp_up)-(sp_modis_no-sp_modis_no_up)*lut.wvl/1000.0)
+radeff_emasp = np.sum((sp_emasp-sp_emasp_up)-(sp_emas_no-sp_emas_no_up)*lut.wvl/1000.0)
+radeff_ssfrp = np.sum((sp_ssfrp-sp_ssfrp_up)-(sp_ssfr_no-sp_ssfr_no_up)*lut.wvl/1000.0)
+radeff_rspp = np.sum((sp_rspp-sp_rspp_up)-(sp_rsp_no-sp_rsp_no_up)*lut.wvl/1000.0)
+radeff_starp = np.sum((sp_starp-sp_starp_up)-(sp_star_no-sp_star_no_up)*lut.wvl/1000.0)
+
+# <codecell>
+
+print 'Modis: ',radeff_modis, ' +/- ', radeff_modisp-radeff_modis
+print 'eMAS: ',radeff_emas, ' +/- ', radeff_emasp-radeff_emas
+print 'SSFR: ',radeff_ssfr, ' +/- ', radeff_ssfrp-radeff_ssfr
+print 'RSP: ',radeff_rsp, ' +/- ', radeff_rspp-radeff_rsp
+print '4star: ', radeff_star, ' +/- ', radeff_starp-radeff_star
+
+# <codecell>
+
 plt.figure(figsize=(13,10))
 f0,a0 = plt.subplots(2,1,sharex=True)
 a0[0].plot(lut.wvl,ssp,label='SSFR Measurement',c='k')
@@ -1386,7 +1627,7 @@ a0[0].plot(lut.wvl,sp_modis,c='m',label='Modis')
 a0[0].plot(lut.wvl,sp_emas,c='b',label='eMAS')
 a0[0].plot(lut.wvl,sp_ssfr,c='g',label='SSFR (reflected)')
 a0[0].plot(lut.wvl,sp_rsp/10.0,c='c',label='RSP')
-a0[0].plot(lut.wvl,sp_modis,c='r',label='4STAR')
+a0[0].plot(lut.wvl,sp_star,c='r',label='4STAR')
 a0[0].legend(frameon=False,prop={'size':10})
 a0[0].set_title('Below cloud downwelling irradiance')
 a0[1].set_xlabel('Wavelength [nm]')
@@ -1434,4 +1675,40 @@ mg.drawcountries()
 figmg.show()
 x,y = mg(goes['lon'],goes['lat'])
 csg = mg.contourf(x,y,goes['tau'],clevels,cmap=plt.cm.gist_ncar)
+
+# <headingcell level=2>
+
+# Plot out FOV of each instrument on eMAS figure
+
+# <codecell>
+
+dc8.dtype
+
+# <codecell>
+
+from plotting_utils import circles
+from map_utils import radius_m2deg
+
+# <codecell>
+
+plt.figure()
+clevels = range(0,50,2)
+cf = plt.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.spectral,extend='max')
+ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))
+idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))
+plt.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
+plt.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b',label='DC8 flight path')
+
+circles(dc8['G_LONG'][idc8[20]],dc8['G_LAT'][idc8[20]],)
+
+plt.title('FOV comparison')
+plt.ylabel('Longitude')
+plt.xlabel('Latitude')
+plt.legend(loc=2,frameon=False)
+
+cbar = plt.colorbar(cf)
+cbar.set_label('$\\tau$')
+
+# <codecell>
+
 
