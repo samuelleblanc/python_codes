@@ -71,8 +71,57 @@ def radius_m2deg(center_lon,center_lat,radius):
     """
     import geopy
     from geopy.distance import VincentyDistance
-    origin = geopy.Point(center_lon,center_lat)
+    origin = geopy.Point(center_lat,center_lon)
     destination = VincentyDistance(kilometers=radius/1000.0).destination(origin,0.0)
     radius_degrees = abs(center_lat-destination.latitude)
     return radius_degrees
+
+# <codecell>
+
+def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
+    """
+    Run through all points defined by lat1 and lon1 (can be arrays)
+    to find the points within defined by lat2 and lon2 that are within a distance in meters defined by radius
+    lat2, lon2, x2 can be multidimensional, will be flattened first
+    Returns a dicttionary of statistics:
+        'index' : array of indices of flattened lat2 and lon2 that are within radius meters of each point of lat1 and lon1
+        'std' : array of standard deviation of x2 that are near lat1 and lon1 by radius
+        'range' : range of values of x2 near lat1, lon1
+        'mean' : mean of values of x2 near lat1, lon1
+        'median': median values of x2 near lat1, lon1
+    """
+    from scipy.spatial import cKDTree
+    from map_utils import radius_m2deg
+    import numpy as np
+    max_distance = radius_m2deg(lat1[0],lon1[0],radius) #transform to degrees
+    points_ref = np.column_stack((lat1,lon1))
+    if len(lat2.shape) > 1:
+        points = np.column_stack((lat2.reshape(lat2.size),lon2.reshape(lon2.size)))
+        xx = x2.reshape(x2.size)
+    else:
+        points = np.column_stack((lat2,lon2)) 
+        xx = x2
+    tree = cKDTree(points)
+    out = dict()
+    out['index'] = tree.query_ball_point(points_ref,max_distance)
+    out['std'] = []
+    out['range'] = []
+    out['mean'] = []
+    out['median'] = []
+    for i in out['index']:
+        if not i:
+            out['std'].append(np.NaN)
+            out['range'].append(np.NaN)
+            out['mean'].append(np.NaN)
+            out['median'].append(np.NaN)
+        else:
+            out['std'].append(np.std(xx[i]))
+            out['range'].append(xx[i].max()-xx[i].min())
+            out['mean'].append(np.mean(xx[i]))
+            out['median'].append(np.median(xx[i]))
+    out['std'] = np.array(out['std'])
+    out['range'] = np.array(out['range'])
+    out['mean'] = np.array(out['mean'])
+    out['median'] = np.array(out['median'])
+    return out
 

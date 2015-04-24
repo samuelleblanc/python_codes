@@ -329,10 +329,6 @@ subp = [1,2,4,5,6,10,11,13]
 
 # <codecell>
 
-#subp = [0,1,3,4,5,6,7,10,11,13,14]
-
-# <codecell>
-
 print max(meas.good)
 print type(mea['good'])
 print isinstance(mea['good'],tuple)
@@ -877,6 +873,7 @@ emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
 
 # <codecell>
 
+emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 # <codecell>
@@ -1138,8 +1135,8 @@ print rsp_good[0][-1]
 from map_utils import spherical_dist
 print rsp['Lat'][rsp_good[0][-1]], rsp['Lon'][rsp_good[0][-1]]
 print rsp['Lat'][rsp_good[0][-2]], rsp['Lon'][rsp_good[0][-2]]
-print spherical_dist(np.array(rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0][-1]]),
-                     np.array(rsp['Lat'][rsp_good[0][-2]],rsp['Lon'][rsp_good[0][-2]]))
+print spherical_dist(np.array((rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0][-1]])),
+                     np.array((rsp['Lat'][rsp_good[0][-2]],rsp['Lon'][rsp_good[0][-2]])))
 
 # <headingcell level=2>
 
@@ -1221,6 +1218,17 @@ cld_base = 13610.0
 cld_top = 16489.0
 er2_hgt = 19018.0
 dc8_hgt = 8047.0
+r_eMAS = (er2_hgt - cld_top)*tan(0.0025)
+r_RSP = (er2_hgt - cld_top)*tan(0.014)
+r_SSFR = (er2_hgt - cld_top)*tan(pi/3)
+r_4STAR = (cld_base - dc8_hgt)*tan(0.0349)
+
+# <codecell>
+
+print r_eMAS
+print r_RSP
+print r_SSFR
+print r_4STAR
 
 # <headingcell level=2>
 
@@ -1659,10 +1667,6 @@ goes,goes_dicts = load_hdf(goes_file,values=goes_values)
 
 # <codecell>
 
-print goes['lat']
-
-# <codecell>
-
 figmg = plt.figure()
 axmg = figm.add_axes([0.1,0.1,0.8,0.8])
 mg = Basemap(projection='stere',lon_0=-87,lat_0=20,
@@ -1682,24 +1686,24 @@ csg = mg.contourf(x,y,goes['tau'],clevels,cmap=plt.cm.gist_ncar)
 
 # <codecell>
 
-dc8.dtype
-
-# <codecell>
-
 from plotting_utils import circles
-from map_utils import radius_m2deg
+from map_utils import radius_m2deg, spherical_dist
 
 # <codecell>
 
 plt.figure()
 clevels = range(0,50,2)
 cf = plt.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.spectral,extend='max')
-ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))
-idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))
+ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))[0]
+idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))[0]
 plt.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
 plt.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b',label='DC8 flight path')
+#plt.plot(dc8['G_LONG'][idc8[400]],dc8['G_LAT'][idc8[400]],'k*')
 
-circles(dc8['G_LONG'][idc8[20]],dc8['G_LAT'][idc8[20]],)
+circles(dc8['G_LONG'][idc8[400]],dc8['G_LAT'][idc8[400]],radius_m2deg(dc8['G_LONG'][idc8[400]],dc8['G_LAT'][idc8[400]],r_4STAR),c='r',alpha=0.4)
+circles(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],radius_m2deg(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],r_SSFR),c='b',alpha=0.4)
+circles(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],radius_m2deg(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],r_eMAS),c='g',alpha=0.4)
+circles(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],radius_m2deg(er2['Longitude'][ier2[400]],er2['Latitude'][ier2[400]],r_RSP),c='y',alpha=0.4)
 
 plt.title('FOV comparison')
 plt.ylabel('Longitude')
@@ -1708,7 +1712,105 @@ plt.legend(loc=2,frameon=False)
 
 cbar = plt.colorbar(cf)
 cbar.set_label('$\\tau$')
+plt.savefig(fp+'plots/emas_FOV.png',dpi=600,transparent=True)
 
 # <codecell>
 
+ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))[0]
+idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))[0]
+clevels = range(0,50,2)
+
+fig = plt.figure(figsize=(15,5))
+ax = fig.add_subplot(122)
+cf = ax.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+
+ax.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
+ax.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b--',label='DC8 flight path')
+
+circles(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],radius_m2deg(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],r_4STAR),c='r',alpha=0.5,ax=ax,label='4STAR')
+circles(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],radius_m2deg(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],r_SSFR),c='g',alpha=0.5,ax=ax,label='SSFR')
+circles(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],radius_m2deg(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],r_eMAS),c='k',alpha=0.5,ax=ax,label='eMAS')
+circles(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],radius_m2deg(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],r_RSP),c='c',alpha=0.5,ax=ax,label='RSP')
+#circles(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],radius_m2deg(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],500.0),c='m',alpha=0.5,ax=ax,label='MODIS')
+vo = [[modis['lon'][495,1208],modis['lat'][495,1208]],
+      [modis['lon'][495,1209],modis['lat'][495,1209]],
+      [modis['lon'][496,1209],modis['lat'][496,1209]],
+      [modis['lon'][496,1208],modis['lat'][496,1208]],
+      [modis['lon'][495,1208],modis['lat'][495,1208]]]
+ax.add_patch(Polygon(vo,closed=True,color='m',alpha=0.5))
+
+
+ax.text(dc8['G_LONG'][idc8[380]]+0.002,dc8['G_LAT'][idc8[380]],'4STAR',color='r')
+ax.text(-93.958,21.53,'SSFR',color='g')
+ax.text(er2['Longitude'][ier2[385]]+0.002,er2['Latitude'][ier2[385]],'eMAS',color='k')
+ax.text(er2['Longitude'][ier2[395]]+0.002,er2['Latitude'][ier2[395]],'RSP',color='c')
+ax.text(er2['Longitude'][ier2[375]]+0.005,er2['Latitude'][ier2[375]],'MODIS',color='m')
+
+dc8toer2 = spherical_dist(np.array((er2['Latitude'][ier2[393]],er2['Longitude'][ier2[393]])),np.array((dc8['G_LAT'][idc8[380]],dc8['G_LONG'][idc8[380]])))
+ax.annotate('' , (er2['Longitude'][ier2[393]],er2['Latitude'][ier2[393]]),(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]]), arrowprops={'arrowstyle':'<->'})
+ax.text(-93.991,21.515,'%.2f km' % dc8toer2)
+
+ya,yb,xa,xb = 21.46,21.54,-94.03,-93.94
+ax.set_ylim([ya,yb])
+ax.set_xlim([xa,xb])
+ax.get_yaxis().get_major_formatter().set_useOffset(False)
+ax.get_xaxis().get_major_formatter().set_useOffset(False)
+ax.set_title('FOV comparison')
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
+
+cbar = plt.colorbar(cf)
+cbar.set_label('$\\tau$')
+
+ax2 = fig.add_subplot(121)
+#ax2.locator_params(nbins=4)
+cf = ax2.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+ax2.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
+ax2.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b--',label='DC8 flight path')
+ax2.plot([xa,xa,xb,xb,xa],[ya,yb,yb,ya,ya],'k')
+ax2.set_xlabel('Longitude')
+ax2.set_ylabel('Latitude')
+ax2.set_title('eMAS Cloud optical thickness')
+ax2.legend(loc=4,frameon=False)
+plt.savefig(fp+'plots/emas_FOV_comp.png',dpi=600,transparent=True)
+
+# <codecell>
+
+from scipy.spatial import cKDTree
+from map_utils import radius_m2deg
+import numpy as np
+lat1,lon1,lat2,lon2 =  er2['Latitude'][ier2],er2['Longitude'][ier2],emas_v1['lat'],emas_v1['lon'] 
+
+# <codecell>
+
+max_distance = radius_m2deg(lat1[0],lon1[0],r_SSFR) #transform to degrees
+points_ref = np.column_stack((lat1,lon1))
+
+# <codecell>
+
+points = np.column_stack((lat2.reshape(lat2.size),lon2.reshape(lon2.size)))
+
+# <codecell>
+
+tree = cKDTree(points)
+
+# <codecell>
+
+tree2 = cKDTree(points_ref)
+
+# <codecell>
+
+indd = tree.query_ball_tree(tree2,max_distance)
+
+# <codecell>
+
+import map_utils
+reload(map_utils)
+from map_utils import stats_within_radius
+ssfr2emastau = stats_within_radius(er2['Latitude'][ier2],er2['Longitude'][ier2],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR) 
+
+# <codecell>
+
+plt.hist(stdd[~isnan(stdd)],alpha=0.5)
+plt.hist(rg[~isnan(rg)],alpha=0.5)
 
