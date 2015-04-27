@@ -792,7 +792,7 @@ m2 = seac_map(axm2[1])
 x,y = m1(modis['lon'],modis['lat'])
 clevels = np.linspace(0,80,41)
 
-cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.gist_ncar,extend='max')
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
 cbar = m1.colorbar(cs1)
 cbar.set_label('$\\tau$')
 axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
@@ -1779,7 +1779,7 @@ plt.savefig(fp+'plots/emas_FOV_comp.png',dpi=600,transparent=True)
 from scipy.spatial import cKDTree
 from map_utils import radius_m2deg
 import numpy as np
-lat1,lon1,lat2,lon2 =  er2['Latitude'][ier2],er2['Longitude'][ier2],emas_v1['lat'],emas_v1['lon'] 
+lat1,lon1,lat2,lon2 =  er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'] 
 
 # <codecell>
 
@@ -1804,10 +1804,27 @@ indd = tree.query_ball_tree(tree2,max_distance)
 
 # <codecell>
 
-import map_utils
-reload(map_utils)
 from map_utils import stats_within_radius
-ssfr2emastau = stats_within_radius(er2['Latitude'][ier2],er2['Longitude'][ier2],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR) 
+
+# <codecell>
+
+out_ssfrtau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR)
+
+# <codecell>
+
+out_ssfrtau.keys()
+
+# <codecell>
+
+out_ssfrtau['std'].shape
+
+# <codecell>
+
+out_ssfrtau['mean']
+
+# <codecell>
+
+plt.plot(out_ssfrtau['std'])
 
 # <codecell>
 

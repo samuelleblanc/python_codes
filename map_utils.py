@@ -93,8 +93,12 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
     from scipy.spatial import cKDTree
     from map_utils import radius_m2deg
     import numpy as np
+    print 'Setting up the lat, lon, localization'
     max_distance = radius_m2deg(lat1[0],lon1[0],radius) #transform to degrees
-    points_ref = np.column_stack((lat1,lon1))
+    if len(lat1) > 100:
+        points_ref = np.column_stack((lat1[::10],lon1[::10]))
+    else:
+        points_ref = np.column_stack((lat1,lon1))
     if len(lat2.shape) > 1:
         points = np.column_stack((lat2.reshape(lat2.size),lon2.reshape(lon2.size)))
         xx = x2.reshape(x2.size)
@@ -102,12 +106,15 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
         points = np.column_stack((lat2,lon2)) 
         xx = x2
     tree = cKDTree(points)
+    tree_ref = cKDTree(points_ref)
     out = dict()
-    out['index'] = tree.query_ball_point(points_ref,max_distance)
+    print '... Getting the index points'
+    out['index'] = tree.query_ball_tree(tree_ref,max_distance)
     out['std'] = []
     out['range'] = []
     out['mean'] = []
     out['median'] = []
+    print '... Running through index points'
     for i in out['index']:
         if not i:
             out['std'].append(np.NaN)
@@ -115,13 +122,14 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
             out['mean'].append(np.NaN)
             out['median'].append(np.NaN)
         else:
-            out['std'].append(np.std(xx[i]))
-            out['range'].append(xx[i].max()-xx[i].min())
-            out['mean'].append(np.mean(xx[i]))
+            out['std'].append(np.nanstd(xx[i]))
+            out['range'].append(np.nanmax(xx[i])-np.nanmin(xx[i]))
+            out['mean'].append(np.nanmean(xx[i]))
             out['median'].append(np.median(xx[i]))
     out['std'] = np.array(out['std'])
     out['range'] = np.array(out['range'])
     out['mean'] = np.array(out['mean'])
     out['median'] = np.array(out['median'])
+    print out.keys()
     return out
 
