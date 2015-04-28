@@ -94,7 +94,7 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
     from map_utils import radius_m2deg
     import numpy as np
     print 'Setting up the lat, lon, localization'
-    max_distance = radius_m2deg(lat1[0],lon1[0],radius) #transform to degrees
+    max_distance = radius_m2deg(lon1[0],lat1[0],radius) #transform to degrees
     if len(lat1) > 100:
         points_ref = np.column_stack((lat1[::10],lon1[::10]))
     else:
@@ -109,7 +109,7 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
     tree_ref = cKDTree(points_ref)
     out = dict()
     print '... Getting the index points'
-    out['index'] = tree.query_ball_tree(tree_ref,max_distance)
+    out['index'] = tree_ref.query_ball_tree(tree,max_distance)
     out['std'] = []
     out['range'] = []
     out['mean'] = []

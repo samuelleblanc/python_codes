@@ -319,6 +319,10 @@ meas.params()
 
 # <codecell>
 
+from Sp_parameters import smooth
+
+# <codecell>
+
 import run_kisq_retrieval as rk
 reload(rk)
 
@@ -345,7 +349,6 @@ print len(meas.good), max(meas.good)
 
 # <codecell>
 
-from Sp_parameters import smooth
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
 ax[0].plot(meas.utc,meas.tau,'rx')
@@ -1238,6 +1241,10 @@ print r_4STAR
 
 plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
+plt.axvspan(np.nanmean(modis_tau)-2.0,np.nanmean(modis_tau)+2.0,color='m',alpha=0.7)
+plt.axvspan(np.nanmean(ssfr_tau)-7.8,np.nanmean(ssfr_tau)+7.8,color='g',alpha=0.7)
+plt.axvspan(np.nanmean(rsp_tau)-0.3,np.nanmean(rsp_tau)+0.3,color='c',alpha=0.7)
+plt.axvspan(np.nanmean(star_tau)-0.8,np.nanmean(star_tau)+0.8,color='r',alpha=0.7)
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 #plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
 plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
@@ -1253,15 +1260,20 @@ plot_median_mean(smooth(emas_tau_v1,60),color='k')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
 plot_median_mean(smooth(rsp_tau,70),color='c')
+
 plt.legend(frameon=False)
 plt.xlim([0,60])
-plt.savefig(fp+'plots/hist_modis_4star_tau_v3.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/hist_modis_4star_tau_v3_fill.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
 # <codecell>
 
 plt.figure(figsize=(9,6))
 plt.axvspan(0,80,color='#FFFFFF')
+plt.axvspan(np.nanmean(modis_ref)-1.7,np.nanmean(modis_ref)+1.7,color='m',alpha=0.7)
+plt.axvspan(np.nanmean(ssfr_ref)-2.7,np.nanmean(ssfr_ref)+2.7,color='g',alpha=0.7)
+plt.axvspan(np.nanmean(rsp_ref)-1.7,np.nanmean(rsp_ref)+1.7,color='c',alpha=0.7)
+plt.axvspan(np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8,color='r',alpha=0.7)
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
 #plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
 plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
@@ -1281,7 +1293,7 @@ plot_median_mean(probes[:,7],color='y')
 plot_median_mean(star_ref,lbl=True,color='r')
 plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
-plt.savefig(fp+'plots/hist_modis_4star_ref_v3.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/hist_modis_4star_ref_v3_fill.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
@@ -1458,6 +1470,10 @@ print lut.wvl.shape
 
 # <codecell>
 
+lut.sp_irrdn[1,:,0,4,0]
+
+# <codecell>
+
 from scipy import interpolate
 #fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,sp[ph,w,z,refranges[ph],:],kx=1,ky=1)
 #sp_hires[ph,w,z,:,:] = fx(ref_hires,tau_hires)
@@ -1555,10 +1571,34 @@ print sp_rsp
 ssfr_dc8 = sio.idl.readsav(fp+'dc8/20130913/20130913_calibspcs.out')
 print ssfr_dc8.keys()
 iutc185 = np.nanargmin(abs(ssfr_dc8['tmhrs']-18.5))
+iutc189 = np.nanargmin(abs(ssfr_dc8['tmhrs']-18.9))
+iutc191 = np.nanargmin(abs(ssfr_dc8['tmhrs']-19.1))
 iutc192 = np.nanargmin(abs(ssfr_dc8['tmhrs']-19.2))
 print ssfr_dc8['zspectra'].shape
-dn = np.nanmean(ssfr_dc8['zspectra'][iutc185:iutc192,:],axis=0)
+dn = np.nanmean(ssfr_dc8['zspectra'][iutc189:iutc191,:],axis=0)
 print dn.shape
+up = np.nanmean(ssfr_dc8['nspectra'][iutc189:iutc191,:],axis=0)
+
+# <codecell>
+
+dnstd = np.nanstd(ssfr_dc8['zspectra'][iutc191:iutc192,:],axis=0)
+
+# <codecell>
+
+plt.plot(dnstd)
+
+# <codecell>
+
+dn_no = interpirr(5.0,0)
+
+# <codecell>
+
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,4,0])
+plt.plot(lut.wvl,lut.sp_irrdn[1,:,0,4,1])
+plt.plot(lut.wvl,dn_no)
+plt.plot(ssfr_dc8['zenlambda'],dn)
+plt.plot(ssfr_dc8['zenlambda'],up)
+plt.plot((dn-up)-(dn_no-up))
 
 # <codecell>
 
@@ -1587,6 +1627,35 @@ ssp = fssp(lut.wvl)
 
 # <codecell>
 
+fssps = interpolate.interp1d(ssfr_dc8['zenlambda'],(dn+dnstd)*r500,bounds_error=False)
+ssps = fssps(lut.wvl)
+
+# <codecell>
+
+fspup = interpolate.interp1d(ssfr_dc8['zenlambda'],up*r500,bounds_error=False)
+sspup = fspup(lut.wvl)
+
+# <codecell>
+
+plt.plot(lut.wvl,dn_no*sspup/ssp)
+
+# <codecell>
+
+plt.plot(lut.wvl[250:],ssp[250:])
+plt.plot(lut.wvl[250:],ssps[250:])
+
+# <codecell>
+
+plt.plot(lut.wvl,sspup,'k')
+plt.plot(lut.wvl,ssp,'r')
+plt.plot(lut.wvl,dn_no,'b')
+plt.plot(lut.wvl,(ssp-sspup)-(dn_no-sspup))
+print 'SSFR forcing, measurement based: %f W/m^2' % np.nansum(((ssp[250:]-sspup[250:])-(dn_no[250:]-sspup[250:]))*lut.wvl[250:]/1000.0)
+print 'SSFR forcing, std measurement based: %f W/m^2' % np.nansum(((ssps[250:]-sspup[250:])-(dn_no[250:]-sspup[250:]))*lut.wvl[250:]/1000.0)
+                                                               
+
+# <codecell>
+
 plt.figure
 plt.plot(lut.wvl,(sp_modis-sp_modis_up)-(sp_modis_no-sp_modis_no_up),c='m',label='Modis')
 plt.plot(lut.wvl,(sp_emas-sp_emas_up)-(sp_emas_no-sp_emas_no_up),c='b',label='eMAS')
@@ -1602,19 +1671,19 @@ plt.savefig(fp+'plots/sp_rad_effect.png',dpi=600,transparent=True)
 
 # <codecell>
 
-radeff_modis = np.sum((sp_modis-sp_modis_up)-(sp_modis_no-sp_modis_no_up)*lut.wvl/1000.0)
-radeff_emas = np.sum((sp_emas-sp_emas_up)-(sp_emas_no-sp_emas_no_up)*lut.wvl/1000.0)
-radeff_ssfr = np.sum((sp_ssfr-sp_ssfr_up)-(sp_ssfr_no-sp_ssfr_no_up)*lut.wvl/1000.0)
-radeff_rsp = np.sum((sp_rsp-sp_rsp_up)-(sp_rsp_no-sp_rsp_no_up)*lut.wvl/1000.0)
-radeff_star = np.sum((sp_star-sp_star_up)-(sp_star_no-sp_star_no_up)*lut.wvl/1000.0)
+radeff_modis = np.sum(((sp_modis[250:]-sp_modis_up[250:])-(sp_modis_no[250:]-sp_modis_no_up[250:]))*lut.wvl[250:]/1000.0)
+radeff_emas = np.sum(((sp_emas[250:]-sp_emas_up[250:])-(sp_emas_no[250:]-sp_emas_no_up[250:]))*lut.wvl[250:]/1000.0)
+radeff_ssfr = np.sum(((sp_ssfr[250:]-sp_ssfr_up[250:])-(sp_ssfr_no[250:]-sp_ssfr_no_up[250:]))*lut.wvl[250:]/1000.0)
+radeff_rsp = np.sum(((sp_rsp[250:]-sp_rsp_up[250:])-(sp_rsp_no[250:]-sp_rsp_no_up[250:]))*lut.wvl[250:]/1000.0)
+radeff_star = np.sum(((sp_star[250:]-sp_star_up[250:])-(sp_star_no[250:]-sp_star_no_up[250:]))*lut.wvl[250:]/1000.0)
 
 # <codecell>
 
-radeff_modisp = np.sum((sp_modisp-sp_modisp_up)-(sp_modis_no-sp_modis_no_up)*lut.wvl/1000.0)
-radeff_emasp = np.sum((sp_emasp-sp_emasp_up)-(sp_emas_no-sp_emas_no_up)*lut.wvl/1000.0)
-radeff_ssfrp = np.sum((sp_ssfrp-sp_ssfrp_up)-(sp_ssfr_no-sp_ssfr_no_up)*lut.wvl/1000.0)
-radeff_rspp = np.sum((sp_rspp-sp_rspp_up)-(sp_rsp_no-sp_rsp_no_up)*lut.wvl/1000.0)
-radeff_starp = np.sum((sp_starp-sp_starp_up)-(sp_star_no-sp_star_no_up)*lut.wvl/1000.0)
+radeff_modisp = np.sum(((sp_modisp-sp_modisp_up)-(sp_modis_no-sp_modis_no_up))*lut.wvl/1000.0)
+radeff_emasp = np.sum(((sp_emasp-sp_emasp_up)-(sp_emas_no-sp_emas_no_up))*lut.wvl/1000.0)
+radeff_ssfrp = np.sum(((sp_ssfrp-sp_ssfrp_up)-(sp_ssfr_no-sp_ssfr_no_up))*lut.wvl/1000.0)
+radeff_rspp = np.sum(((sp_rspp-sp_rspp_up)-(sp_rsp_no-sp_rsp_no_up))*lut.wvl/1000.0)
+radeff_starp = np.sum(((sp_starp-sp_starp_up)-(sp_star_no-sp_star_no_up))*lut.wvl/1000.0)
 
 # <codecell>
 
@@ -1720,7 +1789,7 @@ ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))[0]
 idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))[0]
 clevels = range(0,50,2)
 
-fig = plt.figure(figsize=(15,5))
+fig = plt.figure(figsize=(10,5))
 ax = fig.add_subplot(122)
 cf = ax.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
 
@@ -1746,20 +1815,20 @@ ax.text(er2['Longitude'][ier2[385]]+0.002,er2['Latitude'][ier2[385]],'eMAS',colo
 ax.text(er2['Longitude'][ier2[395]]+0.002,er2['Latitude'][ier2[395]],'RSP',color='c')
 ax.text(er2['Longitude'][ier2[375]]+0.005,er2['Latitude'][ier2[375]],'MODIS',color='m')
 
-dc8toer2 = spherical_dist(np.array((er2['Latitude'][ier2[393]],er2['Longitude'][ier2[393]])),np.array((dc8['G_LAT'][idc8[380]],dc8['G_LONG'][idc8[380]])))
-ax.annotate('' , (er2['Longitude'][ier2[393]],er2['Latitude'][ier2[393]]),(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]]), arrowprops={'arrowstyle':'<->'})
-ax.text(-93.991,21.515,'%.2f km' % dc8toer2)
+#dc8toer2 = spherical_dist(np.array((er2['Latitude'][ier2[393]],er2['Longitude'][ier2[393]])),np.array((dc8['G_LAT'][idc8[380]],dc8['G_LONG'][idc8[380]])))
+#ax.annotate('' , (er2['Longitude'][ier2[393]],er2['Latitude'][ier2[393]]),(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]]), arrowprops={'arrowstyle':'<->'})
+#ax.text(-93.991,21.515,'%.2f km' % dc8toer2)
 
 ya,yb,xa,xb = 21.46,21.54,-94.03,-93.94
 ax.set_ylim([ya,yb])
 ax.set_xlim([xa,xb])
 ax.get_yaxis().get_major_formatter().set_useOffset(False)
 ax.get_xaxis().get_major_formatter().set_useOffset(False)
-ax.set_title('FOV comparison')
+ax.set_title('Field-Of-View comparison')
 ax.set_xlabel('Longitude')
 ax.set_ylabel('Latitude')
 
-cbar = plt.colorbar(cf)
+cbar = plt.colorbar(cf,fraction=0.046, pad=0.04)
 cbar.set_label('$\\tau$')
 
 ax2 = fig.add_subplot(121)
@@ -1772,62 +1841,176 @@ ax2.set_xlabel('Longitude')
 ax2.set_ylabel('Latitude')
 ax2.set_title('eMAS Cloud optical thickness')
 ax2.legend(loc=4,frameon=False)
+yr = ax2.get_ylim()
+xr = ax2.get_xlim()
+ax2.plot([xa,-93.02],[yb,22.107],'k',clip_on=False)
+ax2.plot([xa,-93.02],[ya,20.912],'k',clip_on=False)
+ax2.set_ylim(yr)
+ax2.set_xlim(xr)
+plt.tight_layout()
 plt.savefig(fp+'plots/emas_FOV_comp.png',dpi=600,transparent=True)
 
 # <codecell>
 
-from scipy.spatial import cKDTree
-from map_utils import radius_m2deg
-import numpy as np
-lat1,lon1,lat2,lon2 =  er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'] 
-
-# <codecell>
-
-max_distance = radius_m2deg(lat1[0],lon1[0],r_SSFR) #transform to degrees
-points_ref = np.column_stack((lat1,lon1))
-
-# <codecell>
-
-points = np.column_stack((lat2.reshape(lat2.size),lon2.reshape(lon2.size)))
-
-# <codecell>
-
-tree = cKDTree(points)
-
-# <codecell>
-
-tree2 = cKDTree(points_ref)
-
-# <codecell>
-
-indd = tree.query_ball_tree(tree2,max_distance)
-
-# <codecell>
-
+import map_utils
+reload(map_utils)
 from map_utils import stats_within_radius
 
 # <codecell>
 
 out_ssfrtau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR)
+out_ssfrref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_SSFR)
 
 # <codecell>
 
-out_ssfrtau.keys()
+out_rspref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_RSP)
+out_rsptau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_RSP)
 
 # <codecell>
 
-out_ssfrtau['std'].shape
+out_starref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_4STAR)
+out_startau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_4STAR)
 
 # <codecell>
 
-out_ssfrtau['mean']
+r_MODIS = 500.0
+out_modisref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_MODIS)
+out_modistau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_MODIS)
 
 # <codecell>
 
-plt.plot(out_ssfrtau['std'])
+plt.plot(out_ssfrtau['std'],'g',label='SSFR')
+plt.plot(out_rsptau['std'],'c',label='RSP')
+plt.plot(out_modistau['std'],'m',label='MODIS')
+plt.plot(out_startau['std'],'r',label='4STAR')
+plt.xlabel('points')
+plt.ylabel('$\\tau$')
+plt.title('Standard deviation along horizontal area')
+plt.legend(frameon=False)
 
 # <codecell>
 
-plt.hist(stdd[~isnan(stdd)],alpha=0.5)
-plt.hist(rg[~isnan(rg)],alpha=0.5)
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_subplot(122)
+cf = ax.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+
+ax.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
+ax.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b--',label='DC8 flight path')
+
+circles(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],radius_m2deg(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],r_4STAR),c='r',alpha=0.5,ax=ax,label='4STAR')
+circles(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],radius_m2deg(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],r_SSFR),c='g',alpha=0.5,ax=ax,label='SSFR')
+circles(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],radius_m2deg(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],r_eMAS),c='k',alpha=0.5,ax=ax,label='eMAS')
+circles(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],radius_m2deg(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],r_RSP),c='c',alpha=0.5,ax=ax,label='RSP')
+#circles(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],radius_m2deg(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],500.0),c='m',alpha=0.5,ax=ax,label='MODIS')
+vo = [[modis['lon'][495,1208],modis['lat'][495,1208]],
+      [modis['lon'][495,1209],modis['lat'][495,1209]],
+      [modis['lon'][496,1209],modis['lat'][496,1209]],
+      [modis['lon'][496,1208],modis['lat'][496,1208]],
+      [modis['lon'][495,1208],modis['lat'][495,1208]]]
+ax.add_patch(Polygon(vo,closed=True,color='m',alpha=0.5))
+
+
+#ax.text(dc8['G_LONG'][idc8[380]]+0.002,dc8['G_LAT'][idc8[380]],'4STAR',color='r')
+#ax.text(-93.958,21.53,'SSFR',color='g')
+#ax.text(er2['Longitude'][ier2[385]]+0.002,er2['Latitude'][ier2[385]],'eMAS',color='k')
+#ax.text(er2['Longitude'][ier2[395]]+0.002,er2['Latitude'][ier2[395]],'RSP',color='c')
+#ax.text(er2['Longitude'][ier2[375]]+0.005,er2['Latitude'][ier2[375]],'MODIS',color='m')
+
+#dc8toer2 = spherical_dist(np.array((er2['Latitude'][ier2[393]],er2['Longitude'][ier2[393]])),np.array((dc8['G_LAT'][idc8[380]],dc8['G_LONG'][idc8[380]])))
+#ax.annotate('' , (er2['Longitude'][ier2[393]],er2['Latitude'][ier2[393]]),(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]]), arrowprops={'arrowstyle':'<->'})
+#ax.text(-93.991,21.515,'%.2f km' % dc8toer2)
+
+#ya,yb,xa,xb = 21.46,21.54,-94.03,-93.94
+#ax.set_ylim([ya,yb])
+#ax.set_xlim([xa,xb])
+ax.get_yaxis().get_major_formatter().set_useOffset(False)
+ax.get_xaxis().get_major_formatter().set_useOffset(False)
+ax.set_title('eMAS $\\tau$')
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
+
+cbar = plt.colorbar(cf,fraction=0.046, pad=0.04)
+cbar.set_label('$\\tau$')
+
+ax2 = fig.add_subplot(121,sharey=ax)
+ax2.plot(out_ssfrtau['std'],er2['Latitude'][ier2[::10]],'g',label='SSFR')
+ax2.plot(out_rsptau['std'],er2['Latitude'][ier2[::10]],'c',label='RSP')
+ax2.plot(out_modistau['std'],er2['Latitude'][ier2[::10]],'m',label='MODIS')
+ax2.plot(out_startau['std'],er2['Latitude'][ier2[::10]],'r',label='4STAR')
+ax2.set_ylabel('Lattude')
+ax2.set_xlabel('$\\sigma\\tau$')
+ax2.set_title('Variability of $\\tau$ in each Field-of-View')
+plt.legend(frameon=False)
+plt.tight_layout()
+
+plt.savefig(fp+'plots/emas_tau_variations.png',dpi=600,transparent=True)
+
+# <codecell>
+
+print 'SSFR tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_ssfrtau['std']), np.median(out_ssfrtau['std']), np.nanmax(out_ssfrtau['std']), np.nanmin(out_ssfrtau['std']))
+print 'RSP tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_rsptau['std']), np.median(out_rsptau['std']),np.nanmax(out_rsptau['std']), np.nanmin(out_rsptau['std']))
+print 'MODIS tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_modistau['std']), np.median(out_modistau['std']),np.nanmax(out_modistau['std']), np.nanmin(out_modistau['std']))
+print '4STAR tau: %.2f , %.2f, max, min:%.2f, %.2f' % (np.nanmean(out_startau['std']), np.median(out_startau['std']),np.nanmax(out_startau['std']), np.nanmin(out_startau['std']))
+
+# <codecell>
+
+print 'SSFR ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_ssfrref['std']),np.median(out_ssfrref['std']),np.nanmax(out_ssfrref['std']),np.nanmin(out_ssfrref['std']))
+print 'RSP ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_rspref['std']),np.median(out_rspref['std']),np.nanmax(out_rspref['std']),np.nanmin(out_rspref['std']))
+print 'MODIS ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_modisref['std']),np.median(out_modisref['std']),np.nanmax(out_modisref['std']),np.nanmin(out_modisref['std']))
+print '4STAR ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_starref['std']),np.median(out_starref['std']),np.nanmax(out_starref['std']),np.nanmin(out_starref['std']))
+
+# <codecell>
+
+fig = plt.figure(figsize=(9,5))
+ax = fig.add_subplot(122)
+
+cf = ax.contourf(emas_v1['lon'],emas_v1['lat'],emas_v1['ref'],clevels,cmap=plt.cm.gist_earth,extend='max')
+
+ax.plot(er2['Longitude'][ier2],er2['Latitude'][ier2],'r',label='ER2 flight path')
+ax.plot(dc8['G_LONG'][idc8],dc8['G_LAT'][idc8],'b--',label='DC8 flight path')
+
+circles(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],radius_m2deg(dc8['G_LONG'][idc8[380]],dc8['G_LAT'][idc8[380]],r_4STAR),c='r',alpha=0.5,ax=ax,label='4STAR')
+circles(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],radius_m2deg(er2['Longitude'][ier2[390]],er2['Latitude'][ier2[390]],r_SSFR),c='g',alpha=0.5,ax=ax,label='SSFR')
+circles(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],radius_m2deg(er2['Longitude'][ier2[385]],er2['Latitude'][ier2[385]],r_eMAS),c='k',alpha=0.5,ax=ax,label='eMAS')
+circles(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],radius_m2deg(er2['Longitude'][ier2[395]],er2['Latitude'][ier2[395]],r_RSP),c='c',alpha=0.5,ax=ax,label='RSP')
+#circles(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],radius_m2deg(er2['Longitude'][ier2[375]],er2['Latitude'][ier2[375]],500.0),c='m',alpha=0.5,ax=ax,label='MODIS')
+vo = [[modis['lon'][495,1208],modis['lat'][495,1208]],
+      [modis['lon'][495,1209],modis['lat'][495,1209]],
+      [modis['lon'][496,1209],modis['lat'][496,1209]],
+      [modis['lon'][496,1208],modis['lat'][496,1208]],
+      [modis['lon'][495,1208],modis['lat'][495,1208]]]
+ax.add_patch(Polygon(vo,closed=True,color='m',alpha=0.5))
+
+ax.get_yaxis().get_major_formatter().set_useOffset(False)
+ax.get_xaxis().get_major_formatter().set_useOffset(False)
+ax.set_title('FOV comparison')
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
+
+cbar = plt.colorbar(cf)
+cbar.set_label('$R_{eff}$ [$\\mu$m]')
+
+ax2 = fig.add_subplot(121)
+ax2.plot(out_ssfrref['std'],range(80),'g',label='SSFR')
+ax2.plot(out_rspref['std'],range(80),'c',label='RSP')
+ax2.plot(out_modisref['std'],range(80),'m',label='MODIS')
+ax2.plot(out_starref['std'],range(80),'r',label='4STAR')
+ax2.set_ylabel('points')
+ax2.set_xlabel('$\\sigma R_{eff}$')
+ax2.set_title('$R_{eff}$ variations in FOV')
+plt.legend(frameon=False,loc=4)
+
+plt.savefig(fp+'plots/emas_ref_variations.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.hist(out_ssfrtau['std'],bins=30, histtype='stepfilled', normed=True,color='g',label='SSFR',alpha=0.6)
+plt.hist(out_rsptau['std'][~isnan(out_rsptau['std'])],bins=30, histtype='stepfilled', normed=True,color='c',label='RSP',alpha=0.6)
+plt.hist(out_modistau['std'][~isnan(out_modistau['std'])],bins=30, histtype='stepfilled', normed=True,color='m',label='MODIS',alpha=0.6)
+plt.hist(out_startau['std'][~isnan(out_startau['std'])],bins=30, histtype='stepfilled', normed=True,color='r',label='4STAR',alpha=0.6)
+plt.xlim([0,3])
+plt.legend(frameon=False)
+
+# <codecell>
+
 
