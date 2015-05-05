@@ -619,6 +619,75 @@ def load_apr(datfiles):
 
 # <codecell>
 
+def load_amsr(datfile,lonlatfile):
+    """
+    Name:
+
+        load_amsr
+    
+    Purpose:
+
+        to load amsr data into a sucinct dictionary
+    
+    Calling Sequence:
+
+        amsr = load_amsr(datfile,lonlatfile) 
+    
+    Input: 
+  
+        datfile: path and name of hdf file
+        lonlatfile: path and name of hdf files for lat and lon
+    
+    Output:
+
+        amsr: dictionary with numpy array of values
+    
+    Keywords: 
+
+       none
+    
+    Dependencies:
+
+        gdal
+        numpy
+        gc: for clearing the garbage
+        Sp_parameters for progress issuer
+        pdb: for debugging
+        load_modis: this file
+    
+    Required files:
+   
+        dat file
+        lonlat file
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-05-04, NASA Ames
+        
+    """
+    import os
+    if not(os.path.isfile(datfile)):
+        error('Data file not found!')
+    if not(os.path.isfile(lonlatfile)):
+        error('Lonlat file not found!')
+    import numpy as np
+    from load_modis import load_hdf
+    from osgeo import gdal
+    gdat = gdal.Open(datfile)
+    dat = dict()
+    dat['nfo'] = gdat.GetMetadata()
+    dat['ice'] = gdat.GetRasterBand(1).ReadAsArray()
+    datll,dicll = load_hdf(lonlatfile,values=(('lon',0),('lat',1)),verbose=False)
+    dat['lat'] = datll['lat']
+    dat['lon'] = datll['lon']
+    return dat
+
+# <codecell>
+
 def remove_field_name(a, name):
     names = list(a.dtype.names)
     if name in names:
