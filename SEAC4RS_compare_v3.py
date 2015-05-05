@@ -1036,6 +1036,15 @@ i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
 
 # <codecell>
 
+print 0.19*60
+print 0.10*60
+
+# <codecell>
+
+apr['utc'][it]
+
+# <codecell>
+
 plt.figure
 plt.plot(smooth(apr['dbz'][i,it],10),apr['altflt'][i,it],'k')
 plt.xlim([0,8000])
@@ -1126,7 +1135,12 @@ print len(rsp_good[0])
 
 # <codecell>
 
-plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff159'][rsp_good[0]])
+plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff159'][rsp_good[0]],label='1.59 micron')
+plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff225'][rsp_good[0]],label='2.25 micron')
+plt.xlabel('UTC [Hours]')
+plt.ylabel('R$_{eff}$ [$\\mu$m]')
+plt.title('RSP effective radius retrievals')
+plt.legend(frameon=False)
 
 # <codecell>
 
@@ -1239,12 +1253,22 @@ print r_4STAR
 
 # <codecell>
 
-plt.figure(figsize=(9,6))
-plt.axvspan(0,80,color='#FFFFFF')
-plt.axvspan(np.nanmean(modis_tau)-2.0,np.nanmean(modis_tau)+2.0,color='m',alpha=0.7)
-plt.axvspan(np.nanmean(ssfr_tau)-7.8,np.nanmean(ssfr_tau)+7.8,color='g',alpha=0.7)
-plt.axvspan(np.nanmean(rsp_tau)-0.3,np.nanmean(rsp_tau)+0.3,color='c',alpha=0.7)
-plt.axvspan(np.nanmean(star_tau)-0.8,np.nanmean(star_tau)+0.8,color='r',alpha=0.7)
+fig,ax = plt.subplots(1,figsize=(9,6))
+
+import matplotlib.transforms as mtransforms
+trans1 = mtransforms.blended_transform_factory(ax.transAxes, ax.transAxes)
+trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+
+plt.fill_between([0,1],0,1,transform=trans1,color='#FFFFFF')
+plt.fill_between([np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2))-7.8,np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2))+7.8],
+                 0,1,transform=trans,color='g',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.3)
+plt.fill_between([np.nanmean(smooth(modis_tau,6))-2.0,np.nanmean(smooth(modis_tau,6))+2.0],0,1,transform=trans,
+                 color='m',edgecolor='m',alpha=0.3,hatch='x',linewidth=0.2)
+plt.fill_between([np.nanmean(smooth(rsp_tau,70))-2.0,np.nanmean(smooth(rsp_tau,70))+2.0],0,1,transform=trans,
+                 color='c',edgecolor='c',alpha=0.3,hatch='/',linewidth=0.2)
+plt.fill_between([np.nanmean(smooth(star_tau,40))-2.0,np.nanmean(smooth(star_tau,40))+2.0],0,1,transform=trans,
+                 color='r',edgecolor='r',alpha=0.3,hatch='\\',linewidth=0.2)
+
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 #plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
 plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
@@ -1261,6 +1285,12 @@ plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
 plot_median_mean(smooth(rsp_tau,70),color='c')
 
+xr = ax.get_xlim()
+yr = ax.get_ylim()
+ax.add_patch(plt.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.5,label='Horizontal variability'))
+ax.set_xlim(xr)
+ax.set_ylim(yr)
+
 plt.legend(frameon=False)
 plt.xlim([0,60])
 plt.savefig(fp+'plots/hist_modis_4star_tau_v3_fill.png',dpi=600,transparent=True)
@@ -1268,12 +1298,26 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_v3_fill.png',dpi=600,transparent=True
 
 # <codecell>
 
-plt.figure(figsize=(9,6))
-plt.axvspan(0,80,color='#FFFFFF')
-plt.axvspan(np.nanmean(modis_ref)-1.7,np.nanmean(modis_ref)+1.7,color='m',alpha=0.7)
-plt.axvspan(np.nanmean(ssfr_ref)-2.7,np.nanmean(ssfr_ref)+2.7,color='g',alpha=0.7)
-plt.axvspan(np.nanmean(rsp_ref)-1.7,np.nanmean(rsp_ref)+1.7,color='c',alpha=0.7)
-plt.axvspan(np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8,color='r',alpha=0.7)
+fig,ax = plt.subplots(1,figsize=(9,6))
+import matplotlib.transforms as mtransforms
+trans1 = mtransforms.blended_transform_factory(ax.transAxes, ax.transAxes)
+trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+
+plt.fill_between([0,1],0,1,transform=trans1,color='#FFFFFF')
+plt.fill_between([np.nanmean(ssfr_ref)-2.7,np.nanmean(ssfr_ref)+2.7],0,1,transform=trans,
+                 color='g',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.3)
+plt.fill_between([np.nanmean(modis_ref)-1.7,np.nanmean(modis_ref)+1.7],0,1,transform=trans,
+                 color='m',edgecolor='m',alpha=0.3,hatch='x',linewidth=0.2)
+plt.fill_between([np.nanmean(rsp_ref)-1.7,np.nanmean(rsp_ref)+1.7],0,1,transform=trans,
+                 color='c',edgecolor='c',alpha=0.3,hatch='/',linewidth=0.2)
+plt.fill_between([np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8],0,1,transform=trans,
+                 color='r',edgecolor='r',alpha=0.3,hatch='\\',linewidth=0.2)
+
+#plt.axvspan(0,80,color='#FFFFFF')
+#plt.axvspan(np.nanmean(modis_ref)-1.7,np.nanmean(modis_ref)+1.7,color='m',alpha=0.7)
+#plt.axvspan(np.nanmean(ssfr_ref)-2.7,np.nanmean(ssfr_ref)+2.7,color='g',alpha=0.7)
+#plt.axvspan(np.nanmean(rsp_ref)-1.7,np.nanmean(rsp_ref)+1.7,color='c',alpha=0.7)
+#plt.axvspan(np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8,color='r',alpha=0.7)
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
 #plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
 plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
@@ -1291,9 +1335,64 @@ plot_median_mean(smooth(ssfr_ref,2),color='g')
 plot_median_mean(smooth(rsp_ref,70),color='c')
 plot_median_mean(probes[:,7],color='y')
 plot_median_mean(star_ref,lbl=True,color='r')
+
+ax.add_patch(plt.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.5,label='Horizontal variability'))
+
 plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
+plt.ylim([0,0.3])
 plt.savefig(fp+'plots/hist_modis_4star_ref_v3_fill.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.figure()
+plt.boxplot(smooth(modis_tau,6),vert=False,color='m')
+
+# <codecell>
+
+fig,(ax1,ax2) = plt.subplots(2,figsize=(9,6))
+
+import matplotlib.transforms as mtransforms
+trans1 = mtransforms.blended_transform_factory(ax1.transAxes, ax1.transAxes)
+trans = mtransforms.blended_transform_factory(ax1.transData, ax1.transAxes)
+
+ax1.fill_between([0,1],0,1,transform=trans1,color='#FFFFFF')
+ax1.fill_between([np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2))-7.8,np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2))+7.8],
+                 0,1,transform=trans,color='g',edgecolor='g',hatch='x',linewidth=0.1,alpha=0.3)
+ax1.fill_between([np.nanmean(smooth(modis_tau,6))-2.0,np.nanmean(smooth(modis_tau,6))+2.0],0,1,transform=trans,
+                 color='m',edgecolor='m',alpha=0.3,hatch='x',linewidth=0.1)
+ax1.fill_between([np.nanmean(smooth(rsp_tau,70))-2.0,np.nanmean(smooth(rsp_tau,70))+2.0],0,1,transform=trans,
+                 color='c',edgecolor='c',alpha=0.3,hatch='/',linewidth=0.1)
+ax1.fill_between([np.nanmean(smooth(star_tau,40))-2.0,np.nanmean(smooth(star_tau,40))+2.0],0,1,transform=trans,
+                 color='r',edgecolor='r',alpha=0.3,hatch='\\',linewidth=0.1)
+
+ax1.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
+#plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+ax1.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+ax1.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
+ax1.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
+ax1.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
+ax1.set_title('Optical Thickness histogram')
+ax1.set_ylabel('Normed probability')
+ax1.set_xlabel('$\\tau$')
+plot_median_mean(smooth(modis_tau,6),color='m')
+#plot_median_mean(smooth(emas_tau ,60),color='b')
+plot_median_mean(smooth(emas_tau_v1,60),color='k')
+plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
+plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
+plot_median_mean(smooth(rsp_tau,70),color='c')
+
+xr = ax1.get_xlim()
+yr = ax1.get_ylim()
+ax1.add_patch(plt.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewidth=0.1,alpha=0.5,label='Horizontal variability'))
+ax1.set_xlim(xr)
+ax1.set_ylim(yr)
+
+plt.legend(frameon=False)
+ax1.set_xlim([0,60])
+
+
+plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
