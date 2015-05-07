@@ -103,6 +103,30 @@ def plt_amsr():
     return m
 m = plt_amsr()
 
+# <headingcell level=2>
+
+# Load C130 nav data
+
+# <codecell>
+
+fnav = fp+'c130/20140919_ARISE_Flight_13/arise-C130-Hskping_c130_20140919_RA_Preliminary.ict'
+nav = lm.load_ict(fnav)
+
+# <codecell>
+
+nav['Longitude'][nav['Longitude']==0.0] = np.NaN
+nav['Latitude'][nav['Latitude']<0.0] = np.NaN
+
+# <codecell>
+
+plt.figure()
+plt.plot(nav['Longitude'],nav['Latitude'])
+
+# <codecell>
+
+m = plt_amsr()
+m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10)
+
 # <codecell>
 
 

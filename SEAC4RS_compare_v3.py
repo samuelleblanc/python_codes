@@ -1052,6 +1052,13 @@ plt.xlabel('dbZ')
 plt.ylabel('Altitude [m]')
 #plt.title('APR2 Zenith radar reflectivity at: ',apr['utc'][it])
 
+# <codecell>
+
+plt.figure()
+for j in xrange(20):
+    plt.plot(apr['dbz'][i,it+j],apr['altflt'][i,it+j],label='%f.2'%apr['utc'][it+j])
+plt.legend(frameon=False)
+
 # <headingcell level=2>
 
 # Load the cloud probe data
