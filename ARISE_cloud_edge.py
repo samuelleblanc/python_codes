@@ -32,7 +32,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
-#     - load_modis.py : for loading modis files
+#     - load_modis.py : for loading modis and other files
 #     - matplotlib
 #     - mpltools
 #     - numpy
@@ -50,9 +50,11 @@
 # Needed Files:
 # 
 #   - file.rc : for consistent creation of look of matplotlib figures
-#   - AMSR-E map files
+#   - AMSR-E map files (asi-AMSR2-n6250-20140919-v5.hdf and LongitudeLatitudeGrid-n6250-Arctic.hdf)
 #   - MODIS retrievals
 #   - CALIPSO overpass file
+#   - C130 nav data: arise-C130-Hskping_c130_20140919_RA_Preliminary.ict
+#   - Probes data: ARISE-LARGE-PROBES_C130_20140919_R0.ict
 #   
 
 # <codecell>
@@ -120,13 +122,83 @@ nav['Latitude'][nav['Latitude']<0.0] = np.NaN
 # <codecell>
 
 plt.figure()
-plt.plot(nav['Longitude'],nav['Latitude'])
+#plt.plot(nav['Longitude'],nav['Latitude'])
+ss = plt.scatter(nav['Longitude'],nav['Latitude'],c=nav['Start_UTC'],edgecolor='None',cmap=cm.gist_ncar)
+plt.grid()
+cbar = plt.colorbar(ss)
+cbar.set_label('UTC [h]')
+plt.ylabel('Latitude')
+plt.xlabel('Longitude')
+plt.savefig(fp+'plots/20140919_flightpath.png',dpi=600,transparent=True)
 
 # <codecell>
 
 m = plt_amsr()
-m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10)
+m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor='r')
+plt.savefig(fp+'plots/20140919_map_ice_conc.png',dpi=600,transparent=True)
 
 # <codecell>
 
+flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitude']<0.0))
+
+# <codecell>
+
+plt.figure()
+plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
+plt.xlabel('Longitude')
+plt.ylabel('Altitude [m]')
+plt.savefig(fp+'plots/20140919_proile_alt.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Load Cloud probe data
+
+# <codecell>
+
+fprobe = fp+'c130/20140919_ARISE_Flight_13/ARISE-LARGE-PROBES_C130_20140919_R0.ict'
+probe,prb_header = lm.load_ict(fprobe,header=True)
+
+# <codecell>
+
+prb_header
+
+# <codecell>
+
+flt_prb = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0))
+probe['TWC_gm3'][probe['TWC_gm3']<0.0] = np.NaN
+feet2meter = 0.3048
+
+# <codecell>
+
+plt.figure()
+#plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
+plt.xlabel('Longitude')
+plt.ylabel('Altitude [m]')
+ss = plt.scatter(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,
+                 c=probe['nCDP_cm3'][flt_prb],edgecolor='None',
+                 cmap=cm.gist_ncar_r)
+plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,c='k',linewidth=0.3)
+plt.ylim([0,7000])
+plt.xlim([-138,-128])
+plt.title('C130 profile on 2014-09-19')
+cbar = plt.colorbar(ss)
+cbar.set_label('Drop number concentration [cm$^{-3}$]')
+plt.savefig(fp+'plots/20140919_proile_alt_ndrop.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Load the MODIS cloud properties
+
+# <markdowncell>
+
+# Get the data from MODIS for the proper day of year
+
+# <codecell>
+
+from datetime import datetime
+datetime(2014,9,19).timetuple().tm_yday
+
+# <codecell>
+
+fmodis_aqua = fp+'MODIS/'
 

@@ -132,7 +132,7 @@ def load_modis(geofile,datfile):
 
 # <codecell>
 
-def load_ict(fname):
+def load_ict(fname,header=False):
     """
     Simple ict file loader
     created specifically to load the files from the iwg1 on board the G1 during TCAP, may work with others...
@@ -153,7 +153,7 @@ def load_ict(fname):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
     def utctime(seconds_utc):
         return float(seconds_utc)/3600.
-    conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime, "TIME_UTC":utctime}
+    conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime, "TIME_UTC":utctime, "UTC_mid":utctime}
     data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,converters=conv)
     print data.dtype.names
     #scale the values by using the scale factors
@@ -161,7 +161,10 @@ def load_ict(fname):
         if i>0:
             if factor[i-1]!=float(1):
                 data[name] = data[name]*factor[i-1]    
-    return data
+    if header:
+        return data, header
+    else:
+        return data
 
 # <codecell>
 
