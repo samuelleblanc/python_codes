@@ -35,15 +35,21 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     from map_utils import spherical_dist
     from Sp_parameters import startprogress, progress, endprogress
     import numpy as np
-    if not any(meas_good):
+    if not meas_good:
         meas_good = np.where(meas_lon)
     imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
                             np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
     wimodis = np.where(imodis)
     N1 = mod_lon[imodis].size
     modis_grid = np.hstack([mod_lon[imodis].reshape((N1,1)),mod_lat[imodis].reshape((N1,1))])
-    N2 = len(meas_good)
-    meas_grid = np.hstack([np.array(meas_lon[meas_good]).reshape((N2,1)),np.array(meas_lat[meas_good]).reshape((N2,1))])
+    try:
+        N2 = len(meas_good)
+        if N2==1:
+            meas_good = meas_good[0]
+            N2 = len(meas_good)
+        meas_grid = np.hstack([np.array(meas_lon[meas_good]).reshape((N2,1)),np.array(meas_lat[meas_good]).reshape((N2,1))])
+    except:
+        import pdb; pdb.set_trace()
     meas_in = meas_grid.astype(int)
     meas_ind = np.array([meas_good.ravel()*0,meas_good.ravel()*0])
     startprogress('Running through flight track')

@@ -691,6 +691,70 @@ def load_amsr(datfile,lonlatfile):
 
 # <codecell>
 
+def load_hdf_sd(FILE_NAME):
+    """
+    Name:
+
+        load_hdf_sd
+    
+    Purpose:
+
+        to load everyything in a hdf file using the SD protocol instead of GDAL
+    
+    Calling Sequence:
+
+        dat,dat_dict = load_hdf_sd(FILE_NAME) 
+    
+    Input: 
+  
+        FILE_NAME: path and name of hdf file
+    
+    Output:
+
+        dat: dictionary with numpy array of values
+        dat_dict: dictionary with dictionaries of attributes for each read value
+    
+    Keywords: 
+
+       none
+    
+    Dependencies:
+
+        numpy
+        pyhdf, SDC, SD
+    
+    Required files:
+   
+        dat file
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-05-13, NASA Ames
+        
+    """
+    import numpy as np
+    from pyhdf.SD import SD, SDC
+    print 'Reading file: '+FILE_NAME
+    hdf = SD(FILE_NAME, SDC.READ)
+    dat = dict()
+    dat_dict = dict()
+    for name in hdf.datasets().keys():
+        print '  '+name+': %s' % (hdf.datasets()[name],)
+        dat[name] = hdf.select(name)[:]
+        dat_dict[name] = hdf.select(name).attributes()
+        try:
+            missing_value = dat_dict[name]['missing_value']
+            dat[name][dat[name] == missing_value] = np.nan
+        except:
+            print '  no missing value for key:'+name
+    return dat, dat_dict
+
+# <codecell>
+
 def remove_field_name(a, name):
     names = list(a.dtype.names)
     if name in names:
