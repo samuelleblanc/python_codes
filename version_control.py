@@ -3,11 +3,11 @@
 
 # <codecell>
 
-global program_version
+#global program_version
 
 # <codecell>
 
-def version_set(v_tag,program_version):
+def version_set(v_tag):
     """
     Name:
 
@@ -56,18 +56,28 @@ def version_set(v_tag,program_version):
         Written (v1.0): Samuel LeBlanc, 2015-02-02, NASA Ames
         
     """
-    global program_version
+    #global program_version
     
     import os, time
     import inspect
     import getpass
     
+    def getname(): 
+        import IPython
+        IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookName = " + "\'"+IPython.notebook.notebook_name+"\'");'))
+        IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookPath = " + "\'"+IPython.notebook.notebook_path+"\'");'))
+    getname()
+  #  thisfilepath = os.getcwd() + os.path.sep+theNotebookPath+theNotebookName
+    
     current_file_name = inspect.stack()[1][1]
+    #current_file_name = theNotebookName
+    print current_file_name
     (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(current_file_name)
     lm = "last modified: %s" % time.ctime(mtime)
     lc = "file created: %s" % time.ctime(ctime)
     user = getpass.getuser()
     
     pro_version = {'Filename':current_file_name,'Version':v_tag,'creation':lc,'modified':lm,'Run by':user}
-    return program_version+pro_version
+    #return program_version+pro_version
+    return pro_version
 
