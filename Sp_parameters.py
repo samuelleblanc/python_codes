@@ -298,6 +298,9 @@ class Sp:
     """ 
     Sp: spectrum class object that has all the tools for easy spectra analysis.
     Includes tools for building look up tables
+    
+    Modified (v1.1): Samuel LeBlanc, NASA Ames, 2015-05-14
+                    - added in _init_ for checking if using radiance subset instead of all radiances (rad vs. rads), in matlab loaded values 
     """    
     import numpy as np
     def params(self):
@@ -529,17 +532,21 @@ class Sp:
             self.tau = s['tau']
             self.ref = s['ref']
         else:
-            self.utc = s['utc']
-            if isinstance(s['good'],tuple):
-                self.good = s['good'][0]
+            self.utc = s['utc'][self.iset]
+            if 'good' in s.keys():
+                if isinstance(s['good'],tuple):
+                    self.good = s['good'][0]
+                else:
+                    self.good = s['good']
             else:
-                self.good = s['good']
+                print 'No indexed good values, choosing all times that are greater than 0'
+                self.good = np.where(self.utc>0.0)[0]
             if 'Alt' in s:
-                self.alt = s['Alt']
+                self.alt = s['Alt'][self.iset]
             if 'Lat' in s:
-                self.lat = s['Lat']
+                self.lat = s['Lat'][self.iset]
             if 'Lon' in s:
-                self.lon = s['Lon']
+                self.lon = s['Lon'][self.iset]
         if 'sza' in s:
             self.sza = s['sza']
         # initiate with NANs the values that need to be populated
@@ -557,7 +564,12 @@ class Sp:
         self.reflect = np.zeros_like(self.sp)*np.nan
         
     def wvlsort(self,s,irrad):
-        "Function to sort spectra along the wavelength axis"
+        """
+        Function to sort spectra along the wavelength axis
+        select processing depending on the keys in the original dictionary input
+        
+        Creates the sp element in self, and iset for measurements
+        """
         iwvls = self.iwvls
         if sorted(iwvls) is iwvls:
             print '*** wvls are already sorted, there may be a problem! ***'
@@ -569,7 +581,25 @@ class Sp:
                 sp = s['sp'][:,iwvls,:,:,:]
             else: 
                 raise LookupError
-        if 'rad' in s:
+        if 'rads' in s:
+            print 'in rads'
+            print s['rads'].shape, s['rads'].ndim, len(iwvls)
+            ui = [i for i in range(s['rads'].ndim) if s['rads'].shape[i] == len(self.wvl)]
+            #print ui
+            if 1 in ui:
+                print '1 in ui'
+                sp = s['rads'][:,iwvls]
+            else: 
+                print 'not 1 in ui'
+                sp = s['rads'][iwvls,:]
+            if 'iset' in s:
+                if s['iset'].ndim>1:
+                    self.iset = s['iset'][:,0]
+                else:
+                    self.iset = s['iset']
+            else:
+                print '** Problem, rads present (radiance subset), but not the subset integers **'
+        elif 'rad' in s:
             print 'in rad'
             print s['rad'].shape, s['rad'].ndim, len(iwvls)
             ui = [i for i in range(s['rad'].ndim) if s['rad'].shape[i] == len(self.wvl)]
@@ -580,6 +610,7 @@ class Sp:
             else: 
                 print 'not 1 in ui'
                 sp = s['rad'][iwvls,:]
+            self.iset = np.where(s['rad'][:,0])[0]
         if irrad:
             print 'in irrad'
             ui = [i for i in range(s['sp_irrdn'].ndim) if s['sp_irrdn'].shape[i] == len(self.wvl)]
