@@ -68,6 +68,7 @@ from mpltools import color
 %matplotlib inline
 import numpy as np, h5py
 import scipy.io as sio
+import scipy
 import math, os, IPython
 import Sp_parameters as Sp
 IPython.InteractiveShell.cache_size = 0
@@ -274,6 +275,10 @@ terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
 
 # <codecell>
 
+terra_dicts['tau']
+
+# <codecell>
+
 flt_aqua = np.where(nav['Start_UTC']<19.9)
 
 # <codecell>
@@ -383,7 +388,7 @@ merra,merra_dict = lm.load_hdf_sd(fmerra)
 
 # <codecell>
 
-merra_dict['levels']
+merra_dict['delp']
 
 # <codecell>
 
@@ -415,6 +420,7 @@ q = plt.quiver(x[::4,::4],y[::4,::4],merra['u'][3,-10,::4,::4],merra['v'][3,-10,
 x0,y0 = m(-185,79)
 plt.quiverkey(q,x0,y0,10,'10 m/s',coordinates='data',color='r')
 m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor='k')
+#m.contour(mlon,mlat,merra['delp'][3,-10,:,:],latlon=True,zorder=10)
 plt.savefig(fp+'plots/20140919_map_wind.png',dpi=600,transparent=True)
 
 # <codecell>
@@ -457,6 +463,10 @@ plt.xlabel('Longitude')
 
 import map_utils as mu
 
+# <markdowncell>
+
+# Create a lat lon slice to use for correlating the sea ice concentration
+
 # <codecell>
 
 points_lat = [73.2268,71.817716]
@@ -472,53 +482,30 @@ path_lon = flon(np.arange(100))
 
 # <codecell>
 
-plt.plot(path_lon,path_lat)
-
-# <codecell>
-
-amsr_ind = mu.map_ind(amsr['lon']-180.0,amsr['lat'],path_lon,path_lat)
-
-# <codecell>
-
 ind = np.zeros((2,len(path_lat)), dtype=numpy.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
-    ind[:,i] = np.unravel_index(np.nanargmin(np.square(amsr['lat']-x)+np.square(amsr['lon']-180.0-y)),amsr['lat'].shape)
-
-# <codecell>
-
-ind[:,45]
+    ind[:,i] = np.unravel_index(np.nanargmin(np.square(amsr['lat']-x)+np.square(amsr['lon']-360.0-y)),amsr['lat'].shape)
 
 # <codecell>
 
 plt.plot(path_lon,amsr['ice'][ind[0,:],ind[1,:]])
+plt.ylabel('Ice Concentration [\%]')
+plt.xlabel('Longitude')
+plt.title('Below flight path ice concentration')
 
 # <codecell>
 
-ind = np.unravel_index(np.nanargmin(abs(amsr['lat']-x)+abs(amsr['lon']-180.0-x)),amsr['lat'].shape)
-
-# <codecell>
-
-ind[:,0]
-
-# <codecell>
-
-amsr['ice'][ind[0,:],ind[1,:]]
-
-# <codecell>
-
-amsr['lon'].shape
-
-# <codecell>
-
-print amsr['lon'][854,908]-180
-print amsr['lat'][854,908]
-
-# <codecell>
-
-plt.plot(amsr['lon'].reshape(amsr['lon'].size)-180,amsr['lat'].reshape(amsr['lon'].size),'g+-')
-plt.xlim([-160.5,-160])
-plt.ylim([55,55.5])
+plt.plot(amsr['lon'].reshape(amsr['lon'].size)-360,amsr['lat'].reshape(amsr['lon'].size),'g+-')
+plt.plot(amsr['lon'][ind[0,:],ind[1,:]]-360.0,amsr['lat'][ind[0,:],ind[1,:]],'r+')
+plt.plot(nav['Longitude'],nav['Latitude'],'k')
+plt.xlim([-138,-128])
+plt.ylim([71,74])
+clevels = np.linspace(0,100,21)
+plt.contourf(amsr['lon']-360.0,amsr['lat'],amsr['ice'],clevels,cmap=plt.cm.gist_earth)
+plt.ylabel('Latitude')
+plt.xlabel('Longitude')
+plt.title('AMSR ice concentration for along C130 flight path')
 
 # <codecell>
 
@@ -526,20 +513,72 @@ plt.figure()
 plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
 plt.xlabel('Longitude')
 plt.ylabel('Altitude [m]')
-plt.ylim([0,7000])
+plt.ylim([-200,7000])
 plt.xlim([-138,-128])
 ss = plt.scatter(nav['Longitude'][flt],nav['GPS_Altitude'][flt],c=nav['Start_UTC'][flt],edgecolor='None',cmap=cm.gist_ncar)
-si = plt.scatter(path_lon,path_lon*0.0,c=amsr['ice'][amsr_ind[0,:],amsr_ind[1,:]],edgecolor='None',cmap=cm.gist_earth)
+si = plt.scatter(path_lon,path_lon*0.0-100,c=amsr['ice'][ind[0,:],ind[1,:]],
+                 marker='s',edgecolor='None',cmap=cm.gist_earth,s=30,clip_on=False)
 cbar = plt.colorbar(ss)
 cbar.set_label('UTC [h]')
-#cbar = plt.colorbar(si,orientation='horizontal')
-#cbar.set_label('Ice Concentration [\\%%]')
+cbar = plt.colorbar(si,orientation='horizontal')
+cbar.set_label('Ice Concentration [\%]')
 
 plt.savefig(fp+'plots/20140919_proile_alt_ice.png',dpi=600,transparent=True)
 
 # <codecell>
 
-plt.plot(path_lon,amsr['ice'][amsr_ind[0,:],amsr_ind[1,:]])
+plt.figure()
+plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt],'k',linewidth=0.6)
+plt.xlabel('Longitude')
+plt.ylabel('Altitude [m]')
+plt.ylim([-200,7000])
+plt.xlim([-138,-128])
+#ss = plt.scatter(nav['Longitude'][flt],nav['GPS_Altitude'][flt],c=nav['Start_UTC'][flt],edgecolor='None',cmap=cm.gist_ncar)
+si = plt.scatter(path_lon,path_lon*0.0-100,c=amsr['ice'][ind[0,:],ind[1,:]],
+                 marker='s',edgecolor='None',cmap=cm.gist_earth,s=30,clip_on=False)
+#cbar = plt.colorbar(ss)
+#cbar.set_label('UTC [h]')
+ss = plt.scatter(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,
+                 c=probe['nCDP_cm3'][flt_prb],edgecolor='None',
+                 cmap=cm.gist_ncar_r)
+cbar = plt.colorbar(ss)
+cbar.set_label('Drop number concentration [cm$^{-3}$]')
+
+cbar = plt.colorbar(si,orientation='horizontal')
+cbar.set_label('Ice Concentration [\%]')
+
+plt.savefig(fp+'plots/20140919_profile_alt_cloud_ice.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.figure()
+plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt],'k',linewidth=0.6)
+plt.xlabel('Longitude')
+plt.ylabel('Altitude [m]')
+plt.ylim([-200,2000])
+plt.xlim([-136,-128])
+#ss = plt.scatter(nav['Longitude'][flt],nav['GPS_Altitude'][flt],c=nav['Start_UTC'][flt],edgecolor='None',cmap=cm.gist_ncar)
+si = plt.scatter(path_lon,path_lon*0.0-100,c=amsr['ice'][ind[0,:],ind[1,:]],
+                 marker='s',edgecolor='None',cmap=cm.gist_earth,s=30,clip_on=False)
+#cbar = plt.colorbar(ss)
+#cbar.set_label('UTC [h]')
+ss = plt.scatter(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,
+                 c=probe['nCDP_cm3'][flt_prb],edgecolor='None',
+                 cmap=cm.gist_ncar_r)
+cbar = plt.colorbar(ss)
+cbar.set_label('Drop number concentration [cm$^{-3}$]')
+
+cbar = plt.colorbar(si,orientation='horizontal')
+cbar.set_label('Ice Concentration [\%]')
+
+plt.savefig(fp+'plots/20140919_proile_zoom_alt_cloud_ice.png',dpi=600,transparent=True)
+
+# <markdowncell>
+
+# Now get a MERRA profile of winds on top of this.
+
+# <codecell>
+
 
 # <headingcell level=2>
 
@@ -592,6 +631,218 @@ plt.xlabel('UTC [h]')
 plt.ylim([0,60])
 plt.title('at %.3f $\mu$m' % star['w'][0,1200])
 plt.legend(frameon=False)
+
+# <headingcell level=3>
+
+# Define 4STAR zenith data as an SP object and prepare for calculations
+
+# <codecell>
+
+import Sp_parameters as Sp
+reload(Sp)
+
+# <codecell>
+
+star['good'] = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Alt'][star['iset'][:,0],0]<900.0))[0]
+len(star['good'])
+
+# <codecell>
+
+stars = Sp.Sp(star)
+stars.params()
+
+# <headingcell level=3>
+
+# Now load the different luts
+
+# <codecell>
+
+sice = sio.idl.readsav(fp+'model/sp_v1_20140919_ice_4STAR.out')
+swat = sio.idl.readsav(fp+'model/sp_v1_20140919_4STAR.out')
+print sice.keys()
+print swat.keys()
+
+# <codecell>
+
+lutice = Sp.Sp(sice)
+
+# <codecell>
+
+lutwat = Sp.Sp(swat)
+
+# <codecell>
+
+lutice.params()
+lutice.param_hires()
+lutice.sp_hires()
+
+# <codecell>
+
+lutwat.params()
+lutwat.param_hires()
+lutwat.sp_hires()
+
+# <headingcell level=3>
+
+# Now load and run the retrieval on 4STAR data subset
+
+# <codecell>
+
+import run_kisq_retrieval as rk
+reload(rk)
+
+# <codecell>
+
+(stars.icetau,stars.iceref,stars.icephase,stars.iceki) = rk.run_retrieval(stars,lutice)
+
+# <codecell>
+
+(stars.wattau,stars.watref,stars.watphase,stars.watki) = rk.run_retrieval(stars,lutwat)
+
+# <headingcell level=3>
+
+# Plot the resulting retrieved properties
+
+# <markdowncell>
+
+# Assure that the retrieved properties make sense first, remove bad data
+
+# <codecell>
+
+stars.icetau[stars.icetau>=80] = np.nan
+stars.wattau[stars.wattau>=80] = np.nan
+
+# <codecell>
+
+stars.iceref[stars.iceref>=60] = np.nan
+stars.watref[stars.watref>=60] = np.nan
+stars.iceref[stars.iceref==17] = np.nan
+stars.watref[stars.watref==17] = np.nan
+#stars.iceref[stars.iceref==30] = np.nan
+#stars.watref[stars.watref==30] = np.nan
+#stars.iceref[stars.iceref==40] = np.nan
+#stars.watref[stars.watref==40] = np.nan
+
+# <markdowncell>
+
+# Now smooth over data to reduce variability
+
+# <codecell>
+
+stars.icetau = Sp.smooth(stars.icetau[:,0],5,nan=False)
+stars.wattau = Sp.smooth(stars.wattau[:,0],5,nan=False)
+
+# <codecell>
+
+stars.iceref = Sp.smooth(stars.iceref[:,0],5,nan=False)
+stars.watref = Sp.smooth(stars.watref[:,0],5,nan=False)
+
+# <markdowncell>
+
+# Plot the resulting figures
+
+# <codecell>
+
+plt.plot(stars.lon[:,0,0],stars.icetau,label='All clouds over ice')
+plt.plot(stars.lon[:,0,0],stars.wattau,label='All clouds over water')
+plt.plot(stars.lon[stars.icephase[:,0]==0,0,0],stars.icetau[stars.icephase[:,0]==0],'c+',label='Liq clouds over ice')
+plt.plot(stars.lon[stars.watphase[:,0]==0,0,0],stars.wattau[stars.watphase[:,0]==0],'y+',label='Liq clouds over water')
+plt.plot(stars.lon[stars.icephase[:,0]==1,0,0],stars.icetau[stars.icephase[:,0]==1],'cx',label='Ice clouds over ice')
+plt.plot(stars.lon[stars.watphase[:,0]==1,0,0],stars.wattau[stars.watphase[:,0]==1],'yx',label='Ice clouds over water')
+plt.ylabel('$\\tau$')
+plt.xlabel('Longitude')
+plt.legend(frameon=False,loc=2)
+plt.savefig(fp+'plots/20140919_tau_retrieved.png',dpi=600,transparent=True)
+savemetapng(fp+'plots/20140919_tau_retrieved.png',theNotebookName)
+
+# <codecell>
+
+from PIL import Image
+im2 = Image.open(fp+'plots/20140919_tau_retrieved.png')
+print im2.info
+
+# <codecell>
+
+plt.plot(stars.lon[:,0,0],stars.iceref,label='All clouds over ice')
+plt.plot(stars.lon[:,0,0],stars.watref,label='All clouds over water')
+plt.plot(stars.lon[stars.icephase[:,0]==0,0,0],stars.iceref[stars.icephase[:,0]==0],'c+',label='Liq clouds over ice')
+plt.plot(stars.lon[stars.watphase[:,0]==0,0,0],stars.watref[stars.watphase[:,0]==0],'y+',label='Liq clouds over water')
+plt.plot(stars.lon[stars.icephase[:,0]==1,0,0],stars.iceref[stars.icephase[:,0]==1],'cx',label='Ice clouds over ice')
+plt.plot(stars.lon[stars.watphase[:,0]==1,0,0],stars.watref[stars.watphase[:,0]==1],'yx',label='Ice clouds over water')
+plt.ylabel('r$_{eff}$ [$\\mu$m]')
+plt.xlabel('Longitude')
+plt.legend(frameon=False,loc=2)
+
+# <headingcell level=3>
+
+# Compile into statistics over water and over ice
+
+# <codecell>
+
+fltice = np.where(stars.lon[:,0,0]<-132.0)[0]
+fltwat = np.where(stars.lon[:,0,0]>-131.0)[0]
+
+# <codecell>
+
+help(plt.hist)
+
+# <codecell>
+
+plt.hist(stars.wattau[fltwat],range=(np.nanmin(stars.wattau),np.nanmax(stars.wattau)),normed=True)
+
+# <codecell>
+
+np.version.full_version
+
+# <codecell>
+
+plt.boxplot(stars.wattau[fltwat])
+
+# <headingcell level=2>
+
+# Testing different programs for metadata saving for pngs and python files
+
+# <codecell>
+
+def getname(): 
+    import IPython
+    IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookName = " + "\'"+IPython.notebook.notebook_name+"\'");'))
+    IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookPath = " + "\'"+IPython.notebook.notebook_path+"\'");'))
+
+# <codecell>
+
+getname()
+thisfilepath = os.getcwd()+os.path.sep+theNotebookPath+theNotebookName
+print thisfilepath
+fstat = os.stat(thisfilepath)
+import datetime
+time_of_mod = datetime.datetime.fromtimestamp(fstat.st_mtime).strftime('%Y-%m-%d %H:%M:%S.%f')
+import getpass
+user = getpass.getuser()
+
+# <codecell>
+
+def savemetapng(filein,Notebookname,Notes=None):
+    from PIL import Image
+    from PIL import PngImagePlugin
+    import datetime
+    import getpass
+    import os
+    
+    metadata = dict()
+    metadata['Created with'] = 'IPython'+os.sys.version
+    metadata['Script Name'] = Notebookname
+    metadata['Time created'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    metadata['Author'] = getpass.getuser()
+    if Notes:
+        metadata['Notes'] = Notes
+    
+    im = Image.open(filein)
+    meta = PngImagePlugin.PngInfo()
+
+    for x in metadata:
+        meta.add_text(x, metadata[x])
+    im.save(filein, "png", pnginfo=meta)
 
 # <codecell>
 
