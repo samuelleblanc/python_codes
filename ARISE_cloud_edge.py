@@ -657,8 +657,8 @@ stars.params()
 
 # <codecell>
 
-sice = sio.idl.readsav(fp+'model/sp_v1_20140919_ice_4STAR.out')
-swat = sio.idl.readsav(fp+'model/sp_v1_20140919_4STAR.out')
+sice = sio.idl.readsav(fp+'model/sp_v2_20140919_ice_4STAR.out')
+swat = sio.idl.readsav(fp+'model/sp_v2_20140919_wat_4STAR.out')
 print sice.keys()
 print swat.keys()
 
@@ -729,13 +729,13 @@ stars.watref[stars.watref==17] = np.nan
 
 # <codecell>
 
-stars.icetau = Sp.smooth(stars.icetau[:,0],5,nan=False)
-stars.wattau = Sp.smooth(stars.wattau[:,0],5,nan=False)
+stars.icetau = Sp.smooth(stars.icetau[:],5,nan=False)
+stars.wattau = Sp.smooth(stars.wattau[:],5,nan=False)
 
 # <codecell>
 
-stars.iceref = Sp.smooth(stars.iceref[:,0],5,nan=False)
-stars.watref = Sp.smooth(stars.watref[:,0],5,nan=False)
+stars.iceref = Sp.smooth(stars.iceref[:],5,nan=False)
+stars.watref = Sp.smooth(stars.watref[:],5,nan=False)
 
 # <markdowncell>
 
@@ -743,12 +743,12 @@ stars.watref = Sp.smooth(stars.watref[:,0],5,nan=False)
 
 # <codecell>
 
-plt.plot(stars.lon[:,0,0],stars.icetau,label='All clouds over ice')
-plt.plot(stars.lon[:,0,0],stars.wattau,label='All clouds over water')
-plt.plot(stars.lon[stars.icephase[:,0]==0,0,0],stars.icetau[stars.icephase[:,0]==0],'c+',label='Liq clouds over ice')
-plt.plot(stars.lon[stars.watphase[:,0]==0,0,0],stars.wattau[stars.watphase[:,0]==0],'y+',label='Liq clouds over water')
-plt.plot(stars.lon[stars.icephase[:,0]==1,0,0],stars.icetau[stars.icephase[:,0]==1],'cx',label='Ice clouds over ice')
-plt.plot(stars.lon[stars.watphase[:,0]==1,0,0],stars.wattau[stars.watphase[:,0]==1],'yx',label='Ice clouds over water')
+plt.plot(stars.lon,stars.icetau,label='All clouds over ice')
+plt.plot(stars.lon,stars.wattau,label='All clouds over water')
+plt.plot(stars.lon[stars.icephase==0],stars.icetau[stars.icephase==0],'c+',label='Liq clouds over ice')
+plt.plot(stars.lon[stars.watphase==0],stars.wattau[stars.watphase==0],'y+',label='Liq clouds over water')
+plt.plot(stars.lon[stars.icephase==1],stars.icetau[stars.icephase==1],'cx',label='Ice clouds over ice')
+plt.plot(stars.lon[stars.watphase==1],stars.wattau[stars.watphase==1],'yx',label='Ice clouds over water')
 plt.ylabel('$\\tau$')
 plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
@@ -763,12 +763,12 @@ print im2.info
 
 # <codecell>
 
-plt.plot(stars.lon[:,0,0],stars.iceref,label='All clouds over ice')
-plt.plot(stars.lon[:,0,0],stars.watref,label='All clouds over water')
-plt.plot(stars.lon[stars.icephase[:,0]==0,0,0],stars.iceref[stars.icephase[:,0]==0],'c+',label='Liq clouds over ice')
-plt.plot(stars.lon[stars.watphase[:,0]==0,0,0],stars.watref[stars.watphase[:,0]==0],'y+',label='Liq clouds over water')
-plt.plot(stars.lon[stars.icephase[:,0]==1,0,0],stars.iceref[stars.icephase[:,0]==1],'cx',label='Ice clouds over ice')
-plt.plot(stars.lon[stars.watphase[:,0]==1,0,0],stars.watref[stars.watphase[:,0]==1],'yx',label='Ice clouds over water')
+plt.plot(stars.lon,stars.iceref,label='All clouds over ice')
+plt.plot(stars.lon,stars.watref,label='All clouds over water')
+plt.plot(stars.lon[stars.icephase==0],stars.iceref[stars.icephase==0],'c+',label='Liq clouds over ice')
+plt.plot(stars.lon[stars.watphase==0],stars.watref[stars.watphase==0],'y+',label='Liq clouds over water')
+plt.plot(stars.lon[stars.icephase==1],stars.iceref[stars.icephase==1],'cx',label='Ice clouds over ice')
+plt.plot(stars.lon[stars.watphase==1],stars.watref[stars.watphase==1],'yx',label='Ice clouds over water')
 plt.ylabel('r$_{eff}$ [$\\mu$m]')
 plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
@@ -779,24 +779,249 @@ plt.legend(frameon=False,loc=2)
 
 # <codecell>
 
-fltice = np.where(stars.lon[:,0,0]<-132.0)[0]
-fltwat = np.where(stars.lon[:,0,0]>-131.0)[0]
+fltice = np.where(stars.lon<-132.0)[0]
+fltwat = np.where(stars.lon>-131.0)[0]
 
 # <codecell>
 
-help(plt.hist)
+(stars.wattaumask,stars.iwattau) = Sp.nanmasked(stars.wattau[fltwat])
+(stars.icetaumask,stars.iicetau) = Sp.nanmasked(stars.icetau[fltice])
 
 # <codecell>
 
-plt.hist(stars.wattau[fltwat],range=(np.nanmin(stars.wattau),np.nanmax(stars.wattau)),normed=True)
+def data2figpoints(x,dx):
+    "function to tranform data locations to relative figure coordinates (in fractions of total figure"
+    flen = fig.transFigure.transform([1,1])
+    bot = ax1.transAxes.transform([0,0])/flen
+    top = ax1.transAxes.transform([1,1])/flen
+    
+    start = ax1.transData.transform([x,0])/flen
+    end = ax1.transData.transform([x+dx,0])/flen
+    left = start[0]
+    bottom = bot[1]
+    width = end[0]-start[0]
+    height = top[1]-bot[1] 
+    return left,bottom,width,height
 
 # <codecell>
 
-np.version.full_version
+def plot_vert_hist(fig,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2):
+    "function to plot a 'bean' like vertical histogram"
+    import Sp_parameters as Sp
+    (ymask,iy) = Sp.nanmasked(y)
+    ax = fig.add_axes(data2figpoints(pos,0.4),frameon=False,ylim=ylim)
+    ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
+               labelbottom='off',labeltop='off',right='off',left='off')
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,label=label)
+    if onlyhist:
+        label_mean = None
+        label_median = None
+    else:
+        label_mean = 'Mean'
+        label_median = 'Median'
+    ax.axhline(mean(ymask),color='red',linewidth=2,label=label_mean)
+    ax.axhline(median(ymask),color='k',linewidth=2,linestyle='--',label=label_median)
+    if legend:
+        ax.legend(frameon=False,loc=loc)
+    ax = fig.add_axes(data2figpoints(pos+0.01,-0.4),frameon=False,ylim=ylim)
+    ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
+                   labelbottom='off',labeltop='off',right='off',left='off')
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5)
+    ax.axhline(mean(ymask),color='red',linewidth=2)
+    ax.axhline(median(ymask),color='k',linewidth=2,linestyle='--')
 
 # <codecell>
 
-plt.boxplot(stars.wattau[fltwat])
+fig = plt.figure()
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[-1,7])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([1,5])
+ax1.set_xticklabels(['Over ice','Over water'])
+plot_vert_hist(fig,stars.icetau[fltice],0,[0,40],color='grey',label='Total')
+plot_vert_hist(fig,stars.icetau[fltice[stars.icephase[fltice]==1]],1,[0,40],color='red',label='Ice')
+plot_vert_hist(fig,stars.icetau[fltice[stars.icephase[fltice]==0]],2,[0,40],color='blue',label='Liquid')
+ax.legend()
+
+plot_vert_hist(fig,stars.wattau[fltwat],4,[0,40],color='grey')
+plot_vert_hist(fig,stars.wattau[fltwat[stars.watphase[fltwat]==1]],5,[0,40],color='red')
+plot_vert_hist(fig,stars.wattau[fltwat[stars.watphase[fltwat]==0]],6,[0,40],color='blue')
+ax1.set_title('Distribution of $\\tau$ over different surfaces')
+plt.savefig(fp+'plots/20140919_pdf_surf_tau.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure()
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([1,5])
+ax1.set_xticklabels(['Over ice','Over water'])
+plot_vert_hist(fig,stars.iceref[fltice],0,[0,60],color='grey',label='Total')
+plot_vert_hist(fig,stars.iceref[fltice[stars.icephase[fltice]==1]],1,[0,60],color='red',label='Ice')
+plot_vert_hist(fig,stars.iceref[fltice[stars.icephase[fltice]==0]],2,[0,60],color='blue',label='Liquid')
+
+plot_vert_hist(fig,stars.watref[fltwat],4,[0,60],color='grey')
+plot_vert_hist(fig,stars.watref[fltwat[stars.watphase[fltwat]==1]],5,[0,60],color='red')
+plot_vert_hist(fig,stars.watref[fltwat[stars.watphase[fltwat]==0]],6,[0,60],color='blue')
+ax1.set_title('Distribution of Effective Radius over different surfaces')
+plt.savefig(fp+'plots/20140919_pdf_surf_ref.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0,2])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([0.5,1.5])
+ax1.set_xticklabels(['Over ice','Over open ocean'])
+plot_vert_hist(fig,stars.iceref[fltice],0.5,[0,60],color='grey',legend=True,onlyhist=False)
+plot_vert_hist(fig,stars.watref[fltwat],1.5,[0,60],color='grey')
+
+ax1.set_title('Distribution of r$_{eff}$ over different surfaces')
+plt.savefig(fp+'plots/20140919_pdf_surf_tot_ref.png',dpi=600,transparent=True)
+
+# <codecell>
+
+print np.nanmean(stars.iceref[fltice])
+print np.nanmean(stars.watref[fltwat])
+print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
+
+# <codecell>
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0,2])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([0.5,1.5])
+ax1.set_xticklabels(['Over ice','Over open ocean'])
+plot_vert_hist(fig,stars.icetau[fltice],0.5,[0,40],color='grey',legend=True,onlyhist=False)
+plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
+ax1.set_title('Distribution of $\\tau$ over different surfaces')
+plt.savefig(fp+'plots/20140919_pdf_surf_tot_tau.png',dpi=600,transparent=True)
+
+# <codecell>
+
+ntau,intau = Sp.nanmasked(stars.icetau[fltice])
+plt.figure()
+plt.hist(ntau,bins=30,color='grey',edgecolor='None',alpha=0.5)
+plt.xlim([0,40])
+plt.xlabel('$\\tau$')
+plt.ylabel('Counts')
+plt.axvline(np.mean(ntau),color='r',label='Mean',linewidth=2)
+plt.axvline(np.median(ntau),color='k',linestyle='--',label='Median',linewidth=2)
+plt.legend(frameon=False)
+plt.savefig(fp+'plots/20140919_hist_tau.png',dpi=600,transparent=True)
+
+# <codecell>
+
+print np.nanmean(stars.icetau[fltice])
+print np.nanmean(stars.wattau[fltwat])
+print np.nanmean(stars.wattau[fltwat])-np.nanmean(stars.icetau[fltice])
+
+# <markdowncell>
+
+# Testing other types of plots
+
+# <codecell>
+
+import statsmodels.api as sm
+
+# <codecell>
+
+fig = sm.graphics.beanplot([stars.wattaumask,stars.icetaumask],
+                           labels=['Over water','Over ice'],
+                           jitter=True,
+                           plot_opts={'jitter_marker':'+','jitter_marker_size':2})
+
+# <headingcell level=2>
+
+# Now Match MODIS points to flight path
+
+# <codecell>
+
+aqua.keys()
+
+# <codecell>
+
+aqua['lon'].shape
+
+# <codecell>
+
+ind_aqua = np.zeros((2,len(path_lat)), dtype=numpy.int)
+for i,x in enumerate(path_lat):
+    y = path_lon[i]
+    ind_aqua[:,i] = np.unravel_index(np.nanargmin(np.square(aqua['lat']-x)+np.square(aqua['lon']-y)),aqua['lat'].shape)
+
+# <codecell>
+
+ind_terra = np.zeros((2,len(path_lat)), dtype=numpy.int)
+for i,x in enumerate(path_lat):
+    y = path_lon[i]
+    ind_terra[:,i] = np.unravel_index(np.nanargmin(np.square(terra['lat']-x)+np.square(terra['lon']-y)),terra['lat'].shape)
+
+# <headingcell level=2>
+
+# Plotting resulting MODIS cloud properties
+
+# <codecell>
+
+plt.plot(path_lon,aqua['tau'][ind_aqua[0,:],ind_aqua[1,:]],'b+-',label='Aqua')
+plt.plot(path_lon,terra['tau'][ind_terra[0,:],ind_terra[1,:]],'g+-',label='Terra')
+plt.legend(frameon=False)
+plt.ylabel('$\\tau$')
+plt.xlabel('Longitude')
+plt.title('MODIS Cloud optical depth along flight path')
+
+# <codecell>
+
+plt.plot(path_lon,aqua['ref'][ind_aqua[0,:],ind_aqua[1,:]],'b+-',label='Aqua')
+plt.plot(path_lon,terra['ref'][ind_terra[0,:],ind_terra[1,:]],'g+-',label='Terra')
+plt.legend(frameon=False)
+plt.ylabel('r$_{eff}$ [$\\mu$m]')
+plt.xlabel('Longitude')
+plt.title('MODIS Cloud effective radius along flight path')
+
+# <codecell>
+
+pathice = np.where(path_lon<-132.0)[0]
+pathwat = np.where(path_lon>-131.0)[0]
+
+# <headingcell level=2>
+
+# Build MODIS and 4STAR comparison plot
+
+# <codecell>
+
+fig = plt.figure(figsize=(7,3))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([1,5])
+ax1.set_xticklabels(['Over ice','Over water'])
+ax1.tick_params(axis='x', which='both', top='off')
+plot_vert_hist(fig,stars.icetau[fltice],0,[0,60],color='grey',label='4STAR',legend=True,onlyhist=False,loc=2)
+plot_vert_hist(fig,aqua['tau'][ind_aqua[0,pathice],ind_aqua[1,pathice]],1,[0,60],color='blue')
+plot_vert_hist(fig,terra['tau'][ind_terra[0,pathice],ind_terra[1,pathice]],2,[0,60],color='green')
+
+plot_vert_hist(fig,stars.wattau[fltwat],4,[0,60],color='grey')
+plot_vert_hist(fig,aqua['tau'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,60],color='blue',label='Aqua',legend=True,loc=1)
+plot_vert_hist(fig,terra['tau'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,60],color='green',label='Terra',legend=True,loc=9)
+ax1.set_title('Distribution of $\\tau$ over different surfaces')
+plt.savefig(fp+'plots/20140919_comp_modis_tau.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(7,3))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([1,5])
+ax1.set_xticklabels(['Over ice','Over water'])
+ax1.tick_params(axis='x', which='both', top='off')
+plot_vert_hist(fig,stars.iceref[fltice],0,[0,60],color='grey',label='4STAR',legend=True,onlyhist=False,loc=2)
+plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]],1,[0,60],color='blue')
+plot_vert_hist(fig,terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]],2,[0,60],color='green')
+
+plot_vert_hist(fig,stars.watref[fltwat],4,[0,60],color='grey')
+plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,60],color='blue',label='Aqua',legend=True,loc=1)
+plot_vert_hist(fig,terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,60],color='green',label='Terra',legend=True,loc=9)
+ax1.set_title('Distribution of Effective Radius over different surfaces')
+plt.savefig(fp+'plots/20140919_comp_modis_ref.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
