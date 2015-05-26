@@ -559,6 +559,10 @@ lut.reflect.shape
 
 # <codecell>
 
+lut.ref
+
+# <codecell>
+
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
 axref = axref.ravel()
 for i in range(lut.ref.size/2-1):

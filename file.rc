@@ -19,3 +19,4 @@ font.sans-serif : helvetica
 text.usetex     : True  # use latex for all text handling
 figure.figsize  : 7.3, 4.2
 figure.facecolor: white
+savefig.bbox: tight

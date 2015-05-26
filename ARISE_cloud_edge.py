@@ -914,6 +914,76 @@ plt.savefig(fp+'plots/20140919_hist_tau.png',dpi=600,transparent=True)
 print np.nanmean(stars.icetau[fltice])
 print np.nanmean(stars.wattau[fltwat])
 print np.nanmean(stars.wattau[fltwat])-np.nanmean(stars.icetau[fltice])
+print (np.nanmean(stars.wattau[fltwat])-np.nanmean(stars.icetau[fltice]))/np.nanmean(stars.wattau[fltwat])*100.0
+
+# <codecell>
+
+print np.nanmean(stars.iceref[fltice])
+print np.nanmean(stars.watref[fltwat])
+print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
+print (np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice]))/np.nanmean(stars.watref[fltwat])*100.0
+
+# <markdowncell>
+
+# Plotting the over ice, tau and reff together, and also over ocean tau and ref together
+
+# <codecell>
+
+fig = plt.figure(figsize=(3,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0.5,1.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([1])
+ax1.set_xticklabels(['Over ice'])
+plot_vert_hist(fig,stars.icetau[fltice],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
+#plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
+ax1.set_title('Optical thickness')
+plt.savefig(fp+'plots/20140919_hist_tau_over_ice.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(3,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0.5,1.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([1])
+ax1.set_xticklabels(['Over Open ocean'])
+#plot_vert_hist(fig,stars.icetau[fltice],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.wattau[fltwat],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
+ax1.set_title('Optical thickness')
+plt.savefig(fp+'plots/20140919_hist_tau_over_ocean.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(3,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
+ax2 = ax1.twinx()
+ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax2.set_ylim(ax1.get_ylim())
+ax1.set_xticks([1])
+ax1.set_xticklabels(['Over ice'])
+ax1.tick_params(axis='y',which='both',labelleft='off', labelright='off')
+ax2.tick_params(axis='both', which='both', labelleft='off', labelright='on',bottom='on',top='off',
+               labelbottom='on',labeltop='off',right='on',left='off')
+plot_vert_hist(fig,stars.iceref[fltice],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
+#plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
+ax1.set_title('Effective radius')
+plt.savefig(fp+'plots/20140919_hist_ref_over_ice.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(3,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
+ax2 = ax1.twinx()
+ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax2.set_ylim(ax1.get_ylim())
+ax1.set_xticks([1])
+ax1.set_xticklabels(['Over Open ocean'])
+ax1.tick_params(axis='y',which='both',labelleft='off', labelright='off')
+ax2.tick_params(axis='both', which='both', labelleft='off', labelright='on',bottom='on',top='off',
+               labelbottom='on',labeltop='off',right='on',left='off')
+#plot_vert_hist(fig,stars.iceref[fltice],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.watref[fltwat],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
+ax1.set_title('Effective radius')
+plt.savefig(fp+'plots/20140919_hist_ref_over_ocean.png',dpi=600,transparent=True)
 
 # <markdowncell>
 
