@@ -244,6 +244,60 @@ cbar = plt.colorbar(ss)
 cbar.set_label('Drop number concentration [cm$^{-3}$]')
 plt.savefig(fp+'plots/20140919_proile_alt_ndrop.png',dpi=600,transparent=True)
 
+# <markdowncell>
+
+# plotting of drop size distribution
+
+# <codecell>
+
+bin_diameters = np.array([3,4,5,6,7,8,9,10,11,12,13,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50])
+
+# <codecell>
+
+dlogD = np.log(bin_diameters)
+dlogD[0:-2] = np.log(bin_diameters[1:-1]-bin_diameters[0:-2])
+dlogD[-1] = dlogD[-2]
+
+# <codecell>
+
+print dlogD.size
+print bin_diameters.size
+
+# <codecell>
+
+dlogD
+
+# <codecell>
+
+nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_dNdlogD'],
+                     probe['CDP04_dNdlogD'],probe['CDP05_dNdlogD'],probe['CDP06_dNdlogD'],
+                     probe['CDP07_dNdlogD'],probe['CDP08_dNdlogD'],probe['CDP09_dNdlogD'],
+                     probe['CDP10_dNdlogD'],probe['CDP11_dNdlogD'],probe['CDP12_dNdlogD'],
+                     probe['CDP13_dNdlogD'],probe['CDP14_dNdlogD'],probe['CDP15_dNdlogD'],
+                     probe['CDP16_dNdlogD'],probe['CDP17_dNdlogD'],probe['CDP18_dNdlogD'],
+                     probe['CDP19_dNdlogD'],probe['CDP20_dNdlogD'],probe['CDP21_dNdlogD'],
+                     probe['CDP22_dNdlogD'],probe['CDP23_dNdlogD'],probe['CDP24_dNdlogD'],
+                     probe['CDP25_dNdlogD'],probe['CDP26_dNdlogD'],probe['CDP27_dNdlogD'],
+                     probe['CDP28_dNdlogD'],probe['CDP29_dNdlogD'],probe['CDP30_dNdlogD']))
+
+# <codecell>
+
+probe['CDP01_dNdlogD'].shape
+
+# <codecell>
+
+nd_dist.shape
+
+# <codecell>
+
+clevels = np.arange(1,52,5)
+vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
+cbar = plt.colorbar(vv)
+cbar.set_label('dN/dlogD [cm$^{-3}$]')
+plt.xlabel('UTC [H]')
+plt.ylabel('$r_{eff}$ [$\\mu$m]')
+plt.title('CDP cloud drop size density')
+
 # <headingcell level=2>
 
 # Load the MODIS cloud properties

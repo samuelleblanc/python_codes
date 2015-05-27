@@ -91,3 +91,33 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     ax.add_collection(collection)
     return collection
 
+# <codecell>
+
+def plot_color_maps(reverse=False):
+    """
+    Simple plotting function to run through and plot each color map
+    Help for choosing which colormap to use
+    """
+    import pylab as plt
+    from numpy import outer
+    plt.rc('text', usetex=False)
+    a=outer(plt.ones(10,),plt.arange(0,1,0.01))
+    plt.figure(figsize=(5,15))
+    plt.subplots_adjust(top=0.8,bottom=0.08,left=0.03,right=0.99)
+    if reverse:
+        maps=[m for m in plt.cm.datad]
+        rr = 2
+    else:
+        maps=[m for m in plt.cm.datad if not m.endswith("_r")]
+        rr = 1
+    maps.sort()
+    l=len(maps)+1
+    title_dict = {'fontsize': 10,
+                  'verticalalignment': 'center',
+                  'horizontalalignment': 'left'}
+    for i, m in enumerate(maps):
+        plt.subplot(l,rr,i+1)
+        plt.axis("off")
+        plt.imshow(a,aspect='auto',cmap=plt.get_cmap(m),origin="lower")
+        plt.text(1.01,0.5,m,fontdict=title_dict,transform=plt.gca().transAxes)
+
