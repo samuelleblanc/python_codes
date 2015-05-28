@@ -49,7 +49,7 @@ def phase(parn,model,stdparn):
 
 # <codecell>
 
-def run_retrieval(meas,model,subp=range(15)):
+def run_retrieval(meas,model,subp=range(15),force_liq=False):
     """ 
     Name:
 
@@ -63,13 +63,14 @@ def run_retrieval(meas,model,subp=range(15)):
     
     Calling Sequence:
 
-        (ta,re,ph,ki) = run_retrieval(meas,model,subp=range(15))
+        (ta,re,ph,ki) = run_retrieval(meas,model,subp=range(15),force_liq=False)
     
     Input: 
   
         meas : Sp object (from Sp_parameters) of measurement spectra
         model: Sp object (from Sp_paramters) of modeled spectra, also considered the look-up-table (lut) object
         subp: (optional) array of parameters to use for retrieval
+        force_liq: (optional, default False), if set to True, retrieval is forced to retrieve in the liquid cloud lut, no ice
      
     Output:
 
@@ -101,6 +102,8 @@ def run_retrieval(meas,model,subp=range(15)):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2014-11-08, NASA Ames
+        Modified (v1.1): Samuel LeBlanc, 2015-05-27, Santa Cruz, CA
+                         - added keyword to force the retrieval to use the liquid phase only
 
     """
     import Sp_parameters as Sp
@@ -142,7 +145,10 @@ def run_retrieval(meas,model,subp=range(15)):
             import pdb; pdb.set_trace()
         #first get the phase in first method
         #import pdb; pdb.set_trace()
-        ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
+        if force_liq:
+            ph[tt] = 0
+        else:
+            ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
         if ph[tt] == 2: # undecided, must do the kisq
             ki_2ph = np.nansum(wg[subp]*(meas.parn[tt,subp]-model.parn[:,:,:,subp])**2,axis=3)
             ki_minin = np.unravel_index(np.nanargmin(ki_2ph),ki_2ph.shape)
@@ -175,7 +181,4 @@ def run_retrieval(meas,model,subp=range(15)):
     #save the file
     return (ta,re,ph,ki)
     
-
-# <codecell>
-
 
