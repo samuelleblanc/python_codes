@@ -221,6 +221,12 @@ probe,prb_header = lm.load_ict(fprobe,header=True)
 
 prb_header
 
+# <markdowncell>
+
+# To Note from Lee Thornhill about this version of the archived data, received (2015-05-27 5:03 am PST):
+# 
+# The CDP size distributions are in dN, not dlogD. I make a mistake on that label. Usually I put size distributions into the archive as dNdlogD, but I missed a step in doing that. I will correct that with the next archive file update. 
+
 # <codecell>
 
 flt_prb = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0))
@@ -254,21 +260,6 @@ bin_diameters = np.array([3,4,5,6,7,8,9,10,11,12,13,14,16,18,20,22,24,26,28,30,3
 
 # <codecell>
 
-dlogD = np.log(bin_diameters)
-dlogD[0:-2] = np.log(bin_diameters[1:-1]-bin_diameters[0:-2])
-dlogD[-1] = dlogD[-2]
-
-# <codecell>
-
-print dlogD.size
-print bin_diameters.size
-
-# <codecell>
-
-dlogD
-
-# <codecell>
-
 nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_dNdlogD'],
                      probe['CDP04_dNdlogD'],probe['CDP05_dNdlogD'],probe['CDP06_dNdlogD'],
                      probe['CDP07_dNdlogD'],probe['CDP08_dNdlogD'],probe['CDP09_dNdlogD'],
@@ -282,7 +273,51 @@ nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_
 
 # <codecell>
 
-probe['CDP01_dNdlogD'].shape
+nd_dist[nd_dist<0.5] = np.nan
+
+# <codecell>
+
+clevels = np.arange(0,51)
+vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
+cbar = plt.colorbar(vv)
+cbar.set_label('dN/dlogD [cm$^{-3}$]')
+plt.xlabel('UTC [H]')
+plt.ylabel('$D_{eff}$ [$\\mu$m]')
+plt.title('CDP cloud drop size density')
+plt.savefig(fp+'plots/20140919_utc_dndlogd.png',dpi=600,transparent=True)
+
+# <codecell>
+
+clevels = np.arange(0,51)
+vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
+cbar = plt.colorbar(vv)
+cbar.set_label('dN/dlogD [cm$^{-3}$]')
+plt.xlabel('UTC [H]')
+plt.ylabel('$D_{eff}$ [$\\mu$m]')
+plt.title('CDP cloud drop size density')
+plt.xlim([19.5,23])
+plt.savefig(fp+'plots/20140919_utc_dndlogd_zoom.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Convert the drop size distribution to $r_{eff}$
+
+# <markdowncell>
+
+# Trying to replicate the $r_{eff}$ equation:
+# 
+# $$r_{eff}=\frac{\int^{\infty}_{0}Q_{ext}(r)r^{3}n(r)dr}{\int^{\infty}_{0}Q_{ext}(r)r^{2}n(r)dr}$$
+# 
+# 
+# With $Q_{ext}(r)$ representing the extinction efficiency, $r$ the radius of the particle, $n(r)$ the drop size distribution
+
+# <markdowncell>
+
+# Load $Q_{ext}(r)$ for mie
+
+# <markdowncell>
+
+# For now use Q_ext = parameterized values with exponenetial decrease determined from Mie_Calc ipython notebook for lambda at 1.70 $\mu$m 
 
 # <codecell>
 
@@ -290,13 +325,41 @@ nd_dist.shape
 
 # <codecell>
 
-clevels = np.arange(1,52,5)
-vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
-cbar = plt.colorbar(vv)
-cbar.set_label('dN/dlogD [cm$^{-3}$]')
+nd_dist[:,1000]
+
+# <codecell>
+
+from Sp_parameters import nanmasked
+def calc_ref(nd,diameter):
+    " calculate the effective radius using trapezoid integration rule "
+    nda,ndi = nanmasked(nd)
+    popt = [ 0.87495122 ,0.22795525 ,2.08105225] # from Mie_Calc.py
+    def qext(x, a, c, d):
+        return a*np.exp(-c*x)+d
+    if not any(ndi):
+        re = np.NaN
+    else:
+        re = np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**3.0*nda)/ \
+            np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**2.0*nda)
+    return re
+
+# <codecell>
+
+print calc_ref(nd_dist[:,14000],bin_diameters)
+
+# <codecell>
+
+ref = np.zeros(len(nd_dist[0,:]))
+for i in xrange(len(nd_dist[0,:])):
+    ref[i] = calc_ref(nd_dist[:,i],bin_diameters)
+
+# <codecell>
+
+plt.plot(probe['UTC_mid'],ref)
+plt.title('Calculated effective radius from cloud probes')
 plt.xlabel('UTC [H]')
 plt.ylabel('$r_{eff}$ [$\\mu$m]')
-plt.title('CDP cloud drop size density')
+plt.savefig(fp+'plots/20140919_utc_probes_ref.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
