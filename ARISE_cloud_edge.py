@@ -361,6 +361,10 @@ plt.xlabel('UTC [H]')
 plt.ylabel('$r_{eff}$ [$\\mu$m]')
 plt.savefig(fp+'plots/20140919_utc_probes_ref.png',dpi=600,transparent=True)
 
+# <codecell>
+
+probe_ref = ref
+
 # <headingcell level=2>
 
 # Load the MODIS cloud properties
@@ -810,11 +814,11 @@ reload(rk)
 
 # <codecell>
 
-(stars.icetau,stars.iceref,stars.icephase,stars.iceki) = rk.run_retrieval(stars,lutice)
+(stars.icetau,stars.iceref,stars.icephase,stars.iceki) = rk.run_retrieval(stars,lutice,force_liq=True)
 
 # <codecell>
 
-(stars.wattau,stars.watref,stars.watphase,stars.watki) = rk.run_retrieval(stars,lutwat)
+(stars.wattau,stars.watref,stars.watphase,stars.watki) = rk.run_retrieval(stars,lutwat,force_liq=True)
 
 # <headingcell level=3>
 
@@ -870,7 +874,7 @@ plt.ylabel('$\\tau$')
 plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
 plt.savefig(fp+'plots/20140919_tau_retrieved.png',dpi=600,transparent=True)
-savemetapng(fp+'plots/20140919_tau_retrieved.png',theNotebookName)
+#savemetapng(fp+'plots/20140919_tau_retrieved.png',theNotebookName)
 
 # <codecell>
 
