@@ -989,15 +989,15 @@ plt.savefig(fp+'plots/20140919_pdf_surf_ref.png',dpi=600,transparent=True)
 # <codecell>
 
 fig = plt.figure(figsize=(5,4))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0,2])
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0,2])
 ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax1.set_xticks([0.5,1.5])
 ax1.set_xticklabels(['Over ice','Over open ocean'])
-plot_vert_hist(fig,stars.iceref[fltice],0.5,[0,60],color='grey',legend=True,onlyhist=False)
-plot_vert_hist(fig,stars.watref[fltwat],1.5,[0,60],color='grey')
+plot_vert_hist(fig,stars.iceref[fltice],0.5,[0,30],color='grey',legend=True,onlyhist=False)
+plot_vert_hist(fig,stars.watref[fltwat],1.5,[0,30],color='grey')
 
 ax1.set_title('Distribution of r$_{eff}$ over different surfaces')
-plt.savefig(fp+'plots/20140919_pdf_surf_tot_ref.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_pdf_surf_tot_ref_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -1008,27 +1008,27 @@ print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
 # <codecell>
 
 fig = plt.figure(figsize=(5,4))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0,2])
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0,2])
 ax1.set_ylabel('$\\tau$')
 ax1.set_xticks([0.5,1.5])
 ax1.set_xticklabels(['Over ice','Over open ocean'])
-plot_vert_hist(fig,stars.icetau[fltice],0.5,[0,40],color='grey',legend=True,onlyhist=False)
-plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
+plot_vert_hist(fig,stars.icetau[fltice],0.5,[0,60],color='grey',legend=True,onlyhist=False)
+plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,60],color='grey')
 ax1.set_title('Distribution of $\\tau$ over different surfaces')
-plt.savefig(fp+'plots/20140919_pdf_surf_tot_tau.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_pdf_surf_tot_tau_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
 ntau,intau = Sp.nanmasked(stars.icetau[fltice])
 plt.figure()
 plt.hist(ntau,bins=30,color='grey',edgecolor='None',alpha=0.5)
-plt.xlim([0,40])
+plt.xlim([0,60])
 plt.xlabel('$\\tau$')
 plt.ylabel('Counts')
 plt.axvline(np.mean(ntau),color='r',label='Mean',linewidth=2)
 plt.axvline(np.median(ntau),color='k',linestyle='--',label='Median',linewidth=2)
 plt.legend(frameon=False)
-plt.savefig(fp+'plots/20140919_hist_tau.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_hist_tau_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -1051,31 +1051,31 @@ print (np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice]))/np.nan
 # <codecell>
 
 fig = plt.figure(figsize=(3,4))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0.5,1.5])
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
 ax1.set_ylabel('$\\tau$')
 ax1.set_xticks([1])
 ax1.set_xticklabels(['Over ice'])
-plot_vert_hist(fig,stars.icetau[fltice],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.icetau[fltice],1,[0,60],color='grey',legend=True,onlyhist=False,loc=1)
 #plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
 ax1.set_title('Optical thickness')
-plt.savefig(fp+'plots/20140919_hist_tau_over_ice.png',dpi=600,transparent=True)
-
-# <codecell>
-
-fig = plt.figure(figsize=(3,4))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[0.5,1.5])
-ax1.set_ylabel('$\\tau$')
-ax1.set_xticks([1])
-ax1.set_xticklabels(['Over Open ocean'])
-#plot_vert_hist(fig,stars.icetau[fltice],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
-plot_vert_hist(fig,stars.wattau[fltwat],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
-ax1.set_title('Optical thickness')
-plt.savefig(fp+'plots/20140919_hist_tau_over_ocean.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_hist_tau_over_ice_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
 fig = plt.figure(figsize=(3,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([1])
+ax1.set_xticklabels(['Over Open ocean'])
+#plot_vert_hist(fig,stars.icetau[fltice],1,[0,40],color='grey',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.wattau[fltwat],1,[0,60],color='grey',legend=True,onlyhist=False,loc=1)
+ax1.set_title('Optical thickness')
+plt.savefig(fp+'plots/20140919_hist_tau_over_ocean_forceliq.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(3,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0.5,1.5])
 ax2 = ax1.twinx()
 ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax2.set_ylim(ax1.get_ylim())
@@ -1084,15 +1084,15 @@ ax1.set_xticklabels(['Over ice'])
 ax1.tick_params(axis='y',which='both',labelleft='off', labelright='off')
 ax2.tick_params(axis='both', which='both', labelleft='off', labelright='on',bottom='on',top='off',
                labelbottom='on',labeltop='off',right='on',left='off')
-plot_vert_hist(fig,stars.iceref[fltice],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.iceref[fltice],1,[0,30],color='green',legend=True,onlyhist=False,loc=1)
 #plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,40],color='grey')
 ax1.set_title('Effective radius')
-plt.savefig(fp+'plots/20140919_hist_ref_over_ice.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_hist_ref_over_ice_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
 fig = plt.figure(figsize=(3,4))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0.5,1.5])
 ax2 = ax1.twinx()
 ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax2.set_ylim(ax1.get_ylim())
@@ -1102,9 +1102,9 @@ ax1.tick_params(axis='y',which='both',labelleft='off', labelright='off')
 ax2.tick_params(axis='both', which='both', labelleft='off', labelright='on',bottom='on',top='off',
                labelbottom='on',labeltop='off',right='on',left='off')
 #plot_vert_hist(fig,stars.iceref[fltice],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
-plot_vert_hist(fig,stars.watref[fltwat],1,[0,60],color='green',legend=True,onlyhist=False,loc=1)
+plot_vert_hist(fig,stars.watref[fltwat],1,[0,30],color='green',legend=True,onlyhist=False,loc=1)
 ax1.set_title('Effective radius')
-plt.savefig(fp+'plots/20140919_hist_ref_over_ocean.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_hist_ref_over_ocean_forceliq.png',dpi=600,transparent=True)
 
 # <markdowncell>
 
@@ -1194,25 +1194,57 @@ plot_vert_hist(fig,stars.wattau[fltwat],4,[0,60],color='grey')
 plot_vert_hist(fig,aqua['tau'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,60],color='blue',label='Aqua',legend=True,loc=1)
 plot_vert_hist(fig,terra['tau'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,60],color='green',label='Terra',legend=True,loc=9)
 ax1.set_title('Distribution of $\\tau$ over different surfaces')
-plt.savefig(fp+'plots/20140919_comp_modis_tau.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_comp_modis_tau_forceliq.png',dpi=600,transparent=True)
 
 # <codecell>
 
 fig = plt.figure(figsize=(7,3))
-ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[-1,7])
 ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax1.set_xticks([1,5])
 ax1.set_xticklabels(['Over ice','Over water'])
 ax1.tick_params(axis='x', which='both', top='off')
-plot_vert_hist(fig,stars.iceref[fltice],0,[0,60],color='grey',label='4STAR',legend=True,onlyhist=False,loc=2)
-plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]],1,[0,60],color='blue')
-plot_vert_hist(fig,terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]],2,[0,60],color='green')
+plot_vert_hist(fig,stars.iceref[fltice],0,[0,30],color='grey',label='4STAR',legend=True,onlyhist=False,loc=2)
+plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]],1,[0,30],color='blue')
+plot_vert_hist(fig,terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]],2,[0,30],color='green')
 
-plot_vert_hist(fig,stars.watref[fltwat],4,[0,60],color='grey')
-plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,60],color='blue',label='Aqua',legend=True,loc=1)
-plot_vert_hist(fig,terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,60],color='green',label='Terra',legend=True,loc=9)
+plot_vert_hist(fig,stars.watref[fltwat],4,[0,30],color='grey')
+plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,30],color='blue',label='Aqua',legend=True,loc=1)
+plot_vert_hist(fig,terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,30],color='green',label='Terra',legend=True,loc=9)
 ax1.set_title('Distribution of Effective Radius over different surfaces')
-plt.savefig(fp+'plots/20140919_comp_modis_ref.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_comp_modis_ref_forceliq.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Compare to $r_{eff}$ derived from Cloud probes
+
+# <codecell>
+
+probe.dtype.names
+
+# <codecell>
+
+flt_probe_ice = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']<-133.5))[0]
+flt_probe_wat = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']>-132.5))[0] 
+
+# <codecell>
+
+fig = plt.figure(figsize=(7,3))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[-1,5])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([0.5,3.5])
+ax1.set_xticklabels(['Over ice','Over water'])
+ax1.tick_params(axis='x', which='both', top='off')
+plot_vert_hist(fig,stars.iceref[fltice],0,[0,30],color='grey',label='4STAR',legend=True,onlyhist=False,loc=2)
+plot_vert_hist(fig,probe_ref[flt_probe_ice],1,[0,30],color='blue')
+#plot_vert_hist(fig,terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]],2,[0,30],color='green')
+
+plot_vert_hist(fig,stars.watref[fltwat],3,[0,30],color='grey')
+plot_vert_hist(fig,probe_ref[flt_probe_wat],4,[0,30],color='blue',label='Probes',legend=True,loc=1)
+#plot_vert_hist(fig,aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]],5,[0,30],color='blue',label='Aqua',legend=True,loc=1)
+#plot_vert_hist(fig,terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,30],color='green',label='Terra',legend=True,loc=9)
+ax1.set_title('Distribution of Effective Radius over different surfaces')
+plt.savefig(fp+'plots/20140919_comp_probes_ref_forceliq.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
