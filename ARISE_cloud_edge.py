@@ -363,7 +363,36 @@ plt.savefig(fp+'plots/20140919_utc_probes_ref.png',dpi=600,transparent=True)
 
 # <codecell>
 
-probe_ref = ref
+probe_ref = Sp.smooth(ref,10,nan=False)
+
+# <codecell>
+
+plt.figure()
+#plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
+plt.xlabel('Longitude')
+plt.ylabel('Altitude [m]')
+ss = plt.scatter(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,
+                 c=probe_ref[flt_prb],edgecolor='None',
+                 cmap=cm.gist_ncar_r)
+plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,c='k',linewidth=0.3)
+plt.ylim([0,7000])
+plt.xlim([-138,-128])
+plt.title('Profile of calculated $r_{eff}$ from cloud probes')
+cbar = plt.colorbar(ss)
+cbar.set_label('$r_{eff}$ [$\\mu$m]')
+plt.savefig(fp+'plots/20140919_proile_alt_ref_calc.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.figure()
+plt.plot(probe['Longitude_deg'][flt_prb],probe_ref[flt_prb],label='Raw')
+plt.plot(probe['Longitude_deg'][flt_prb],Sp.smooth(probe_ref[flt_prb],10,nan=False),label='Smoothed 10x',linewidth=2)
+plt.plot(probe['Longitude_deg'][flt_prb],Sp.smooth(probe_ref[flt_prb],30,nan=False),label='Smoothed 30x',linewidth=2)
+plt.title('Cloud probes calculated $r_{eff}$')
+plt.xlabel('Longitude')
+plt.ylabel('$r_{eff}$ [$\\mu$m]')
+plt.legend(frameon=False)
+plt.savefig(fp+'plots/20140919_lon_ref_calc.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
@@ -649,7 +678,7 @@ plt.savefig(fp+'plots/20140919_proile_alt_ice.png',dpi=600,transparent=True)
 # <codecell>
 
 plt.figure()
-plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt],'k',linewidth=0.6)
+plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,'k',linewidth=0.6)
 plt.xlabel('Longitude')
 plt.ylabel('Altitude [m]')
 plt.ylim([-200,7000])
@@ -673,7 +702,7 @@ plt.savefig(fp+'plots/20140919_profile_alt_cloud_ice.png',dpi=600,transparent=Tr
 # <codecell>
 
 plt.figure()
-plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt],'k',linewidth=0.6)
+plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,'k',linewidth=0.6)
 plt.xlabel('Longitude')
 plt.ylabel('Altitude [m]')
 plt.ylim([-200,2000])
@@ -1004,6 +1033,7 @@ plt.savefig(fp+'plots/20140919_pdf_surf_tot_ref_forceliq.png',dpi=600,transparen
 print np.nanmean(stars.iceref[fltice])
 print np.nanmean(stars.watref[fltwat])
 print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
+print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])/np.nanmean(stars.watref[fltwat])*100.0
 
 # <codecell>
 
@@ -1225,7 +1255,7 @@ probe.dtype.names
 # <codecell>
 
 flt_probe_ice = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']<-133.5))[0]
-flt_probe_wat = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']>-132.5))[0] 
+flt_probe_wat = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']>-130.0))[0] 
 
 # <codecell>
 

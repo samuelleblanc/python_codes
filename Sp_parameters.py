@@ -43,7 +43,7 @@ def smooth(x, window,nan=True):
         from scipy import interpolate
         ix = np.arange(len(x))
         xmasked, mask = nanmasked(x)
-        fx = interpolate.interp1d(ix[mask],xmasked)
+        fx = interpolate.interp1d(ix[mask],xmasked,bounds_error=False,fill_value=0)
         xinterp = fx(ix)
         xout = np.convolve(xinterp, np.ones(window)/window, 'same')
     else:
