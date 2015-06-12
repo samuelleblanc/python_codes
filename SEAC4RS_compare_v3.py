@@ -97,7 +97,8 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 # <codecell>
 
 # load the idl save file containing the modeled radiances
-s=sio.idl.readsav(fp+'model\\sp_v2_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
+vv = 'v2'
+s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 print s.keys()
 print 'sp', s.sp.shape
 print 'sp (wp, wvl, z, re, ta)'
@@ -135,18 +136,23 @@ print lut.par.shape
 
 # <codecell>
 
-fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
 
 for i in range(lut.npar-1):
     color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.RdBu,ax=ax3[i])
     for j in xrange(len(lut.ref)):
         ax3[i].plot(lut.tau,lut.par[0,j,:,i])
-    ax3[i].set_title('Parameter '+str(i))
+    ax3[i].set_title('Parameter '+str(i+1))
     ax3[i].grid()
     ax3[i].set_xlim([0,100])
-    if i > 11: 
-        ax3[i].set_xlabel('Tau')
+    ax3[i].set_ylabel('$\\eta_{%i}$' % (i+1))
+    if i > 10: 
+        ax3[i].set_xlabel('$\\tau$')
+
+for tk in ax3[11].get_xticklabels():
+    tk.set_visible(True)
+ax3[-1].axis('off')
 
 fig3.tight_layout()
 plt.suptitle('Liquid')
@@ -156,26 +162,31 @@ cbar_ax = fig3.add_axes([0.95,0.10,0.02,0.8])
 scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.RdBu,norm=plt.Normalize(vmin=0,vmax=1))
 scalarmap.set_array(lut.ref[lut.ref<30])
 cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
-cba.ax.set_ylabel('R$_{ef}$ [$\\mu$m]')
+cba.ax.set_ylabel('$r_{eff}$ [$\\mu$m]')
 cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
 
+plt.savefig(fp+'plots/20130913_'+vv+'_param_liq_vs_tau.png',dpi=600,transparent=True)
 plt.show()
 
 # <codecell>
 
-fig4,ax4 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+fig4,ax4 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax4 = ax4.ravel()
 
 for i in range(lut.npar-1):
     color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar,ax=ax4[i])
     for j in xrange(len(lut.tau)):
         ax4[i].plot(lut.ref,lut.par[0,:,j,i])
-    ax4[i].set_title('Parameter '+str(i))
+    ax4[i].set_title('Parameter '+str(i+1))
     ax4[i].grid()
     ax4[i].set_xlim([0,30])
-    if i > 11: 
-        ax4[i].set_xlabel('R$_{ef}$ [$\mu$m]')
+    ax4[i].set_ylabel('$\\eta_{%i}$' % (i+1))
+    if i > 10: 
+        ax4[i].set_xlabel('$r_{eff}$ [$\mu$m]')
 
+for tk in ax4[11].get_xticklabels():
+    tk.set_visible(True)
+ax4[-1].axis('off')
 fig4.tight_layout()
 plt.suptitle('Liquid')
 plt.subplots_adjust(top=0.93,right=0.93)
@@ -188,23 +199,28 @@ cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
 
+plt.savefig(fp+'plots/20130913_'+vv+'_param_liq_vs_ref.png',dpi=600,transparent=True)
 plt.show()
 
 # <codecell>
 
-fig5,ax5 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+fig5,ax5 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax5 = ax5.ravel()
 
 for i in range(lut.npar-1):
     color.cycle_cmap(len(lut.ref),cmap=plt.cm.RdBu,ax=ax5[i])
     for j in xrange(len(lut.ref)):
         ax5[i].plot(lut.tau,lut.par[1,j,:,i])
-    ax5[i].set_title('Parameter '+str(i))
+    ax5[i].set_title('Parameter '+str(i+1))
     ax5[i].grid()
     ax5[i].set_xlim([0,100])
-    if i > 11: 
-        ax5[i].set_xlabel('Tau')
+    ax5[i].set_ylabel('$\\eta_{%i}$' % (i+1))
+    if i > 10: 
+        ax5[i].set_xlabel('$\\tau$')
 
+for tk in ax5[11].get_xticklabels():
+    tk.set_visible(True)
+ax5[-1].axis('off')
 fig5.tight_layout()
 plt.suptitle('Ice')
 plt.subplots_adjust(top=0.93,right=0.93)
@@ -212,24 +228,30 @@ cbar_ax = fig5.add_axes([0.95,0.10,0.02,0.8])
 scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.RdBu,norm=plt.Normalize(vmin=0,vmax=1))
 scalarmap.set_array(lut.ref)
 cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
-cba.ax.set_ylabel('R$_{ef}$ [$\\mu$m]')
+cba.ax.set_ylabel('$r_{eff}$ [$\\mu$m]')
 cba.ax.set_yticklabels(np.linspace(lut.ref[0],lut.ref[-1],6));
+
+plt.savefig(fp+'plots/20130913_'+vv+'_param_ice_vs_tau.png',dpi=600,transparent=True)
 plt.show()
 
 # <codecell>
 
-fig6,ax6 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+fig6,ax6 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax6 = ax6.ravel()
 for i in range(lut.npar-1):
     color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar,ax=ax6[i])
     for j in xrange(len(lut.tau)):
         ax6[i].plot(lut.ref,lut.par[1,:,j,i])
-    ax6[i].set_title('Parameter '+str(i))
+    ax6[i].set_title('Parameter '+str(i+1))
     ax6[i].grid()
     ax6[i].set_xlim([0,50])
-    if i > 11: 
-        ax6[i].set_xlabel('R$_{ef}$ [$\mu$m]')
+    ax6[i].set_ylabel('$\\eta_{%i}$' % (i+1))
+    if i > 10: 
+        ax6[i].set_xlabel('$r_{eff}$ [$\mu$m]')
 
+for tk in ax6[11].get_xticklabels():
+    tk.set_visible(True)
+ax6[-1].axis('off')
 fig6.tight_layout()
 plt.suptitle('Ice')
 plt.subplots_adjust(top=0.93,right=0.93)
@@ -240,6 +262,8 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
 cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
+
+plt.savefig(fp+'plots/20130913_'+vv+'_param_ice_vs_ref.png',dpi=600,transparent=True)
 plt.show()
 
 # <headingcell level=2>
@@ -254,7 +278,7 @@ from load_modis import mat2py_time, toutc, load_ict
 
 # <codecell>
 
-dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')
+dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')[0]
 
 # <codecell>
 
@@ -263,6 +287,7 @@ plt.plot(dc8['TIME_UTC'],dc8['G_ALT'])
 plt.xlabel('UTC [h]')
 plt.ylabel('GPS Altitude [m]')
 plt.title('DC8 Altitude on 2013-09-13')
+plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -411,14 +436,17 @@ import load_modis as lm
 if 'lm' in locals():
     reload(lm)
 from load_modis import load_ict
+
+# <codecell>
+
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
-ssfr_er2 = load_ict(ssfr_er2_file)
+ssfr_er2 = load_ict(ssfr_er2_file)[0]
 print len(ssfr_er2['UTC'])
 
 # <codecell>
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
-er2 = load_ict(nasdat_er2_file)
+er2 = load_ict(nasdat_er2_file)[0]
 print len(er2['Start_UTC'])
 print er2['Start_UTC']
 print np.min(er2['Solar_Zenith_Angle'])
@@ -433,6 +461,7 @@ plt.grid(True)
 plt.xlabel('Time [UTC]')
 plt.ylabel('ER-2 Altitude [m]')
 plt.legend(frameon=False)
+plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -569,12 +598,20 @@ for i in range(lut.ref.size/2-1):
     color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar,ax=axref[i])
     for j in xrange(len(lut.tau)):
         axref[i].plot(lut.wvl,lut.reflect[1,:,1,2*i,j])
-    axref[i].set_title('Ref i='+str(2*i))
+    axref[i].set_title('$r_{eff}$=%2.0f $\\mu$m' % lut.ref[i*2+1])
     axref[i].grid()
     axref[i].set_xlim([350,1700])
     axref[i].set_ylim([0,1])
-    if i > 26: 
+    if i > 24: 
         axref[i].set_xlabel('Wavelength [nm]')
+
+ididnt = [u for u in range(axref.size) if u>i]
+for u in ididnt: 
+    axref[u].axis('off')
+for u in range(len(ididnt)):
+    for tk in axref[i-u-1].get_xticklabels():
+        tk.set_visible(True)
+    
 figref.tight_layout()
 plt.suptitle('Ice')
 plt.subplots_adjust(top=0.93,right=0.93)
@@ -585,6 +622,7 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
 cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
+plt.savefig(fp+'plots/Spectral_reflectance_model_ice.png',dpi=600,transparent=True)
 plt.show()
 
 # <codecell>
@@ -595,12 +633,20 @@ for i in range(lut.ref.size/2-1):
     color.cycle_cmap(len(lut.tau),cmap=plt.cm.gist_ncar,ax=axref[i])
     for j in xrange(len(lut.tau)):
         axref[i].plot(lut.wvl,lut.reflect[0,:,1,2*i,j])
-    axref[i].set_title('Ref i='+str(2*i))
+    axref[i].set_title('$r_{eff}$=%2.0f $\\mu$m' %lut.ref[i*2+1])
     axref[i].grid()
     axref[i].set_xlim([350,1700])
     axref[i].set_ylim([0,1])
-    if i > 26: 
+    if i > 23: 
         axref[i].set_xlabel('Wavelength [nm]')
+        
+ididnt = [u for u in range(axref.size) if u>i]
+for u in ididnt: 
+    axref[u].axis('off')
+for u in range(len(ididnt)):
+    for tk in axref[i-u-1].get_xticklabels():
+        tk.set_visible(True)
+        
 figref.tight_layout()
 plt.suptitle('Liquid')
 plt.subplots_adjust(top=0.93,right=0.93)
@@ -611,6 +657,7 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
 cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
+plt.savefig(fp+'plots/Spectral_reflectance_model_liq.png',dpi=600,transparent=True)
 plt.show()
 
 # <headingcell level=3>
@@ -1134,11 +1181,28 @@ plt.ylabel('Altitude [m]')
 
 # <headingcell level=2>
 
+# Load CCN results
+
+# <codecell>
+
+ccn = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict')[0]
+
+# <codecell>
+
+ccn['Number_Concentration'][ccn['Number_Concentration']==-8888]=np.nan
+
+# <codecell>
+
+plt.figure()
+plt.plot(ccn['UTC_mid'],ccn['Number_Concentration'])
+
+# <headingcell level=2>
+
 # Load RSP results
 
 # <codecell>
 
-rsp = load_ict(fp+'er2/20130913/SEAC4RS-RSP-ICECLD_ER2_20130913_R2.ict')
+rsp = load_ict(fp+'er2/20130913/SEAC4RS-RSP-ICECLD_ER2_20130913_R2.ict')[0]
 print rsp['Phase']
 rsp_good = np.where((rsp['UTC']>17.8) & (rsp['UTC']<19.2) & (rsp['Phase']==0) & (rsp['COT']>0) & (rsp['R_eff159']>0))
 print np.shape(rsp_good)
@@ -1152,6 +1216,7 @@ plt.xlabel('UTC [Hours]')
 plt.ylabel('R$_{eff}$ [$\\mu$m]')
 plt.title('RSP effective radius retrievals')
 plt.legend(frameon=False)
+plt.savefig(fp+'plots/20130913_RSP_reff.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -1404,6 +1469,48 @@ ax1.set_xlim([0,60])
 
 
 plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Plot histogram of retrieved properties (tau and ref) in new 'bean' plots
+
+# <codecell>
+
+from plotting_utils import plot_vert_hist
+
+# <codecell>
+
+import plotting_utils
+reload(plotting_utils)
+
+# <codecell>
+
+fig = plt.figure(figsize=(7,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[-0.5,4.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','4STAR\n(transmitted)'])
+plot_vert_hist(fig,ax1,smooth(modis_tau,6),0,[0,40],legend=True,onlyhist=False,loc=2,color='m')
+plot_vert_hist(fig,ax1,smooth(emas_tau_v1,60),1,[0,40],legend=True,color='k')
+plot_vert_hist(fig,ax1,smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),2,[0,40],legend=True,color='g')
+plot_vert_hist(fig,ax1,smooth(rsp_tau,70),3,[0,40],legend=True,color='c')
+plot_vert_hist(fig,ax1,smooth(star_tau,40),4,[0,40],legend=True,color='r')
+plt.savefig(fp+'plots/vert_hist_tau_v3.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig = plt.figure(figsize=(8,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,80],xlim=[-0.5,5.5])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([0,1,2,3,4,5])
+ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','4STAR\n(transmitted)','Cloud probes\n(In Situ)'])
+plot_vert_hist(fig,ax1,smooth(modis_ref,6),0,[0,80],legend=True,onlyhist=False,loc=2,color='m')
+plot_vert_hist(fig,ax1,smooth(emas_ref_v1,60),1,[0,80],legend=True,color='k')
+plot_vert_hist(fig,ax1,smooth(ssfr_ref,2),2,[0,80],legend=True,color='g')
+plot_vert_hist(fig,ax1,smooth(rsp_ref,70),3,[0,80],legend=True,color='c')
+plot_vert_hist(fig,ax1,smooth(star_ref,40),4,[0,80],legend=True,color='r')
+plot_vert_hist(fig,ax1,probes[:,7],5,[0,80],legend=True,color='y')
+plt.savefig(fp+'plots/vert_hist_ref_v3.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 

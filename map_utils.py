@@ -35,8 +35,13 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     from map_utils import spherical_dist
     from Sp_parameters import startprogress, progress, endprogress
     import numpy as np
-    if not meas_good:
-        meas_good = np.where(meas_lon)
+    try:
+        if not meas_good:
+            meas_good = np.where(meas_lon)
+    except ValueError:
+        if not meas_good.any():
+            meas_good = np.where(meas_lon)
+        
     imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
                             np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
     wimodis = np.where(imodis)

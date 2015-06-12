@@ -121,3 +121,50 @@ def plot_color_maps(reverse=False):
         plt.imshow(a,aspect='auto',cmap=plt.get_cmap(m),origin="lower")
         plt.text(1.01,0.5,m,fontdict=title_dict,transform=plt.gca().transAxes)
 
+# <codecell>
+
+def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2):
+    """
+    function to plot a 'bean' like vertical histogram
+    """
+    import Sp_parameters as Sp
+    import numpy as np
+    from plotting_utils import data2figpoints
+    (ymask,iy) = Sp.nanmasked(y)
+    ax = fig.add_axes(data2figpoints(pos,0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
+    ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
+               labelbottom='off',labeltop='off',right='off',left='off')
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,label=label)
+    if onlyhist:
+        label_mean = None
+        label_median = None
+    else:
+        label_mean = 'Mean'
+        label_median = 'Median'
+    ax.axhline(np.mean(ymask),color='red',linewidth=2,label=label_mean)
+    ax.axhline(np.median(ymask),color='k',linewidth=2,linestyle='--',label=label_median)
+    if legend:
+        ax.legend(frameon=False,loc=loc)
+    ax = fig.add_axes(data2figpoints(pos+0.01,-0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
+    ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
+                   labelbottom='off',labeltop='off',right='off',left='off')
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5)
+    ax.axhline(np.mean(ymask),color='red',linewidth=2)
+    ax.axhline(np.median(ymask),color='k',linewidth=2,linestyle='--')
+
+# <codecell>
+
+def data2figpoints(x,dx,fig,ax1):
+    "function to tranform data locations to relative figure coordinates (in fractions of total figure"
+    flen = fig.transFigure.transform([1,1])
+    bot = ax1.transAxes.transform([0,0])/flen
+    top = ax1.transAxes.transform([1,1])/flen
+    
+    start = ax1.transData.transform([x,0])/flen
+    end = ax1.transData.transform([x+dx,0])/flen
+    left = start[0]
+    bottom = bot[1]
+    width = end[0]-start[0]
+    height = top[1]-bot[1] 
+    return left,bottom,width,height
+
