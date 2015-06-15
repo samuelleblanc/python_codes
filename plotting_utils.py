@@ -168,3 +168,14 @@ def data2figpoints(x,dx,fig,ax1):
     height = top[1]-bot[1] 
     return left,bottom,width,height
 
+# <codecell>
+
+def plot_lin(x,y,color='b',labels=True):
+    """
+    function to plot on top of previous a linear fit line, with the line equation in legend.
+    """
+    from linfit import linfit
+    from Sp_parametes import nanmasked
+    c = linfit(x,y)
+    
+

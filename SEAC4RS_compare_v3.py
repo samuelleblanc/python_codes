@@ -1185,16 +1185,69 @@ plt.ylabel('Altitude [m]')
 
 # <codecell>
 
-ccn = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict')[0]
+ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict')
+
+# <codecell>
+
+ccnhead
 
 # <codecell>
 
 ccn['Number_Concentration'][ccn['Number_Concentration']==-8888]=np.nan
+ccn['Number_Concentration_STP'][ccn['Number_Concentration_STP']==-8888]=np.nan
+ccn['Supersaturation'][ccn['Supersaturation']==-999]=np.nan
 
 # <codecell>
 
-plt.figure()
-plt.plot(ccn['UTC_mid'],ccn['Number_Concentration'])
+fig,ax = plt.subplots(3,1,sharex=True)
+ax[0].plot(ccn['UTC_mid'],ccn['Number_Concentration'])
+ax[1].plot(ccn['UTC_mid'],ccn['Number_Concentration_STP'])
+ax[2].plot(ccn['UTC_mid'],ccn['Supersaturation'])
+ax[0].set_title('Number Concentration')
+ax[1].set_title('Number Concentration STP')
+ax[2].set_title('SuperSaturation')
+ax[2].set_xlabel('UTC [h]')
+ax[0].set_ylabel('[\#/cm$^{3}$]')
+ax[1].set_ylabel('[\#/cm$^{3}$]')
+ax[2].set_ylabel('[\%]')
+
+# <codecell>
+
+fig,ax = plt.subplots(3,1,sharex=True)
+ax[0].plot(ccn['UTC_mid'],ccn['Number_Concentration'])
+ax[1].plot(ccn['UTC_mid'],ccn['Number_Concentration_STP'])
+ax[2].plot(ccn['UTC_mid'],ccn['Supersaturation'])
+ax[0].set_title('Number Concentration')
+ax[1].set_title('Number Concentration STP')
+ax[2].set_title('SuperSaturation')
+ax[2].set_xlabel('UTC [h]')
+ax[2].set_xlim([18.0,19.5])
+ax[0].set_ylim([0,200])
+ax[1].set_ylim([0,500])
+ax[0].set_ylabel('[\#/cm$^{3}$]')
+ax[1].set_ylabel('[\#/cm$^{3}$]')
+ax[2].set_ylabel('[\%]')
+
+# <codecell>
+
+plt.plot(ccn['UTC_mid'],np.log(ccn['Number_Concentration']))
+plt.xlim([18,19.5])
+
+# <codecell>
+
+from Sp_parameters import find_closest
+id = find_closest(dc8['TIME_UTC'],ccn['UTC_mid'])
+
+# <codecell>
+
+ccn_good = np.where((ccn['UTC_mid']>18.0)&(ccn['UTC_mid']<19.5))[0]
+
+# <codecell>
+
+plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good])
+plt.xlabel('Latitude')
+plt.ylabel('Number Concentration [\#/cm$^{3}$]')
+plt.title('CCN number concentration from DC8')
 
 # <headingcell level=2>
 
@@ -1511,6 +1564,71 @@ plot_vert_hist(fig,ax1,smooth(rsp_ref,70),3,[0,80],legend=True,color='c')
 plot_vert_hist(fig,ax1,smooth(star_ref,40),4,[0,80],legend=True,color='r')
 plot_vert_hist(fig,ax1,probes[:,7],5,[0,80],legend=True,color='y')
 plt.savefig(fp+'plots/vert_hist_ref_v3.png',dpi=600,transparent=True)
+
+# <headingcell level=2>
+
+# Scatter plots of the different effective radius
+
+# <codecell>
+
+ids = find_closest(er2['Start_UTC'],ssfr.utc)
+
+# <codecell>
+
+plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70),'c.',label='RSP')
+plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],smooth(ssfr_ref,2),'g.',label='SSFR')
+plt.plot(emas_v1['lat'][dc8_ind[0,ie1],dc8_ind[1,ie1]],smooth(emas_ref_v1,60),'k.',label='eMAS')
+plt.plot(meas.lat[meas.good[ist]],smooth(star_ref,40),'r.',label='4STAR')
+plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],smooth(modis_ref,6),'m.',label='MODIS')
+plt.legend(frameon=False)
+plt.xlabel('Latitude')
+plt.ylabel('r$_{eff}$ [$\\mu$m]')
+
+# <codecell>
+
+plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'b.')
+plt.plot(dc8['G_LAT'][id[ccn_good]],smooth(ccn['Number_Concentration'][ccn_good],5,nan=False),'r.')
+
+# <codecell>
+
+id_ccn_rsp = find_closest(dc8['G_LAT'][id[ccn_good]],rsp['Lat'][rsp_good])
+id_ccn_ssfr = find_closest(dc8['G_LAT'][id[ccn_good]],er2['Latitude'][ids[ssfr.good[0][iss]]])
+id_ccn_emas = find_closest(dc8['G_LAT'][id[ccn_good]],emas_v1['lat'][dc8_ind[0,ie1],dc8_ind[1,ie1]])
+id_ccn_star = find_closest(dc8['G_LAT'][id[ccn_good]],meas.lat[meas.good[ist]])
+id_ccn_modis = find_closest(dc8['G_LAT'][id[ccn_good]],modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]])
+
+# <codecell>
+
+from linfit import linfit
+
+# <codecell>
+
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),'c.')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),'g+')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),'k*')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star]),np.log(smooth(star_ref,40)),'ro')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_modis]),np.log(smooth(modis_ref,6)),'mx')
+plt.xlabel('Log(Number Concentration)')
+plt.ylabel('Log(r$_{eff}$)')
+
+# <codecell>
+
+plt.plot(smooth(star_ref,40),smooth(modis_ref,6),'mo')
+plt.plot(smooth(star_ref,40),smooth(emas_ref_v1,60),'ko')
+plt.plot(smooth(star_ref,40),smooth(ssfr_ref,2),'go')
+plt.plot(smooth(star_ref,40),smooth(rsp_ref,70),'co')
+plt.plot(utc,smooth(star_ref,40),'ro')
+
+# <codecell>
+
+plt.plot(smooth(star_ref,40),smooth(modis_ref,6),'mo')
+#plt.plot(smooth(star_ref,40),smooth(emas_ref_v1,60),'ko')
+#plt.plot(smooth(star_ref,40),smooth(ssfr_ref,2),'go')
+#plt.plot(smooth(star_ref,40),smooth(rsp_ref,70),'co')
+
+# <codecell>
+
+plt.plot(meas)
 
 # <headingcell level=2>
 
