@@ -913,6 +913,10 @@ plt.plot(emas['tau'])
 
 # <codecell>
 
+emas_file_v1_10 = fp+'emas/20130913/EMASL2_13965_10_20130913_1815_1828_V01.hdf'
+emas_file_v1_11 = fp+'emas/20130913/EMASL2_13965_11_20130913_1832_1845_V01.hdf'
+emas_file_v1_12 = fp+'emas/20130913/EMASL2_13965_12_20130913_1848_1901_V01.hdf'
+emas_file_v1_14 = fp+'emas/20130913/EMASL2_13965_14_20130913_1921_1934_V01.hdf'
 emas_file_v1 = fp+'emas/20130913/EMASL2_13965_13_20130913_1905_1918_V01.hdf'
 print os.path.isfile(emas_file_v1)
 
@@ -929,6 +933,13 @@ emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
+
+# <codecell>
+
+emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values)
+emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values)
+emas_v1_12,emas_dicts_v1_12 = load_hdf(emas_file_v1_12, values=emas_values)
+emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values)
 
 # <codecell>
 
@@ -1599,17 +1610,26 @@ id_ccn_modis = find_closest(dc8['G_LAT'][id[ccn_good]],modis['lat'][dc8_ind_modi
 
 # <codecell>
 
-from linfit import linfit
+import plotting_utils
+import plotting_utils as pu
+reload(plotting_utils)
 
 # <codecell>
 
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),'c.')
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),'g+')
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),'k*')
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star]),np.log(smooth(star_ref,40)),'ro')
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_modis]),np.log(smooth(modis_ref,6)),'mx')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),'c.',label='RSP')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),color='c')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),'g+',label='SSFR')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),color='g')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),'k*',label='eMAS')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),color='k')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star]),np.log(smooth(star_ref,40)),'ro',label='4STAR')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star])[:,0],np.log(smooth(star_ref,40)),color='r')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_modis]),np.log(smooth(modis_ref,6)),'mx',label='MODIS')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_modis]),np.log(smooth(modis_ref,6)),color='m')
 plt.xlabel('Log(Number Concentration)')
 plt.ylabel('Log(r$_{eff}$)')
+
+plt.legend(bbox_to_anchor=[1,0.1],loc=3)
 
 # <codecell>
 
@@ -2345,7 +2365,4 @@ plt.hist(out_modistau['std'][~isnan(out_modistau['std'])],bins=30, histtype='ste
 plt.hist(out_startau['std'][~isnan(out_startau['std'])],bins=30, histtype='stepfilled', normed=True,color='r',label='4STAR',alpha=0.6)
 plt.xlim([0,3])
 plt.legend(frameon=False)
-
-# <codecell>
-
 

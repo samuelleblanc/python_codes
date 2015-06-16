@@ -174,8 +174,15 @@ def plot_lin(x,y,color='b',labels=True):
     """
     function to plot on top of previous a linear fit line, with the line equation in legend.
     """
+    import matplotlib.pyplot as plt
+    import numpy as np
     from linfit import linfit
-    from Sp_parametes import nanmasked
-    c = linfit(x,y)
-    
+    from Sp_parameters import nanmasked, doublenanmask
+    xn,yn = doublenanmask(x,y)
+    c,cm = linfit(xn,yn)
+    xx = np.array([xn.min(),xn.max()])
+    if labels:
+        plt.plot(xx,c[1]+c[0]*xx,color=color,label='y=%2.2f+%2.2f x' % (c[1],c[0]))
+    else:
+        plt.plot(xx,c[1]+c[0]*xx,color=color)
 
