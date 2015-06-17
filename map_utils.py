@@ -45,11 +45,19 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
                             np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
     wimodis = np.where(imodis)
+    if not wimodis[0].any():
+        print '** No points found within range +/- 0.02 in lat and lon, Extending range to +/- 0.2 **'
+        imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.2 , mod_lon<max(meas_lon[meas_good])+0.2),
+                                np.logical_and(mod_lat>min(meas_lat[meas_good])-0.2 , mod_lat<max(meas_lat[meas_good])+0.2))
+        wimodis = np.where(imodis)
+        if not wimodis[0].any():
+            print '** No points found in extended range, returning null **'
+            return []
     N1 = mod_lon[imodis].size
     modis_grid = np.hstack([mod_lon[imodis].reshape((N1,1)),mod_lat[imodis].reshape((N1,1))])
     try:
         N2 = len(meas_good)
-        if N2==1:
+        if N2==1 or N2==2:
             meas_good = meas_good[0]
             N2 = len(meas_good)
         meas_grid = np.hstack([np.array(meas_lon[meas_good]).reshape((N2,1)),np.array(meas_lat[meas_good]).reshape((N2,1))])
@@ -60,7 +68,10 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     startprogress('Running through flight track')
     for i in xrange(meas_good.size):
         d = spherical_dist(meas_grid[i],modis_grid)
-        meas_ind[0,i] = wimodis[0][np.argmin(d)]
+        try:
+            meas_ind[0,i] = wimodis[0][np.argmin(d)]
+        except:
+            import pdb; pdb.set_trace()
         meas_ind[1,i] = wimodis[1][np.argmin(d)]
         progress(float(i)/len(meas_good)*100)
     endprogress()
