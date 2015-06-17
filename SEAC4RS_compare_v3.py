@@ -278,7 +278,7 @@ from load_modis import mat2py_time, toutc, load_ict
 
 # <codecell>
 
-dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_RB.ict')[0]
+dc8 = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict')[0]
 
 # <codecell>
 
@@ -911,6 +911,10 @@ plt.plot(emas['tau'])
 # 
 # From Tom Arnold 20150120: While the calibration for the V01 data is considered final, some minor revision may still be made to the themal band (3.7um and higher) radiance data for two or three of the tracks I have given you. Separate from the calibration process, filtering (for a coherent noise problem) has been applied to all the eMAS thermal bands (bands 26-38).  Evaluation of the quality of the filtering has shown for some eMAS tracks, some additional filtering is still required (and will likely affect two or three of the tracks I have given you).  I will make that data available when it is completed for the tracks you need, though for the thick cirrus in the tracks you are interested in,  I don’t expect much impact to the cloud retrievals (most impact will be relatively small adjustment to some of the cloud top property data - such as cloud top temperature or pressure). I expect the re-filtered data to be available in the next couple weeks.
 
+# <markdowncell>
+
+# There is multiple eMAS files, representing each a different time slice. Load all of them.
+
 # <codecell>
 
 emas_file_v1_10 = fp+'emas/20130913/EMASL2_13965_10_20130913_1815_1828_V01.hdf'
@@ -936,10 +940,10 @@ emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 # <codecell>
 
-emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values)
-emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values)
-emas_v1_12,emas_dicts_v1_12 = load_hdf(emas_file_v1_12, values=emas_values)
-emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values)
+emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values, verbose=False)
+emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values, verbose=False)
+emas_v1_12,emas_dicts_v1_12 = load_hdf(emas_file_v1_12, values=emas_values, verbose=False)
+emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values, verbose=False)
 
 # <codecell>
 
@@ -950,9 +954,52 @@ emas_dicts_v1['tau']
 from map_utils import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
 
+# <markdowncell>
+
+# Create different good filters for each different time slice
+
+# <codecell>
+
+mea['good_10'] = np.where((mea['utc']>18.15) & (mea['utc']<18.50) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
+mea['good_11'] = np.where((mea['utc']>18.50) & (mea['utc']<18.85) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
+mea['good_12'] = np.where((mea['utc']>18.75) & (mea['utc']<19.10) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
+mea['good_13'] = np.where((mea['utc']>19.00) & (mea['utc']<19.35) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
+mea['good_14'] = np.where((mea['utc']>19.25) & (mea['utc']<19.60) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
+
+# <codecell>
+
+mea['good_13']
+
+# <codecell>
+
+print mea['Lat'][mea['good_13']].min(), mea['Lat'][mea['good_13']].max()
+print mea['Lon'][mea['good_13']].min(), mea['Lon'][mea['good_13']].max()
+
+# <codecell>
+
+print emas_v1['lat'].min(), emas_v1['lat'].max()
+print emas_v1['lon'].min(), emas_v1['lon'].max()
+
+# <codecell>
+
+import map_utils as mu
+reload(mu)
+
+# <codecell>
+
+dc8_ind_10 = mu.map_ind(emas_v1_10['lon'],emas_v1_10['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_10'])
+dc8_ind_11 = mu.map_ind(emas_v1_11['lon'],emas_v1_11['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_11'])
+dc8_ind_12 = mu.map_ind(emas_v1_12['lon'],emas_v1_12['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_12'])
+dc8_ind_13 = mu.map_ind(emas_v1['lon'],emas_v1['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_13'])
+dc8_ind_14 = mu.map_ind(emas_v1_14['lon'],emas_v1_14['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_14'])
+
 # <codecell>
 
 print np.shape(dc8_ind)
+print dc8_ind_10.shape
+print dc8_ind_11.shape
+print dc8_ind_12.shape
+print dc8_ind_14.shape
 
 # <codecell>
 
@@ -965,6 +1012,34 @@ sdist= lambda lon1,lat1,lon2,lat2:1000.0 * 3958.75 * np.arccos(np.cos(np.radians
 # <codecell>
 
 print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][385,714],emas['lat'][385,714])
+
+# <headingcell level=3>
+
+# Now combine all eMAS results
+
+# <codecell>
+
+emas_full = dict()
+emas_full['lon'] = np.concatenate([emas_v1_10['lon'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
+                    emas_v1_11['lon'][dc8_ind_11[0,:],dc8_ind_11[1,:]],
+                    emas_v1_12['lon'][dc8_ind_12[0,:],dc8_ind_12[1,:]],
+                    emas_v1['lon'][dc8_ind_13[0,:],dc8_ind_13[1,:]],
+                    emas_v1_14['lon'][dc8_ind_14[0,:],dc8_ind_14[1,:]]])
+emas_full['lat'] = np.concatenate([emas_v1_10['lat'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
+                    emas_v1_11['lat'][dc8_ind_11[0,:],dc8_ind_11[1,:]],
+                    emas_v1_12['lat'][dc8_ind_12[0,:],dc8_ind_12[1,:]],
+                    emas_v1['lat'][dc8_ind_13[0,:],dc8_ind_13[1,:]],
+                    emas_v1_14['lat'][dc8_ind_14[0,:],dc8_ind_14[1,:]]])
+emas_full['tau'] = np.concatenate([emas_v1_10['tau'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
+                    emas_v1_11['tau'][dc8_ind_11[0,:],dc8_ind_11[1,:]],
+                    emas_v1_12['tau'][dc8_ind_12[0,:],dc8_ind_12[1,:]],
+                    emas_v1['tau'][dc8_ind_13[0,:],dc8_ind_13[1,:]],
+                    emas_v1_14['tau'][dc8_ind_14[0,:],dc8_ind_14[1,:]]])
+emas_full['ref'] = np.concatenate([emas_v1_10['ref'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
+                    emas_v1_11['ref'][dc8_ind_11[0,:],dc8_ind_11[1,:]],
+                    emas_v1_12['ref'][dc8_ind_12[0,:],dc8_ind_12[1,:]],
+                    emas_v1['ref'][dc8_ind_13[0,:],dc8_ind_13[1,:]],
+                    emas_v1_14['ref'][dc8_ind_14[0,:],dc8_ind_14[1,:]]])
 
 # <markdowncell>
 
@@ -1305,9 +1380,11 @@ from Sp_parameters import nanmasked
 modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
 emas_tau,ie = nanmasked(emas['tau'][dc8_ind[0,:],dc8_ind[1,:]])
 emas_tau_v1,ie1 = nanmasked(emas_v1['tau'][dc8_ind[0,:],dc8_ind[1,:]])
+emas_tau_full,ief = nanmasked(emas_full['tau'])
 modis_ref,im = nanmasked(modis['ref'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
 emas_ref,ie = nanmasked(emas['ref'][dc8_ind[0,:],dc8_ind[1,:]])
 emas_ref_v1,ie1 = nanmasked(emas_v1['ref'][dc8_ind[0,:],dc8_ind[1,:]])
+emas_ref_full,ief = nanmasked(emas_full['ref'])
 star_tau,ist = nanmasked(meas.tau[meas.good])
 star_ref,ist = nanmasked(meas.ref[meas.good])
 ssfr.good = np.where((ssfr.utc>17.8)&(ssfr.utc<19.2))
@@ -1411,7 +1488,8 @@ plt.fill_between([np.nanmean(smooth(star_tau,40))-2.0,np.nanmean(smooth(star_tau
 
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 #plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
-plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+#plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+plt.hist(smooth(emas_tau_full,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
 plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
 plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
 plt.hist(smooth(star_tau,40),bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,40))
@@ -1420,7 +1498,8 @@ plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
 plot_median_mean(smooth(modis_tau,6),color='m')
 #plot_median_mean(smooth(emas_tau ,60),color='b')
-plot_median_mean(smooth(emas_tau_v1,60),color='k')
+#plot_median_mean(smooth(emas_tau_v1,60),color='k')
+plot_median_mean(smooth(emas_tau_full,60),color='k')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
 plot_median_mean(smooth(rsp_tau,70),color='c')
@@ -1433,7 +1512,7 @@ ax.set_ylim(yr)
 
 plt.legend(frameon=False)
 plt.xlim([0,60])
-plt.savefig(fp+'plots/hist_modis_4star_tau_v3_fill.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/hist_modis_4star_tau_v4_fill.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
 # <codecell>
@@ -1460,7 +1539,8 @@ plt.fill_between([np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8],0,1,transfo
 #plt.axvspan(np.nanmean(star_ref)-1.8,np.nanmean(star_ref)+1.8,color='r',alpha=0.7)
 plt.hist(smooth(modis_ref,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,59))
 #plt.hist(smooth(emas_ref,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
-plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+#plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
+plt.hist(smooth(emas_ref_full,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,59))
 plt.hist(smooth(ssfr_ref,2),bins=30, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(0,59))
 plt.hist(smooth(rsp_ref,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,79))
 plt.hist(star_ref,bins=30, histtype='stepfilled', normed=True, color='r',alpha=0.6, label='4STAR (Transmitted)',range=(0,59))
@@ -1470,7 +1550,8 @@ plt.ylabel('Normed probability')
 plt.xlabel('R$_{eff}$ [$\\mu$m]')
 plot_median_mean(smooth(modis_ref,6),color='m')
 #plot_median_mean(smooth(emas_ref,60),color='b')
-plot_median_mean(smooth(emas_ref_v1,60),color='k')
+#plot_median_mean(smooth(emas_ref_v1,60),color='k')
+plot_median_mean(smooth(emas_ref_full,60),color='k')
 plot_median_mean(smooth(ssfr_ref,2),color='g')
 plot_median_mean(smooth(rsp_ref,70),color='c')
 plot_median_mean(probes[:,7],color='y')
@@ -1481,7 +1562,7 @@ ax.add_patch(plt.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewi
 plt.legend(frameon=False,loc='upper right')
 plt.xlim([10,80])
 plt.ylim([0,0.3])
-plt.savefig(fp+'plots/hist_modis_4star_ref_v3_fill.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/hist_modis_4star_ref_v4_fill.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -1555,11 +1636,11 @@ ax1.set_ylabel('$\\tau$')
 ax1.set_xticks([0,1,2,3,4])
 ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','4STAR\n(transmitted)'])
 plot_vert_hist(fig,ax1,smooth(modis_tau,6),0,[0,40],legend=True,onlyhist=False,loc=2,color='m')
-plot_vert_hist(fig,ax1,smooth(emas_tau_v1,60),1,[0,40],legend=True,color='k')
+plot_vert_hist(fig,ax1,smooth(emas_tau_full,60),1,[0,40],legend=True,color='k')
 plot_vert_hist(fig,ax1,smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),2,[0,40],legend=True,color='g')
 plot_vert_hist(fig,ax1,smooth(rsp_tau,70),3,[0,40],legend=True,color='c')
 plot_vert_hist(fig,ax1,smooth(star_tau,40),4,[0,40],legend=True,color='r')
-plt.savefig(fp+'plots/vert_hist_tau_v3.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/vert_hist_tau_v4.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -1569,12 +1650,12 @@ ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax1.set_xticks([0,1,2,3,4,5])
 ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','4STAR\n(transmitted)','Cloud probes\n(In Situ)'])
 plot_vert_hist(fig,ax1,smooth(modis_ref,6),0,[0,80],legend=True,onlyhist=False,loc=2,color='m')
-plot_vert_hist(fig,ax1,smooth(emas_ref_v1,60),1,[0,80],legend=True,color='k')
+plot_vert_hist(fig,ax1,smooth(emas_ref_full,60),1,[0,80],legend=True,color='k')
 plot_vert_hist(fig,ax1,smooth(ssfr_ref,2),2,[0,80],legend=True,color='g')
 plot_vert_hist(fig,ax1,smooth(rsp_ref,70),3,[0,80],legend=True,color='c')
 plot_vert_hist(fig,ax1,smooth(star_ref,40),4,[0,80],legend=True,color='r')
 plot_vert_hist(fig,ax1,probes[:,7],5,[0,80],legend=True,color='y')
-plt.savefig(fp+'plots/vert_hist_ref_v3.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/vert_hist_ref_v4.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
@@ -1588,7 +1669,7 @@ ids = find_closest(er2['Start_UTC'],ssfr.utc)
 
 plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70),'c.',label='RSP')
 plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],smooth(ssfr_ref,2),'g.',label='SSFR')
-plt.plot(emas_v1['lat'][dc8_ind[0,ie1],dc8_ind[1,ie1]],smooth(emas_ref_v1,60),'k.',label='eMAS')
+plt.plot(emas_full['lat'][ief],smooth(emas_ref_full,60),'k.',label='eMAS')
 plt.plot(meas.lat[meas.good[ist]],smooth(star_ref,40),'r.',label='4STAR')
 plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],smooth(modis_ref,6),'m.',label='MODIS')
 plt.legend(frameon=False)
@@ -1604,7 +1685,7 @@ plt.plot(dc8['G_LAT'][id[ccn_good]],smooth(ccn['Number_Concentration'][ccn_good]
 
 id_ccn_rsp = find_closest(dc8['G_LAT'][id[ccn_good]],rsp['Lat'][rsp_good])
 id_ccn_ssfr = find_closest(dc8['G_LAT'][id[ccn_good]],er2['Latitude'][ids[ssfr.good[0][iss]]])
-id_ccn_emas = find_closest(dc8['G_LAT'][id[ccn_good]],emas_v1['lat'][dc8_ind[0,ie1],dc8_ind[1,ie1]])
+id_ccn_emas = find_closest(dc8['G_LAT'][id[ccn_good]],emas_full['lat'][ief])
 id_ccn_star = find_closest(dc8['G_LAT'][id[ccn_good]],meas.lat[meas.good[ist]])
 id_ccn_modis = find_closest(dc8['G_LAT'][id[ccn_good]],modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]])
 
@@ -1620,8 +1701,8 @@ plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth
 pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),color='c')
 plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),'g+',label='SSFR')
 pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_ssfr]),np.log(smooth(ssfr_ref,2)),color='g')
-plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),'k*',label='eMAS')
-pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_v1,60)),color='k')
+plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_full,60)),'k*',label='eMAS')
+pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_emas]),np.log(smooth(emas_ref_full,60)),color='k')
 plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star]),np.log(smooth(star_ref,40)),'ro',label='4STAR')
 pu.plot_lin(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_star])[:,0],np.log(smooth(star_ref,40)),color='r')
 plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_modis]),np.log(smooth(modis_ref,6)),'mx',label='MODIS')
@@ -1630,6 +1711,44 @@ plt.xlabel('Log(Number Concentration)')
 plt.ylabel('Log(r$_{eff}$)')
 
 plt.legend(bbox_to_anchor=[1,0.1],loc=3)
+plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn.png',dpi=600,transparent=True)
+
+# <codecell>
+
+xn,yn = doublenanmask(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)))
+c,cm = linfit(xn,yn)
+
+# <codecell>
+
+c,cm
+
+# <codecell>
+
+from scipy import stats
+slope, intercept, r_value, p_value, std_err = stats.linregress(xn,yn)
+
+# <codecell>
+
+slope, intercept, r_value, p_value, std_err
+
+# <codecell>
+
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+# <codecell>
+
+Xn = sm.add_constant(xn)
+model = sm.GLS(yn,Xn)
+result = model.fit()
+
+# <codecell>
+
+result.summary()
+
+# <codecell>
+
+help(linfit)
 
 # <codecell>
 
