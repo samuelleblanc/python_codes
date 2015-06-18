@@ -94,13 +94,19 @@ def nanmasked(x):
     maskA = x[mask]
     return (maskA,mask)
 
-def doublenanmask(x,y):
-    "Build two arrays that have no nans, in either. Returns smaller array"
+def doublenanmask(x,y,return_mask=False):
+    """
+    Build two arrays that have no nans, in either. Returns smaller array
+    if return_mask is set to True (default is False), the mask is also returned
+    """
     if len(x) != len(y):
         print "The two arrays don't match sizes, returning"
         return
     mask = ~np.isnan(x) & ~np.isnan(y)
-    return x[mask],y[mask]
+    if return_mask:
+        return x[mask],y[mask],mask
+    else:
+        return x[mask],y[mask]
 
 def nan_helper(y):
     """Helper to handle indices and logical indices of NaNs.
