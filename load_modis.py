@@ -132,10 +132,14 @@ def load_modis(geofile,datfile):
 
 # <codecell>
 
-def load_ict(fname,header=False):
+def load_ict(fname,return_header=False,make_nan=True):
     """
     Simple ict file loader
     created specifically to load the files from the iwg1 on board the G1 during TCAP, may work with others...
+    inputs:
+       fname: filename with full path
+       return_header: (default set to False) if True, returns data, header in that form
+       make_nan: (default set to True) if True, the values defined in the header to be missing data, usually -999, is changed to NaNs
     """
     from datetime import datetime
     import numpy as np
@@ -145,6 +149,7 @@ def load_ict(fname,header=False):
     num2skip = int(first.strip().split(',')[0])
     header = lines[0:num2skip]
     factor = map(float,header[10].strip().split(','))
+    missing = map(float,header[11].strip().split(','))
     f.close()
     if any([i!=1 for i in factor]):
         print('Some Scaling factors are not equal to one, Please check the factors:')
@@ -160,8 +165,10 @@ def load_ict(fname,header=False):
     for i,name in enumerate(data.dtype.names):
         if i>0:
             if factor[i-1]!=float(1):
-                data[name] = data[name]*factor[i-1]    
-    if header:
+                data[name] = data[name]*factor[i-1]
+            if make_nan:
+                data[name][data[name]==missing[i-1]]=np.NaN
+    if return_header:
         return data, header
     else:
         return data
