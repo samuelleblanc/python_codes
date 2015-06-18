@@ -170,19 +170,109 @@ def data2figpoints(x,dx,fig,ax1):
 
 # <codecell>
 
-def plot_lin(x,y,color='b',labels=True):
+def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit'):
     """
-    function to plot on top of previous a linear fit line, with the line equation in legend.
+    function to plot on top of previous a linear fit line, 
+    with the line equation in legend.
+    Input:
+       x: independent
+       y: dependent
+       x_err: uncertainty in x (default None)
+       y_err: uncertainty in y (default None)
+       color: color of the plot (default blue)
+       labels if include label in legend of linear equation values (default True)
+       ci: Confidence interval (in percent) (default 95)
+       shaded_ci: plot the shaded confidence interval (default True)
+       use_method: Define which method to use for linear regression
+                   options:
+                   'linfit' (default) Use the linfit method from linfit module, when set, x_err and y_err are ignored
+                   'odr' use the scipy ODR method to calculate the linear regression, with x_err and y_err abilities
+                   'statsmodels' use the statsmodels method, Weighted least squares, with weighing of 1/y_err, x_err ignored
     """
     import matplotlib.pyplot as plt
     import numpy as np
-    from linfit import linfit
-    from Sp_parameters import nanmasked, doublenanmask
-    xn,yn = doublenanmask(x,y)
-    c,cm = linfit(xn,yn)
-    xx = np.array([xn.min(),xn.max()])
-    if labels:
-        plt.plot(xx,c[1]+c[0]*xx,color=color,label='y=%2.2f+%2.2f x' % (c[1],c[0]))
+    from Sp_parameters import doublenanmask, nanmasked
+    from plotting_utils import confidence_envelope, lin
+    xn,yn,mask = doublenanmask(x,y,return_mask=True)
+    if use_method=='odr':
+        from scipy import odr
+        model = odr.Model(lin)
+        if any(x_err):
+            if any(y_err):
+                dat = odr.RealData(xn,yn,sx=x_err[mask],sy=y_err[mask])
+            else:
+                dat = odr.RealData(xn,yn,sx=x_err[mask])
+        else:
+            if any(y_err):
+                dat = odr.RealData(xn,yn,sy=y_err[mask]) 
+            else:
+                dat = odr.RealData(xn,yn)
+        outa = odr.ODR(dat,model,beta0=[1.0,0.5]).run()
+        print outa.cov_beta
+        perr = np.sqrt(np.diag(outa.cov_beta))
+        p = outa.beta
+    elif use_method=='linfit':
+        from linfit import linfit
+        c,cm = linfit(xn,yn)
+        p = np.array([c[1],c[0]])
+        cerr = np.sqrt(np.diag(cm))
+        perr = np.array([cerr[1],cerr[0]]) 
+    elif use_method=='statsmodels':
+        import statsmodels.api as sm
+        Xn = sm.add_constant(xn)
+        if any(y_err):
+            results = sm.WLS(yn,Xn,weights=1/y_err[mask]).fit()
+        else:
+            results = sm.OLS(yn,Xn).fit()
+        p = results.params
+        perr = results.bse
     else:
-        plt.plot(xx,c[1]+c[0]*xx,color=color)
+        print 'Method: %s is not a valid choice' % use_method
+        return
+    xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
+    if labels:
+        plt.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]))
+    else:
+        plt.plot(xx,lin(p,xx),color=color)
+    if shaded_ci:
+        y_up,y_down = confidence_envelope(xx, p, perr, ci=ci)
+        plt.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
+
+# <codecell>
+
+def lin(p,x):
+    """ 
+    Simple function that returns a linear expression:
+    y = p[0] + p[1]*x
+    """
+    return p[0]+p[1]*x
+
+# <codecell>
+
+def confidence_envelope(xn,p,p_err,ci=95,size=1000):
+    """
+    Simple function to model the confidence enveloppe of a linear function
+    Returns y_up and y_down: y values for the upper bounds and lower bound
+       of the confidence interval defined by ci [in percent]. Returns the y values at each xn points
+    Inputs:
+    p: p[0] is the intercept, p[1] is the slope
+    p_err: uncertainty in each p value
+    size: number of points to use in montecarlo simulation of confidence bounds (default 1000)
+    """
+    import numpy as np
+    from plotting_utils import lin
+    from scipy import stats
+    if len(xn)<=1:
+        print '** Problem with input xn **'
+        return None,None
+    p0s = np.random.normal(loc=p[0],scale=p_err[0],size=size)
+    p1s = np.random.normal(loc=p[1],scale=p_err[1],size=size)
+    ys = np.zeros((size,len(xn)))
+    for i in xrange(size):
+        ys[i,:] = lin([p0s[i],p1s[i]],xn)
+    y_up, y_down = np.zeros((2,len(xn)))
+    for j in xrange(len(xn)):
+        y_up[j] = stats.scoreatpercentile(ys[:,j],ci)
+        y_down[j] = stats.scoreatpercentile(ys[:,j],100-ci)
+    return y_up, y_down
 
