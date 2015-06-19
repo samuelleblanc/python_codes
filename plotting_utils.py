@@ -134,7 +134,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos,0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,label=label)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,label=label,range=ylim)
     if onlyhist:
         label_mean = None
         label_median = None
@@ -148,7 +148,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos+0.01,-0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                    labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,range=ylim)
     ax.axhline(np.mean(ymask),color='red',linewidth=2)
     ax.axhline(np.median(ymask),color='k',linewidth=2,linestyle='--')
 
