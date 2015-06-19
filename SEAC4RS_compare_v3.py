@@ -1826,9 +1826,14 @@ from scipy import interpolate
 
 # <codecell>
 
-idc8_lat = dc8['G_LAT'][id[ccn_good]].argsort()
+idc8_lat = np.argsort(dc8['G_LAT'][id[ccn_good]])
 dc8_sort = np.sort(dc8['G_LAT'][id[ccn_good]])
 ccn_sort = ccn['Number_Concentration'][ccn_good][idc8_lat]
+
+# <codecell>
+
+dc8_sort_nonunique,inonunique = np.unique(dc8_sort,return_index=True)
+ccn_sort_nonunique = ccn_sort[inonunique]
 
 # <codecell>
 
@@ -1837,8 +1842,8 @@ plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'.')
 
 # <codecell>
 
-f_ccn = interpolate.InterpolatedUnivariateSpline(dc8_sort,ccn_sort,k=1)
-cnn_ref_rsp = f_ccn(rsp['Lat'][rsp_good])
+f_ccn = interpolate.InterpolatedUnivariateSpline(dc8_sort_nonunique,ccn_sort_nonunique,k=1)
+ccn_ref_rsp = f_ccn(rsp['Lat'][rsp_good])
 ccn_ref_ssfr = f_ccn(er2['Latitude'][ids[ssfr.good[0][iss]]])
 ccn_ref_emas = f_ccn(emas_full['lat'][ief])
 ccn_ref_star = f_ccn(meas.lat[meas.good[ist],0])
@@ -1846,17 +1851,191 @@ ccn_ref_modis = f_ccn(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]])
 
 # <codecell>
 
-plt.plot(rsp['Lat'][rsp_good],cnn_ref_rsp,'b.')
-plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70),'g.')
-plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'r.')
+i_extrap_rsp = np.where((rsp['Lat'][rsp_good] > np.max(dc8_sort_nonunique)) | (rsp['Lat'][rsp_good] < np.min(dc8_sort_nonunique)))
+i_extrap_ssfr = np.where((er2['Latitude'][ids[ssfr.good[0][iss]]] > np.max(dc8_sort_nonunique)) | (er2['Latitude'][ids[ssfr.good[0][iss]]] < np.min(dc8_sort_nonunique)))
+i_extrap_emas = np.where((emas_full['lat'][ief] > np.max(dc8_sort_nonunique)) | (emas_full['lat'][ief] < np.min(dc8_sort_nonunique)))
+i_extrap_star = np.where((meas.lat[meas.good[ist],0] > np.max(dc8_sort_nonunique)) | (meas.lat[meas.good[ist],0] < np.min(dc8_sort_nonunique)))
+i_extrap_modis = np.where((modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]] > np.max(dc8_sort_nonunique)) | (modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]] < np.min(dc8_sort_nonunique)))
 
 # <codecell>
 
-plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70)*smooth(rsp_tau,70)*2/3/10,'c.',label='RSP')
-plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],smooth(ssfr_ref,2)*smooth(ssfr_tau,2)*2/3/10,'g.',label='SSFR')
-plt.plot(emas_full['lat'][ief],smooth(emas_ref_full,60)*smooth(emas_tau_full,60)*2/3/10,'k.',label='eMAS')
-plt.plot(meas.lat[meas.good[ist]],smooth(star_ref,40)*smooth(star_tau,40)*2/3/10,'r.',label='4STAR')
-plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],smooth(modis_ref,6)*smooth(modis_tau,6)*2/3/10,'m.',label='MODIS')
+ccn_ref_rsp[i_extrap_rsp] = np.nan
+ccn_ref_ssfr[i_extrap_ssfr] = np.nan
+ccn_ref_emas[i_extrap_emas] = np.nan
+ccn_ref_star[i_extrap_star] = np.nan
+ccn_ref_modis[i_extrap_modis] = np.nan
+
+# <codecell>
+
+plt.plot(rsp['Lat'][rsp_good],ccn_ref_rsp,'c.',label='CCN interp to RSP')
+plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],ccn_ref_ssfr,'g+',label='CCN interp to SSFR')
+plt.plot(emas_full['lat'][ief],ccn_ref_emas,'k*',label='CCN interp to eMAS')
+plt.plot(meas.lat[meas.good[ist],0],ccn_ref_star,'ro',label='CCN interp to 4STAR')
+plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],ccn_ref_modis,'mx',label='CCN interp to MODIS')
+plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70),'g.',label='RSP reff')
+plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'r.',label='original CCN')
+plt.legend(frameon=False)
+plt.xlabel('Latitude')
+plt.ylabel('Number concentration [\#/cm$^{3}$] \underline{or} $r_{eff}$ [$\mu$m]')
+
+# <codecell>
+
+plt.plot(np.log(ccn_ref_rsp),np.log(smooth(rsp_ref,70)),'c.',label='RSP')
+pu.plot_lin(np.log(ccn_ref_rsp),np.log(smooth(rsp_ref,70)),
+            x_err=np.log(ccn_ref_rsp*0.055),y_err=np.log(smooth(rsp_ref,70)*0.15),
+            color='c',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_ssfr),np.log(smooth(ssfr_ref,2)),'g+',label='SSFR')
+pu.plot_lin(np.log(ccn_ref_ssfr),np.log(smooth(ssfr_ref,2)),
+            x_err=np.log(ccn_ref_ssfr*0.055),color='g',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_emas),np.log(smooth(emas_ref_full,60)),'k*',label='eMAS')
+pu.plot_lin(np.log(ccn_ref_emas),np.log(smooth(emas_ref_full,60)),
+            x_err=np.log(ccn_ref_emas*0.055),color='k',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_star),np.log(smooth(star_ref,40)),'ro',label='4STAR')
+pu.plot_lin(np.log(ccn_ref_star),np.log(smooth(star_ref,40)),
+            x_err=np.log(ccn_ref_star*0.055),color='r',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_modis),np.log(smooth(modis_ref,6)),'mx',label='MODIS')
+pu.plot_lin(np.log(ccn_ref_modis),np.log(smooth(modis_ref,6)),
+            x_err=np.log(ccn_ref_modis*0.055),color='m',use_method='statsmodels',ci=75)
+plt.xlabel('Log(Number Concentration)')
+plt.ylabel('Log(r$_{eff}$)')
+plt.xlim([2.2,4.8])
+plt.ylim([2.5,4.2])
+
+plt.legend(bbox_to_anchor=[1,1.05],loc=2)
+plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_interp.png',dpi=600,transparent=True)
+
+# <markdowncell>
+
+# Now set up for only using the values that have positive vertical velocities as measured by dc8
+# 
+# First need to interpolate the vertical wind speed, then find the points
+
+# <codecell>
+
+idc8_good = np.where((dc8['TIME_UTC']>18.0)&(dc8['TIME_UTC']<19.5))[0]
+idc8_sort_lat = np.argsort(dc8['G_LAT'][idc8_good])
+dc8_lat_sort = dc8['G_LAT'][idc8_good[idc8_sort_lat]]
+dc8_w_sort = dc8['W'][idc8_good[idc8_sort_lat]]
+dc8_lat_nonunique,idc8_lat_nonunique = np.unique(dc8_lat_sort,return_index=True)
+dc8_w_sort_nounique = dc8_w_sort[idc8_lat_nonunique]
+
+# <codecell>
+
+f_w_dc8 = interpolate.InterpolatedUnivariateSpline(dc8_lat_nonunique,smooth(dc8_w_sort_nounique,2))
+dc8_w_rsp = f_w_dc8(rsp['Lat'][rsp_good])
+dc8_w_ssfr = f_w_dc8(er2['Latitude'][ids[ssfr.good[0][iss]]])
+dc8_w_emas = f_w_dc8(emas_full['lat'][ief])
+dc8_w_star = f_w_dc8(meas.lat[meas.good[ist],0])
+dc8_w_modis = f_w_dc8(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]])
+
+# <codecell>
+
+dc8_w_rsp[dc8_w_rsp>20] = np.nan
+dc8_w_ssfr[dc8_w_ssfr>20] = np.nan
+dc8_w_emas[dc8_w_emas>20] = np.nan
+dc8_w_star[dc8_w_star>20] = np.nan
+dc8_w_modis[dc8_w_modis>20] = np.nan
+
+# <codecell>
+
+plt.plot(dc8['G_LAT'][id],dc8['W'][id],'r.')
+plt.plot(rsp['Lat'][rsp_good],dc8_w_rsp,'c.')
+plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],dc8_w_ssfr,'g+')
+plt.plot(emas_full['lat'][ief],dc8_w_emas,'k*')
+plt.plot(meas.lat[meas.good[ist],0],dc8_w_star,'ro')
+plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],dc8_w_modis,'mx')
+plt.plot([20.9,22.3],[0,0],'k')
+plt.xlim([20.9,22.3])
+
+# <codecell>
+
+iup_rsp = dc8_w_rsp>0
+iup_ssfr = dc8_w_ssfr>0
+iup_emas = dc8_w_emas>0
+iup_star = dc8_w_star>0
+iup_modis = dc8_w_modis>0
+
+# <codecell>
+
+plt.plot(np.log(ccn_ref_rsp[iup_rsp]),np.log(smooth(rsp_ref,70)[iup_rsp]),'c.',label='RSP')
+pu.plot_lin(np.log(ccn_ref_rsp[iup_rsp]),np.log(smooth(rsp_ref,70)[iup_rsp]),
+            x_err=np.log(ccn_ref_rsp[iup_rsp]*0.055),y_err=np.log(smooth(rsp_ref,70)[iup_rsp]*0.15),
+            color='c',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_ssfr[iup_ssfr]),np.log(smooth(ssfr_ref,2)[iup_ssfr]),'g+',label='SSFR')
+pu.plot_lin(np.log(ccn_ref_ssfr[iup_ssfr]),np.log(smooth(ssfr_ref,2)[iup_ssfr]),
+            x_err=np.log(ccn_ref_ssfr[iup_ssfr]*0.055),color='g',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_emas[iup_emas]),np.log(smooth(emas_ref_full,60)[iup_emas]),'k*',label='eMAS')
+pu.plot_lin(np.log(ccn_ref_emas[iup_emas]),np.log(smooth(emas_ref_full,60)[iup_emas]),
+            x_err=np.log(ccn_ref_emas[iup_emas]*0.055),color='k',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_star[iup_star]),np.log(smooth(star_ref,40)[iup_star]),'ro',label='4STAR')
+pu.plot_lin(np.log(ccn_ref_star[iup_star]),np.log(smooth(star_ref,40)[iup_star]),
+            x_err=np.log(ccn_ref_star[iup_star]*0.055),color='r',use_method='statsmodels',ci=75)
+plt.plot(np.log(ccn_ref_modis[iup_modis]),np.log(smooth(modis_ref,6)[iup_modis]),'mx',label='MODIS')
+pu.plot_lin(np.log(ccn_ref_modis[iup_modis]),np.log(smooth(modis_ref,6)[iup_modis]),
+            x_err=np.log(ccn_ref_modis[iup_modis]*0.055),color='m',use_method='statsmodels',ci=75)
+plt.xlabel('Log(Number Concentration)')
+plt.ylabel('Log(r$_{eff}$)')
+plt.xlim([2.2,4.8])
+plt.ylim([2.5,4.2])
+
+plt.legend(bbox_to_anchor=[1,1.05],loc=2)
+plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_interp_up.png',dpi=600,transparent=True)
+
+# <markdowncell>
+
+# Recalculate the reff vs. ccn with derivative
+
+# <codecell>
+
+from Sp_parameters import deriv
+
+# <codecell>
+
+ccn_rsp_dif = smooth(deriv(np.log(smooth(rsp_ref,70)),np.log(ccn_ref_rsp)),5)
+ccn_ssfr_dif = smooth(deriv(np.log(smooth(ssfr_ref,2)),np.log(ccn_ref_ssfr)),5)
+ccn_emas_dif = smooth(deriv(np.log(smooth(emas_ref_full,60)),np.log(ccn_ref_emas)),5)
+ccn_star_dif = smooth(deriv(np.log(smooth(star_ref,40)),np.log(ccn_ref_star)),5)
+ccn_modis_dif = smooth(deriv(np.log(smooth(modis_ref,6)),np.log(ccn_ref_modis)),5)
+
+# <codecell>
+
+np.nanmean(ccn_rsp_dif)
+
+# <codecell>
+
+plt.plot(rsp['Lat'][rsp_good],ccn_rsp_dif,'c.')
+plt.plot(er2['Latitude'][ids[ssfr.good[0][iss]]],ccn_ssfr_dif,'g+')
+plt.plot(emas_full['lat'][ief],ccn_emas_dif,'k*')
+plt.plot(meas.lat[meas.good[ist],0],ccn_star_dif,'ro')
+plt.plot(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]],ccn_modis_dif,'mx')
+plt.plot([20.8,22.4],[0,0],'k')
+plt.ylim([-5,5])
+
+# <codecell>
+
+plt.hist(ccn_rsp_dif,bins=50, histtype='stepfilled', normed=True, color='c',alpha=0.6,range=[-20,20])
+plt.hist(ccn_ssfr_dif,bins=50, histtype='stepfilled', normed=True, color='g',alpha=0.6,range=(-20,20))
+plt.hist(ccn_emas_dif,bins=50, histtype='stepfilled', normed=True, color='k',alpha=0.6,range=(-20,20))
+plt.hist(ccn_star_dif,bins=50, histtype='stepfilled', normed=True, color='r',alpha=0.6,range=(-20,20))
+plt.hist(ccn_modis_dif,bins=50, histtype='stepfilled', normed=True, color='m',alpha=0.6,range=(-20,20))
+
+# <codecell>
+
+reload(pu)
+
+# <codecell>
+
+fig = plt.figure(figsize=(7,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-2,2],xlim=[-0.5,4.5])
+ax1.set_ylabel('ACI$_{r}$')
+ax1.set_xticks([0,1,2,3,4])
+ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,ccn_modis_dif,0,[-2,2],legend=True,onlyhist=False,loc=2,color='m')
+pu.plot_vert_hist(fig,ax1,ccn_emas_dif,1,[-2,2],legend=True,color='k')
+pu.plot_vert_hist(fig,ax1,ccn_ssfr_dif,2,[-2,2],legend=True,color='g')
+pu.plot_vert_hist(fig,ax1,ccn_rsp_dif,3,[-2,2],legend=True,color='c')
+pu.plot_vert_hist(fig,ax1,ccn_star_dif,4,[-2,2],legend=True,color='r')
+plt.savefig(fp+'plots/vert_hist_ACI_r.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
 
