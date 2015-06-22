@@ -1657,6 +1657,16 @@ plot_vert_hist(fig,ax1,smooth(emas_tau_full,60),1,[0,40],legend=True,color='k')
 plot_vert_hist(fig,ax1,smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),2,[0,40],legend=True,color='g')
 plot_vert_hist(fig,ax1,smooth(rsp_tau,70),3,[0,40],legend=True,color='c')
 plot_vert_hist(fig,ax1,smooth(star_tau,40),4,[0,40],legend=True,color='r')
+(_,caps,_) = ax1.errorbar([0,1,2,3,4],
+             [np.nanmean(smooth(modis_tau,6)),
+              np.nanmean(smooth(emas_tau_full,60)),
+              np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2)),
+              np.nanmean(smooth(rsp_tau,70)),
+              np.nanmean(smooth(star_tau,40))],yerr=[2,0,7.8,2,2],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_tau_v4.png',dpi=600,transparent=True)
 
 # <codecell>
@@ -1672,6 +1682,16 @@ plot_vert_hist(fig,ax1,smooth(ssfr_ref,2),2,[0,80],legend=True,color='g')
 plot_vert_hist(fig,ax1,smooth(rsp_ref,70),3,[0,80],legend=True,color='c')
 plot_vert_hist(fig,ax1,smooth(star_ref,40),4,[0,80],legend=True,color='r')
 plot_vert_hist(fig,ax1,probes[:,7],5,[0,80],legend=True,color='y')
+(_,caps,_) = ax1.errorbar([0,1,2,3,4],
+             [np.nanmean(smooth(modis_ref,6)),
+              np.nanmean(smooth(emas_ref_full,60)),
+              np.nanmean(smooth(ssfr_ref,2)),
+              np.nanmean(smooth(rsp_ref,70)),
+              np.nanmean(smooth(star_ref,40))],yerr=[1.7,0,4.7,1.7,1.8],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_ref_v4.png',dpi=600,transparent=True)
 
 # <headingcell level=2>
