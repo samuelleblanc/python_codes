@@ -60,6 +60,10 @@
 #   - file.rc : for consistent creation of look of matplotlib figures
 #   - sp_v3_20130913_4STAR.out: modeled spectra output for SEAC4RS at sza 17.9, idl save file
 #   - %%20130219starzen_rad.mat : special zenith radiance 4star matlab file 
+#   
+# Modification History:
+# 
+#     Written: Samuel LeBlanc, NASA Ames
 
 # <codecell>
 

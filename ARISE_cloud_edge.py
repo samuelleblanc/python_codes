@@ -56,6 +56,9 @@
 #   - C130 nav data: arise-C130-Hskping_c130_20140919_RA_Preliminary.ict
 #   - Probes data: ARISE-LARGE-PROBES_C130_20140919_R0.ict
 #   
+#  Modification History:
+#  
+#      Written: by Samuel LeBlanc, NASA Ames
 
 # <codecell>
 
