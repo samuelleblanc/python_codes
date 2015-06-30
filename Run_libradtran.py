@@ -293,6 +293,147 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
 # <codecell>
 
+def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
+    """
+    Purpose:
+
+        Writes the file with profile of cloud moment files
+        writes one file per layer of cloud properties, which are wavelength dependent
+        outputs 2 columns of layer properties: 
+            # z [km]     file_path
+
+            write_cloud_file_moments(cloud['file_name'],cloud['wvl'],cloud['ext'],cloud['ssa'],cloud['zbot'],cloud['ztop'],
+                                     cloud['moments'],cloud['nmom'],verbose=verbose)
+
+    Input: 
+  
+        output_file: full path to file to be written
+        tau: value of cloud optical thickness
+        ref: value of cloud particles effective radius [microns]
+        zbot: bottom of cloud layer [km]
+        ztop: top of cloud layer [km]
+    
+    Output:
+
+        output_file              
+    
+    Keywords: 
+
+        verbose: (default False) if true prints out info about file writing 
+    
+    Dependencies:
+
+        numpy
+        Run_libradtran (this file)
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+    """
+    import numpy as np
+    from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa
+        
+    if (zbot >= ztop):
+        raise ValueError('*** Error ztop must be larger than zbot ***')
+    if (ztop < 1.0):
+        print('ztop is smaller than one, check units, ztop should be in km')
+        if verbose:
+            print('..file preperations continuing')
+            
+    ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(tau,ref,ztop-zbot,verbose=False)
+    
+    try:
+        output = file(output_file,'w')
+    except Exception,e:
+        print 'Problem with accessing file, return Exception: ',e
+        return
+    if verbose:
+        print('..printing to file: %s' % output_file)
+
+    output.write('# z [km] \t file_path\n')
+    output.write('%4.4f\t%s\n' % (ztop,'NULL'))
+    file_cloud = output_file+'_zbot'
+    output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+    
+    write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose)
+    
+    output.close() 
+    if verbose:
+        print('..File finished, closed')
+
+# <codecell>
+
+def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False):
+    """
+    Purpose:
+
+        Writes the file with cloud properties per wavelength
+        outputs many columns of layer properties: 
+            # wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments
+    
+    Input: 
+  
+        output_file: full path to file to be written
+        ext: value of aerosol extinction coefficient at each wavelength [wvl]
+        ssa: value of aerosol single scattering albedo at each wavelength [wvl]
+        moments: array of moments at each wavelength [wvl]
+        nmom: number of moments to be written out. 
+        wvl: array of wavelengths in nm
+    
+    Output:
+
+        output_file
+                
+    Keywords: 
+
+        verbose: (default False) if true prints out info about file writing 
+    
+    Dependencies:
+
+        numpy
+        Run_libradtran (this file)
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+    """
+    if not len(wvl)==len(ext):
+        raise LookupError("ext and wvl_arr don't have the same size")
+    if not len(wvl)==len(ssa):
+        raise LookupError("ssa and wvl_arr don't have the same size")  
+        
+    try:
+        output = file(output_file,'w')
+    except Exception,e:
+        print 'Problem with accessing file, return Exception: ',e
+        return
+    if verbose:
+        print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
+    output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
+    for iw,wv in enumerate(wvl):
+        output.write('%f\t%f\t%1.6f\t%s \n' % (wv,ext[iw],ssa[iw]," ".join([str(x) for x in moments[0:nmom]])))
+    output.close()
+    if verbose:
+        print('..File finished, closed')
+
+# <codecell>
+
 def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     """
     Purpose:
@@ -352,6 +493,57 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
 
 # <codecell>
 
+def get_cloud_ext_ssa_moms(tau,ref,dz,verbose=False):
+    """
+    Purpose:
+
+        Writes the libradtran input file with defined defaults, see below
+        outputs libradtran input files in ascii format
+        
+    Input: 
+  
+        tau: optical thickness of cloud layer [unitless]
+        ref: effective radius of cloud particles [microns]
+        dz: cloud layer thickness [km] 
+        
+    Output:
+
+        ext,ssa,wvl,moments,nmom
+        ext: extinction coefficient of cloud per wavelength [km^-1]
+        ssa: single scattering albedo of cloud per wavelength [unitless]
+        wvl: wavelength array of returned properties [nm]
+        moments: array of legendre moments at each wavelength
+        nmom: number of legendre moments
+                
+    Keywords: 
+
+        verbose: (default False) if true prints out info about file writing 
+    
+    Dependencies:
+
+        numpy
+        Run_libradtran (this file)
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+    """
+    import numpy as np
+    
+    ###
+    
+    return ext,ssa,wvl,moments,nmom
+
+# <codecell>
+
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                     verbose=False):
     """
@@ -394,6 +586,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             ztop: location in km of cloud top
             zbot: location in km of cloud bottom
             phase: either 'ic' for ice cloud or 'wc' for water cloud
+            write_moments_file: (default False) if True, writes out moments into an ascii file instead 
+              of reading directly from the netcdf file. Requires the moments to be put in the cloud dict and the nmom.
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
@@ -432,6 +626,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+                added writing of moments for cloud properties file
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts
@@ -451,6 +647,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     albedo = merge_dicts({'create_albedo_file':False,
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
+    cloud = merge_dicts({'write_moments_file':False},cloud)
     
     if source.get('source')=='solar':
         source['source'] = 'solar '+source['dat_path']+'solar_flux/kurudz_1.0nm.dat per_nm'
@@ -510,16 +707,18 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         cloud['file_name'] = output_file+'_cloud'
         if cloud['phase']=='ic':
             if verbose: print '..Ice cloud'
-            output.write('ic_file 1D \t %s\n' % cloud['file_name'])
+            output.write('ic_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
             output.write('ic_properties baum_v36 interpolate\n')
         elif cloud['phase']=='wc':
             if verbose: print '..Liquid water cloud'
-            output.write('wc_file 1D \t %s\n' % cloud['file_name'])
+            output.write('wc_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
             output.write('wc_properties mie interpolate\n')
         else:
             raise ValueError('phase value in cloud dict not recognised')
-        write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
-    
+        if cloud['write_moments_file']:
+            write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
+        else:
+            write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
     output.close()
     if verbose: print 'Finished printing: Closing file'   
 
