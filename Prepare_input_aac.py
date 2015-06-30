@@ -114,3 +114,99 @@ cbar = plt.colorbar(cs)
 cbar.set_label('MODIS mean COD')
 plt.savefig(fp+'plots/MODIS_mean_COD.png',dpi=600,transparent=True)
 
+# <codecell>
+
+input_DJF['MODIS_COD_mean'][0,0][20,20]
+
+# <codecell>
+
+input_DJF['MODIS_effrad_mean'][0,0][20,20]
+
+# <codecell>
+
+input_DJF['MOC_wavelengths'][0,0]
+
+# <codecell>
+
+print MODIS_lon[20,20],MODIS_lat[20,20]
+
+# <codecell>
+
+input_DJF['MOC_asym_mean'][0,0][20,20]
+
+# <codecell>
+
+tt = np.array([1,2,3,4,5.0])
+
+# <codecell>
+
+type(tt)
+
+# <codecell>
+
+to = [1,2,3,4,5.0]
+
+# <codecell>
+
+type(to)
+
+# <codecell>
+
+len(tt)
+
+# <codecell>
+
+len(to)
+
+# <codecell>
+
+ext = [[1,2,3],[4.0,5.0,6.0]]
+
+# <codecell>
+
+len(ext)
+
+# <codecell>
+
+ee = np.array(ext)
+
+# <codecell>
+
+len(ee)
+
+# <codecell>
+
+size(ext)
+
+# <codecell>
+
+size(ee)
+
+# <codecell>
+
+shape(ee)
+
+# <codecell>
+
+shape(ext)
+
+# <codecell>
+
+tr = [  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
+         4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
+         3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
+         2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
+         2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
+         1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
+         4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
+         1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
+         7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
+         1.69683997e-04,   8.10304392e-05,   3.35441191e-05]
+
+# <codecell>
+
+shape(tr)
+
+# <codecell>
+
+

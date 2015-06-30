@@ -176,10 +176,20 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit_wvl
-    if not len(z_arr)==ext.shape[0]:
-        raise LookupError('*** Error z_arr not same size as ext ***')
-    if not len(wvl_arr)==ext.shape[1]:
-        raise LookupError('*** Error wvl_arr not same size as ext ***')
+    two_z = False
+    if not len(z_arr)==np.shape(ext)[0]:
+        if len(z_arr)==2:
+            #sepcial case for only two points on the z array
+            two_z = True
+        else:
+            raise LookupError('*** Error z_arr not same size as ext ***')
+    if two_z:
+        if not len(wvl_arr)==len(ext):
+            raise LookupError('*** Error wvl_arr not same size as ext ***')
+    else:
+        if not len(wvl_arr)==np.shape(ext)[1]:
+            raise LookupError('*** Error wvl_arr not same size as ext ***')
+        
     try:
         output = file(output_file,'w')
     except Exception,e:
@@ -189,17 +199,24 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
         print('..printing to file: %s' % output_file)
     
     output.write('# z [km] \t file_path\n')
-    izs = z_arr.argsort()[::-1]
-    zs = z_arr[izs]
+    izs = np.argsort(z_arr)[::-1]
+    zs = np.sort(z_arr)[::-1]
     if verbose:
         print('..printing %i lines onto profile file' % len(zs))
     for iz,z in enumerate(zs):
         file_iz = output_file+'_z%03i' % iz
-        if any(ext[izs[iz],:]):
-            write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],verbose=verbose)
-            output.write('%4.4f\t%s\n' % (z,file_iz))
+        if two_z:
+            if iz>0:
+                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose)
+                output.write('%4.4f\t%s\n' % (z,file_iz))
+            else:
+                output.write('%4.4f\t%s\n' % (z,'NULL'))
         else:
-            output.write('%4.4f\t%s\n' % (z,'NULL'))
+            if any(ext[izs[iz],:]):
+                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],verbose=verbose)
+                output.write('%4.4f\t%s\n' % (z,file_iz))
+            else:
+                output.write('%4.4f\t%s\n' % (z,'NULL'))
     output.close() 
     if verbose:
         print('..File finished, closed')
@@ -357,6 +374,12 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             lat: latitude
             lon: longitude
             doy: day of year
+            year: year (YYYY format)
+            month: month (MM format)
+            day: day of the month (DD format)
+            hour: hour of the day, 24h format, UTC
+            minute: minutes of the hour
+            second: seconds of the minute
             zout: at what altitude should be outputted, in km, default is 0 and 100
         aero: dictionary with aerosol properties
             ext: value of aerosol extinction coefficient at each altitude and wavelength [alt,wvl]
@@ -420,10 +443,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         return
     if verbose: print 'Opening input file %s' % output_file
     
-    if verbose: print 'setting the dicts to defaults'
+    if verbose: print '..setting the dicts to defaults'
     source = merge_dicts({'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
                           'source':'solar',
-                          'wvl_range':[202.0,500.0],
+                          'wvl_range':[250.0,500.0],
                           'integrate_values':True},source)
     albedo = merge_dicts({'create_albedo_file':False,
                           'albedo':0.29},albedo)
@@ -443,6 +466,12 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         output.write('output_process per_nm\n')
     output.write('data_files_path \t %s\n' % source['dat_path'])
     output.write('source \t %s \n' % source['source'])
+    if source['wvl_range'][0]>source['wvl_range'][1]:
+        print 'wvl_range was set inverse, inversing'
+        source['wvl_range'] = list(reversed(source['wvl_range'])) 
+    if source['wvl_range'][0]<250:
+        print 'wvl_range starting too low, setting to 250 nm'
+        source['wvl_range'][0] = 250.0
     output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
     
     if verbose: print '..write out the albedo values'
@@ -459,15 +488,19 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     output.write('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
     if geo.get('lat'):
         output.write("latitude\t%s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
-        output.write("longitude\t%s %f\n" % ('S' if geo['lon']<0 else 'N',abs(geo['lon'])))
+        output.write("longitude\t%s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
     if geo.get('sza'):
         output.write('sza\t%f\n' % geo['sza'])
     if geo.get('doy'):
-        output.write('day_of_year\t%i' % geo['doy'])
+        output.write('day_of_year\t%i\n' % geo['doy'])
+    if geo.get('year'):
+        output.write('time\t%04i\t%02i\t%02i\t%02i\t%02i\t%02i\n' 
+                     %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
         
     if aero.get('ext'):
         if verbose: print '..write out the aerosol parameters'
-        output.write('disort_intcor moments') #set to use moments for explicit aerosol file
+        output.write('aerosol_default\n')
+        output.write('disort_intcor moments\n') #set to use moments for explicit aerosol file
         aero['file_name'] = output_file+'_aero'
         output.write('aerosol_file explicit \t%s\n' % aero['file_name'])
         write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],aero['asy'],aero['wvl_arr'],verbose=verbose)
@@ -478,9 +511,11 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         if cloud['phase']=='ic':
             if verbose: print '..Ice cloud'
             output.write('ic_file 1D \t %s\n' % cloud['file_name'])
+            output.write('ic_properties baum_v36 interpolate\n')
         elif cloud['phase']=='wc':
             if verbose: print '..Liquid water cloud'
             output.write('wc_file 1D \t %s\n' % cloud['file_name'])
+            output.write('wc_properties mie interpolate\n')
         else:
             raise ValueError('phase value in cloud dict not recognised')
         write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
@@ -547,4 +582,54 @@ if __name__=='__main__':
 
 # <codecell>
 
+    geo = {'zout':[0,3,100],
+           'lat':-14.0,
+           'lon':-85.0,
+           'year':2007,'month':2,'day':10,'hour':10,'minute':0,'second':0}
+    aero = {'ext':[  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
+         4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
+         3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
+         2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
+         2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
+         1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
+         4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
+         1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
+         7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
+         1.69683997e-04,   8.10304392e-05,   3.35441191e-05],
+            'ssa':[ 0.94027621,  0.94451989,  0.94726128,  0.94923121,  0.95027106,
+        0.95172633,  0.95389696,  0.95572622,  0.9572892 ,  0.95868109,
+        0.9598034 ,  0.9607617 ,  0.96177931,  0.96326677,  0.95907986,
+        0.94878827,  0.92993408,  0.90942679,  0.87588452,  0.85667554,
+        0.83186815,  0.80753487,  0.78811889,  0.76859549,  0.741118  ,
+        0.70538566,  0.66048003,  0.58568778,  0.46758827,  0.27607095],
+            'asy':[ 0.7852096 ,  0.78103743,  0.77684837,  0.77285771,  0.77073574,
+        0.767068  ,  0.76026127,  0.75438874,  0.74906518,  0.74499582,
+        0.74245588,  0.7404872 ,  0.73816073,  0.73253394,  0.72113882,
+        0.70217822,  0.66814234,  0.63567558,  0.58822783,  0.56218055,
+        0.52791341,  0.49239392,  0.4624792 ,  0.43165396,  0.38933818,
+        0.34021788,  0.28974332,  0.22683931,  0.1585286 ,  0.08400939],
+            'z_arr':[3.0,4.0],
+            'wvl_arr':np.array([  0.20005,   0.2343 ,   0.2648 ,   0.2921 ,   0.3105 ,   0.34   ,
+          0.3975 ,   0.4675 ,   0.54625,   0.6423 ,   0.742  ,   0.8415 ,
+          0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
+          4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
+         11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
+    cloud = {'tau':7.6,
+             'ref':12.47,
+             'ztop':3.0,
+             'zbot':2.0,
+             'phase':'wc'}
+    source = {'wvl_range':[202,5600],
+              'source':'solar',
+              'integrate_values':True}
+    albedo = {'create_albedo_file':False,
+              'albedo':0.2}
+
+# <codecell>
+
+    write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
+
+# <codecell>
+
+    list(reversed(source['wvl_range']))
 
