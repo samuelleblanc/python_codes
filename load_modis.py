@@ -707,6 +707,7 @@ def load_hdf_sd(FILE_NAME):
     Purpose:
 
         to load everyything in a hdf file using the SD protocol instead of GDAL
+        makes nans out of Missing_value and _FilValue. Scales the values by the scale_factor
     
     Calling Sequence:
 
@@ -741,6 +742,9 @@ def load_hdf_sd(FILE_NAME):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-05-13, NASA Ames
+        Modified (v1.1): by Samuel LeBlanc, 2015-07-01, NASA Ames, Happy Canada Day!
+                        - added Fill value keyword selection
+                        - added scale factor and add offset
         
     """
     import numpy as np
@@ -758,6 +762,21 @@ def load_hdf_sd(FILE_NAME):
             dat[name][dat[name] == missing_value] = np.nan
         except:
             print '  no missing value for key:'+name
+        try:
+            missing_value = dat_dict[name]['_FillValue']
+            dat[name][dat[name] == missing_value] = np.nan
+        except:
+            print '  no Fill value for key:'+name
+        try:
+            scale_factor = dat_dict[name]['scale_factor']
+            dat[name] = dat[name]*scale_factor
+        except:
+            print '  no Scale Factor for key:'+name
+        try:
+            add_offset = dat_dict[name]['add_offset']
+            dat[name] = dat[name]+add_offset
+        except:
+            print '  no Add offset for key:'+name
     return dat, dat_dict
 
 # <codecell>
