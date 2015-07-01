@@ -123,7 +123,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
     output.close() 
     if verbose:
-        print('..File finished, closed')
+        print('..File finished write_cloud_file, closed')
 
 # <codecell>
 
@@ -219,7 +219,7 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
                 output.write('%4.4f\t%s\n' % (z,'NULL'))
     output.close() 
     if verbose:
-        print('..File finished, closed')
+        print('..File finished write_aerosol_file_explicit, closed')
 
 # <codecell>
 
@@ -289,11 +289,11 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
         output.write('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
     output.close()
     if verbose:
-        print('..File finished, closed')
+        print('..File finished write_aerosol_file_explicit_wvl, closed')
 
 # <codecell>
 
-def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
+def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbose=False):
     """
     Purpose:
 
@@ -302,9 +302,6 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
         outputs 2 columns of layer properties: 
             # z [km]     file_path
 
-            write_cloud_file_moments(cloud['file_name'],cloud['wvl'],cloud['ext'],cloud['ssa'],cloud['zbot'],cloud['ztop'],
-                                     cloud['moments'],cloud['nmom'],verbose=verbose)
-
     Input: 
   
         output_file: full path to file to be written
@@ -312,6 +309,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
         ref: value of cloud particles effective radius [microns]
         zbot: bottom of cloud layer [km]
         ztop: top of cloud layer [km]
+        moms_dict: dictionary from saved legendre moments. 
+                    Includes: ntheta, pmom, rho, nmom, ssa, nim, nre, ext, wvl, phase, theta, ref
     
     Output:
 
@@ -339,7 +338,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
         Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
     """
     import numpy as np
-    from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa
+    from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa_moms
         
     if (zbot >= ztop):
         raise ValueError('*** Error ztop must be larger than zbot ***')
@@ -348,7 +347,9 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
         if verbose:
             print('..file preperations continuing')
             
-    ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(tau,ref,ztop-zbot,verbose=False)
+    lwp = 2.0/3.0*tau*ref
+    lwc = lwp/(ztop-zbot)*0.001
+    ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(ref,lwc,moms_dict=moms_dict,verbose=False)
     
     try:
         output = file(output_file,'w')
@@ -367,7 +368,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,verbose=False):
     
     output.close() 
     if verbose:
-        print('..File finished, closed')
+        print('..File finished write_cloud_file_moments, closed')
 
 # <codecell>
 
@@ -427,10 +428,15 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
     output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
     for iw,wv in enumerate(wvl):
-        output.write('%f\t%f\t%1.6f\t%s \n' % (wv,ext[iw],ssa[iw]," ".join([str(x) for x in moments[0:nmom]])))
+        try:
+            output.write('%f\t%f\t%1.6f\t%s \n' % 
+                         (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:nmom[iw]])])))
+        except:
+            import pdb
+            pdb.set_trace()
     output.close()
     if verbose:
-        print('..File finished, closed')
+        print('..File write_cloud_file_moments_wvl finished, closed')
 
 # <codecell>
 
@@ -489,22 +495,22 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
         output.write('%f\t%f\n' % (w,alb[iw]))
     output.close()
     if verbose:
-        print('..File finished, closed')
+        print('..File write_albedo_file finished, closed')
 
 # <codecell>
 
-def get_cloud_ext_ssa_moms(tau,ref,dz,verbose=False):
+def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     """
     Purpose:
 
-        Writes the libradtran input file with defined defaults, see below
-        outputs libradtran input files in ascii format
+        Extracts the moments, extinction, ssa 
         
     Input: 
   
-        tau: optical thickness of cloud layer [unitless]
         ref: effective radius of cloud particles [microns]
-        dz: cloud layer thickness [km] 
+        lwc: liquid/ice water content in cloud [g/m^3]
+        moms_dict: dictionary from saved legendre moments. 
+                    Includes: ntheta, pmom, rho, nmom, ssa, nim, nre, ext, wvl, phase, theta, ref
         
     Output:
 
@@ -522,7 +528,8 @@ def get_cloud_ext_ssa_moms(tau,ref,dz,verbose=False):
     Dependencies:
 
         numpy
-        Run_libradtran (this file)
+        sys
+        scipy.io (for loading idl files)
     
     Required files:
    
@@ -530,17 +537,32 @@ def get_cloud_ext_ssa_moms(tau,ref,dz,verbose=False):
     
     Example:
 
-        ...
+        ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(ref,lwc,moms_dict=moms_dict,verbose=True)
         
     Modification History:
     
-        Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+        Written (v1.0): Samuel LeBlanc, 2015-06-30, NASA Ames, from Santa Cruz, CA
     """
     import numpy as np
+    if verbose:
+        print '..Getting the moments and extinction coefficients from the moms_dict of cloud properties'
     
-    ###
-    
-    return ext,ssa,wvl,moments,nmom
+    if not moms_dict:
+        import sys
+        if sys.platform=='win32':
+            fdict = 'C:/Users/sleblan2/Research/4STAR/rtm_dat/mie_hi.out'
+        else:
+            fdict = '/u/sleblan2/4STAR/rtm_dat/mie_hi.out'
+        print 'No moments dict defined, loading defaults: '+fdict
+        import scipy.io as sio
+        moms_dict = sio.idl.read(fdict)
+    ir = np.argmin(abs(moms_dict['ref']-ref))
+    ext = moms_dict['ext'][ir,:]*lwc
+    wvl = moms_dict['wvl']
+    if wvl[0]<1:
+        wvl = wvl*1000.0
+
+    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:,:],moms_dict['nmom'][ir,:]
 
 # <codecell>
 
@@ -588,12 +610,14 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             phase: either 'ic' for ice cloud or 'wc' for water cloud
             write_moments_file: (default False) if True, writes out moments into an ascii file instead 
               of reading directly from the netcdf file. Requires the moments to be put in the cloud dict and the nmom.
+            moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. To be used when building the moments file
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
             dat_path: data path to be used. Defaults to pleaides values (/u/sleblan2/libradtran/libRadtran-2.0-beta/data/)
             integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
                             if set to False, returns per_nm irradiance values
+            moms_dict
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -630,7 +654,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 added writing of moments for cloud properties file
     """
     import numpy as np
-    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts
+    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
     
     try:
         output = file(output_file,'w')
@@ -716,23 +740,68 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             raise ValueError('phase value in cloud dict not recognised')
         if cloud['write_moments_file']:
-            write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
+            write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                     verbose=verbose,moms_dict=cloud.get('moms_dict'))
         else:
             write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
     output.close()
-    if verbose: print 'Finished printing: Closing file'   
+    if verbose: print 'Finished printing main input file: Closing file'   
 
 # <codecell>
 
 def merge_dicts(*dict_args):
-    '''
+    """
     Given any number of dicts, shallow copy and merge into a new dict,
     precedence goes to key value pairs in latter dicts.
-    '''
+    """
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
     return result
+
+# <codecell>
+
+def make_pmom_inputs():
+    """
+    Purpose:
+    
+        Create the moments used as input for the write_input_aac function
+        
+    Dependencies:
+
+        numpy
+        scipy
+    
+    Required files:
+   
+        mie_hi.out
+        wc.sol.long.mie.cdf
+        wc.sol.short.mie.cdf        
+    
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-06-30, NASA Ames, from Santa Cruz, CA
+    """
+    import numpy as np
+    import scipy.io as sio
+    mie = sio.idl.readsav('C:/Users/sleblan2/Research/4STAR/rtm_dat/mie_hi.out')
+    mie_long = sio.netcdf_file('C:/Users/sleblan2/Research/4STAR/rtm_dat/wc.sol.long.mie.cdf','r')
+    pmom = mie
+    pmom['wvl'] = np.append(mie['wvl'],mie_long.variables['wavelen'].data)
+    pmom['ntheta'] = np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[:,:,0],0,1)),axis=1)
+    pmom['rho'] = np.concatenate((mie['rho'],np.swapaxes(mie_long.variables['rho'].data,0,1)),axis=1)
+    pmom['nmom'] = np.concatenate((mie['nmom'],np.swapaxes(mie_long.variables['nmom'].data[:,:,0],0,1)),axis=1)
+    pmom['ssa'] = np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data,0,1)),axis=1)
+    pmom['ext'] = np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data,0,1)),axis=1)
+    pmom['nim'] = np.append(mie['nim'],mie_long.variables['refim'].data)
+    pmom['nre'] = np.append(mie['nre'],mie_long.variables['refre'].data)
+    pmom['pmom'] = np.concatenate((mie['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[:,:,0,:],0,1),
+                                                               np.zeros((30,79,750))),axis=2)),axis=1)
+    pmom['phase'] = np.concatenate((np.concatenate((mie['phase'],np.zeros((30,754,602))),axis=2),
+                                    np.swapaxes(mie_long.variables['phase'].data[:,:,0,:],0,1)),axis=1)
+    pmom['theta'] = np.concatenate((np.concatenate((mie['theta'],np.zeros((30,754,602))),axis=2),
+                                    np.swapaxes(mie_long.variables['theta'].data[:,:,0,:],0,1)),axis=1).shape 
+    return pmom
 
 # <codecell>
 
@@ -747,9 +816,6 @@ if __name__=='__main__':
     ext = np.array([[0.5,0.4,0.3],[0,0,0]])
     ssa = ext*1.9
     asy = ext*1.7
-
-# <codecell>
-
     ext.shape
 
 # <codecell>
@@ -778,6 +844,10 @@ if __name__=='__main__':
 
     import Run_libradtran
     reload(Run_libradtran)
+
+# <codecell>
+
+    mie = make_pmom_inputs()
 
 # <codecell>
 
@@ -813,11 +883,8 @@ if __name__=='__main__':
           0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
           4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
          11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
-    cloud = {'tau':7.6,
-             'ref':12.47,
-             'ztop':3.0,
-             'zbot':2.0,
-             'phase':'wc'}
+    cloud = {'tau':7.6,'ref':12.47,'ztop':3.0,'zbot':2.0,
+             'phase':'wc','write_moments_file':True,'moms_dict':mie}
     source = {'wvl_range':[202,5600],
               'source':'solar',
               'integrate_values':True}
@@ -830,5 +897,4 @@ if __name__=='__main__':
 
 # <codecell>
 
-    list(reversed(source['wvl_range']))
 
