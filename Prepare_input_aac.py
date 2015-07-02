@@ -55,6 +55,7 @@ from mpl_toolkits.basemap import Basemap
 # <codecell>
 
 import Run_libradtran as RL
+reload(RL)
 
 # <codecell>
 
@@ -71,6 +72,10 @@ input_DJF = sio.loadmat(fp+'Input_to_DARF_DJF.mat',mat_dtype=True)['data_input_d
 # <codecell>
 
 input_DJF.dtype.names
+
+# <codecell>
+
+enumerate(input_DJF['MODIS_lat'][0,0])
 
 # <codecell>
 
@@ -136,76 +141,163 @@ input_DJF['MOC_asym_mean'][0,0][20,20]
 
 # <codecell>
 
-tt = np.array([1,2,3,4,5.0])
+input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 
 # <codecell>
 
-type(tt)
+input_mmm['MOC_ext_mean'][0,0].shape
 
 # <codecell>
 
-to = [1,2,3,4,5.0]
+input_mmm['MODIS_effrad_mean'][0,0].shape
 
 # <codecell>
 
-type(to)
+input_mmm['MODIS_lat'][0,0].shape
+
+# <headingcell level=2>
+
+# Read sample MODIS albedo file
 
 # <codecell>
 
-len(tt)
+import load_modis as lm
+reload(lm)
 
 # <codecell>
 
-len(to)
+alb_geo,alb_geo_dict = lm.load_hdf_sd('C:\Users\sleblan2\Research\Calipso\meloe\MCD43GF_geo_shortwave_001_2007.hdf')
 
 # <codecell>
 
-ext = [[1,2,3],[4.0,5.0,6.0]]
+alb_geo['MCD43GF_CMG'].shape
 
 # <codecell>
 
-len(ext)
+alb_geo['MCD43GF_CMG'][1,0]
 
 # <codecell>
 
-ee = np.array(ext)
+alb_geo_dict['MCD43GF_CMG']['_FillValue']
 
 # <codecell>
 
-len(ee)
+input_DJF['MODIS_COD_mean'][0,0].shape
 
 # <codecell>
 
-size(ext)
+alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
 
 # <codecell>
 
-size(ee)
+alb_geo_lat = np.linspace(90,-90,num=48)
+alb_geo_lon = np.linspace(-180,180,num=75)
 
 # <codecell>
 
-shape(ee)
+co = plt.contourf(alb_geo_lon,alb_geo_lat,alb_geo_sub)
+cbar = plt.colorbar(co)
+
+# <headingcell level=2>
+
+# Prepare inputs of aac for libradtran
+
+# <markdowncell>
+
+# Set up the default, not changing properties
 
 # <codecell>
 
-shape(ext)
+input_mmm = input_DJF
+mmm = 'DJF'
 
 # <codecell>
 
-tr = [  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
-         4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
-         3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
-         2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
-         2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
-         1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
-         4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
-         1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
-         7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
-         1.69683997e-04,   8.10304392e-05,   3.35441191e-05]
+pmom = RL.make_pmom_inputs()
 
 # <codecell>
 
-shape(tr)
+geo = {'zout':[0,3,100],'year':2007,'month':1,'day':15,'minute':0,'second':0}
+aero = {'z_arr':[3.0,4.0]}
+cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True,'moms_dict':pmom}
+source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+albedo = {'create_albedo_file':False}
+
+# <codecell>
+
+fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
+fp_alb = fp
+
+# <codecell>
+
+def build_aac_input(fp,fp_alb):
+    """
+    Program to build the inputs of libradtran for Meloe's AAC study
+    """
+    import numpy as np
+    import scipy.io as sio
+    import Run_libradtran as RL
+    import load_modis as lm
+    pmom = RL.make_pmom_inputs()
+    geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
+    aero = {'z_arr':[3.0,4.0]}
+    cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True,'moms_dict':pmom}
+    source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+    albedo = {'create_albedo_file':False}
+    for mmm in ['DJF','MAM','JJA','SON']:
+        print 'in %s months, getting mat files' % mmm
+        input_mmm = sio.loadmat(fp+'Input_to_DARF_%s.mat' % mmm,mat_dtype=True)['data_input_darf']
+        if mmm=='DJF':
+            geo['month'] = 1
+            doy = 17
+        elif mmm=='MAM':
+            geo['month'] = 4
+            doy = 137
+        elif mmm=='JJA':
+            geo['month'] = 7
+            doy = 225
+        elif mmm=='SON':
+            geo['month'] = 10
+            doy = 321
+
+        print 'Getting albedo files'
+        alb_geo,alb_geo_dict = lm.load_hdf_sd(fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy)
+        alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
+        alb_geo_lat = np.linspace(90,-90,num=48)
+        alb_geo_lon = np.linspace(-180,180,num=75)
+
+        print 'Running through the files'
+        for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
+            for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
+                geo['lat'],geo['lon'] = lat,lon
+                # set the aerosol values
+                aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
+                aero['ext'] = input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]
+                aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
+                aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+                # set the cloud values
+                cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
+                cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
+                # set the albedo
+                alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
+                if np.isnan(alb): 
+                    albedo['sea_surface_albedo'] = True
+                else:
+                    albedo['albedo'] = alb
+
+                for HH in xrange(24):
+                    geo['hour'] = HH
+                    #build the solar input file
+                    source['source'] = 'solar'
+                    source['wvl_range'] = [250,5600]
+                    file_out_sol = fp+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
+                    RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
+                    #build the thermal input file
+                    source['source'] = 'thermal'
+                    source['wvl_range'] = [4000,50000]
+                    file_out_thm = fp+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
+                    RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
+                    print HH,ilat,ilon
 
 # <codecell>
 
