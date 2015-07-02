@@ -624,6 +624,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             albedo: value of albedo. Only used if create_albedo_file is false and albedo_file is empty (defaults to 0.29 - Earth's average)
             alb: wavelength dependent value of albedo for use when create_albedo_file is set to True
             alb_wvl: wavelength grid of albedo for use when create_albedo_file is set to True
+            sea_surface_albedo: (default False) If True, sets the sea surface to be parameterized by cox and munk, 
+                            requires wind_speed to be set.
+            wind_speed: [m/s] (default to 10 m/s) Only used if sea_surface_albedo is set to True. 
+                            wind speed over water for parameterization of cox_and_munk
     
     Output:
 
@@ -652,6 +656,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
         Modified: Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
                 added writing of moments for cloud properties file
+        Modified: Samuel LeBlanc, 2015-07-01, NASA Ames, Happy Canada Day!
+                added sea-surface albedo parameterization
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -668,7 +674,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                           'source':'solar',
                           'wvl_range':[250.0,500.0],
                           'integrate_values':True},source)
-    albedo = merge_dicts({'create_albedo_file':False,
+    albedo = merge_dicts({'create_albedo_file':False,'sea_surface_albedo':False,'wind_speed':10,
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
     cloud = merge_dicts({'write_moments_file':False},cloud)
@@ -702,6 +708,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         output.write('albedo_file \t%s\n' % albedo['albedo_file'])
     elif albedo.get('albedo_file'):
         output.write('albedo_file \t%s\n' % albedo['albedo_file'])
+    elif albedo.get('sea_surface_albedo'):
+        output.write('brdf_cam u10\t%i\n' % albedo['wind_speed'])
     else:
         output.write('albedo\t%f\n' % albedo['albedo'])
     
