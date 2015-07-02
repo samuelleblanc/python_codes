@@ -758,25 +758,24 @@ def load_hdf_sd(FILE_NAME):
         dat[name] = hdf.select(name)[:]
         dat_dict[name] = hdf.select(name).attributes()
         try:
-            missing_value = dat_dict[name]['missing_value']
-            dat[name][dat[name] == missing_value] = np.nan
-        except:
-            print '  no missing value for key:'+name
-        try:
-            missing_value = dat_dict[name]['_FillValue']
-            dat[name][dat[name] == missing_value] = np.nan
-        except:
-            print '  no Fill value for key:'+name
-        try:
-            scale_factor = dat_dict[name]['scale_factor']
+            scale_factor = dat_dict[name].get('scale_factor')
+            if not scale_factor:
+                scale_factor = 1.0
             dat[name] = dat[name]*scale_factor
+            try:
+                dat[name][dat[name] == dat_dict[name].get('missing_value')*scale_factor] = np.nan
+            except TypeError:
+                print 'No missing_value on '+name
+            try:
+                dat[name][dat[name] == dat_dict[name].get('_FillValue')*scale_factor] = np.nan
+            except TypeError:
+                print 'No FillValue on '+name
+            add_offset = dat_dict[name].get('add_offset')
+            if not add_offset:
+                add_offset = 0
+            dat[name] = dat[name] + add_offset
         except:
-            print '  no Scale Factor for key:'+name
-        try:
-            add_offset = dat_dict[name]['add_offset']
-            dat[name] = dat[name]+add_offset
-        except:
-            print '  no Add offset for key:'+name
+            print 'Problem in filling with nans and getting the offsets, must do it manually'
     return dat, dat_dict
 
 # <codecell>
