@@ -617,7 +617,6 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             dat_path: data path to be used. Defaults to pleaides values (/u/sleblan2/libradtran/libRadtran-2.0-beta/data/)
             integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
                             if set to False, returns per_nm irradiance values
-            moms_dict
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -726,7 +725,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         output.write('time\t%04i\t%02i\t%02i\t%02i\t%02i\t%02i\n' 
                      %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
         
-    if aero.get('ext'):
+    if 'ext' in aero:
         if verbose: print '..write out the aerosol parameters'
         output.write('aerosol_default\n')
         output.write('disort_intcor moments\n') #set to use moments for explicit aerosol file
@@ -734,7 +733,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         output.write('aerosol_file explicit \t%s\n' % aero['file_name'])
         write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],aero['asy'],aero['wvl_arr'],verbose=verbose)
     
-    if cloud.get('tau'):
+    if 'tau' in cloud:
         if verbose: print '..write out the cloud properties'
         cloud['file_name'] = output_file+'_cloud'
         if cloud['phase']=='ic':
