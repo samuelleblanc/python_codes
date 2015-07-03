@@ -227,10 +227,11 @@ albedo = {'create_albedo_file':False}
 
 fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
 fp_alb = fp
+fp_out = 'C:\Users\sleblan2\Research\Calipso\meloe\input/'
 
 # <codecell>
 
-def build_aac_input(fp,fp_alb):
+def build_aac_input(fp,fp_alb,fp_out):
     """
     Program to build the inputs of libradtran for Meloe's AAC study
     """
@@ -245,8 +246,9 @@ def build_aac_input(fp,fp_alb):
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
     albedo = {'create_albedo_file':False}
     for mmm in ['DJF','MAM','JJA','SON']:
-        print 'in %s months, getting mat files' % mmm
-        input_mmm = sio.loadmat(fp+'Input_to_DARF_%s.mat' % mmm,mat_dtype=True)['data_input_darf']
+        fpm = fp+'Input_to_DARF_%s.mat' % mmm
+        print 'in %s months, getting mat file: %s' % (mmm,fpm)
+        input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
         if mmm=='DJF':
             geo['month'] = 1
             doy = 17
@@ -260,8 +262,9 @@ def build_aac_input(fp,fp_alb):
             geo['month'] = 10
             doy = 321
 
-        print 'Getting albedo files'
-        alb_geo,alb_geo_dict = lm.load_hdf_sd(fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy)
+        fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
+        print 'Getting albedo files: '+fpa
+        alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
         alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
@@ -273,6 +276,9 @@ def build_aac_input(fp,fp_alb):
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 aero['ext'] = input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]
+                if np.isnan(aero['ext']).all():
+                    print 'skipping lat:%i, lon:%i' % (ilat,ilon)
+                    continue
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
                 aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
                 # set the cloud values
@@ -290,14 +296,22 @@ def build_aac_input(fp,fp_alb):
                     #build the solar input file
                     source['source'] = 'solar'
                     source['wvl_range'] = [250,5600]
-                    file_out_sol = fp+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
+                    cloud['write_moments_file'] = True
+                    file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
                     #build the thermal input file
                     source['source'] = 'thermal'
                     source['wvl_range'] = [4000,50000]
-                    file_out_thm = fp+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
+                    cloud['write_moments_file'] = False
+                    file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
-                    print HH,ilat,ilon
+                    print ilat,ilon,HH
+        del alb_geo
+        del input_mmm
+
+# <codecell>
+
+build_aac_input(fp,fp_alb,fp_out)
 
 # <codecell>
 
