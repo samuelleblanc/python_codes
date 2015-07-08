@@ -799,6 +799,8 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                     - added new file for loading of thermal mie properties
         Modified: Samuel LeBlanc, 2015-07-07, NASA Ames, CA
                     - added the allpmom netcdf file from Claudia Emde for Solar 
+        Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
+                    - fixed bugs with Claudia Emde's full pmom netcdf files. Added longer wavelengths to be saved.
     """
     import numpy as np
     import scipy.io as sio
