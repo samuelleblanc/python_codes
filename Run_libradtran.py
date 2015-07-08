@@ -37,6 +37,7 @@
 #     - math
 #     - pdb
 #     - datetime
+#     - load_modis
 #   
 # Needed Files:
 # 
@@ -796,11 +797,28 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
         Modified: Samuel LeBlanc, 2015-07-02, Santa Cruz, CA
                     - added source keyword
                     - added new file for loading of thermal mie properties
+        Modified: Samuel LeBlanc, 2015-07-07, NASA Ames, CA
+                    - added the allpmom netcdf file from Claudia Emde for Solar 
     """
     import numpy as np
     import scipy.io as sio
     
     if source=='solar':
+        mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
+        pmom = {'wvl':mie.variables['wavelen'].data,
+                'ref':mie.variables['reff'].data,
+                'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
+                'rho':np.swapaxes(mie.variables['rho'].data,0,1),
+                'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
+                'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
+                'ext':np.swapaxes(mie.variables['ext'].data,0,1),
+                'nim':mie.variables['refim'].data,
+                'nre':mie.variables['refre'].data,
+                'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
+                'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
+                'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
+    
+    elif source=='solar_sub':
         mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
         mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
         pmom = mie
@@ -821,6 +839,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
     elif source=='thermal':
         mie_trm = sio.netcdf_file(fp_rtm+'wc_trm_longmie.cdf','r')
         pmom = {'wvl':mie_trm.variables['wavelen'].data, 
+                'ref':mie_trm.variables['reff'].data,
                 'ntheta':np.swapaxes(mie_trm.variables['ntheta'].data[:,:,0],0,1),
                 'rho':np.swapaxes(mie_trm.variables['rho'].data,0,1),
                 'nmom':np.swapaxes(mie_trm.variables['nmom'].data[:,:,0],0,1),
@@ -832,9 +851,129 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                 'phase':np.swapaxes(mie_trm.variables['phase'].data[:,:,0,:],0,1),
                 'theta':np.swapaxes(mie_trm.variables['theta'].data[:,:,0,:],0,1)}
     else:
-        print 'Not a correct option for source: select either solar or thermal'
+        print 'Not a correct option for source: select either solar, solar_sub, or thermal'
         return None
     return pmom
+
+# <codecell>
+
+def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
+    """
+    Purpose:
+    
+        Program to build the inputs of libradtran for Meloë's AAC study
+    
+    Inputs:
+    
+        fp: path of directory to matlab input files
+        fp_alb: full path to where (without the filename) of the MODIS albedo
+        fp_out: full path to where the input files will be saved
+        fp_pmom: full path (without the filename) to pmom files
+        
+    Dependencies:
+    
+        numpy
+        scipy
+        load_modis
+        Run_libradtran 
+        
+    Required files:
+    
+        Input_to_DARF_mmm.mat : input files from Meloë
+        surface albedo files from MODIS (MCD43GF_geo_shortwave_doy_2007.hdf)
+        pmom files in netcdf (thermal and solar)
+        
+    Example:
+    
+        ...
+        
+    Modification History:
+    
+        Written: Samuel LeBlanc, 2015-07-01, Happy Canada Day!, Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2015-07-07, NASA Ames
+                - Modified the calling paths to include fp_pmom
+                - Added comments
+                - Changed out of Prepare_input_aac to Run_libradtran
+        
+    """
+    import numpy as np
+    import scipy.io as sio
+    import Run_libradtran as RL
+    import load_modis as lm
+    if fp_pmom:
+        pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')
+        pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
+    else:
+        pmom_solar = RL.make_pmom_inputs(source='solar')
+        pmom_thermal = RL.make_pmom_inputs(source='thermal')
+    geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
+    aero = {'z_arr':[3.0,4.0]}
+    cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
+    source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+    albedo = {'create_albedo_file':False}
+    for mmm in ['DJF','MAM','JJA','SON']:
+        fpm = fp+'Input_to_DARF_%s.mat' % mmm
+        print 'in %s months, getting mat file: %s' % (mmm,fpm)
+        input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
+        if mmm=='DJF':
+            geo['month'] = 1
+            doy = 17
+        elif mmm=='MAM':
+            geo['month'] = 4
+            doy = 137
+        elif mmm=='JJA':
+            geo['month'] = 7
+            doy = 225
+        elif mmm=='SON':
+            geo['month'] = 10
+            doy = 321
+
+        fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
+        print 'Getting albedo files: '+fpa
+        alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
+        alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
+        alb_geo_lat = np.linspace(90,-90,num=48)
+        alb_geo_lon = np.linspace(-180,180,num=75)
+
+        print 'Running through the files'
+        for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
+            for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
+                geo['lat'],geo['lon'] = lat,lon
+                # set the aerosol values
+                aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
+                aero['ext'] = input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]
+                if np.isnan(aero['ext']).all():
+                    print 'skipping lat:%i, lon:%i' % (ilat,ilon)
+                    continue
+                aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
+                aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+                # set the cloud values
+                cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
+                cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
+                # set the albedo
+                alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
+                if np.isnan(alb): 
+                    albedo['sea_surface_albedo'] = True
+                else:
+                    albedo['albedo'] = alb
+
+                for HH in xrange(24):
+                    geo['hour'] = HH
+                    #build the solar input file
+                    source['source'] = 'solar'
+                    source['wvl_range'] = [250,5600]
+                    cloud['moms_dict'] = pmom_solar
+                    file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
+                    RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
+                    #build the thermal input file
+                    source['source'] = 'thermal'
+                    source['wvl_range'] = [4000,50000]
+                    cloud['moms_dict'] = pmom_thermal
+                    file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
+                    RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
+                    print ilat,ilon,HH
+        del alb_geo
+        del input_mmm
 
 # <codecell>
 
