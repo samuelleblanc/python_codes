@@ -198,6 +198,61 @@ alb_geo_lon = np.linspace(-180,180,num=75)
 co = plt.contourf(alb_geo_lon,alb_geo_lat,alb_geo_sub)
 cbar = plt.colorbar(co)
 
+# <markdowncell>
+
+# Check netcdf
+
+# <codecell>
+
+fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/'
+
+# <codecell>
+
+mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
+
+# <codecell>
+
+mie_short = {'wvl':mie.variables['wavelen'].data,
+                'ref':mie.variables['reff'].data,
+                'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
+                'rho':np.swapaxes(mie.variables['rho'].data,0,1),
+                'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
+                'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
+                'ext':np.swapaxes(mie.variables['ext'].data,0,1),
+                'nim':mie.variables['refim'].data,
+                'nre':mie.variables['refre'].data,
+                'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
+                'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
+                'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
+
+# <codecell>
+
+mie.variables['theta'].data.shape
+
+# <codecell>
+
+mie_long.variables['theta'].data.shape
+
+# <codecell>
+
+mie_short['theta'].shape
+
+# <codecell>
+
+pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
+        'ref':mie_short['ref'],
+        'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
+        'rho':mie_short['rho'],
+        'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
+        'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
+        'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
+        'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
+        'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
+        'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
+                                                                 np.zeros((25,72,2500))),axis=2)),axis=1),
+        'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
+        'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
+
 # <headingcell level=2>
 
 # Prepare inputs of aac for libradtran

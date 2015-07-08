@@ -805,19 +805,32 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
     
     if source=='solar':
         mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
-        pmom = {'wvl':mie.variables['wavelen'].data,
-                'ref':mie.variables['reff'].data,
-                'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
-                'rho':np.swapaxes(mie.variables['rho'].data,0,1),
-                'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
-                'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
-                'ext':np.swapaxes(mie.variables['ext'].data,0,1),
-                'nim':mie.variables['refim'].data,
-                'nre':mie.variables['refre'].data,
-                'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
-                'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
-                'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
-    
+        mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
+        mie_short = {'wvl':mie.variables['wavelen'].data,
+                     'ref':mie.variables['reff'].data,
+                     'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
+                     'rho':np.swapaxes(mie.variables['rho'].data,0,1),
+                     'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
+                     'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
+                     'ext':np.swapaxes(mie.variables['ext'].data,0,1),
+                     'nim':mie.variables['refim'].data,
+                     'nre':mie.variables['refre'].data,
+                     'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
+                     'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
+                     'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
+        pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
+                'ref':mie_short['ref'],
+                'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
+                'rho':mie_short['rho'],
+                'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
+                'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
+                'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
+                'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
+                'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
+                'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
+                                                                         np.zeros((25,72,2500))),axis=2)),axis=1),
+                'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
+                'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
     elif source=='solar_sub':
         mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
         mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
@@ -857,7 +870,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 # <codecell>
 
-def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
+def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None):
     """
     Purpose:
     
@@ -869,6 +882,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
         fp_alb: full path to where (without the filename) of the MODIS albedo
         fp_out: full path to where the input files will be saved
         fp_pmom: full path (without the filename) to pmom files
+        fp_uvspec: full path to the uvspec program, defaults to : /u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec
+        fp_output: path to output of uvspec, if none, the fp_out is used, with the last assumed directory 
+                    /input/ to be changed to /output/
         
     Dependencies:
     
@@ -894,6 +910,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
                 - Modified the calling paths to include fp_pmom
                 - Added comments
                 - Changed out of Prepare_input_aac to Run_libradtran
+        Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
+                - added creator of list file (for running on cluster), creating list file in the path described by fp_out
+                - added fp_uvspec 
+                - added fp_output for list file creation of uvspec output
         
     """
     import numpy as np
@@ -911,6 +931,16 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
     albedo = {'create_albedo_file':False}
+    
+    try:
+        file_list = file(fp_out+'AAC_list_file.sh','w')
+    except Exception,e:
+        print 'Problem with accessing file, return Exception: ',e
+        return
+    print 'Starting list file'
+    if not fp_output:
+        fp_output = fp_out.replace('input','output')
+    
     for mmm in ['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_%s.mat' % mmm
         print 'in %s months, getting mat file: %s' % (mmm,fpm)
@@ -971,9 +1001,14 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None):
                     cloud['moms_dict'] = pmom_thermal
                     file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False)
+                    file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
+                                    +'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out' % (ilat,ilon,mmm,HH))
+                    file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
+                                    +'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out' % (ilat,ilon,mmm,HH))
                     print ilat,ilon,HH
         del alb_geo
         del input_mmm
+    file_list.close()
 
 # <codecell>
 
