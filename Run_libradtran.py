@@ -1052,6 +1052,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         source['wvl_filename'] = wvl_file_sol
                     else:
                         source['wvl_range'] = [250,5600]
+                        source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_solar
                     file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
@@ -1064,6 +1065,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         source['wvl_filename'] = wvl_file_thm
                     else:
                         source['wvl_range'] = [4000,50000]
+                        source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_thermal
                     file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
