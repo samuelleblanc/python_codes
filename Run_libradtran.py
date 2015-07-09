@@ -733,7 +733,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     output.write('source \t %s \n' % source['source'])
     
     if source.get('wvl_filename'):
-        output.write('wavelength\t%s\n' %s source['wvl_filename'])
+        output.write('wavelength\t%s\n' % source['wvl_filename'])
     else:
         if source['wvl_range'][0]>source['wvl_range'][1]:
             print 'wvl_range was set inverse, inversing'
