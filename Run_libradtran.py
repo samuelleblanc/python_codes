@@ -618,6 +618,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             dat_path: data path to be used. Defaults to pleaides values (/u/sleblan2/libradtran/libRadtran-2.0-beta/data/)
             integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
                             if set to False, returns per_nm irradiance values
+            wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -664,6 +665,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added sea-surface albedo parameterization
         Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
                 - added base file writing
+                - added wvl_filename which is to be writen out
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -729,13 +731,17 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             output.write('output_process per_nm\n')
         output.write('data_files_path \t %s\n' % source['dat_path'])
     output.write('source \t %s \n' % source['source'])
-    if source['wvl_range'][0]>source['wvl_range'][1]:
-        print 'wvl_range was set inverse, inversing'
-        source['wvl_range'] = list(reversed(source['wvl_range'])) 
-    if source['wvl_range'][0]<250:
-        print 'wvl_range starting too low, setting to 250 nm'
-        source['wvl_range'][0] = 250.0
-    output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+    
+    if source.get('wvl_filename'):
+        output.write('wavelength\t%s\n' %s source['wvl_filename'])
+    else:
+        if source['wvl_range'][0]>source['wvl_range'][1]:
+            print 'wvl_range was set inverse, inversing'
+            source['wvl_range'] = list(reversed(source['wvl_range'])) 
+        if source['wvl_range'][0]<250:
+            print 'wvl_range starting too low, setting to 250 nm'
+            source['wvl_range'][0] = 250.0
+        output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
@@ -914,7 +920,8 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 # <codecell>
 
-def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None):
+def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
+                    wvl_file_sol=None,wvl_file_thm=None):
     """
     Purpose:
     
@@ -929,6 +936,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         fp_uvspec: full path to the uvspec program, defaults to : /u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec
         fp_output: path to output of uvspec, if none, the fp_out is used, with the last assumed directory 
                     /input/ to be changed to /output/
+        wvl_file_sol: full path to solar wavelength file (wavelengths in nm in second column)
+        wvl_file_thm: full path of thermal wavelength file (wavelengths in nm in second column)
         
     Dependencies:
     
@@ -959,6 +968,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 - added fp_uvspec 
                 - added fp_output for list file creation of uvspec output
                 - changed to use the base_file method
+                - changed to use wavelength_files
         
     """
     import numpy as np
@@ -1038,7 +1048,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     geo['hour'] = HH
                     #build the solar input file
                     source['source'] = 'solar'
-                    source['wvl_range'] = [250,5600]
+                    if wvl_file_sol:
+                        source['wvl_filename'] = wvl_file_sol
+                    else:
+                        source['wvl_range'] = [250,5600]
                     cloud['moms_dict'] = pmom_solar
                     file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
@@ -1047,7 +1060,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         make_base = False
                     #build the thermal input file
                     source['source'] = 'thermal'
-                    source['wvl_range'] = [4000,50000]
+                    if wvl_file_thm:
+                        source['wvl_filename'] = wvl_file_thm
+                    else:
+                        source['wvl_range'] = [4000,50000]
                     cloud['moms_dict'] = pmom_thermal
                     file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
