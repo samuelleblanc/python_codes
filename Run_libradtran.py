@@ -901,7 +901,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                                         np.swapaxes(mie_long.variables['theta'].data[:,:,0,:],0,1)),axis=1).shape 
     elif source=='thermal':
         mie_trm = sio.netcdf_file(fp_rtm+'wc_trm_longmie.cdf','r')
-        pmom = {'wvl':mie_trm.variables['wavelen'].data, 
+        pmom = {'wvl':mie_trm.variables['wavelen'].data*1000.0, 
                 'ref':mie_trm.variables['reff'].data,
                 'ntheta':np.swapaxes(mie_trm.variables['ntheta'].data[:,:,0],0,1),
                 'rho':np.swapaxes(mie_trm.variables['rho'].data,0,1),
