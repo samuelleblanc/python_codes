@@ -767,7 +767,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             source['wvl_range'][0] = 250.0
         output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
         if source['source']=='thermal':
-            output.write('wavelength ')
+            output.write('wavelength_step 10\n')
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
@@ -1068,6 +1068,11 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     continue
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
                 aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+                if aero['wvl_arr'].max()<100000.0:
+                    aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
+                    aero['ext'] = np.append(aero['ext'],aero['ext'][-1])
+                    aero['ssa'] = np.append(aero['ssa'],aero['ssa'][-1])
+                    aero['asy'] = np.append(aero['asy'],aero['asy'][-1])
                 # set the cloud values
                 cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
                 cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
@@ -1216,6 +1221,9 @@ if __name__=='__main__':
 # <codecell>
 
     write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
+
+# <codecell>
+
 
 # <codecell>
 

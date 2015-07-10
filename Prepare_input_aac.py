@@ -87,6 +87,30 @@ input_DJF['MODIS_COD_mean'][0,0][input_DJF['MODIS_COD_mean'][0,0]==-9999] = np.n
 
 # <codecell>
 
+ilat,ilon = 5,15
+
+# <codecell>
+
+wvl = np.append(wvl,100000.0)
+
+# <codecell>
+
+wvl
+
+# <codecell>
+
+ext = np.abs(input_DJF['MOC_ext_mean'][0,0][ilat,ilon,:])
+
+# <codecell>
+
+input_DJF['MOC_ext_mean'][0,0][ilat,ilon,:]
+
+# <codecell>
+
+wvl = input_DJF['MOC_wavelengths'][0,0][0,:]*1000.0
+
+# <codecell>
+
 ctr = plt.contourf(input_DJF['MODIS_lon'][0,0][:,0],input_DJF['MODIS_lat'][0,0][:,0],input_DJF['MODIS_COD_mean'][0,0])
 plt.xlabel('Longitude')
 plt.ylabel('Latitude')
