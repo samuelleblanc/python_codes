@@ -976,6 +976,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         scipy
         load_modis
         Run_libradtran 
+        os
         
     Required files:
     
@@ -1003,12 +1004,15 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         Modified: Samuel LeBlanc, 2015-07-09, NASA Ames, CA
                 - using one set of cloud files per lat lon combinations, not for every hour
                 - added aero_clear keyword to define clear value
+        Modified: Samuel LeBlanc, 2015-07-10, Santa Cruz, CA
+                - changed to have seperate path and list file for each mmm
         
     """
     import numpy as np
     import scipy.io as sio
     import Run_libradtran as RL
     import load_modis as lm
+    import os
     if fp_pmom:
         pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')
         pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
@@ -1020,17 +1024,6 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
     albedo = {'create_albedo_file':False}
-    
-    try:
-        file_list = file(fp_out+'AAC_list_file.sh','w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    print 'Starting list file'
-    if not fp_output:
-        fp_output = fp_out.replace('input','output')
-    fp_base_file = fp_out+'base.inp'
-    make_base = True
     
     for mmm in ['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_%s.mat' % mmm
@@ -1048,6 +1041,22 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         elif mmm=='SON':
             geo['month'] = 10
             doy = 321
+            
+        try:
+            file_list = file(fp_out+'AAC_list_file_%s.sh' % mmm,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        print 'Starting list file'
+        fp_out2 = fp_out+mmm+'/'
+        if not os.path.exist(fp_out2):
+            os.mkdir(fp_out2)
+        if not fp_output:
+            fp_output = fp_out2.replace('input','output')
+            if not os.path.exist(fp_output):
+                os.mkdir(fp_output)
+        fp_base_file = fp_out2+'base.inp'
+        make_base = True
 
         fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
         print 'Getting albedo files: '+fpa
@@ -1087,9 +1096,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     
                 cloud['link_to_mom_file'] = False
                 aero['link_to_mom_file'] = False
-                cloud_file_name_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_sol.inp_cloud' % (ilat,ilon,mmm)
-                cloud_file_name_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_thm.inp_cloud' % (ilat,ilon,mmm)
-                aero['file_name'] = fp_out+'AAC_input_lat%02i_lon%02i_%s_thm.inp_aero' % (ilat,ilon,mmm)
+                cloud_file_name_sol = fp_out2+'AAC_input_lat%02i_lon%02i_%s_sol.inp_cloud' % (ilat,ilon,mmm)
+                cloud_file_name_thm = fp_out2+'AAC_input_lat%02i_lon%02i_%s_thm.inp_cloud' % (ilat,ilon,mmm)
+                aero['file_name'] = fp_out2+'AAC_input_lat%02i_lon%02i_%s_thm.inp_aero' % (ilat,ilon,mmm)
 
                 for HH in xrange(24):
                     geo['hour'] = HH
@@ -1102,7 +1111,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_solar
                     cloud['file_name'] = cloud_file_name_sol
-                    file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
+                    file_out_sol = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=make_base,fp_base_file=fp_base_file,set_quiet=True)
                     if make_base:
@@ -1116,7 +1125,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_thermal
                     cloud['file_name'] = cloud_file_name_thm
-                    file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
+                    file_out_thm = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=False,fp_base_file=fp_base_file,set_quiet=True)
                     file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
