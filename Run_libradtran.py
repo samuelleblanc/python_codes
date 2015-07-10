@@ -766,8 +766,6 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             print 'wvl_range starting too low, setting to 250 nm'
             source['wvl_range'][0] = 250.0
         output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
-        if source['source']=='thermal':
-            output.write('wavelength_step 10\n')
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
