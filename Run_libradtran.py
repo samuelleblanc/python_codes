@@ -1018,7 +1018,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
     aero = {'z_arr':[3.0,4.0]}
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
-    source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+    source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
     albedo = {'create_albedo_file':False}
     
     try:
