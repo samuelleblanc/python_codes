@@ -603,6 +603,9 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             asy: value of aerosol asymmetry parameter at each altitude and wavelength [alt,wvl]
             z_arr: value of altitudes to use with ext,ssa,asy
             wvl_arr: array of wavelengths in nm
+            link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to aero dict
+            file_name: file name and paths of explicit file for aerosol defined. 
+                        By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
         cloud: dictionary with cloud properties
             tau: value of cloud optical thickness
             ref: value of effective radius in microns
@@ -612,6 +615,9 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             write_moments_file: (default False) if True, writes out moments into an ascii file instead 
               of reading directly from the netcdf file. Requires the moments to be put in the cloud dict and the nmom.
             moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. To be used when building the moments file
+            link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to cloud dict
+            file_name: file name and paths of moments file for cloud defined. 
+                        By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
@@ -619,6 +625,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
                             if set to False, returns per_nm irradiance values
             wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
+            run_fuliou: if set to True, then runs fu liou instead of sbdart (default is False)
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -666,6 +673,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
                 - added base file writing
                 - added wvl_filename which is to be writen out
+        Modified: Samuel LeBlanc, 2015-07-09, NASA Ames, CA
+                - possibility of using the fuliou codes instead of sbdart
+                - added link_to_mom_file to cloud and aero dict
+                - added file_name in cloud and aero dict
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -694,7 +705,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     source = merge_dicts({'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
                           'source':'solar',
                           'wvl_range':[250.0,500.0],
-                          'integrate_values':True},source)
+                          'integrate_values':True,
+                          'run_fuliou':False},source)
     albedo = merge_dicts({'create_albedo_file':False,'sea_surface_albedo':False,'wind_speed':10,
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
@@ -705,7 +717,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     
     if verbose: print '..write out general default values'
     if make_base:
-        base.write('mol_abs_param sbdart\n')
+        if source['run_fuliou']:
+            base.write('mol_abs_param fu\n')
+        else:
+            base.write('mol_abs_param sbdart\n')
         base.write('rte_solver disort\n')
         if set_quiet:
             base.write('quiet\n')
@@ -714,19 +729,28 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     else:
         if set_quiet:
             output.write('quiet\n')
-        output.write('mol_abs_param sbdart\n')
+        if source['run_fuliou']:
+            output.write('mol_abs_param fu\n')
+        else:
+            output.write('mol_abs_param sbdart\n')
         output.write('rte_solver disort\n')
     
     if verbose: print '..write out source dict values'
     if make_base:
         if source['integrate_values']:
-            base.write('output_process integrate\n')
+            if source['run_fuliou']:
+                base.write('output_process sum\n')
+            else:
+                base.write('output_process integrate\n')
         else:
             base.write('output_process per_nm\n')
         base.write('data_files_path \t %s\n' % source['dat_path'])
     elif not include_base:
         if source['integrate_values']:
-            output.write('output_process integrate\n')
+            if source['run_fuliou']:
+                output.write('output_process sum\n')
+            else:
+                output.write('output_process integrate\n')
         else:
             output.write('output_process per_nm\n')
         output.write('data_files_path \t %s\n' % source['dat_path'])
@@ -742,6 +766,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             print 'wvl_range starting too low, setting to 250 nm'
             source['wvl_range'][0] = 250.0
         output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+        if source['source']=='thermal':
+            output.write('wavelength ')
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
@@ -776,13 +802,17 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         elif not include_base:    
             output.write('aerosol_default\n')
             output.write('disort_intcor moments\n') #set to use moments for explicit aerosol file
-        aero['file_name'] = output_file+'_aero'
+        if not aero.get('link_to_mom_file'):
+            if not aero.get('file_name'):
+                aero['file_name'] = output_file+'_aero'
+            write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],aero['asy'],aero['wvl_arr'],verbose=verbose)
         output.write('aerosol_file explicit \t%s\n' % aero['file_name'])
-        write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],aero['asy'],aero['wvl_arr'],verbose=verbose)
     
     if 'tau' in cloud:
         if verbose: print '..write out the cloud properties'
-        cloud['file_name'] = output_file+'_cloud'
+        if not cloud.get('link_to_mom_file'):
+            if not cloud.get('file_name'):
+                cloud['file_name'] = output_file+'_cloud'
         if cloud['phase']=='ic':
             if verbose: print '..Ice cloud'
             output.write('ic_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
@@ -794,10 +824,12 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             raise ValueError('phase value in cloud dict not recognised')
         if cloud['write_moments_file']:
-            write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
-                                     verbose=verbose,moms_dict=cloud.get('moms_dict'))
+            if not cloud.get('link_to_mom_file'):
+                write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                         verbose=verbose,moms_dict=cloud.get('moms_dict'))
         else:
-            write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
+            if not cloud.get('link_to_mom_file'):
+                write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
     output.close()
     if make_base:
         base.close()
@@ -969,6 +1001,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 - added fp_output for list file creation of uvspec output
                 - changed to use the base_file method
                 - changed to use wavelength_files
+        Modified: Samuel LeBlanc, 2015-07-09, NASA Ames, CA
+                - using one set of cloud files per lat lon combinations, not for every hour
         
     """
     import numpy as np
@@ -1043,6 +1077,12 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     albedo['sea_surface_albedo'] = True
                 else:
                     albedo['albedo'] = alb
+                    
+                cloud['link_to_mom_file'] = False
+                aero['link_to_mom_file'] = False
+                cloud_file_name_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_sol.inp_cloud' % (ilat,ilon,mmm)
+                cloud_file_name_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_thm.inp_cloud' % (ilat,ilon,mmm)
+                aero['file_name'] = fp_out+'AAC_input_lat%02i_lon%02i_%s_thm.inp_aero' % (ilat,ilon,mmm)
 
                 for HH in xrange(24):
                     geo['hour'] = HH
@@ -1054,6 +1094,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         source['wvl_range'] = [250,5600]
                         source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_solar
+                    cloud['file_name'] = cloud_file_name_sol
                     file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=make_base,fp_base_file=fp_base_file,set_quiet=True)
@@ -1064,9 +1105,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     if wvl_file_thm:
                         source['wvl_filename'] = wvl_file_thm
                     else:
-                        source['wvl_range'] = [4000,50000]
+                        source['wvl_range'] = [4000,50000-1]
                         source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_thermal
+                    cloud['file_name'] = cloud_file_name_thm
                     file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
                     RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=False,fp_base_file=fp_base_file,set_quiet=True)
@@ -1074,7 +1116,11 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                                     +'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out\n' % (ilat,ilon,mmm,HH))
                     file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
                                     +'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out\n' % (ilat,ilon,mmm,HH))
-                    print ilat,ilon,HH
+                    if not cloud['link_to_mom_file']:
+                        cloud['link_to_mom_file'] = True
+                    if not aero['link_to_mom_file']:
+                        aero['link_to_mom_file'] = True
+                    print mmm,ilat,ilon,HH
         del alb_geo
         del input_mmm
     file_list.close()
