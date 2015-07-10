@@ -951,7 +951,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 # <codecell>
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False):
     """
     Purpose:
     
@@ -968,6 +968,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     /input/ to be changed to /output/
         wvl_file_sol: full path to solar wavelength file (wavelengths in nm in second column)
         wvl_file_thm: full path of thermal wavelength file (wavelengths in nm in second column)
+        aero_clear: if set to True, then aerosol extinction is set to zero in all cases. (defaults to False) 
         
     Dependencies:
     
@@ -1001,6 +1002,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 - changed to use wavelength_files
         Modified: Samuel LeBlanc, 2015-07-09, NASA Ames, CA
                 - using one set of cloud files per lat lon combinations, not for every hour
+                - added aero_clear keyword to define clear value
         
     """
     import numpy as np
@@ -1053,7 +1055,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
-
+        
         print 'Running through the files'
         for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
             for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
@@ -1061,6 +1063,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])
+                if aero_clear:
+                    aero['ext'] = aero['ext']*0.0
                 if np.isnan(aero['ext']).all():
                     print 'skipping lat:%i, lon:%i' % (ilat,ilon)
                     continue
@@ -1127,6 +1131,44 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         del alb_geo
         del input_mmm
     file_list.close()
+
+# <codecell>
+
+def read_libradtran():
+    """
+    Purpose:
+    
+        Program to read the output of libradtran irradiance files
+    
+    Inputs:
+    
+        file_path: full path of file to read
+        zout: array of zout values
+        
+    Outputs:
+    
+        out: dictionary 
+        
+    Dependencies:
+    
+        numpy
+        
+    Required files:
+    
+        file output of libradtran
+        
+    Example:
+    
+        ...
+        
+    Modification History:
+    
+        Written: Samuel LeBlanc, 2015-07-09, Santa Cruz, CA
+        
+    """
+    import numpy as np
+    print 'test'
+    
 
 # <codecell>
 
