@@ -1024,6 +1024,11 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
     albedo = {'create_albedo_file':False}
+    if not fp_output:
+        change_fp_output = True
+    else:
+        change_fp_output = False
+    
     
     for mmm in ['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_%s.mat' % mmm
@@ -1049,11 +1054,11 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             return
         print 'Starting list file'
         fp_out2 = fp_out+mmm+'/'
-        if not os.path.exist(fp_out2):
+        if not os.path.exists(fp_out2):
             os.mkdir(fp_out2)
-        if not fp_output:
+        if change_fp_output:
             fp_output = fp_out2.replace('input','output')
-            if not os.path.exist(fp_output):
+            if not os.path.exists(fp_output):
                 os.mkdir(fp_output)
         fp_base_file = fp_out2+'base.inp'
         make_base = True
@@ -1139,7 +1144,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     print mmm,ilat,ilon,HH
         del alb_geo
         del input_mmm
-    file_list.close()
+        file_list.close()
 
 # <codecell>
 
