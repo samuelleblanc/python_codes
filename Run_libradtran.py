@@ -1285,7 +1285,7 @@ def read_aac(fp_out,fp_mat,mmm=None):
                 output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
                 output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
                 output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
-                print mmm,ilat,ilon,HH
+            print mmm,ilat,ilon
             output['SW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['SW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
             output['SW_irr_up_avg'][:,ilat,ilon] = np.mean(output['SW_irr_up_utc'][:,ilat,ilon,:],axis=1)
             output['LW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['LW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
