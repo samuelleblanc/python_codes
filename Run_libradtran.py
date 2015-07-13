@@ -1250,6 +1250,7 @@ def read_aac(fp_out,fp_mat,mmm=None):
     import os
     import scipy.io as sio
     import Run_libradtran as RL
+    import numpy as np
     
     if not mmm:
         raise NameError('no season string defined')
