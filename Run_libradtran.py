@@ -1262,14 +1262,14 @@ def read_aac(fp_out,fp_mat,mmm=None):
               'UTC':range(24),
               'zout':[0,3,100]}
     nlat,nlon,nz = len(output['lat']),len(output['lon']),len(output['zout'])
-    output['SW_irr_dn_utc'] = np.zeros(nz,nlat,nlon,24)
-    output['SW_irr_up_utc'] = np.zeros(nz,nlat,nlon,24)
-    output['LW_irr_dn_utc'] = np.zeros(nz,nlat,nlon,24)
-    output['LW_irr_up_utc'] = np.zeros(nz,nlat,nlon,24)
-    output['SW_irr_dn_avg'] = np.zeros(nz,nlat,nlon)
-    output['SW_irr_up_avg'] = np.zeros(nz,nlat,nlon)
-    output['LW_irr_dn_avg'] = np.zeros(nz,nlat,nlon)
-    output['LW_irr_up_avg'] = np.zeros(nz,nlat,nlon)    
+    output['SW_irr_dn_utc'] = np.zeros((nz,nlat,nlon,24))
+    output['SW_irr_up_utc'] = np.zeros((nz,nlat,nlon,24))
+    output['LW_irr_dn_utc'] = np.zeros((nz,nlat,nlon,24))
+    output['LW_irr_up_utc'] = np.zeros((nz,nlat,nlon,24))
+    output['SW_irr_dn_avg'] = np.zeros((nz,nlat,nlon))
+    output['SW_irr_up_avg'] = np.zeros((nz,nlat,nlon))
+    output['LW_irr_dn_avg'] = np.zeros((nz,nlat,nlon))
+    output['LW_irr_up_avg'] = np.zeros((nz,nlat,nlon))    
     for ilat in xrange(nlat):
         for ilon in xrange(nlon):        
             for iutc in output['UTC']:
