@@ -1148,23 +1148,33 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
 
 # <codecell>
 
-def read_libradtran():
+def read_libradtran(fp,zout=[0,3,100]):
     """
     Purpose:
     
         Program to read the output of libradtran irradiance files
+        Very simple output of 3 zout, one wavelength
     
     Inputs:
     
-        file_path: full path of file to read
+        fp: full path of file to read
         zout: array of zout values
         
     Outputs:
     
-        out: dictionary 
+        out: dictionary with
+            wvl:
+            zout:
+            direct_down: irradiance down from direct beam
+            diffuse_down: irradiance down from diffuse soruces
+            diffuse_up: irradiance upwwelling
+            int_dir_dn: average intensity direct down
+            int_dif_dn: average intensity diffuse down
+            int_dif_up: average intensity diffuse up
         
     Dependencies:
     
+        os
         numpy
         
     Required files:
@@ -1177,12 +1187,109 @@ def read_libradtran():
         
     Modification History:
     
-        Written: Samuel LeBlanc, 2015-07-09, Santa Cruz, CA
+        Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
         
     """
+    import os
     import numpy as np
-    print 'test'
+    if not os.path.isfile(fp):
+        raise IOError('File not found')
+        return
+    dat = np.loadtxt(fp)
+    output = {'wvl':dat[:,0],
+              'zout':zout,
+              'direct_down':dat[:,1],
+              'diffuse_down':dat[:,2],
+              'diffuse_up':dat[:,3],
+              'int_dir_dn':dat[:,4],
+              'int_dif_dn':dat[:,5],
+              'int_dif_up':dat[:,6]}
+    return output
+
+# <codecell>
+
+def read_aac(fp_out,fp_mat,mmm=None):
+    """
+    Purpose:
     
+        Simple program to read all the output of the libradtran runs for AAC
+        Program to read the output of libradtran irradiance files
+        Very simple output of 3 zout, one wavelength
+    
+    Inputs:
+    
+        fp_out: full path of the directory with the files to read
+        fp_mat: full path of mat file with lat and lon to use
+        mmm: string with the season defined (can be DJF,MAM,JJA, or SON)
+        
+    Outputs:
+    
+        out: dictionary with the saved output 
+        
+    Dependencies:
+    
+        Run_libradtran (this file)
+        os
+        numpy
+        scipy
+        
+    Required files:
+    
+        files of libradtran output
+        meloë's .mat files
+        
+    Example:
+    
+        ...
+        
+    Modification History:
+    
+        Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
+        
+    """
+    import os
+    import scipy.io as sio
+    import Run_libradtran as RL
+    
+    if not mmm:
+        raise NameError('no season string defined')
+        return
+    
+    input_mmm = sio.loadmat(fp_mat,mat_dtype=True)['data_input_darf']
+    output = {'lat':input_mmm['MODIS_lat'][0,0],
+              'lon':input_mmm['MODIS_lon'][0,0],
+              'UTC':range(24),
+              'zout':[0,3,100]}
+    nlat,nlon,nz = len(output['lat']),len(output['lon']),len(output['zout'])
+    output['SW_irr_dn_utc'] = np.zeros(nz,nlat,nlon,24)
+    output['SW_irr_up_utc'] = np.zeros(nz,nlat,nlon,24)
+    output['LW_irr_dn_utc'] = np.zeros(nz,nlat,nlon,24)
+    output['LW_irr_up_utc'] = np.zeros(nz,nlat,nlon,24)
+    output['SW_irr_dn_avg'] = np.zeros(nz,nlat,nlon)
+    output['SW_irr_up_avg'] = np.zeros(nz,nlat,nlon)
+    output['LW_irr_dn_avg'] = np.zeros(nz,nlat,nlon)
+    output['LW_irr_up_avg'] = np.zeros(nz,nlat,nlon)    
+    for ilat in xrange(nlat):
+        for ilon in xrange(nlon):        
+            for iutc in output['UTC']:
+                file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out' % (ilat,ilon,mmm,iutc)
+                file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out' % (ilat,ilon,mmm,iutc)
+                try:
+                    sol = RL.read_libradtran(file_out_sol,zout=output['zout'])
+                    thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
+                except:
+                    print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
+                    continue
+                output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
+                output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
+                output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
+                output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
+                print mmm,ilat,ilon,HH
+            output['SW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['SW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
+            output['SW_irr_up_avg'][:,ilat,ilon] = np.mean(output['SW_irr_up_utc'][:,ilat,ilon,:],axis=1)
+            output['LW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['LW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
+            output['LW_irr_up_avg'][:,ilat,ilon] = np.mean(output['LW_irr_up_utc'][:,ilat,ilon,:],axis=1)
+    return output
 
 # <codecell>
 
@@ -1278,6 +1385,11 @@ if __name__=='__main__':
 
 # <codecell>
 
+    fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
+
+# <codecell>
+
+    Run_libradtran.read_libradtran(fp)
 
 # <codecell>
 
