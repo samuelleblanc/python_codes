@@ -1419,11 +1419,11 @@ if __name__=='__main__':
 
 # <codecell>
 
-    if run_from_ipython():
-        %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
-        %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
-        %timeit gg = np.loadtxt(fp)
-        %timeit gh = np.genfromtxt(fp)
+    #if run_from_ipython():
+    #    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
+    #    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
+    #    %timeit gg = np.loadtxt(fp)
+    #    %timeit gh = np.genfromtxt(fp)
 
 # <codecell>
 
