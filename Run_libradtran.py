@@ -1190,12 +1190,12 @@ def read_libradtran(fp,zout=[0,3,100]):
         Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
         
     """
-    import os
+    #import os
     import numpy as np
-    if not os.path.isfile(fp):
-        raise IOError('File not found')
-        return
-    dat = np.loadtxt(fp)
+    #if not os.path.isfile(fp):
+    #    raise IOError('File not found')
+    #    return
+    dat = np.fromfile(fp,sep=' ').reshape((len(zout),7))
     output = {'wvl':dat[:,0],
               'zout':zout,
               'direct_down':dat[:,1],
@@ -1278,7 +1278,7 @@ def read_aac(fp_out,fp_mat,mmm=None):
                 try:
                     sol = RL.read_libradtran(file_out_sol,zout=output['zout'])
                     thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
-                except:
+                except IOError:
                     print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     continue
                 output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
@@ -1387,6 +1387,42 @@ if __name__=='__main__':
 # <codecell>
 
     fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
+
+# <codecell>
+
+    import pandas as pd
+
+# <codecell>
+
+    d = pd.read_csv(fp,delim_whitespace=True,engine='c')
+
+# <codecell>
+
+    d
+
+# <codecell>
+
+    dat = np.array(d)
+
+# <codecell>
+
+    dat
+
+# <codecell>
+
+    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
+
+# <codecell>
+
+    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
+
+# <codecell>
+
+    %timeit gg = np.loadtxt(fp)
+
+# <codecell>
+
+    %timeit gh = np.genfromtxt(fp)
 
 # <codecell>
 
