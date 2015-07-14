@@ -1294,6 +1294,15 @@ def read_aac(fp_out,fp_mat,mmm=None):
 
 # <codecell>
 
+def run_from_ipython():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False
+
+# <codecell>
+
 if __name__=='__main__':
 
 # <codecell>
@@ -1410,19 +1419,11 @@ if __name__=='__main__':
 
 # <codecell>
 
-    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
-
-# <codecell>
-
-    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
-
-# <codecell>
-
-    %timeit gg = np.loadtxt(fp)
-
-# <codecell>
-
-    %timeit gh = np.genfromtxt(fp)
+    if run_from_ipython():
+        %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
+        %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
+        %timeit gg = np.loadtxt(fp)
+        %timeit gh = np.genfromtxt(fp)
 
 # <codecell>
 
