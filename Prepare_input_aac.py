@@ -312,6 +312,124 @@ fp_out = 'C:\Users\sleblan2\Research\Calipso\meloe\input/'
 
 RL.build_aac_input(fp,fp_alb,fp_out)
 
+# <headingcell level=2>
+
+# Read the output of DARF
+
+# <codecell>
+
+fp
+
+# <codecell>
+
+mam = sio.loadmat(fp+'DARF/MAM_DARF.mat')
+
+# <codecell>
+
+mam.keys()
+
+# <codecell>
+
+mam['SW_DARF'].shape
+
+# <codecell>
+
+mam['lon'].shape
+
+# <codecell>
+
+ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+cbar = plt.colorbar(ctr)
+cbar.set_label('SW DARF [W/m$^{2}$]')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=11,c='k')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=10,c=input_DJF['MODIS_COD_mean'][0,0])
+plt.xlim([-180,180])
+plt.ylim([-90,90])
+plt.savefig(fp+'plots/MAM_DARF_SW.png',dpi=600,transparent=True)
+
+# <codecell>
+
+ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['LW_DARF'][2,:,:])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+cbar = plt.colorbar(ctr)
+cbar.set_label('LW DARF [W/m$^{2}$]')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=11,c='k')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=10,c=input_DJF['MODIS_COD_mean'][0,0])
+plt.xlim([-180,180])
+plt.ylim([-90,90])
+plt.savefig(fp+'plots/MAM_DARF_LW.png',dpi=600,transparent=True)
+
+# <codecell>
+
+ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['LW_DARF'][2,:,:]+mam['SW_DARF'][2,:,:])
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+cbar = plt.colorbar(ctr)
+cbar.set_label('net DARF [W/m$^{2}$]')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=11,c='k')
+#plt.scatter(MODIS_lon, MODIS_lat,marker='x',s=10,c=input_DJF['MODIS_COD_mean'][0,0])
+plt.xlim([-180,180])
+plt.ylim([-90,90])
+plt.savefig(fp+'plots/MAM_DARF_net.png',dpi=600,transparent=True)
+
+# <codecell>
+
+def make_darf_plots(mam,mmm):
+    fig,ax = plt.subplots(3,1,figsize=(6,13))
+    ax.flatten()
+    cl0 = np.linspace(-200,150,31)
+    ctr = ax[0].contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:],cl0,extend='both')
+    ax[0].set_xlabel('Longitude')
+    ax[0].set_ylabel('Latitude')
+    cbar = plt.colorbar(ctr,ax=ax[0])
+    cbar.set_label('SW DARF [W/m$^{2}$]')
+    ax[0].set_xlim([-180,180])
+    ax[0].set_ylim([-90,90])
+
+    cl1 = np.linspace(0,150,31)
+    ctr1 = ax[1].contourf(mam['lon'][:,0],mam['lat'][:,0],mam['LW_DARF'][2,:,:],cl1,cmap=plt.cm.gist_heat,extend='max')
+    ax[1].set_xlabel('Longitude')
+    ax[1].set_ylabel('Latitude')
+    cbar = plt.colorbar(ctr1,ax=ax[1])
+    cbar.set_label('LW DARF [W/m$^{2}$]')
+    ax[1].set_xlim([-180,180])
+    ax[1].set_ylim([-90,90])
+
+    cl2 = np.linspace(-150,150,41)
+    ctr2 = ax[2].contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:]+mam['LW_DARF'][2,:,:],cl2,cmap=plt.cm.RdBu,extend='both')
+    ax[2].set_xlabel('Longitude')
+    ax[2].set_ylabel('Latitude')
+    cbar = plt.colorbar(ctr2,ax=ax[2])
+    cbar.set_label('net DARF [W/m$^{2}$]')
+    ax[2].set_xlim([-180,180])
+    ax[2].set_ylim([-90,90])
+    ax[0].set_title(mmm)
+
+    plt.savefig(fp+'plots/'+mmm+'_DARF.png',dpi=600,transparent=True)
+
+# <codecell>
+
+mam = sio.loadmat(fp+'DARF/MAM_DARF.mat')
+make_darf_plots(mam,'MAM')
+
+# <codecell>
+
+djf = sio.loadmat(fp+'DARF/DJF_DARF.mat')
+make_darf_plots(djf,'DJF')
+
+# <codecell>
+
+jja = sio.loadmat(fp+'DARF/JJA_DARF.mat')
+make_darf_plots(jja,'JJA')
+
+# <codecell>
+
+son = sio.loadmat(fp+'DARF/SON_DARF.mat')
+make_darf_plots(son,'SON')
+
 # <codecell>
 
 

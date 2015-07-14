@@ -1301,6 +1301,13 @@ def read_aac(fp_out,fp_mat,mmm=None):
 
 # <codecell>
 
+def read_all_aac():
+    """
+    Simple program to run the read_aac for the files and paths saved
+    """
+
+# <codecell>
+
 def run_from_ipython():
     try:
         __IPYTHON__
