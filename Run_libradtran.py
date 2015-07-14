@@ -1281,6 +1281,13 @@ def read_aac(fp_out,fp_mat,mmm=None):
                 except IOError:
                     print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     continue
+                except ValueError:
+                    print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
+                    output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
+                    output['SW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
+                    output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
+                    output['LW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
+                    continue
                 output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
                 output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
                 output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
