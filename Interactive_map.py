@@ -27,8 +27,8 @@ def build_basemap(lower_left=[-20,-25],upper_right=[15,0],ax=plt.gca()):
     #m.fillcontinents(color='#AAAAAA')
     m.drawstates()
     m.drawcountries()
-    m.drawmeridians(np.linspace(lower_left[0],upper_right[0],8),labels=[0,0,0,1])
-    m.drawparallels(np.linspace(lower_left[1],upper_right[1],8),labels=[1,0,0,0])
+    m.drawmeridians(np.linspace(lower_left[0],upper_right[0],8).astype(int),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(lower_left[1],upper_right[1],8).astype(int),labels=[1,0,0,0])
     return m
 
 # <codecell>
@@ -41,6 +41,43 @@ def format_coord(x, y):
 m = build_basemap()
 ax = plt.gca()
 ax.format_coord = format_coord
+
+# <codecell>
+
+fig = plt.gcf()
+
+# <codecell>
+
+def on_resize(event):
+    ax.set_title('Resize, button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
+        event.button, event.x, event.y, event.xdata, event.ydata))
+
+# <codecell>
+
+fig.canvas.mpl_connect('resize_event',on_resize)
+
+# <codecell>
+
+fig.canvas.mpl_connect('button_release_event',define_event)
+
+# <codecell>
+
+fig.canvas.mpl_disconnect('resize_event')
+
+# <codecell>
+
+print 'yes'
+
+# <codecell>
+
+def define_event(event):
+    for ax in event.canvas.figure.axes:
+        print ax.get_navigate_mode()
+
+# <codecell>
+
+import sys
+from PyQt4 import QtGui, QtCore
 
 # <codecell>
 

@@ -43,3 +43,6 @@ fu.shape
 plt.plot(fu,'+-')
 plt.plot(sbdart/1000.0,'x-')
 
+# <codecell>
+
+
