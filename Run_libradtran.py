@@ -1208,7 +1208,7 @@ def read_libradtran(fp,zout=[0,3,100]):
 
 # <codecell>
 
-def read_aac(fp_out,fp_mat,mmm=None):
+def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
     """
     Purpose:
     
@@ -1221,6 +1221,8 @@ def read_aac(fp_out,fp_mat,mmm=None):
         fp_out: full path of the directory with the files to read
         fp_mat: full path of mat file with lat and lon to use
         mmm: string with the season defined (can be DJF,MAM,JJA, or SON)
+        read_sol: set to True (default) to read the sol files
+        read_thm: set to True (default) to read the thm files
         
     Outputs:
     
@@ -1240,11 +1242,28 @@ def read_aac(fp_out,fp_mat,mmm=None):
         
     Example:
     
-        ...
+        >>> import Run_libradtran as RL
+        >>> fp_out = '/nobackup/sleblan2/AAC_DARF/output/v2/DJF/'
+        >>> fp_mat = '/u/sleblan2/meloe_AAC/Input_to_DARF_DJF.mat'
+        >>> mmm = 'DJF'
+        >>> DJF = RL.read_aac(fp_out,fp_mat,mmm=mmm)
+        
+        DJF 0 0
+        File not found skip: lat00_lon00_DJF_HH00 
+        .
+        .
+        .
+        
+        >>> DJF.keys()
+        
+
         
     Modification History:
     
         Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2015-07-15, Santa Cruz, CA
+                    - added read_sol and read_thm keywords
+                    - added example
         
     """
     import os
@@ -1276,8 +1295,10 @@ def read_aac(fp_out,fp_mat,mmm=None):
                 file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out' % (ilat,ilon,mmm,iutc)
                 file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out' % (ilat,ilon,mmm,iutc)
                 try:
-                    sol = RL.read_libradtran(file_out_sol,zout=output['zout'])
-                    thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
+                    if read_sol:
+                        sol = RL.read_libradtran(file_out_sol,zout=output['zout'])
+                    if read_thm:
+                        thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
                 except IOError:
                     print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     continue
@@ -1288,10 +1309,12 @@ def read_aac(fp_out,fp_mat,mmm=None):
                     output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
                     output['LW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
                     continue
-                output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
-                output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
-                output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
-                output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
+                if read_sol:
+                    output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
+                    output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
+                if read_thm:
+                    output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
+                    output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
             print mmm,ilat,ilon
             output['SW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['SW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
             output['SW_irr_up_avg'][:,ilat,ilon] = np.mean(output['SW_irr_up_utc'][:,ilat,ilon,:],axis=1)
