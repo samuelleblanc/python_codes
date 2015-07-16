@@ -1255,9 +1255,19 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
         .
         
         >>> DJF.keys()
-        
-
-        
+        ['UTC', 
+         'LW_irr_up_utc', 
+         'lon', 
+         'SW_irr_dn_avg', 
+         'SW_irr_up_utc',
+         'LW_irr_dn_avg', 
+         'zout', 
+         'LW_irr_up_avg', 
+         'lat', 
+         'SW_irr_up_avg', 
+         'SW_irr_dn_utc', 
+         'LW_irr_dn_utc']
+ 
     Modification History:
     
         Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
