@@ -432,4 +432,114 @@ make_darf_plots(son,'SON')
 
 # <codecell>
 
+for ilat,lat in enumerate(mam['lon']):
+    print ilat,lat
+
+# <codecell>
+
+ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:])
+plt.xlim(25,75)
+plt.ylim(-15,-35)
+
+# <codecell>
+
+mam_sw = sio.loadmat(fp+'DARF/AAC_MAM.mat')
+
+# <codecell>
+
+mam_sw.keys()
+
+# <codecell>
+
+ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['SW_irr_dn_avg'][2,:,:],50)
+plt.colorbar(ctr)
+
+# <codecell>
+
+ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['SW_irr_up_avg'][2,:,:],50)
+plt.colorbar(ctr)
+
+# <codecell>
+
+ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['LW_irr_dn_avg'][2,:,:],50)
+plt.colorbar(ctr)
+
+# <codecell>
+
+ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['LW_irr_up_avg'][2,:,:],50)
+plt.colorbar(ctr)
+
+# <codecell>
+
+mam_sw_cl= sio.loadmat(fp+'DARF/AAC_MAM_clear.mat')
+
+# <codecell>
+
+ctr = plt.contourf(mam_sw_cl['lon'][:,0],mam_sw_cl['lat'][:,0],mam_sw_cl['LW_irr_dn_avg'][2,:,:],50)
+plt.colorbar(ctr)
+
+# <headingcell level=2>
+
+# Check the difference when assuming kato2 vs. fu liou calculations
+
+# <codecell>
+
+djf_fu = sio.loadmat(fp+'DARF/AAC_DJF.mat')
+djf_kato = sio.loadmat(fp+'DARF/AAC_DJF_kato.mat')
+
+# <codecell>
+
+djf_fu.keys()
+
+# <codecell>
+
+djf_kato.keys()
+
+# <codecell>
+
+djf_fu['SW_irr_up_avg'].shape
+
+# <codecell>
+
+fig,(ax1,ax2) = plt.subplots(1,2)
+ctr = ax1.contourf(djf_fu['lon'][:,0],djf_fu['lat'][:,0],djf_fu['SW_irr_up_avg'][2,:,:])
+plt.colorbar(ctr,ax=ax1)
+ctr = ax2.contourf(djf_kato['lon'][:,0],djf_kato['lat'][:,0],djf_kato['SW_irr_up_avg'][2,:,:])
+plt.colorbar(ctr,ax=ax2)
+
+# <codecell>
+
+djf_dif = djf_fu['SW_irr_up_avg'][2,:,:]-djf_kato['SW_irr_up_avg'][2,:,:]
+
+# <codecell>
+
+ctr = plt.contourf(djf_fu['lon'][:,0],djf_fu['lat'][:,0],djf_dif)
+plt.colorbar(ctr)
+
+# <codecell>
+
+dddjf = djf_dif.flatten()
+
+# <codecell>
+
+from Sp_parameters import nanmasked
+
+# <codecell>
+
+dddjf,idjf = nanmasked(djf_dif.flatten())
+
+# <codecell>
+
+dddjf.shape
+
+# <codecell>
+
+plt.plot(djf_fu['SW_irr_up_avg'][2,:,:].flatten())
+
+# <codecell>
+
+plt.hist(dddjf,normed=True,bins=30)
+plt.xlabel('SW Irradiance TOA difference [W/m$^{2}$]')
+plt.title('Fu liou - Kato')
+plt.savefig(fp+'plots/diff_fuliou_kato.png',dpi=600,transparent=True)
 
