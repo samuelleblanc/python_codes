@@ -501,7 +501,7 @@ djf_fu['SW_irr_up_avg'].shape
 
 # <codecell>
 
-fig,(ax1,ax2) = plt.subplots(1,2)
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
 ctr = ax1.contourf(djf_fu['lon'][:,0],djf_fu['lat'][:,0],djf_fu['SW_irr_up_avg'][2,:,:])
 plt.colorbar(ctr,ax=ax1)
 ctr = ax2.contourf(djf_kato['lon'][:,0],djf_kato['lat'][:,0],djf_kato['SW_irr_up_avg'][2,:,:])
@@ -542,4 +542,90 @@ plt.hist(dddjf,normed=True,bins=30)
 plt.xlabel('SW Irradiance TOA difference [W/m$^{2}$]')
 plt.title('Fu liou - Kato')
 plt.savefig(fp+'plots/diff_fuliou_kato.png',dpi=600,transparent=True)
+
+# <codecell>
+
+djf_kato_clear = sio.loadmat(fp+'DARF/AAC_DJF_clear_kato.mat')
+djf_fu_clear = sio.loadmat(fp+'DARF/AAC_DJF_clear.mat')
+
+# <codecell>
+
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
+ctr = ax1.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],djf_fu_clear['SW_irr_up_avg'][2,:,:])
+plt.colorbar(ctr,ax=ax1)
+ctr = ax2.contourf(djf_kato_clear['lon'][:,0],djf_kato_clear['lat'][:,0],djf_kato_clear['SW_irr_up_avg'][2,:,:])
+plt.colorbar(ctr,ax=ax2)
+
+# <codecell>
+
+darf_kato = djf_kato['SW_irr_up_avg'][2,:,:] - djf_kato_clear['SW_irr_up_avg'][2,:,:]
+darf_fu = djf_fu['SW_irr_up_avg'][2,:,:] - djf_fu_clear['SW_irr_up_avg'][2,:,:]
+
+# <codecell>
+
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
+ctr = ax1.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],darf_fu,40)
+cbr = plt.colorbar(ctr,ax=ax1)
+cbr.set_label('DARF [W/m$^{2}$]')
+ax1.set_title('DJF DARF Fu Liou')
+ctr = ax2.contourf(djf_kato_clear['lon'][:,0],djf_kato_clear['lat'][:,0],darf_kato,40)
+cbr = plt.colorbar(ctr,ax=ax2)
+cbr.set_label('DARF [W/m$^{2}$]')
+ax2.set_title('DJF DARF Kato')
+plt.savefig(fp+'plots/DARF_fu_vs_kato.png',dpi=600,transparent=True)
+
+# <codecell>
+
+dif_darf = darf_fu-darf_kato
+
+# <codecell>
+
+clevels = np.linspace(-10,10,41)
+
+# <codecell>
+
+clevels[20]
+
+# <codecell>
+
+help(plt.contourf)
+
+# <codecell>
+
+
+ctr = plt.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],dif_darf,levels=clevels,cmap=plt.cm.bwr)
+cbr = plt.colorbar(ctr)
+cbr.set_label('DARF difference [W/m$^{2}$]')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.title('DARF difference Fu Liou - Kato')
+plt.savefig(fp+'plots/DARF_diff_lat_lon.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig, (ax1,ax2) = plt.subplots(2,1,sharex=True)
+ax1.hist(nanmasked(dif_darf)[0],bins=60,normed=True)
+ax1.set_title('DARF difference Fu Liou - Kato')
+#ax1.set_xlabel('DARF difference [W/m$^{2}$]')
+ax1.set_ylabel('Relative frequency')
+
+ax2.hist(nanmasked(dif_darf)[0],bins=60,normed=True)
+#ax2.set_title('DARF difference Fu Liou - Kato')
+ax2.set_xlabel('DARF difference [W/m$^{2}$]')
+ax2.set_ylabel('Relative frequency')
+ax2.set_ylim([0,0.08])
+ax2.text(-10,0.05,'Zoomed in')
+plt.savefig(fp+'plots/DARF_difference_fu_kato.png',dpi=600,transparent=True)
+
+# <codecell>
+
+plt.hist(nanmasked(dif_darf/darf_kato)[0],bins=60,normed=True)
+
+# <codecell>
+
+rms_darf = np.sqrt(np.nanmean(darf_fu**2-darf_kato**2))
+
+# <codecell>
+
+rms_darf
 
