@@ -45,4 +45,17 @@ plt.plot(sbdart/1000.0,'x-')
 
 # <codecell>
 
+import scipy.io as sio
+
+# <codecell>
+
+ffp = 'C:\Users\sleblan2\Dropbox\CALIPSO_Ames\Jens_data_mat\\'
+
+# <codecell>
+
+ss = sio.loadmat(ffp+'DTland_DBland_ocean_right.mat')
+
+# <codecell>
+
+ss.keys()
 
