@@ -13,7 +13,7 @@ from mpl_toolkits.basemap import Basemap
 
 # <codecell>
 
-def build_basemap(lower_left=[-20,-25],upper_right=[15,0],ax=plt.gca()):
+def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
     """
     First try at a building of the basemap with a 'stere' projection
     Must put in the values of the lower left corner and upper right corner (lon and lat)
@@ -38,9 +38,53 @@ def format_coord(x, y):
 
 # <codecell>
 
+class LineDrawer(object):
+    lines = []
+    pos = []
+    def __init__(self,m):
+        self.m = m
+    def draw_line(self):
+        ax = plt.gca()
+        xy = plt.ginput(2)
+
+        x = [p[0] for p in xy]
+        y = [p[1] for p in xy]
+        line = plt.plot(x,y)
+        ax.figure.canvas.draw()
+        
+        self.lines.append(line)
+        self.pos.append(self.m(x,y,inverse=True))
+
+# <codecell>
+
 m = build_basemap()
 ax = plt.gca()
 ax.format_coord = format_coord
+
+# <codecell>
+
+type(m)
+
+# <codecell>
+
+ld = LineDrawer(m)
+ld.draw_line()
+
+# <codecell>
+
+ld.pos
+
+# <codecell>
+
+ld.m()
+
+# <codecell>
+
+ld.draw_line()
+
+# <codecell>
+
+ld.lines
 
 # <codecell>
 
