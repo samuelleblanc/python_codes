@@ -34,6 +34,18 @@ var
 
 # <codecell>
 
+ceres.comment
+
+# <codecell>
+
+ceres.title
+
+# <codecell>
+
+ceres.filename
+
+# <codecell>
+
 ceres.dimensions
 
 # <codecell>
@@ -81,7 +93,15 @@ def create_map(lower_left=[-20,-25],upper_right=[20,10],ax=plt.gca()):
 
 # <codecell>
 
-aero_darf = var['toa_comp_sw-up_all_mon'][2,:,:]-var['toa_comp_sw-up_naer_mon'][2,:,:]
+aero_darf = var['toa_comp_sw-up_naer_mon'][2,:,:]-var['toa_comp_sw-up_all_mon'][2,:,:]
+
+# <codecell>
+
+aero_darf_sep = var['toa_comp_sw-up_naer_mon'][1,:,:]-var['toa_comp_sw-up_all_mon'][1,:,:]
+
+# <codecell>
+
+cld_frac_sep = var['cldarea_low_mon'][1,:,:]
 
 # <codecell>
 
@@ -106,17 +126,70 @@ cbr = plt.colorbar(ctr,ax=ax)
 cbr.set_label('DARF [W/m$^{2}$]')
 ctrl = m.contour(x,y,cld_frac,8,colors='g')
 plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
-ax.set_title('CERES TOA Shortwave DARF - August 2007')
+ax.set_title('CERES TOA Shortwave DARF - October 2007')
 
 
 ax0.plot(cld_frac.flatten(),aero_darf.flatten(),'o')
+
+ax0.text(160,-11.5,'Low Cloud Fraction',color='g')
 ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
 ax0.set_xlabel('Low Cloud Fraction [\%]')
 ax0.set_title('Shortwave DARF as a function of Cloud fraction')
 
-ax0.text(160,-7.5,'Low Cloud Fraction',color='g')
 
-plt.savefig(fp+'plots/CERES_SW_AAC_cloud_fraction.png',dpi=600,transparent=True)
+
+plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Oct2007.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
+m = create_map(ax=ax)
+clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
+x,y = m(clon,clat)
+ctr = m.contourf(x,y,aero_darf_sep,40,cmap=plt.cm.RdBu_r)
+cbr = plt.colorbar(ctr,ax=ax)
+cbr.set_label('DARF [W/m$^{2}$]')
+ctrl = m.contour(x,y,cld_frac_sep,8,colors='g')
+plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
+ax.set_title('CERES TOA Shortwave DARF - September 2007')
+
+ax0.plot(cld_frac_sep.flatten(),aero_darf_sep.flatten(),'o')
+
+ax0.text(160,-12,'Low Cloud Fraction',color='g')
+ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
+ax0.set_xlabel('Low Cloud Fraction [\%]')
+ax0.set_title('Shortwave DARF as a function of Cloud fraction')
+
+
+plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Sept2007.png',dpi=600,transparent=True)
+
+# <codecell>
+
+aero_darf_aug = var['toa_comp_sw-up_naer_mon'][0,:,:]-var['toa_comp_sw-up_all_mon'][0,:,:]
+cld_frac_aug = var['cldarea_low_mon'][0,:,:]
+
+# <codecell>
+
+fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
+m = create_map(ax=ax)
+clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
+x,y = m(clon,clat)
+ctr = m.contourf(x,y,aero_darf_aug,40,cmap=plt.cm.RdBu_r)
+cbr = plt.colorbar(ctr,ax=ax)
+cbr.set_label('DARF [W/m$^{2}$]')
+ctrl = m.contour(x,y,cld_frac_aug,8,colors='g')
+plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
+ax.set_title('CERES TOA Shortwave DARF - August 2007')
+
+ax0.plot(cld_frac_aug.flatten(),aero_darf_aug.flatten(),'o')
+
+ax0.text(160,-12,'Low Cloud Fraction',color='g')
+ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
+ax0.set_xlabel('Low Cloud Fraction [\%]')
+ax0.set_title('Shortwave DARF as a function of Cloud fraction')
+
+
+plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Aug2007.png',dpi=600,transparent=True)
 
 # <codecell>
 
