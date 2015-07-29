@@ -100,11 +100,12 @@ def radius_m2deg(center_lon,center_lat,radius):
 
 # <codecell>
 
-def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
+def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
     """
     Run through all points defined by lat1 and lon1 (can be arrays)
     to find the points within defined by lat2 and lon2 that are within a distance in meters defined by radius
     lat2, lon2, x2 can be multidimensional, will be flattened first
+    if subset (optional) is set to True, and there are more than 100 points, only every 10th in lat1, lon1 will be used.
     Returns a dicttionary of statistics:
         'index' : array of indices of flattened lat2 and lon2 that are within radius meters of each point of lat1 and lon1
         'std' : array of standard deviation of x2 that are near lat1 and lon1 by radius
@@ -117,7 +118,7 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius):
     import numpy as np
     print 'Setting up the lat, lon, localization'
     max_distance = radius_m2deg(lon1[0],lat1[0],radius) #transform to degrees
-    if len(lat1) > 100:
+    if (len(lat1) > 100) & subset:
         points_ref = np.column_stack((lat1[::10],lon1[::10]))
     else:
         points_ref = np.column_stack((lat1,lon1))
