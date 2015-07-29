@@ -26,6 +26,10 @@ ceres = sio.netcdf_file(fp+'CERES\CERES_SYN1deg-Month_Terra-Aqua-MODIS_Ed3A_Subs
 
 # <codecell>
 
+ceres.version
+
+# <codecell>
+
 var = ceres.variables
 
 # <codecell>
@@ -123,22 +127,19 @@ clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
 x,y = m(clon,clat)
 ctr = m.contourf(x,y,aero_darf,40,cmap=plt.cm.RdBu_r)
 cbr = plt.colorbar(ctr,ax=ax)
-cbr.set_label('DARF [W/m$^{2}$]')
+cbr.set_label('DARE [W/m$^{2}$]')
 ctrl = m.contour(x,y,cld_frac,8,colors='g')
 plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
-ax.set_title('CERES TOA Shortwave DARF - October 2007')
-
+ax.set_title('CERES TOA Shortwave DARE - October 2007')
 
 ax0.plot(cld_frac.flatten(),aero_darf.flatten(),'o')
 
-ax0.text(160,-11.5,'Low Cloud Fraction',color='g')
-ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
+ax0.text(160,-11.5,'$\\textrm{---}$ Low Cloud Fraction',color='g')
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
 ax0.set_xlabel('Low Cloud Fraction [\%]')
-ax0.set_title('Shortwave DARF as a function of Cloud fraction')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
 
-
-
-plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Oct2007.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Oct2007.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -148,20 +149,20 @@ clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
 x,y = m(clon,clat)
 ctr = m.contourf(x,y,aero_darf_sep,40,cmap=plt.cm.RdBu_r)
 cbr = plt.colorbar(ctr,ax=ax)
-cbr.set_label('DARF [W/m$^{2}$]')
+cbr.set_label('DARE [W/m$^{2}$]')
 ctrl = m.contour(x,y,cld_frac_sep,8,colors='g')
 plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
-ax.set_title('CERES TOA Shortwave DARF - September 2007')
+ax.set_title('CERES TOA Shortwave DARE - September 2007')
 
 ax0.plot(cld_frac_sep.flatten(),aero_darf_sep.flatten(),'o')
 
-ax0.text(160,-12,'Low Cloud Fraction',color='g')
-ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
+#ax0.text(160,-12,'Low Cloud Fraction',color='g')
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
 ax0.set_xlabel('Low Cloud Fraction [\%]')
-ax0.set_title('Shortwave DARF as a function of Cloud fraction')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
+ax0.text(160,-12,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
-
-plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Sept2007.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Sept2007.png',dpi=600,transparent=True)
 
 # <codecell>
 
@@ -176,20 +177,200 @@ clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
 x,y = m(clon,clat)
 ctr = m.contourf(x,y,aero_darf_aug,40,cmap=plt.cm.RdBu_r)
 cbr = plt.colorbar(ctr,ax=ax)
-cbr.set_label('DARF [W/m$^{2}$]')
+cbr.set_label('DARE [W/m$^{2}$]')
 ctrl = m.contour(x,y,cld_frac_aug,8,colors='g')
 plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
-ax.set_title('CERES TOA Shortwave DARF - August 2007')
+ax.set_title('CERES TOA Shortwave DARE - August 2007')
 
 ax0.plot(cld_frac_aug.flatten(),aero_darf_aug.flatten(),'o')
 
-ax0.text(160,-12,'Low Cloud Fraction',color='g')
-ax0.set_ylabel('CERES Shortwave DARF [W/m$^{2}$]')
+#ax0.text(160,-12,'Low Cloud Fraction',color='g')
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
 ax0.set_xlabel('Low Cloud Fraction [\%]')
-ax0.set_title('Shortwave DARF as a function of Cloud fraction')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
+ax0.text(160,-18,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Aug2007.png',dpi=600,transparent=True)
 
-plt.savefig(fp+'plots/CERES_SW_DARF_cloud_fraction_Aug2007.png',dpi=600,transparent=True)
+# <headingcell level=2>
+
+# Now subset the different areas
+
+# <codecell>
+
+iocean = np.where((clon<10) & (clon>-17) & (clat>-25) & (clat<0))
+
+# <codecell>
+
+def plot_greatcircle_path(lon,lat,m=None,*args,**kwargs):
+    """
+    function to plot a path, defined by the points, all in great circles
+    Returns the points along the path in lons, lats
+    """
+    import numpy as np
+    if not m:
+        print 'please supply the basemap instance'
+        return
+    m.plot(lon,lat,marker=kwargs.get('marker'),linestyle='None',color=kwargs.get('color'),latlon=True)
+    if kwargs.get('marker'): kwargs['marker'] = None
+    for i in xrange(len(lat)-1):
+        xy = m.drawgreatcircle(lon[i],lat[i],lon[i+1],lat[i+1],del_s=50.0,*args,**kwargs)
+        xlon,ylat = m(xy.vertices[:,0],xy.vertices[:,1],inverse=True)
+        if i==0:
+            lons,lats = xlon,ylat
+        else:
+            lons = np.append(lons,xlon,axis=0)
+            lats = np.append(lats,ylat,axis=0)
+    return lons,lats
+
+# <codecell>
+
+path_15_lon,path_15_lat = [ 14.645278,   9.      ,  -5.      ,   9.      ,  14.645278],[-23., -15., -15., -15., -23.]
+
+# <codecell>
+
+path_NS_lon,path_NS_lat = [ 14.645278,  11.      ,  11.      ,   9.      ,   9.      ,
+        14.645278], [-23., -15.,  -4.,  -4., -15., -23.]
+
+# <codecell>
+
+import map_utils as mu
+reload(mu)
+
+# <codecell>
+
+cld_fr_15 = mu.stats_within_radius(lats15,lons15,clat,clon,aero_darf_aug,100000,subset=False)
+
+# <codecell>
+
+cld_fr_NS = mu.stats_within_radius(latsNS,lonsNS,clat,clon,aero_darf_aug,100000,subset=False)
+
+# <codecell>
+
+import itertools
+
+# <codecell>
+
+iNS = unique(list(itertools.chain(*cld_fr_NS['index'])))
+i15 = unique(list(itertools.chain(*cld_fr_15['index'])))
+
+# <codecell>
+
+plt.plot(clon,clat,'b.')
+plt.plot(clon.flatten()[iNS],clat.flatten()[iNS],'r.')
+plt.plot(lonsNS,latsNS,'r-')
+plt.plot(path_NS_lon,path_NS_lat,'mx')
+
+# <codecell>
+
+import plotting_utils as pu
+reload(pu)
+
+# <codecell>
+
+fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
+m = create_map(ax=ax)
+clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
+x,y = m(clon,clat)
+ctr = m.contourf(x,y,aero_darf_aug,40,cmap=plt.cm.RdBu_r)
+cbr = plt.colorbar(ctr,ax=ax)
+cbr.set_label('DARE [W/m$^{2}$]')
+ctrl = m.contour(x,y,cld_frac_aug,8,colors='g')
+plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
+ax.set_title('CERES TOA Shortwave DARE - August 2007')
+lons,lats = plot_greatcircle_path([10,-17,-17,10,10],[-25,-25,0,0,-25],m=m,color='r')
+lons15,lats15 = plot_greatcircle_path(path_15_lon,path_15_lat,m=m,color='m',linewidth=2,marker='x')
+lonsNS,latsNS = plot_greatcircle_path(path_NS_lon,path_NS_lat,m=m,color='b',linewidth=2,marker='x')
+
+ax0.plot(cld_frac_aug.flatten(),aero_darf_aug.flatten(),'ko',label='All')
+pu.plot_lin(cld_frac_aug.flatten(),aero_darf_aug.flatten(),labels=False,shaded_ci=False,color='k',ax=ax0)
+ax0.plot(cld_frac_aug[iocean[0],iocean[1]].flatten(),aero_darf_aug[iocean[0],iocean[1]].flatten(),'r.',label='Only Ocean')
+pu.plot_lin(cld_frac_aug[iocean[0],iocean[1]].flatten(),aero_darf_aug[iocean[0],iocean[1]].flatten(),labels=False,shaded_ci=False,color='r',ax=ax0)
+ax0.plot(cld_frac_aug.flatten()[iNS],aero_darf_aug.flatten()[iNS],'b.',label='N-S Flight path')
+pu.plot_lin(cld_frac_aug.flatten()[iNS],aero_darf_aug.flatten()[iNS],labels=False,shaded_ci=False,color='b',ax=ax0)
+ax0.plot(cld_frac_aug.flatten()[i15],aero_darf_aug.flatten()[i15],'m.',label='15S Flight path')
+pu.plot_lin(cld_frac_aug.flatten()[i15],aero_darf_aug.flatten()[i15],labels=False,shaded_ci=False,color='m',ax=ax0)
+ax0.axhline(0,linestyle='--',color='k')
+ax0.legend(frameon=True,loc=4)
+
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
+ax0.set_xlabel('Low Cloud Fraction [\%]')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
+ax0.text(160,-18,'$\\textrm{---}$ Low Cloud Fraction',color='g')
+
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Aug2007_sub.png',dpi=600,transparent=True)
+
+# <codecell>
+
+fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
+m = create_map(ax=ax)
+clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
+x,y = m(clon,clat)
+ctr = m.contourf(x,y,aero_darf_sep,40,cmap=plt.cm.RdBu_r)
+cbr = plt.colorbar(ctr,ax=ax)
+cbr.set_label('DARE [W/m$^{2}$]')
+ctrl = m.contour(x,y,cld_frac_sep,8,colors='g')
+plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
+ax.set_title('CERES TOA Shortwave DARE - September 2007')
+lons,lats = plot_greatcircle_path([10,-17,-17,10,10],[-25,-25,0,0,-25],m=m,color='r')
+lons15,lats15 = plot_greatcircle_path(path_15_lon,path_15_lat,m=m,color='m',linewidth=2,marker='x')
+lonsNS,latsNS = plot_greatcircle_path(path_NS_lon,path_NS_lat,m=m,color='b',linewidth=2,marker='x')
+
+ax0.plot(cld_frac_sep.flatten(),aero_darf_sep.flatten(),'ko',label='All')
+pu.plot_lin(cld_frac_sep.flatten(),aero_darf_sep.flatten(),labels=False,shaded_ci=False,color='k',ax=ax0)
+ax0.plot(cld_frac_sep[iocean[0],iocean[1]].flatten(),aero_darf_sep[iocean[0],iocean[1]].flatten(),'r.',label='Only Ocean')
+pu.plot_lin(cld_frac_sep[iocean[0],iocean[1]].flatten(),aero_darf_sep[iocean[0],iocean[1]].flatten(),labels=False,shaded_ci=False,color='r',ax=ax0)
+ax0.plot(cld_frac_sep.flatten()[iNS],aero_darf_sep.flatten()[iNS],'b.',label='N-S Flight path')
+pu.plot_lin(cld_frac_sep.flatten()[iNS],aero_darf_sep.flatten()[iNS],labels=False,shaded_ci=False,color='b',ax=ax0)
+ax0.plot(cld_frac_sep.flatten()[i15],aero_darf_sep.flatten()[i15],'m.',label='15S Flight path')
+pu.plot_lin(cld_frac_sep.flatten()[i15],aero_darf_sep.flatten()[i15],labels=False,shaded_ci=False,color='m',ax=ax0)
+ax0.axhline(0,linestyle='--',color='k')
+ax0.legend(frameon=True,loc=2)
+
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
+ax0.set_xlabel('Low Cloud Fraction [\%]')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
+ax0.text(160,-12,'$\\textrm{---}$ Low Cloud Fraction',color='g')
+
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Sep2007_sub.png',dpi=600,transparent=True)
+
+# <codecell>
+
+aero_darf_oct, cld_frac_oct = aero_darf, cld_frac
+
+# <codecell>
+
+fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
+m = create_map(ax=ax)
+clon,clat = np.meshgrid(var['lon'].data,var['lat'].data,sparse=False)
+x,y = m(clon,clat)
+ctr = m.contourf(x,y,aero_darf_oct,40,cmap=plt.cm.RdBu_r)
+cbr = plt.colorbar(ctr,ax=ax)
+cbr.set_label('DARE [W/m$^{2}$]')
+ctrl = m.contour(x,y,cld_frac_oct,8,colors='g')
+plt.clabel(ctrl, fontsize=9, inline=1,fmt='%2i \%%')
+ax.set_title('CERES TOA Shortwave DARE - October 2007')
+lons,lats = plot_greatcircle_path([10,-17,-17,10,10],[-25,-25,0,0,-25],m=m,color='r')
+lons15,lats15 = plot_greatcircle_path(path_15_lon,path_15_lat,m=m,color='m',linewidth=2,marker='x')
+lonsNS,latsNS = plot_greatcircle_path(path_NS_lon,path_NS_lat,m=m,color='b',linewidth=2,marker='x')
+
+ax0.plot(cld_frac_oct.flatten(),aero_darf_oct.flatten(),'ko',label='All')
+pu.plot_lin(cld_frac_oct.flatten(),aero_darf_oct.flatten(),labels=False,shaded_ci=False,color='k',ax=ax0)
+ax0.plot(cld_frac_oct[iocean[0],iocean[1]].flatten(),aero_darf_oct[iocean[0],iocean[1]].flatten(),'r.',label='Only Ocean')
+pu.plot_lin(cld_frac_oct[iocean[0],iocean[1]].flatten(),aero_darf_oct[iocean[0],iocean[1]].flatten(),labels=False,shaded_ci=False,color='r',ax=ax0)
+ax0.plot(cld_frac_oct.flatten()[iNS],aero_darf_oct.flatten()[iNS],'b.',label='N-S Flight path')
+pu.plot_lin(cld_frac_oct.flatten()[iNS],aero_darf_oct.flatten()[iNS],labels=False,shaded_ci=False,color='b',ax=ax0)
+ax0.plot(cld_frac_oct.flatten()[i15],aero_darf_oct.flatten()[i15],'m.',label='15S Flight path')
+pu.plot_lin(cld_frac_oct.flatten()[i15],aero_darf_oct.flatten()[i15],labels=False,shaded_ci=False,color='m',ax=ax0)
+ax0.axhline(0,linestyle='--',color='k')
+ax0.legend(frameon=True,loc=2)
+
+ax0.set_ylabel('CERES Shortwave DARE [W/m$^{2}$]')
+ax0.set_xlabel('Low Cloud Fraction [\%]')
+ax0.set_title('Shortwave DARE as a function of Cloud fraction')
+ax0.text(160,-12,'$\\textrm{---}$ Low Cloud Fraction',color='g')
+
+plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Oct2007_sub.png',dpi=600,transparent=True)
 
 # <codecell>
 
