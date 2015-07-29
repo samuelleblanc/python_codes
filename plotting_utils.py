@@ -170,7 +170,7 @@ def data2figpoints(x,dx,fig,ax1):
 
 # <codecell>
 
-def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit'):
+def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None):
     """
     function to plot on top of previous a linear fit line, 
     with the line equation in legend.
@@ -188,11 +188,14 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
                    'linfit' (default) Use the linfit method from linfit module, when set, x_err and y_err are ignored
                    'odr' use the scipy ODR method to calculate the linear regression, with x_err and y_err abilities
                    'statsmodels' use the statsmodels method, Weighted least squares, with weighing of 1/y_err, x_err ignored
+       ax: variable containing the axis to which to plot onto.
     """
     import matplotlib.pyplot as plt
     import numpy as np
     from Sp_parameters import doublenanmask, nanmasked
     from plotting_utils import confidence_envelope, lin
+    if not ax:
+        ax = plt.gca()
     xn,yn,mask = doublenanmask(x,y,return_mask=True)
     if use_method=='odr':
         from scipy import odr
@@ -231,12 +234,12 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
         return
     xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
     if labels:
-        plt.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]))
+        ax.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]))
     else:
-        plt.plot(xx,lin(p,xx),color=color)
+        ax.plot(xx,lin(p,xx),color=color)
     if shaded_ci:
         y_up,y_down = confidence_envelope(xx, p, perr, ci=ci)
-        plt.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
+        ax.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
 
 # <codecell>
 
