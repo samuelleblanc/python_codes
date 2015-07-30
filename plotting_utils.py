@@ -170,7 +170,7 @@ def data2figpoints(x,dx,fig,ax1):
 
 # <codecell>
 
-def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None):
+def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None,*args,**kwargs):
     """
     function to plot on top of previous a linear fit line, 
     with the line equation in legend.
@@ -189,6 +189,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
                    'odr' use the scipy ODR method to calculate the linear regression, with x_err and y_err abilities
                    'statsmodels' use the statsmodels method, Weighted least squares, with weighing of 1/y_err, x_err ignored
        ax: variable containing the axis to which to plot onto.
+       any other input for matplotlib plot function can be passed via args or kwargs
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -234,9 +235,9 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
         return
     xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
     if labels:
-        ax.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]))
+        ax.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]),*args,**kwargs)
     else:
-        ax.plot(xx,lin(p,xx),color=color)
+        ax.plot(xx,lin(p,xx),color=color,*args,**kwargs)
     if shaded_ci:
         y_up,y_down = confidence_envelope(xx, p, perr, ci=ci)
         ax.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
