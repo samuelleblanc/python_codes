@@ -630,6 +630,3 @@ def main():
     plt.title('Suomi NPP Earth at night April/October 2012')
     plt.show()
 
-# <codecell>
-
-
