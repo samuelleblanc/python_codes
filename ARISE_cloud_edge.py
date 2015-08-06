@@ -74,6 +74,7 @@ import scipy.io as sio
 import scipy
 import math, os, IPython
 import Sp_parameters as Sp
+import load_modis as lm
 IPython.InteractiveShell.cache_size = 0
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/ARISE/'
@@ -84,7 +85,6 @@ fp='C:/Users/sleblan2/Research/ARISE/'
 
 # <codecell>
 
-import load_modis as lm
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.hdf'
 fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
@@ -834,6 +834,223 @@ lutice.sp_hires()
 lutwat.params()
 lutwat.param_hires()
 lutwat.sp_hires()
+
+# <headingcell level=2>
+
+# Plot the 4STAR zenith radiance measurement and model
+
+# <codecell>
+
+from Sp_parameters import nanmasked, closestindex, norm2max
+
+# <codecell>
+
+def plot_greys(fig=None,ax=None):
+    " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
+    cl = '#DDDDDD'
+    plt.axvspan(1000,1077,color=cl) #eta1
+    plt.axvspan(1192,1194,color=cl) #eta2
+    plt.axvspan(1492,1494,color=cl) #eta3
+    plt.axvspan(1197,1199,color=cl); plt.axvspan(1235,1237,color=cl);  #eta4
+    plt.axvspan(1248,1270,color=cl) #eta5
+    plt.axvspan(1565,1644,color=cl) #eta6
+    plt.axvspan(1000,1050,color=cl) #eta7
+    plt.axvspan(1493,1600,color=cl) #eta8
+    plt.axvspan(1000,1077,color=cl) #eta9
+    plt.axvspan(1200,1300,color=cl) #eta10
+    plt.axvspan(530 ,610 ,color=cl) #eta11
+    plt.axvspan(1039,1041,color=cl) #eta12
+    plt.axvspan(999 ,1001,color=cl); plt.axvspan(1064,1066,color=cl);  #eta13
+    plt.axvspan(599 ,601 ,color=cl); plt.axvspan(869 ,871 ,color=cl);  #eta14
+    plt.axvspan(1565,1634,color=cl); #eta15
+
+# <codecell>
+
+print stars.utc[fltice[200]]
+print stars.utc[fltwat[200]]
+
+# <codecell>
+
+stars.norm.shape
+
+# <codecell>
+
+stars.sp.shape
+
+# <codecell>
+
+fig,ax = plt.subplots()
+ax.plot(stars.wvl,stars.norm[fltice,:].T)
+ax.set_title('Zenith radiance spectra')
+ax.set_ylabel('Normalized Radiance')
+ax.set_xlabel('Wavelength [nm]')
+ax.set_xlim([350,1700])
+ax.set_ylim([0,1.0])
+ax.plot(stars.wvl,stars.norm[fltice[400],:],'k',linewidth=3)
+
+# <codecell>
+
+fig,ax = plt.subplots()
+ax.plot(stars.wvl,stars.norm[fltwat,:].T)
+ax.set_title('Zenith radiance spectra')
+ax.set_ylabel('Normalized Radiance')
+ax.set_xlabel('Wavelength [nm]')
+ax.set_xlim([350,1700])
+ax.set_ylim([0,1.0])
+ax.plot(stars.wvl,stars.norm[fltwat[400],:],'k',linewidth=3)
+
+# <codecell>
+
+lutice.norm
+
+# <codecell>
+
+lutice.tau.shape
+
+# <codecell>
+
+lutice.tau[25]
+
+# <codecell>
+
+lutice.sp.shape
+
+# <codecell>
+
+spwat = stars.norm[fltwat[400],:]
+spwat[1066:1072] = nan
+spwat[979] = nan
+
+# <codecell>
+
+spice = stars.norm[fltice[400],:]
+spwat[1066:1072] = nan
+
+# <codecell>
+
+fig,ax = plt.subplots()
+ax.plot(stars.wvl,Sp.smooth(stars.norm[fltwat[400],:],2),'k-')
+ax.plot(stars.wvl,Sp.smooth(stars.norm[fltice[400],:],2),'k--')
+ax.set_title('Zenith radiance spectra')
+ax.set_ylabel('Normalized Radiance')
+ax.set_xlabel('Wavelength [nm]')
+ax.set_xlim([400,1680])
+ax.set_ylim([0,1.0])
+plot_greys()
+lines = [('$\\tau$=0.5, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[0],'Reds',0,[0,13],3,[460,0.009]),
+         ('$\\tau$=0.5, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[13],'Greens',0,[13,34],3,[420,0.02]),
+         ('$\\tau$=15, r$_{eff}$=%2.0f $\\mu$m'% lutice.ref[0],'RdPu',0,[0,13],25,[800,0.14]),
+         ('$\\tau$=15, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[13],'Blues',0,[13,34],25,[750,0.152])]
+iwvls = lutice.iwvls
+lutice.wv = lutice.wvl
+for names,cmap,iphase,irefs,itau,pos in lines:
+    rf = range(irefs[0],irefs[1])
+    cmm = plt.cm._generate_cmap(cmap,int(len(rf)*2.25))
+    cl = plt.cm.get_cmap(cmap)(200)
+    ax.plot(lutice.wvl,lutice.sp[iphase,:,0,irefs[0],itau]/np.nanmax(lutice.sp[iphase,:,0,irefs[0],itau]),color=cl,linewidth=2,alpha=0.8)
+    #for ir,r in enumerate(rf):
+    #    ax.plot(lutice.wvl,lutice.norm[iphase,:,0,r,itau],color=cmm(ir),linewidth=2,alpha=0.8)
+    ax.text(pos[0],pos[1]/0.22,names,color=cl)
+    #[alow,ahigh] = plot_line_gradients(ax,lutice,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
+ax.text(1120,0.39,'4STAR Measurements\n over Beaufort Sea (2014-09-19)')
+ax.plot(stars.wvl,Sp.smooth(spwat,2),'k-',linewidth=2, label='Over open water')
+ax.plot(stars.wvl,Sp.smooth(spice,2),'k--',linewidth=2, label='Over sea-ice')
+ax.legend(frameon=False,loc=(0.6,0.2),fontsize=12)
+plt.savefig(fp+'plots/20140919_4STAR_mod_meas_zenrad.png',dpi=600,transparent=True)
+
+# <codecell>
+
+# set up plotting of a few of the zenith radiance spectra
+def pltzen(fig=None,ax=None, tit='Zenith spectra'):
+    "Plotting of zenith measurements in radiance units"
+    if ax is None: 
+        fig,ax = plt.subplots()
+        doaxes = True
+    else:
+        doaxes = False
+    ax.plot(sm.nm[mask],rad,lw=2, c='k', label='4STAR measured at: '+str(time_ref))
+    if doaxes:
+        plt.title(tit)
+        plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+        plt.xlabel('Wavelength [nm]')
+        plt.xlim([350,1700])
+        plt.ylim([0,0.22])
+        plt.legend(frameon=False)
+    #plot_url = py.plot_mpl(fig)
+    return fig,ax
+
+def norm(fig=None,ax=None):
+    "Plotting of zenith measurements in normalized radiance"
+    if ax is None:
+        fig,ax = plt.subplots()
+        doaxes = True
+    else:
+        doaxes = False
+    ax.plot(sm.nm[mask],norm2max(rad),lw=2, c='k', label='4STAR measured at: '+str(time_ref))
+    if doaxes:
+        plt.title('Zenith radiance spectra')
+        plt.ylabel('Normalized Radiance')
+        plt.xlabel('Wavelength [nm]')
+        plt.xlim([350,1700])
+        plt.ylim([0,1.0])
+        plt.legend(frameon=False)
+    #plot_url = py.plot_mpl(fig)
+    return fig,ax
+
+def dashlen(dashlength,dashseperation,fig=plt.gcf()):
+    """ Build a list of dash length that fits within the current figure or figure denoted by fig, 
+        each dash is length dashlength, with its centers at dashseperation """
+    totallen = fig.get_figwidth()
+    numdash = int(totallen/dashseperation)*2
+    f=lambda i: dashlength if i%2==0 else dashseperation-dashlength
+    return tuple([f(i) for i in range(numdash)])
+
+# <codecell>
+
+def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=False):
+    """ Make multiple lines on the subplot ax of the spectra s, for the case defined by names with the cmap
+      for one particular phase (iphase), range of refs (irefs) and at one itau. Returns the axis handles for the thin and thick ref """
+    rf = range(irefs[0],irefs[1])
+    colors = plt.cm._generate_cmap(cmap,int(len(rf)*2.25))
+    for ir in rf:
+        if not(normalize):
+            a1 = ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
+                         color=(0.2,0.2,0.2),
+                         lw=1.0+1.4*float(ir)/irefs[1])
+            ax.plot(s.wv,s.sp[iphase,iwvls,0,ir,itau],
+                     color=colors(ir),
+                     lw=1.0+1.3*float(ir)/irefs[1])
+            ax.text(pos[0],pos[1],names,color=colors(irefs[1]))
+        else:
+            a1 = ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
+                         color=(0.2,0.2,0.2),
+                         lw=1.0+1.4*float(ir)/irefs[1])
+            ax.plot(s.wv,norm2max(s.sp[iphase,iwvls,0,ir,itau]),
+                     color=colors(ir),
+                     lw=1.0+1.3*float(ir)/irefs[1])    
+            ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
+        if ir == rf[0]:
+            alow = a1
+        if ir == rf[-1]:
+            ahigh = a1
+    return [alow,ahigh]
+
+# <codecell>
+
+fig,ax=norm()
+lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
+         ('Ice Cloud Model, $\\tau$=0.5','Greens',1,[13,34],1,[380,0.02]),
+         ('Liquid Cloud Model, $\\tau$=10','RdPu',0,[0,13],9,[700,0.16]),
+         ('Ice Cloud Model, $\\tau$=10','Blues',1,[13,34],9,[750,0.15])]
+for names,cmap,iphase,irefs,itau,pos in lines:
+    [alow,ahigh] = plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
+plt.legend([alow[0],ahigh[0]],lbl,
+           frameon=False,loc=7,prop={'size':10})
+ax.text(600,0.19/0.22,'4STAR Measurement')
+norm(fig,ax)
+plt.axvspan(350,1700,color='#FFFFFF')
+plot_greys()
+plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 
 # <headingcell level=3>
 
