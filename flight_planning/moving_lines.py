@@ -112,13 +112,61 @@ class LineBuilder:
         x0,y0 = self.xy
         self.r = sqrt((x-x0)**2+(y-y0)**2)
         return 'x=%2.5f, y=%2.5f, d=%2.5f' % (x,y,self.r)
-        
+
+def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
+    """
+    First try at a building of the basemap with a 'stere' projection
+    Must put in the values of the lower left corner and upper right corner (lon and lat)
+    
+    Defaults to draw 8 meridians and parallels
+    """
+    m = Basemap(projection='stere',lon_0=(upper_right[0]+lower_left[0]),lat_0=(upper_right[1]+lower_left[1]),
+            llcrnrlon=lower_left[0], llcrnrlat=lower_left[1],
+            urcrnrlon=upper_right[0], urcrnrlat=upper_right[1],resolution='h',ax=ax)
+    m.drawcoastlines()
+    #m.fillcontinents(color='#AAAAAA')
+    m.drawstates()
+    m.drawcountries()
+    m.drawmeridians(np.linspace(lower_left[0],upper_right[0],8).astype(int),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(lower_left[1],upper_right[1],8).astype(int),labels=[1,0,0,0])
+    return m
+
+def pll(string):
+    """
+    pll for parse_lat_lon
+    function that parses a string and converts it to lat lon values
+    one space indicates seperation between degree, minutes, or minutes and seconds
+    returns decimal degrees
+    """
+    import re
+    n = len(string.split())
+    str_ls = string.split()
+    char_neg = re.findall("[SWsw]+",str_ls[-1])
+    char_pos = re.findall("[NEne]+",str_ls[-1])
+    if len(char_neg)>0:
+        sign = -1
+        cr = char_neg[0]
+    elif len(char_pos)>0:
+        sign = 1
+        cr = char_pos[0]
+    else:
+        sign = 1
+        cr = ''
+    str_ls[-1] = str_ls[-1].strip(cr)
+    deg = float(str_ls[0])*sign
+    deg_m = 0.0
+    for i in range(n-1,0,-1):
+        deg_m = (deg_m + float(str_ls[i])/60.0)/60.0
+    return deg+deg_m
+    
 fig,ax = plt.subplots()
+#m = build_basemap(ax=ax)
 ax.set_title('line segments')
+lat0,lon0 = pll('22 58.783S'), pll('14 38.717E')
 line, = ax.plot([0],[0],'ro-')
 text = ('Press s to stop interaction\\n'
         'Press i to restart interaction\\n')
-plt.text(1.0,0.1,text)
+#plt.text(1.0,0.1,text)
 linebuilder = LineBuilder(line)
 plt.show()
 
