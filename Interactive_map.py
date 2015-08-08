@@ -33,6 +33,11 @@ def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
 
 # <codecell>
 
+import sys
+sys.path
+
+# <codecell>
+
 def format_coord(x, y):
     return 'Lon=%.4f, Lat=%.4f'%(m(x, y, inverse = True))
 
