@@ -20,6 +20,8 @@ def __init__():
 def spherical_dist(pos1, pos2, r=3958.75):
     "Calculate the distance, in km, from one point to another (can use arrays)"
     import numpy as np
+    pos1 = np.array(pos1)
+    pos2 = np.array(pos2)
     pos1 = pos1 * np.pi / 180
     pos2 = pos2 * np.pi / 180
     cos_lat1 = np.cos(pos1[..., 0])
