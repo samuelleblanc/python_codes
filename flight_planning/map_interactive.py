@@ -136,8 +136,15 @@ class LineBuilder:
         'event handler for updating the figure with excel data'
         if self.ex:
             self.ex.check_updates_excel()
-            self.
-
+            self.lats = self.ex.lat
+            self.lons = self.ex.lon
+            if self.m:
+                x,y = self.m(self.ex.lat,self.ex.lon)
+                self.xs = x
+                self.ys = y
+                self.line.set_data(self.xs,self.ys)
+                self.line.figure.canvas.daw()
+                
     def format_position_simple(self,x,y):
         if self.m:
             return 'Lon=%.7f, Lat=%.7f'%(self.m(x, y, inverse = True))

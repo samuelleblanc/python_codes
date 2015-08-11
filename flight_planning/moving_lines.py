@@ -19,7 +19,8 @@ line, = m.plot([x0],[y0],'ro-')
 text = ('Press s to stop interaction\\n'
         'Press i to restart interaction\\n')
 #plt.text(1.0,0.1,text)
-lines = mi.LineBuilder(line,m=m)
 wb = ex.dict_position()
+lines = mi.LineBuilder(line,m=m,ex=wb)
+
 m.show()
 

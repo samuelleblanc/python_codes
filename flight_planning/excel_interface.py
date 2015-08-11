@@ -167,7 +167,7 @@ class dict_position:
         self.wb.set_current()
         tmp = Range('A2').table.value
         dim = np.shape(tmp)
-        if len(dim)=1:
+        if len(dim)==1:
             tmp = [tmp]
         num = 0
         for i,t in enumerate(tmp):
@@ -188,9 +188,9 @@ class dict_position:
             self.write_to_excel()
         self.num_changed = num
 
-    def appends(self,lat,lon,sp=nan,dt=nan,alt=nan,
-                clt=nan,utc=nan,loc=nan,lt=nan,d=nan,cd=nan,
-                dnm=nan,cdnm=nan,spkt=nan,altk=nan,
+    def appends(self,lat,lon,sp=None,dt=None,alt=None,
+                clt=None,utc=None,loc=None,lt=None,d=None,cd=None,
+                dnm=None,cdnm=None,spkt=None,altk=None,
                 bear=0.0,endbear=0.0,turnd=0.0,turnt=0.0):
         """
         Program that appends to the current class with values supplied, or with defaults from the command line
@@ -216,7 +216,7 @@ class dict_position:
         self.turn_deg = np.append(self.turn_deg,turnd)
         self.turn_time = np.append(self.turn_time,turnt)
 
-    def mods(self,i,lat=nan,lon=nan,sp=nan,spkt=nan,dt=nan,alt=nan,altk=nan):
+    def mods(self,i,lat=None,lon=None,sp=None,spkt=None,dt=None,alt=None,altk=None):
         """
         Program to modify the contents of the current class if there is an update on the line, defned by i
         If anything is not input, then the default of NaN is used
