@@ -32,6 +32,24 @@ def spherical_dist(pos1, pos2, r=3958.75):
 
 # <codecell>
 
+def bearing(pos1,pos2):
+    "Calculate the initial bearing, in degrees, to go from one point to another, along a great circle"
+    import numpy as np
+    pos1 = np.array(pos1)
+    pos2 = np.array(pos2)
+    pos1 = pos1 * np.pi / 180
+    pos2 = pos2 * np.pi / 180
+    cos_lat1 = np.cos(pos1[..., 0])
+    cos_lat2 = np.cos(pos2[..., 0])
+    sin_lat1 = np.sin(pos1[...,0])
+    sin_lat2 = np.sin(pos2[...,0])
+    sin_lon_d = np.sin(pos1[...,1]-pos2[...,1])
+    cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
+    cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
+    return (np.arctan2(sin_lon_d*cos_lat2,cos_lat1*sin_lat2-sin_lat1*cos_lat2*cos_lon_d)*180.0/np.pi+360.0) % 360.0
+
+# <codecell>
+
 def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
     from map_utils import spherical_dist
