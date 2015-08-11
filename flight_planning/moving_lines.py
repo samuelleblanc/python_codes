@@ -22,5 +22,4 @@ text = ('Press s to stop interaction\\n'
 wb = ex.dict_position()
 lines = mi.LineBuilder(line,m=m,ex=wb)
 
-m.show()
 

@@ -24,15 +24,24 @@ class LineBuilder:
         self.line.axes.format_coord = self.format_position_simple
         self.press = None
         self.contains = False
+        self.labelsoff = True
 
     def connect(self):
         'Function to connect all events'
-        self.cid_onpress = self.line.figure.canvas.mpl_connect('button_press_event', self.onpress)
-        self.cid_onrelease = self.line.figure.canvas.mpl_connect('button_release_event', self.onrelease)
-        self.cid_onmotion = self.line.figure.canvas.mpl_connect('motion_notify_event',self.onmotion)
-        self.cid_onkeypress = self.line.figure.canvas.mpl_connect('key_press_event',self.onkeypress)
-        self.cid_onkeyrelease = self.line.figure.canvas.mpl_connect('key_release_event',self.onkeyrelease)
-        self.cid_onfigureenter = self.line.figure.canvas.mpl_connect('figure_enter_event',self.onfigureenter)
+        self.cid_onpress = self.line.figure.canvas.mpl_connect(
+            'button_press_event', self.onpress)
+        self.cid_onrelease = self.line.figure.canvas.mpl_connect(
+            'button_release_event', self.onrelease)
+        self.cid_onmotion = self.line.figure.canvas.mpl_connect(
+            'motion_notify_event',self.onmotion)
+        self.cid_onkeypress = self.line.figure.canvas.mpl_connect(
+            'key_press_event',self.onkeypress)
+        self.cid_onkeyrelease = self.line.figure.canvas.mpl_connect(
+            'key_release_event',self.onkeyrelease)
+        self.cid_onfigureenter = self.line.figure.canvas.mpl_connect(
+            'figure_enter_event',self.onfigureenter)
+        self.cid_onaxesenter = self.line.figure.canvas.mpl_connect(
+            'axes_enter_event',self.onfigureenter)
 
     def disconnect(self):
         'Function to disconnect all events (except keypress)'
@@ -86,7 +95,9 @@ class LineBuilder:
                 self.line.axes.lines.remove(hlight)
             self.contains = False
             if self.ex:
-                self.ex.mods(self.contains_index,self.lats[i],self.lons[i])
+                self.ex.mods(self.contains_index,
+                             self.lats[self.contains_index],
+                             self.lons[self.contains_index])
                 self.ex.calculate()
                 self.ex.write_to_excel()
         else:
@@ -94,6 +105,7 @@ class LineBuilder:
                 self.ex.appends(self.lats[-1],self.lons[-1])
                 self.ex.calculate()
                 self.ex.write_to_excel()
+        self.update_labels()
         self.line.figure.canvas.draw()
             
 
@@ -134,16 +146,18 @@ class LineBuilder:
 
     def onfigureenter(self,event):
         'event handler for updating the figure with excel data'
+        print 'entered figure'#, event
         if self.ex:
-            self.ex.check_updates_excel()
-            self.lats = self.ex.lat
-            self.lons = self.ex.lon
+            self.ex.check_xl()
+            self.lats = list(self.ex.lat)
+            self.lons = list(self.ex.lon)
             if self.m:
-                x,y = self.m(self.ex.lat,self.ex.lon)
-                self.xs = x
-                self.ys = y
+                x,y = self.m(self.ex.lon,self.ex.lat)
+                self.xs = list(x)
+                self.ys = list(y)
                 self.line.set_data(self.xs,self.ys)
-                self.line.figure.canvas.daw()
+                self.line.figure.canvas.draw()
+        self.update_labels()
                 
     def format_position_simple(self,x,y):
         if self.m:
@@ -162,6 +176,17 @@ class LineBuilder:
             x0,y0 = self.xy
             self.r = sqrt((x-x0)**2+(y-y0)**2)
             return 'x=%2.5f, y=%2.5f, d=%2.5f' % (x,y,self.r)
+        
+    def update_labels(self):
+        if self.labelsoff:
+            return
+        if self.ex:
+            self.wp = self.ex.WP
+        else:
+            self.n = len(self.xs)
+            self.wp = range(1,self.n+1)
+        for i in self.wp:
+            self.line.axes.annotate('\#%i'%i,(self.xs[i-1],self.ys[i-1]))
 
 def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
     """
