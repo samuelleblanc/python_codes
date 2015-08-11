@@ -1,16 +1,25 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+import sys
+import map_utils as mu
 
 class LineBuilder:
-    def __init__(self, line,m=None):
+    def __init__(self, line,m=None,ex=None):
         """
-        Start the line builder, with line2d object as input, and opitonally the m from basemap object
+        Start the line builder, with line2d object as input,
+        and opitonally the m from basemap object,
+        Optionally the ex, dict_position class from the excel_interface,
+            for interfacing with Excel spreadsheet
+        
         """
         self.line = line
         self.m = m
+        self.ex = ex
         self.xs = list(line.get_xdata())
         self.ys = list(line.get_ydata())
+        if self.m:
+            self.lons,self.lats = self.m(self.xs,self.ys,inverse=True)
         self.connect()
         self.line.axes.format_coord = self.format_position_simple
         self.press = None
@@ -23,6 +32,7 @@ class LineBuilder:
         self.cid_onmotion = self.line.figure.canvas.mpl_connect('motion_notify_event',self.onmotion)
         self.cid_onkeypress = self.line.figure.canvas.mpl_connect('key_press_event',self.onkeypress)
         self.cid_onkeyrelease = self.line.figure.canvas.mpl_connect('key_release_event',self.onkeyrelease)
+        self.cid_onfigureenter = self.line.figure.canvas.mpl_connect('figure_enter_event',self.onfigureenter)
 
     def disconnect(self):
         'Function to disconnect all events (except keypress)'
@@ -37,7 +47,7 @@ class LineBuilder:
         if event.inaxes!=self.line.axes: return
         tb = plt.get_current_fig_manager().toolbar
         if tb.mode!='': return
-        self.contains, attrd = line.contains(event)
+        self.contains, attrd = self.line.contains(event)
         if self.contains:
             print 'click is near point:',self.contains,attrd
             self.contains_index = attrd['ind']
@@ -54,6 +64,10 @@ class LineBuilder:
             self.xy = self.xs[-1],self.ys[-1]
             self.xs.append(event.xdata)
             self.ys.append(event.ydata)
+            if self.m:
+                lo,la = self.m(event.xdata,event.ydata,inverse=True)
+                self.lons.append(lo)
+                self.lats.append(la)
             self.line.axes.format_coord = self.format_position_distance
         self.line.set_data(self.xs, self.ys)
         self.line.figure.canvas.draw()
@@ -71,7 +85,17 @@ class LineBuilder:
             while hlight in self.line.axes.lines:
                 self.line.axes.lines.remove(hlight)
             self.contains = False
+            if self.ex:
+                self.ex.mods(self.contains_index,self.lats[i],self.lons[i])
+                self.ex.calculate()
+                self.ex.write_to_excel()
+        else:
+            if self.ex:
+                self.ex.appends(self.lats[-1],self.lons[-1])
+                self.ex.calculate()
+                self.ex.write_to_excel()
         self.line.figure.canvas.draw()
+            
 
     def onmotion(self,event):
         'Function that moves the points to desired location'
@@ -86,6 +110,8 @@ class LineBuilder:
             i = -1
         self.xs[i] = event.xdata
         self.ys[i] = event.ydata
+        if self.m:
+            self.lons[i],self.lats[i] = self.m(event.xdata,event.ydata,inverse=True)
         self.line.set_data(self.xs,self.ys)
         self.line.figure.canvas.draw()
 
@@ -105,6 +131,12 @@ class LineBuilder:
     def onkeyrelease(self,event):
         #print 'released key',event.key
         if event.inaxes!=self.line.axes: return
+
+    def onfigureenter(self,event):
+        'event handler for updating the figure with excel data'
+        if self.ex:
+            self.ex.check_updates_excel()
+            self.
 
     def format_position_simple(self,x,y):
         if self.m:

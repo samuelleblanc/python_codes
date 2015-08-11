@@ -31,15 +31,35 @@ class dict_position:
         from xlwings import Range
         import map_interactive as mi
         from map_interactive import pll
+        import map_utils as mu
         self.lon = np.array([pll(lon0)])
         self.lat = np.array([pll(lat0)])
         self.speed = np.array([speed])
         self.alt = np.array([alt0])
         self.UTC_conversion = UTC_conversion
-        self.UTC = np.array(UTC_start)
-        self.calculate()
+        self.utc = np.array([UTC_start])
+        self.UTC = self.utc
+        self.legt = self.UTC*0.0
+        self.dist = self.UTC*0.0
+        self.cumdist = self.UTC*0.0
+        self.cumlegt = self.legt
+        self.delayt = self.legt
+        self.bearing = self.lon*0.0
+        self.endbearing = self.lon*0.0
+        self.turn_deg = self.lon*0.0
+        self.turn_time = self.lon*0.0
+        self.speed_kts = self.speed*1.94384449246
+        self.alt_kft = self.alt*3.28084/1000.0
+        self.head = self.legt
+        try:
+            self.calculate()
+        except:
+            print 'calculate failed'
         self.wb = self.Create_excel()
-        self.write_to_excel()
+        try:
+            self.write_to_excel()
+        except:
+            print 'writing to excel failed'
 
     def calculate(self):
         """
@@ -49,25 +69,82 @@ class dict_position:
         Involves calculating time of flight local and utc
         Fills in the waypoint numbers
 
-        Assumes that blank spaces are to be filled with new calculations
+        Assumes that blank spaces/nan are to be filled with new calculations
         """
+        import numpy as np
+        import map_utils as mu
         default_bank_angle = 15.0
-        self.rate_of_turn = 1091.0*tan(default_bank_angle*np.pi/180)/self.speed[0]
+        self.rate_of_turn = 1091.0*np.tan(default_bank_angle*np.pi/180)/self.speed[0] # degree per second
+        self.n = len(self.lon)
+        self.WP = range(1,self.n+1)
+        for i in xrange(self.n-1):
+            self.dist[i+1] = mu.spherical_dist([self.lat[i],self.lon[i]],[self.lat[i+1].self.lon[i+1]])
+            if isfinite(self.speed[i+1]):
+                self.speed_kts[i+1] = self.speed[i+1]*1.94384449246
+            elif isfinite(self.speed_kts[i+1]):
+                self.speed[i+1] = seld.speed_kts[i+1]/1.94384449246
+            else:
+                self.speed[i+1] = self.speed[i]
+                self.speed_kts[i+1] = self.speed[i+1]*1.94384449246
+            if isfinite(self.alt[i+1]):
+                self.alt_kft[i+1] = self.alt[i+1]*3.28084/1000.0
+            elif isfinite(self.alt_kft[i+1]):
+                self.alt[i+1] = self.alt_kft[i+1]*1000.0/3.28084
+            else:
+                self.alt[i+1] = self.alt[i]
+                self.alt_kft[i+1] = self.alt[i+1]*3.28084/1000.0
+            self.bearing[i] = mu.bearing([self.lat[i],self.lon[i]],[self.lat[i+1].self.lon[i+1]])
+            self.endbearing[i] = (mu.bearing([self.lat[i+1].self.lon[i+1]],[self.lat[i],self.lon[i]])+180)%360.0
+            try:
+                self.bearing[i+1] = mu.bearing([self.lat[i+1],self.lon[i+1]],[self.lat[i+2].self.lon[i+2]])
+            except:
+                self.bearing[i+1] = self.endbearing[i]
+            try:
+                self.turn_deg[i+1] = abs(self.endbearing[i]-self.bearing[i+1])
+            except:
+                self.turn_deg[i+1] = 0.0
+            self.turn_time[i+1] = (self.turn_deg[i+1]/self.rate_of_turn)/60.0
+            if not isfinite(self.delayt[i+1]):
+                self.delayt[i+1] = self.turn_time[i+1]
+            else:
+                self.delayt[i+1] = self.delayt[i+1]+self.turn_time[i+1]
+            self.legt[i+1] = (self.dist[i+1]/(self.speed[i+1]/1000.0))/3600.0 + self.delayt[i+1]/60.0
+            self.utc[i+1] = self.utc[i]+self.legt[i+1]
+            
+        self.local = self.utc+self.UTC_conversion
+        self.dist_nm = self.dist*0.53996
+        self.cumdist = self.dist.cumsum()
+        self.cumdist_nm = self.dist_nm.cumsum()
+        self.cumlegt = self.legt.cumsum()
+        self.time2xl()
+
+    def time2xl(self):
+        """
+        Convert the UTC fractional hours to hh:mm format for use in excel
+        """
+        print 'time 2 xl Not yet implemented'
+        self.cumlegt_xl = self.cumlegt/24.0
+        self.utc_xl = self.utc/24.0
+        self.local_xl = self.local/24.0
+        self.legt_xl = self.legt/24.0
 
     def write_to_excel(self):
         """
         writes out the dict_position class values to excel spreadsheet
         """
+        import numpy as np
+        from xlwings import Range
+        self.wb.set_current()
         Range('A2').value = np.array([self.WP,
                                       self.lat,
                                       self.lon,
                                       self.speed,
                                       self.delayt,
                                       self.alt,
-                                      self.cumlegt,
-                                      self.utc,
-                                      self.local,
-                                      self.legt,
+                                      self.cumlegt_xl,
+                                      self.utc_xl,
+                                      self.local_xl,
+                                      self.legt_xl,
                                       self.dist,
                                       self.cumdist,
                                       self.dist_nm,
@@ -75,13 +152,9 @@ class dict_position:
                                       self.speed_kts,
                                       self.alt_kft
                                       ]).T
-
-    def read_excel(self):
-        """
-        raw read and parse of the excel spreadsheet values
-        """
-        tmp = Range('A2').table.value
-        self.tmp
+        Range('G2:J%i'%self.n).number_format = 'hh:mm'
+        Range('B:B').autofit('c')
+        Range('C:C').autofit('c')
 
     def check_updates_excel(self):
         """
@@ -89,10 +162,98 @@ class dict_position:
         If there is change, empty out the corresponding calculated areas
         Priority is always given to metric
         """
-        self.read_excel()
-        
-        print 'not yet'
+        from xlwings import Range
+        import numpy as np
+        self.wb.set_current()
+        tmp = Range('A2').table.value
+        dim = np.shape(tmp)
+        if len(dim)=1:
+            tmp = [tmp]
+        num = 0
+        for i,t in enumerate(tmp):
+            wp,lat,lon,sp,dt,alt,clt,utc,loc,lt,d,cd,dnm,cdnm,spkt,altk = t[0:16]
+            if wp > self.n:
+                num = num+1
+                self.appends(lat,lon,sp,dt,alt,clt,utc,loc,lt,d,cd,dnm,cdnm,spkt,altk)
+            else:
+                changed = self.mods(i,lat,lon,sp,spkt,dt,alt,altk)
+                if i == 0:
+                    if self.utc[i] != utc:
+                        self.utc[i] = utc
+                        changed = True
+                if changed: num = num+1
+        if num>0:
+            print 'Updated %i lines from Excel, recalculating and printing' % num
+            self.calculate()
+            self.write_to_excel()
+        self.num_changed = num
 
+    def appends(self,lat,lon,sp=nan,dt=nan,alt=nan,
+                clt=nan,utc=nan,loc=nan,lt=nan,d=nan,cd=nan,
+                dnm=nan,cdnm=nan,spkt=nan,altk=nan,
+                bear=0.0,endbear=0.0,turnd=0.0,turnt=0.0):
+        """
+        Program that appends to the current class with values supplied, or with defaults from the command line
+        """
+        import numpy as np
+        self.lat = np.append(self.lat,lat)
+        self.lon = np.append(self.lon,lon)
+        self.speed = np.append(self.speed,sp)
+        self.delayt = np.append(self.delayt,dt)
+        self.alt = np.append(self.alt,alt)
+        self.cumlegt = np.append(self.cumlegt,clt*24.0)
+        self.utc = np.append(self.utc,utc*24.0)
+        self.local = np.append(self.local,loc*24.0)
+        self.legt = np.append(self.legt,lt*24.0)
+        self.dist = np.append(self.dist,d)
+        self.cumdist = np.append(self.cumdist,cd)
+        self.dist_nm = np.append(self.dist_nm,dnm)
+        self.cumdist_nm = np.append(self.cumdist_nm,cdnm)
+        self.speed_kts = np.append(self.speed_kts,spkt)
+        self.alt_kft = np.append(self.alt_kft,altk)
+        self.bearing = np.append(self.bearing,bear)
+        self.endbearing = np.append(self.endbearing,endbear)
+        self.turn_deg = np.append(self.turn_deg,turnd)
+        self.turn_time = np.append(self.turn_time,turnt)
+
+    def mods(self,i,lat=nan,lon=nan,sp=nan,spkt=nan,dt=nan,alt=nan,altk=nan):
+        """
+        Program to modify the contents of the current class if there is an update on the line, defned by i
+        If anything is not input, then the default of NaN is used
+        """
+        changed = False
+        self.toempty = {'speed':0,'delayt':0,'alt':0,'speed_kts':0,'alt_kft':0}
+        if self.lat[i] != lat:
+            self.lat[i] = lat
+            changed = True
+        if self.lon[i] != lon:
+            self.lon[i] = lon
+            changed = True
+        if self.speed[i] != sp:
+            self.speed[i] = sp
+            self.toempty['speed_kts'] = 1
+            changed = True
+        if self.speed_kts[i] != spkt:
+            self.toempty['speed'] = 1
+            changed = True
+        if self.delayt[i] != dt:
+            self.delayt[i] = dt
+            changed = True
+        if self.alt[i] != alt:
+            self.alt[i] = alt
+            self.toempty['alt_kft'] = 1
+            changed = True
+        if self.alt_kft[i] != altk:
+            self.alt_kft[i] = altk
+            self.toempty['alt'] = 1
+            changed = True
+        for s in self.toempty:
+            if self.toempty.get(s):
+                v = getattr(self,s)
+                v[i] = nan
+                setattr(self,s,v)
+        return changed
+        
     def Create_excel(self):
         """
         Purpose:
@@ -131,11 +292,12 @@ class dict_position:
         if sys.platform.startswith('win'):
             from win32com.client import Dispatch
             xl = Dispatch("Excel.Application")
-            xl.ActiveWorkbook.Windows(1).SplitColumn = 0.4
+         #   xl.ActiveWorkbook.Windows(1).SplitColumn = 0.4
             xl.ActiveWorkbook.Windows(1).SplitRow = 1.0
             xl.Range(address).Font.Bold = True
         top_line.autofit()
-        Range('A2').value = np.arange(50).reshape((50,1))+1
+        Range('G2:J2').number_format = 'hh:mm'
+        #Range('A2').value = np.arange(50).reshape((50,1))+1
         return wb
   
 
