@@ -47,3 +47,4 @@ Temporary Items
 *.pyc
 
 flight_planning/
+flight_planning/*
