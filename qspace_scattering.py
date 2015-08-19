@@ -119,4 +119,87 @@ plt.savefig(fp+'baum_2011_qspace_500nm.png',dpi=600,transparent=True)
 
 # <codecell>
 
+import Sp_parameters as sp
+
+# <codecell>
+
+baum.dq = baum.qspace
+for i,r in enumerate(baum.ref):
+    for j,w in enumerate(baum.wvl):
+        baum.dq[j,i,0,:] = sp.deriv(np.log(baum.phase[j,i,0,:]),np.log(baum.qspace[j,i,0,:]))
+
+# <codecell>
+
+for i,r in enumerate(baum.ref):
+    if (i%2 == 0):
+        plt.plot(baum.dq[10,i,0,:],baum.phase[10,i,0,:],label='r$_{e}$=%2i$\\mu$m'%r,color=plt.cm.gist_ncar(float(i)/len(baum.ref)))
+#plt.yscale('log')
+#plt.xscale('log')
+plt.legend(frameon=False)
+plt.title('Ice crystal GHM derivative - 500 nm')
+plt.xlabel('qspace')
+plt.ylabel('dP$_{11}$')
+plt.savefig(fp+'baum_2011_deriv_qspace_500nm.png',dpi=600,transparent=True)
+
+# <codecell>
+
+blogq = np.log(baum.qspace[10,10,0,:])
+blogs = np.log(baum.phase[10,10,0,:])
+
+# <codecell>
+
+plt.plot(baum.qspace[10,10,0,:],baum.phase[10,10,0,:])
+
+# <codecell>
+
+plt.plot(blogq,blogs)
+
+# <codecell>
+
+towwrite = np.array(([blogq],[blogs]))[:,0,:]
+
+# <codecell>
+
+np.savetxt(fp+'baum_2011_qspace.dat',np.flipud(towwrite.T))
+
+# <codecell>
+
+np.flipud(towwrite.T)
+
+# <codecell>
+
+np.flipud(towwrite).T.shape
+
+# <headingcell level=2>
+
+# Do legendre expansion of the qspace log log
+
+# <codecell>
+
+qleg = np.polynomial.legendre.legfit(baum.qspace[10,10,0,:],baum.phase[10,10,0,:],50)
+
+# <codecell>
+
+qleg.shape
+
+# <codecell>
+
+qleg
+
+# <codecell>
+
+ll = np.polynomial.legendre.Legendre(qleg)
+
+# <codecell>
+
+x,y = ll.linspace()
+
+# <codecell>
+
+plt.plot(x,y)
+#plt.yscale('log')
+#plt.xscale('log')
+
+# <codecell>
+
 
