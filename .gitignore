@@ -44,7 +44,8 @@ Temporary Items
 .ipynb_checkpoints
 
 # compiled python
+*.*~
 *.pyc
-
 flight_planning/
 flight_planning/*
+
