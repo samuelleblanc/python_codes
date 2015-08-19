@@ -15,10 +15,12 @@ class dict_position:
     Outputs:
         dict_position class 
     Dependencies:
+        numpy
         xlwings
         Excel (win or mac)
         map_interactive
         map_utils
+        simplekml
     Required files:
         none
     Example:
@@ -27,8 +29,13 @@ class dict_position:
         Written: Samuel LeBlanc, 2015-08-07, Santa Cruz, CA
         Modified: Samuel LeBlanc, 2015-08-11, Santa Cruz, CA
                  - update and bug fixes
+        Modified: Samuel LeBlanc, 2015-08-14, NASA Ames, CA
+                - added save to kml functionality
+        Modified: Samuel LeBlanc, 2015-08-18, NASA Ames, CA
+                - added open excel functionality via the filename option and extra method
     """
-    def __init__(self,lon0='14 38.717E',lat0='22 58.783S',speed=150.0,UTC_start=7.0,UTC_conversion=+1.0,alt0=0.0):
+    def __init__(self,lon0='14 38.717E',lat0='22 58.783S',speed=150.0,UTC_start=7.0,
+                 UTC_conversion=+1.0,alt0=0.0,verbose=False,filename=None):
         import numpy as np
         from xlwings import Range
         import map_interactive as mi
@@ -53,15 +60,24 @@ class dict_position:
         self.speed_kts = self.speed*1.94384449246
         self.alt_kft = self.alt*3.28084/1000.0
         self.head = self.legt
+        self.googleearthopened = False
+        self.netkml = None
+        self.verbose = verbose
         try:
             self.calculate()
         except:
             print 'calculate failed'
-        self.wb = self.Create_excel()
-        try:
+        if not filename:
+            self.wb = self.Create_excel()
+            try:
+                self.write_to_excel()
+            except:
+                print 'writing to excel failed'
+        else:
+            self.wb = self.Open_excel(filename=filename)
+            self.check_xl()
+            self.calculate()
             self.write_to_excel()
-        except:
-            print 'writing to excel failed'
 
     def calculate(self):
         """
@@ -164,7 +180,8 @@ class dict_position:
         Reruns check_updates_excel whenever a line is found to be deleted
         """
         while self.check_updates_excel():
-            print 'line removed, cutting it out'
+            if self.verbose:
+                print 'line removed, cutting it out'
 
     def check_updates_excel(self):
         """
@@ -186,7 +203,8 @@ class dict_position:
             n0,_ = dim0
             n1,_ = dim
             if n0>n1: tmp = tmp0
-            print 'vertical num: %i, range num: %i' %(n0,n1)
+            if self.verbose:
+                print 'vertical num: %i, range num: %i' %(n0,n1)
         num = 0
         num_del = 0
         for i,t in enumerate(tmp):
@@ -209,12 +227,15 @@ class dict_position:
                         changed = True
                 if changed: num = num+1
         if self.n>(i+1):
-            print 'deleting points'
+            if self.verbose:
+                print 'deleting points'
             for j in range(i+1,self.n-1):
                 self.dels(j)
+                self.n = self.n-1
                 num = num+1
         if num>0:
-            print 'Updated %i lines from Excel, recalculating and printing' % num
+            if self.verbose:
+                print 'Updated %i lines from Excel, recalculating and printing' % num
             self.calculate()
             self.write_to_excel()
         self.num_changed = num
@@ -253,6 +274,7 @@ class dict_position:
         self.endbearing = np.delete(self.endbearing,i)
         self.turn_deg = np.delete(self.turn_deg,i)
         self.turn_time = np.delete(self.turn_time,i)
+        print 'deletes, number of lon left:%i' %len(self.lon)
 
     def appends(self,lat,lon,sp=None,dt=None,alt=None,
                 clt=None,utc=None,loc=None,lt=None,d=None,cd=None,
@@ -334,8 +356,37 @@ class dict_position:
                 v[i] = np.nan
                 setattr(self,s,v)
         return changed
+
+    def Open_excel(self,filename=None):
+        """
+        Purpose:
+            Program that opens and excel file and creates the proper links with pytho
+        Inputs:
+            filename of excel file to open
+        outputs:
+            wb: workbook instance
+        Dependencies:
+            xlwings
+            Excel (win or mac)
+        Example:
+            ...
+        History:
+            Written: Samuel LeBlanc, 2015-08-18, NASA Ames, CA
+        """
+        from xlwings import Workbook, Sheet, Range, Chart
+        import numpy as np
+        if not filename:
+            print 'No filename found'
+            return
+        try:
+            wb = Workbook(filename)
+        except Exception,ie:
+            print 'Exception found:',ie
+            return
+        self.name = Sheet(1).name
+        return wb
         
-    def Create_excel(self):
+    def Create_excel(self,name='P3 Flight path'):
         """
         Purpose:
             Program that creates the link to an excel file
@@ -360,7 +411,8 @@ class dict_position:
         from xlwings import Workbook, Sheet, Range, Chart
         import numpy as np
         wb = Workbook()
-        Sheet(1).name = 'Flight Path'
+        self.name = name
+        Sheet(1).name = self.name
         Range('A1').value = ['WP','Lat\n[+-90]','Lon\n[+-180]',
                              'Speed\n[m/s]','delayT\n[min]','Altitude\n[m]',
                              'CumLegT\n[hh:mm]','UTC\n[hh:mm]','LocalT\n[hh:mm]',
@@ -380,5 +432,83 @@ class dict_position:
         Range('G2:J2').number_format = 'hh:mm'
         #Range('A2').value = np.arange(50).reshape((50,1))+1
         return wb
-  
+
+    def save2xl(self,filename=None):
+        """
+        Simple to program to initiate the save function in Excel
+        Same as save button in Excel
+        """
+        self.wb.save(filename)
+
+    def save2kml(self,filename=None):
+        """
+        Program to save the points contained in the spreadsheet to a kml file
+        """
+        import simplekml
+        if not filename:
+            raise NameError('filename not defined')
+            return
+        if not self.netkml:
+            self.netkml = simplekml.Kml(open=1)
+            self.netkml.name = 'Flight plan'
+            net = self.netkml.newnetworklink(name=self.name)
+            net.link.href = filename
+            net.link.refreshmode = simplekml.RefreshMode.onchange
+            filenamenet = filename+'_net.kml'
+            self.netkml.save(filenamenet)
+            self.kml = simplekml.Kml(open=1)
+        self.kml.document = simplekml.Folder(name = self.name)
+        self.print_points_kml()
+        self.print_path_kml()
+        self.kml.save(filename)
+        if not self.googleearthopened:
+            self.openGoogleEarth(filenamenet)
+            self.googleearthopened = True
+
+    def print_points_kml(self):
+        """
+        print the points saved in lat, lon
+        """
+        if not self.kml:
+            raise NameError('kml not initilaized')
+            return
+        for i in xrange(self.n):
+            pnt = self.kml.newpoint()
+            pnt.name = 'WP \# %i' % self.WP[i]
+            pnt.coords = [(self.lon[i],self.lat[i])]
+
+    def print_path_kml(self):
+        """
+        print the path onto a kml file
+        """
+        import simplekml
+        import numpy as np
+        path = self.kml.newlinestring(name=self.name)
+        coords = [(lon,lat,alt) for (lon,lat,alt) in np.array((self.lon,self.lat,self.alt)).T]
+        path.coords = coords
+        path.altitudemode = simplekml.AltitudeMode.clamptoground
+        path.extrude = 1
+        path.style.linestyle.color = simplekml.Color.red
+        path.style.linestyle.width = 4.0
+
+    def openGoogleEarth(self,filename=None):
+        """
+        Function that uses either COM object or appscript (not yet implemented)
+        to load the new Google Earth kml file
+        """
+        if not filename:
+            print 'no filename defined, returning'
+            return
+        import sys
+        import os
+        if sys.platform.startswith('win'):
+            try:
+                import win32com.client
+                ge = win32com.client.Dispatch("GoogleEarth.ApplicationGE")
+                ge.OpenKmlFile(filename,True)
+            except:
+                os.startfile(filename)
+        else:
+            os.startfile(filename)
+        
 

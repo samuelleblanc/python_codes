@@ -5,7 +5,7 @@ import sys
 import map_utils as mu
 
 class LineBuilder:
-    def __init__(self, line,m=None,ex=None):
+    def __init__(self, line,m=None,ex=None,verbose=False):
         """
         Start the line builder, with line2d object as input,
         and opitonally the m from basemap object,
@@ -24,7 +24,9 @@ class LineBuilder:
         self.line.axes.format_coord = self.format_position_simple
         self.press = None
         self.contains = False
-        self.labelsoff = True
+        self.labelsoff = False
+        self.lbl = None
+        self.verbose = verbose
 
     def connect(self):
         'Function to connect all events'
@@ -58,9 +60,13 @@ class LineBuilder:
         if tb.mode!='': return
         self.contains, attrd = self.line.contains(event)
         if self.contains:
-            print 'click is near point:',self.contains,attrd
+            if self.verbose:
+                print 'click is near point:',self.contains,attrd
             self.contains_index = attrd['ind']
-            print 'index:', self.contains_index
+            if len(self.contains_index)>1:
+                self.contains_index = self.contains_index[-1]
+            if self.verbose:
+                print 'index:', self.contains_index
             if not self.contains_index is 0:
                 self.xy = self.xs[self.contains_index-1],self.ys[self.contains_index-1]
                 self.line.axes.format_coord = self.format_position_distance
@@ -80,15 +86,19 @@ class LineBuilder:
             self.line.axes.format_coord = self.format_position_distance
         self.line.set_data(self.xs, self.ys)
         self.line.figure.canvas.draw()
-        self.press = event.xdata,event.ydata                                    
-        sys.stdout.write('moving:')
-        sys.stdout.flush()
+        self.press = event.xdata,event.ydata
+        if self.verbose:
+            sys.stdout.write('moving:')
+            sys.stdout.flush()
         
     def onrelease(self,event):
         'Function to set the point location'
-        print 'release'#,event
+        if self.verbose:
+            print 'release'#,event
         self.press = None
         self.line.axes.format_coord = self.format_position_simple
+        tb = plt.get_current_fig_manager().toolbar
+        if tb.mode!='': return
         if self.contains:
             hlight = self.highlight_linepoint.findobj()[0]
             while hlight in self.line.axes.lines:
@@ -113,8 +123,11 @@ class LineBuilder:
         'Function that moves the points to desired location'
         if event.inaxes!=self.line.axes: return
         if self.press is None: return
-        sys.stdout.write("\r"+" moving: x=%2.5f, y=%2.5f" %(event.xdata,event.ydata))
-        sys.stdout.flush()
+        tb = plt.get_current_fig_manager().toolbar
+        if tb.mode!='': return
+        if self.verbose:
+            sys.stdout.write("\r"+" moving: x=%2.5f, y=%2.5f" %(event.xdata,event.ydata))
+            sys.stdout.flush()
         if self.contains:
             i = self.contains_index
             self.highlight_linepoint.set_data(event.xdata,event.ydata)
@@ -124,11 +137,12 @@ class LineBuilder:
         self.ys[i] = event.ydata
         if self.m:
             self.lons[i],self.lats[i] = self.m(event.xdata,event.ydata,inverse=True)
-        self.line.set_data(self.xs,self.ys)
+        self.line.set_data(list(self.xs),list(self.ys))
         self.line.figure.canvas.draw()
 
     def onkeypress(self,event):
-        print 'pressed key',event.key,event.xdata,event.ydata
+        if self.verbose:
+            print 'pressed key',event.key,event.xdata,event.ydata
         if event.inaxes!=self.line.axes: return
         if (event.key=='s') | (event.key=='alt+s'):
             print 'Stopping interactive point selection'
@@ -146,7 +160,8 @@ class LineBuilder:
 
     def onfigureenter(self,event):
         'event handler for updating the figure with excel data'
-        print 'entered figure'#, event
+        if self.verbose:
+            print 'entered figure'#, event
         if self.ex:
             self.ex.check_xl()
             self.lats = list(self.ex.lat)
@@ -185,8 +200,20 @@ class LineBuilder:
         else:
             self.n = len(self.xs)
             self.wp = range(1,self.n+1)
+        if self.lbl:
+           for ll in self.lbl:
+                try:
+                    ll.remove()
+                except:
+                    continue    
         for i in self.wp:
-            self.line.axes.annotate('\#%i'%i,(self.xs[i-1],self.ys[i-1]))
+            if not self.lbl:
+                self.lbl = [self.line.axes.annotate('\#%i'%i,
+                                                    (self.xs[i-1],self.ys[i-1]))]
+            else:
+                self.lbl.append(self.line.axes.
+                                annotate('\#%i'%i,(self.xs[i-1],self.ys[i-1])))
+        self.line.figure.canvas.draw()
 
 def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
     """
@@ -202,8 +229,10 @@ def build_basemap(lower_left=[-20,-30],upper_right=[20,10],ax=plt.gca()):
     #m.fillcontinents(color='#AAAAAA')
     m.drawstates()
     m.drawcountries()
-    m.drawmeridians(np.linspace(lower_left[0],upper_right[0],8).astype(int),labels=[0,0,0,1])
-    m.drawparallels(np.linspace(lower_left[1],upper_right[1],8).astype(int),labels=[1,0,0,0])
+    mer = np.linspace(lower_left[0],upper_right[0],8).astype(int)
+    par = np.linspace(lower_left[1],upper_right[1],8).astype(int)
+    m.drawmeridians(mer,labels=[0,0,0,1])
+    m.drawparallels(par,labels=[1,0,0,0])
     return m
 
 def pll(string):
