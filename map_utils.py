@@ -178,7 +178,7 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
 
 # <codecell>
 
-def equi(self, m, centerlon, centerlat, radius, *args, **kwargs):
+def equi(m, centerlon, centerlat, radius, *args, **kwargs):
     """
     plot a single circle on a map
     uses the shoot function below
@@ -199,7 +199,8 @@ def equi(self, m, centerlon, centerlat, radius, *args, **kwargs):
 
     #m.plot(X,Y,**kwargs) #Should work, but doesn't...
     X,Y = m(X,Y)
-    m.plot(X,Y,**kwargs)
+    line = m.ax.plot(X,Y,**kwargs)
+    return line
 
 # <codecell>
 
@@ -288,16 +289,17 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
     glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     if azimuth-180 >= 0:
         while glon2 <= startlon:
-            m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
+            line = m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
             azimuth = baz + 180.
             glat1, glon1 = (glat2, glon2)
  
             glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     elif azimuth-180 < 0:
         while glon2 >= startlon:
-            m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
+            line = m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
             azimuth = baz + 180.
             glat1, glon1 = (glat2, glon2)
  
-            glon2, glat2, baz = shoot(glon1, glat1, azimuth, step
+            glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
+    return line
 
