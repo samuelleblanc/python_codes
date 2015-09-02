@@ -111,9 +111,9 @@ def radius_m2deg(center_lon,center_lat,radius):
         
         - geopy library
     """
-    import geopy
+    from geopy import Point
     from geopy.distance import VincentyDistance
-    origin = geopy.Point(center_lat,center_lon)
+    origin = Point(center_lat,center_lon)
     destination = VincentyDistance(kilometers=radius/1000.0).destination(origin,0.0)
     radius_degrees = abs(center_lat-destination.latitude)
     return radius_degrees
