@@ -55,8 +55,24 @@ fp='C:/Users/sleblan2/Research/NAAMES/plot/'
 # <codecell>
 
 lat = 47.6
-lon = np.array([40.0,45.0,50.0,52.8])
+lon = np.array([-40.0,-45.0,-50.0,-52.8])
 utc = np.arange('2015-11-12T00:00Z','2015-11-13T00:00Z',15,dtype='datetime64[m]').astype(datetime.datetime)
+
+# <codecell>
+
+uu = datetime.datetime(2015,11,12,0,0,10)
+
+# <codecell>
+
+uu.timetuple()
+
+# <codecell>
+
+t = 20.6
+
+# <codecell>
+
+int(floor(t))
 
 # <codecell>
 
@@ -73,6 +89,32 @@ sza = np.zeros((len(lon),len(utc)))
 # <codecell>
 
 azi = np.zeros((len(lon),len(utc)))
+
+# <codecell>
+
+utc.size
+
+# <codecell>
+
+utcsub = utc[0::10]
+
+# <codecell>
+
+utcsub
+
+# <codecell>
+
+latsub = [lat,lat,lat,lat,lat,
+          lat,lat,lat,lat,lat]
+
+# <codecell>
+
+lonsub = [lon[0],lon[0],lon[0],lon[0],lon[0],
+          lon[0],lon[0],lon[0],lon[0],lon[0]]
+
+# <codecell>
+
+szasub = 90.0-sol.GetAltitude(latsub,lonsub,utcsub)
 
 # <codecell>
 
