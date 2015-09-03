@@ -17,8 +17,19 @@ def __init__():
 
 # <codecell>
 
-def spherical_dist(pos1, pos2, r=3958.75):
-    "Calculate the distance, in km, from one point to another (can use arrays)"
+def spherical_dist(pos1, pos2, r=6378.1,use_mi=False):
+    """
+    Calculate the distance, in km if using the default radius, 
+    from one point to another (can use arrays)
+    pos1 is array of [lat,lon]
+    pos2 is array of [lat,lon]
+    if use_mi = True, radius set to 3958.75 miles, default to False, with radius of 6378.1 km
+
+    Modified: Samuel LeBlanc, NASA Ames, Santa Cruz, CA, 2015-09-02
+    """
+    if use_mi:
+        r = 3958.75
+        print 'using miles'
     import numpy as np
     pos1 = np.array(pos1)
     pos2 = np.array(pos2)
@@ -302,4 +313,27 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
  
             glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     return line
+
+# <codecell>
+
+def get_sza_azi(lat,lon,datetime):
+    """
+    Program wrapper for pysolar to get the solar zenith angle and the solar azimuth angle
+    can use inputs of list or numpy arrays
+    require input of lat,lon,datetime 
+    """
+    import Pysolar.solar as sol
+    try:
+        n = len(lat)
+    except TypeError:
+        lat = [lat]
+        lon = [lon]
+        datetime = [datetime]
+        n = len(lat)
+    sza = []
+    azi = []
+    for i in range(n):
+        sza.append(90.0-sol.GetAltitude(lat[i],lon[i],datetime[i]))
+        azi.append(sol.GetAzimuth(lat[i],lon[i],datetime[i]))
+    return sza,azi
 
