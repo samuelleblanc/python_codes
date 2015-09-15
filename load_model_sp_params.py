@@ -275,6 +275,33 @@ plot_greys()
 plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/zen_spectra_model.eps')
 
+# <markdowncell>
+
+# Plot the same but with squeezed axes
+
+# <codecell>
+
+fp
+
+# <codecell>
+
+fig,ax=norm()
+fig.set_figheight(5)
+fig.set_figwidth(6)
+lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
+         ('Ice Cloud Model, $\\tau$=0.5','Greens',1,[13,34],1,[380,0.02]),
+         ('Liquid Cloud Model, $\\tau$=10','RdPu',0,[0,13],9,[700,0.16]),
+         ('Ice Cloud Model, $\\tau$=10','Blues',1,[13,34],9,[750,0.15])]
+for names,cmap,iphase,irefs,itau,pos in lines:
+    [alow,ahigh] = plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
+plt.legend([alow[0],ahigh[0]],lbl,
+           frameon=False,loc=7,prop={'size':10})
+ax.text(600,0.19/0.22,'4STAR Measurement')
+norm(fig,ax)
+plt.axvspan(350,1700,color='#FFFFFF')
+plot_greys()
+plt.savefig(fp+'plots/zen_spectra_model_squeeze.png',dpi=600,transparent=True)
+
 # <headingcell level=3>
 
 # Now calculate the parameters for the measured spectra

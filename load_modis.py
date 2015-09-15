@@ -146,10 +146,15 @@ def load_ict(fname,return_header=False,make_nan=True):
     f = open(fname,'r')
     lines = f.readlines()
     first = lines[0]
-    num2skip = int(first.strip().split(',')[0])
+    sep = ','
+    try:
+        num2skip = int(first.strip().split(sep)[0])
+    except ValueError:
+        sep = None
+        num2skip = int(first.strip().split(sep)[0])
     header = lines[0:num2skip]
-    factor = map(float,header[10].strip().split(','))
-    missing = map(float,header[11].strip().split(','))
+    factor = map(float,header[10].strip().split(sep))
+    missing = map(float,header[11].strip().split(sep))
     f.close()
     if any([i!=1 for i in factor]):
         print('Some Scaling factors are not equal to one, Please check the factors:')
@@ -159,7 +164,7 @@ def load_ict(fname,return_header=False,make_nan=True):
     def utctime(seconds_utc):
         return float(seconds_utc)/3600.
     conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime, "TIME_UTC":utctime, "UTC_mid":utctime}
-    data = np.genfromtxt(fname,names=True,delimiter=',',skip_header=num2skip-1,converters=conv)
+    data = np.genfromtxt(fname,names=True,delimiter=sep,skip_header=num2skip-1,converters=conv)
     print data.dtype.names
     #scale the values by using the scale factors
     for i,name in enumerate(data.dtype.names):
