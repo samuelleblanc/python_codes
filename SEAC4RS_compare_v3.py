@@ -69,11 +69,13 @@
 
 %config InlineBackend.rc = {}
 import matplotlib 
+
+matplotlib.use('nbagg')
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+#matplotlib.use('nbagg')
 import numpy as np, h5py
 #import plotly.plotly as py
 import scipy.io as sio
@@ -83,6 +85,10 @@ import Sp_parameters as Sp
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
+
+# <codecell>
+
+matplotlib.get_backend()
 
 # <codecell>
 
