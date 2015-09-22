@@ -150,6 +150,7 @@ def load_ict(fname,return_header=False,make_nan=True):
     try:
         num2skip = int(first.strip().split(sep)[0])
     except ValueError:
+        print 'Seperation is set to a space'
         sep = None
         num2skip = int(first.strip().split(sep)[0])
     header = lines[0:num2skip]

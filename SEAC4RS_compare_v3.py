@@ -333,6 +333,14 @@ mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flat
 
 # <codecell>
 
+mea['w'][0][1068]
+
+# <codecell>
+
+plt.plot(mea['w'][0])
+
+# <codecell>
+
 plt.figure()
 plt.plot(mea['utc'],abs(mea['rad'][:,1024]-mea['rad'][:,1068]))
 plt.xlabel('UTC [Hours]')
@@ -354,6 +362,30 @@ if 'meas' in locals():
 # first convert measurements to Sp class, with inherent parameters defined
 meas = Sp.Sp(mea)
 meas.params()
+
+# <codecell>
+
+meas.sp.shape
+
+# <codecell>
+
+fig = plt.figure()
+color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
+for i in range(len(meas.utc)):
+    plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+plt.title('All radiance spectra')
+
+# <codecell>
+
+fig = plt.figure()
+color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
+for i in range(len(meas.utc)):
+    plt.plot(meas.wvl,meas.norm[i,:])
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Radiance')
+plt.title('All normalized radiance spectra')
 
 # <headingcell level=2>
 
@@ -457,13 +489,13 @@ from load_modis import load_ict
 # <codecell>
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
-ssfr_er2 = load_ict(ssfr_er2_file)[0]
+ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 # <codecell>
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
-er2 = load_ict(nasdat_er2_file)[0]
+er2 = load_ict(nasdat_er2_file)
 print len(er2['Start_UTC'])
 print er2['Start_UTC']
 print np.min(er2['Solar_Zenith_Angle'])
@@ -698,6 +730,9 @@ ssfr.ref[ssfr.ref==60] = np.nan
 
 # <codecell>
 
+
+# <codecell>
+
 figsr,axsr = plt.subplots(3,1,sharex=True)
 axsr[0].plot(ssfr.utc,ssfr.tau[:,1])
 axsr[1].plot(ssfr.utc,ssfr.ref[:,1])
@@ -712,7 +747,7 @@ axsr[2].set_xlim([18.0,19.2])
 
 # <headingcell level=2>
 
-# Load data from CPL to caompare flight profiles of DC8 and ER2 to cloud layers
+# Load data from CPL to compare flight profiles of DC8 and ER2 to cloud layers
 
 # <codecell>
 
@@ -1112,6 +1147,10 @@ csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.Greys
 plt.colorbar(csz)
 plt.xlabel('UTC [h]')
 plt.ylabel('Altitude [m]')
+
+# <codecell>
+
+%matplotlib notebook
 
 # <codecell>
 
