@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <codecell>
+# coding: utf-8
+
+# In[ ]:
 
 def __init__():
     """
@@ -17,7 +17,8 @@ def __init__():
     """
     pass
 
-# <codecell>
+
+# In[1]:
 
 def load_modis(geofile,datfile):
     """
@@ -130,7 +131,8 @@ def load_modis(geofile,datfile):
     del geosds, datsds,sds,lonsds,latsds,geosub,datsub
     return modis,modis_dicts
 
-# <codecell>
+
+# In[1]:
 
 def load_ict(fname,return_header=False,make_nan=True):
     """
@@ -179,7 +181,8 @@ def load_ict(fname,return_header=False,make_nan=True):
     else:
         return data
 
-# <codecell>
+
+# In[ ]:
 
 def modis_qa(qa_array):
     """
@@ -192,7 +195,8 @@ def modis_qa(qa_array):
     
     
 
-# <codecell>
+
+# In[ ]:
 
 def mat2py_time(matlab_datenum):
     "convert a matlab datenum to a python datetime object. Works on numpy arrays of datenum"
@@ -206,7 +210,8 @@ def mat2py_time(matlab_datenum):
         python_datetime = np.array([m2ptime(matlab_datenum.flatten()[i]) for i in xrange(matlab_datenum.size)])
     return python_datetime
 
-# <codecell>
+
+# In[1]:
 
 def toutc(pydatetime):
     "Convert python datetime to utc fractional hours"
@@ -215,10 +220,10 @@ def toutc(pydatetime):
         return utc_fx(pydatetime)
     except:
         import numpy as np
-        return np.array([utc_fx(pydatetime.flatten()[i])+(pydatetime.flatten()[i].day-pydatetime.flatten()[0].day)*24.0 \
-                         for i in xrange(pydatetime.size)]) 
+        return np.array([utc_fx(pydatetime.flatten()[i])+(pydatetime.flatten()[i].day-pydatetime.flatten()[0].day)*24.0                          for i in xrange(pydatetime.size)]) 
 
-# <codecell>
+
+# In[ ]:
 
 def load_emas(datfile):
     """
@@ -322,7 +327,8 @@ def load_emas(datfile):
     del datsds,sds,datsub
     return emas,emas_dicts
 
-# <codecell>
+
+# In[ ]:
 
 def load_hdf(datfile,values=None,verbose=True):
     """
@@ -438,7 +444,8 @@ def load_hdf(datfile,values=None,verbose=True):
     del datsds,sds,datsub
     return hdf,hdf_dicts
 
-# <codecell>
+
+# In[1]:
 
 def load_cpl_layers(datfile,values=None):
     """
@@ -530,7 +537,8 @@ def load_cpl_layers(datfile,values=None):
                 
     return d
 
-# <codecell>
+
+# In[1]:
 
 def load_apr(datfiles):
     """
@@ -605,9 +613,22 @@ def load_apr(datfiles):
         try:
             for z in range(apr['altz'].shape[0]):
                 apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+        except IndexError:
+            try:
+                print 'swaping axes'
+                apr['altflt'] = np.swapaxes(apr['altflt'],0,1)
+                apr['altz'] = np.swapaxes(apr['altz'],0,1)
+                apr['latz'] = np.swapaxes(apr['latz'],0,1)
+                apr['lonz'] = np.swapaxes(apr['lonz'],0,1)
+                apr['dbz'] = np.swapaxes(apr['dbz'],0,1)
+                for z in range(apr['altz'].shape[0]):
+                    apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+            except:
+                print 'Problem file:',f
+                print '... Skipping'
+                continue
         except:
             print 'Problem with file: ',f
-            print ' ... dimensions do not agree'
             print ' ... Skipping'
             continue
         izen = apr['altz'][:,0,0].argmax() #get the index of zenith
@@ -633,7 +654,8 @@ def load_apr(datfiles):
     print 'Loaded data points: ', aprout['utc'].shape
     return aprout        
 
-# <codecell>
+
+# In[1]:
 
 def load_amsr(datfile,lonlatfile):
     """
@@ -702,7 +724,8 @@ def load_amsr(datfile,lonlatfile):
     dat['lon'] = datll['lon']
     return dat
 
-# <codecell>
+
+# In[ ]:
 
 def load_hdf_sd(FILE_NAME):
     """
@@ -784,7 +807,8 @@ def load_hdf_sd(FILE_NAME):
             print 'Problem in filling with nans and getting the offsets, must do it manually'
     return dat, dat_dict
 
-# <codecell>
+
+# In[ ]:
 
 def remove_field_name(a, name):
     names = list(a.dtype.names)
@@ -793,78 +817,15 @@ def remove_field_name(a, name):
     b = a[names]
     return b
 
-# <markdowncell>
 
 # Testing of the script:
 
-# <codecell>
+# In[4]:
 
 if __name__ == "__main__":
-
-# <codecell>
-
     import os
     import numpy as np
     from osgeo import gdal
-
-# <codecell>
-
-    fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
-
-# <codecell>
-
-    myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
-    myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
-    print os.path.isfile(myd03_file) #check if it exists
-    print os.path.isfile(myd06_file)
-
-# <codecell>
-
-    myd_geo = gdal.Open(myd03_file)
-    myd_geo_sub = myd_geo.GetSubDatasets()
-    for i in range(len(myd_geo_sub)):
-        print str(i)+': '+myd_geo_sub[i][1]
-
-# <codecell>
-
-    latsds = gdal.Open(myd_geo_sub[12][0],gdal.GA_ReadOnly)
-    lonsds = gdal.Open(myd_geo_sub[13][0],gdal.GA_ReadOnly)
-    szasds = gdal.Open(myd_geo_sub[21][0],gdal.GA_ReadOnly)
-
-# <codecell>
-
-    print latsds.RasterCount # verify that only one raster exists
-    lat = latsds.ReadAsArray()
-    lon = lonsds.ReadAsArray()
-    sza = szasds.ReadAsArray()
-    print lon.shape
-
-# <markdowncell>
-
-# Now load the specific data files:
-
-# <codecell>
-
-    myd_dat = gdal.Open(myd06_file)
-    myd_dat_sub = myd_dat.GetSubDatasets()
-    for i in range(len(myd_dat_sub)):
-        print str(i)+': '+myd_dat_sub[i][1]
-
-# <codecell>
-
-    print myd_dat_sub[118]
-    retfsds = gdal.Open(myd_dat_sub[118][0])
-
-# <codecell>
-
-    for key,value in myd_dat.GetMetadata_Dict().items():
-        print key,value
-
-# <markdowncell>
-
-# Load the different modis values:
-
-# <codecell>
 
     modis_values = (('cloud_top',57),
                     ('phase',53),
@@ -880,31 +841,24 @@ if __name__ == "__main__":
                     ('cloud_mask',110)
                     )
 
-# <markdowncell>
 
 # Testing the metadata dictionary
 
-# <codecell>
+# In[ ]:
+
+if __name__ == "__main__":
 
     gdal.Open(myd_dat_sub[53][0]).GetMetadata()
-
-# <codecell>
 
     mm = dict()
     mm['one'] = gdal.Open(myd_dat_sub[72][0]).GetMetadata()
     mm['two'] = gdal.Open(myd_dat_sub[74][0]).GetMetadata()
     mm['two']['_FillValue']
 
-# <codecell>
-
     from Sp_parameters import startprogress, progress, endprogress
     import gc; gc.collect()
 
-# <codecell>
-
     tuple(i[0] for i in modis_values).index('etau')
-
-# <codecell>
 
     modis = dict()
     modis_dicts = dict()
@@ -916,8 +870,6 @@ if __name__ == "__main__":
         modis[i][modis[i] == float(modis_dicts[i]['_FillValue'])] = np.nan
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
-
-# <codecell>
 
     print modis.keys()
     print modis_dicts.keys()
