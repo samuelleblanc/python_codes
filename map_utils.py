@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <codecell>
+# coding: utf-8
+
+# In[ ]:
 
 def __init__():
     """
@@ -15,7 +15,8 @@ def __init__():
     """
     pass
 
-# <codecell>
+
+# In[1]:
 
 def spherical_dist(pos1, pos2, r=6378.1,use_mi=False):
     """
@@ -41,7 +42,8 @@ def spherical_dist(pos1, pos2, r=6378.1,use_mi=False):
     cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
     return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
 
-# <codecell>
+
+# In[1]:
 
 def bearing(pos1,pos2):
     "Calculate the initial bearing, in degrees, to go from one point to another, along a great circle"
@@ -59,7 +61,8 @@ def bearing(pos1,pos2):
     cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
     return (np.arctan2(sin_lon_d*cos_lat2,cos_lat1*sin_lat2-sin_lat1*cos_lat2*cos_lon_d)*180.0/np.pi+360.0) % 360.0
 
-# <codecell>
+
+# In[2]:
 
 def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
@@ -108,7 +111,8 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     endprogress()
     return meas_ind
 
-# <codecell>
+
+# In[ ]:
 
 def radius_m2deg(center_lon,center_lat,radius):
     """ 
@@ -129,7 +133,8 @@ def radius_m2deg(center_lon,center_lat,radius):
     radius_degrees = abs(center_lat-destination.latitude)
     return radius_degrees
 
-# <codecell>
+
+# In[1]:
 
 def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
     """
@@ -187,7 +192,8 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
     print out.keys()
     return out
 
-# <codecell>
+
+# In[3]:
 
 def equi(m, centerlon, centerlat, radius, *args, **kwargs):
     """
@@ -213,7 +219,8 @@ def equi(m, centerlon, centerlat, radius, *args, **kwargs):
     line = m.ax.plot(X,Y,**kwargs)
     return line
 
-# <codecell>
+
+# In[4]:
 
 def shoot(lon, lat, azimuth, maxdist=None):
     """Shooter Function
@@ -283,7 +290,8 @@ def shoot(lon, lat, azimuth, maxdist=None):
  
     return (glon2, glat2, baz)
 
-# <codecell>
+
+# In[ ]:
 
 def great(m, startlon, startlat, azimuth,*args, **kwargs):
     """
@@ -314,7 +322,8 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
             glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     return line
 
-# <codecell>
+
+# In[1]:
 
 def get_sza_azi(lat,lon,datetime):
     """
@@ -336,4 +345,33 @@ def get_sza_azi(lat,lon,datetime):
         sza.append(90.0-sol.GetAltitude(lat[i],lon[i],datetime[i]))
         azi.append(sol.GetAzimuth(lat[i],lon[i],datetime[i]))
     return sza,azi
+
+
+# In[1]:
+
+def consecutive(data, stepsize=1):
+    'simple program to get consecutive values'
+    import numpy as np
+    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
+
+
+# In[3]:
+
+def mplot_spec(m,lon,lat,*args,**kwargs):
+    'Program to plot lines on a map, wihtout the extra cross sides of lines because of the dateline problem'
+    import numpy as np
+    from map_utils import consecutive
+    latrange = [m.llcrnrlat,m.urcrnrlat]
+    lonrange = [m.llcrnrlon,m.urcrnrlon]
+    lon = np.array(lon)
+    lat = np.array(lat)
+    ii, = np.where((lat<=latrange[1])&(lat>=latrange[0])&(lon>=lonrange[0])&(lon<=lonrange[1]))
+    ic = consecutive(ii)
+    lines = []
+    for c in ic:
+        if c[0] != 0 : c = np.insert(c,0,c[0]-1)
+        if c[-1] != len(lon)-1: c = np.append(c,c[-1]+1)
+        x,y = m(lon[c],lat[c])
+        lines.append(m.plot(x,y,*args,**kwargs))
+    return lines  
 
