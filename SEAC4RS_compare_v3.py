@@ -63,7 +63,7 @@
 # 
 #     Written: Samuel LeBlanc, NASA Ames
 
-# In[1]:
+# In[2]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -83,18 +83,18 @@ import Sp_parameters as Sp
 #mpld3.enable_notbeook()
 
 
-# In[2]:
+# In[3]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[4]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[4]:
+# In[5]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -102,7 +102,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[4]:
+# In[8]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
@@ -115,7 +115,7 @@ iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[5]:
+# In[9]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -124,19 +124,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[6]:
+# In[10]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[7]:
+# In[11]:
 
 lut.sp_hires()
 
 
-# In[8]:
+# In[12]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -505,7 +505,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[49]:
+# In[13]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -513,14 +513,14 @@ if 'lm' in locals():
 from load_modis import load_ict
 
 
-# In[54]:
+# In[14]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[55]:
+# In[15]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -529,7 +529,7 @@ print er2['Start_UTC']
 print np.min(er2['Solar_Zenith_Angle'])
 
 
-# In[29]:
+# In[16]:
 
 plt.figure()
 feet2meter=0.3048
@@ -542,14 +542,14 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[56]:
+# In[17]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
 print er2['Pressure_Altitude'][12000]
 
 
-# In[57]:
+# In[18]:
 
 ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
 ssfr_idl = sio.idl.readsav(ssfr_idl_file)
@@ -558,7 +558,7 @@ print np.shape(ssfr_idl['zspectra'])
 print np.shape(ssfr_idl['sat'])
 
 
-# In[58]:
+# In[19]:
 
 class object():
     pass
@@ -585,20 +585,20 @@ else:
     ssfr.Rnir[ssfr.Rnir>1] = np.nan
 
 
-# In[59]:
+# In[20]:
 
 print i500, i1650
 i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
 
 
-# In[60]:
+# In[21]:
 
 iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
 iu2 = np.argmin(abs(ssfr_er2['UTC']-18.5))
 print iu,iu2
 
 
-# In[61]:
+# In[22]:
 
 print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
 print ssfr_er2['DN500'][iu2+200], ssfr_idl['nspectra'][iu+200,i500], ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
@@ -609,7 +609,7 @@ rup500 = ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
 rdn500 = ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
 
 
-# In[62]:
+# In[23]:
 
 print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
 print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
@@ -620,18 +620,18 @@ rup1600 = ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
 rdn1600 = ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
 
 
-# In[63]:
+# In[24]:
 
 print rup500/rdn500
 
 
-# In[64]:
+# In[25]:
 
 ssfr.Rvis = ssfr.Rvis*rup500/rdn500
 ssfr.Rnir = ssfr.Rnir*rup1600/rdn1600
 
 
-# In[65]:
+# In[26]:
 
 print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
 print ssfr_idl['nadlambda'][i1650-2]
@@ -639,7 +639,7 @@ print i500, i1650
 print len(ssfr.utc), len(ssfr.Rvis)
 
 
-# In[66]:
+# In[27]:
 
 from scipy import interpolate
 sza_fx = interpolate.interp1d(er2['Start_UTC'],er2['Solar_Zenith_Angle'],bounds_error=False)
@@ -648,7 +648,7 @@ print sza_fx(18.41)
 print ssfr.utc[17000], ssfr.sza[17000]
 
 
-# In[34]:
+# In[28]:
 
 fig = plt.figure()
 fig.add_subplot(1,2,1)
@@ -667,23 +667,24 @@ plt.xlim([17.8,19.2])
 
 # ##### Check the lut for reflectance
 
-# In[67]:
+# In[29]:
 
 lut.sp_hires(doirrad=True)
 
 
-# In[68]:
+# In[30]:
 
 lut.reflect.shape
 
 
-# In[69]:
+# In[31]:
 
 lut.ref
 
 
-# In[61]:
+# In[80]:
 
+figref = plt.figure(15,16)
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
 axref = axref.ravel()
 for i in range(lut.ref.size/2-1):
@@ -715,7 +716,7 @@ cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
 plt.savefig(fp+'plots/Spectral_reflectance_model_ice.png',dpi=600,transparent=True)
-plt.show()
+#plt.show()
 
 
 # In[64]:
@@ -754,6 +755,42 @@ plt.savefig(fp+'plots/Spectral_reflectance_model_liq.png',dpi=600,transparent=Tr
 plt.show()
 
 
+# ### plot the lut
+
+# In[37]:
+
+w500 = np.argmin(abs(lut.wvl-500.0))
+w1700 = np.argmin(abs(lut.wvl-1700.0))
+
+
+# In[35]:
+
+lut.reflect.shape
+
+
+# In[79]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w500,1,ir,:],lut.reflect[1,w1700,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w500,1,ir,-1]+0.01,lut.reflect[1,w1700,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w500,1,:,it],lut.reflect[1,w1700,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.02,lut.reflect[1,w1700,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.01,lut.reflect[1,w1700,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 500 nm') 
+plt.ylabel('Reflectance at 1700 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,0.8])
+plt.savefig(fp+'plots/Reflectance_lut_ice.png',dpi=600,transparent=True)
+
+
 # ### Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
 # In[70]:
@@ -772,11 +809,6 @@ if 'rw' in locals():
 
 ssfr.tau[ssfr.ref==60] = np.nan
 ssfr.ref[ssfr.ref==60] = np.nan
-
-
-# In[ ]:
-
-
 
 
 # In[371]:

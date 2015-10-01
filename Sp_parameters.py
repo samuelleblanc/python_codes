@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Run the different import required at start
 
-# <codecell>
+# In[1]:
 
 from __future__ import division
 import numpy as np
@@ -15,11 +13,10 @@ import warnings
 import sys
 warnings.simplefilter('ignore', np.RankWarning)
 
-# <markdowncell>
 
 # Prepare the different functions require to run the class Sp
 
-# <codecell>
+# In[1]:
 
 def closestindex(a,x):
     " Get the index from a of the closest value from x "
@@ -72,16 +69,10 @@ def deriv(y,x):
     if len(x) < 3:
         print '*** Not enough points ***'
         return
-    d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) - \
-           y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) + \
-           y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
-    d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) + \
-            y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) - \
-            y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
+    d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) -            y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) +            y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
+    d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) +             y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) -             y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
     for i in xrange(1,len(x)-1):
-        d[i] = y[i-1]*(x[i]-x[i+1])/((x[i-1]-x[i])*(x[i-1]-x[i+1])) + \
-               y[i]*(1.0/(x[i]-x[i+1]) - 1.0/(x[i-1]-x[i])) - \
-               y[i+1]*(x[i-1]-x[i])/((x[i-1]-x[i+1])*(x[i]-x[i+1]))
+        d[i] = y[i-1]*(x[i]-x[i+1])/((x[i-1]-x[i])*(x[i-1]-x[i+1])) +                y[i]*(1.0/(x[i]-x[i+1]) - 1.0/(x[i-1]-x[i])) -                y[i+1]*(x[i-1]-x[i])/((x[i-1]-x[i+1])*(x[i]-x[i+1]))
     return d
         
 def nanmasked(x):
@@ -184,11 +175,10 @@ def param(sp,wvlin):
         par[15] = np.nan
     return par
 
-# <markdowncell>
 
 # For fancy ouputting of progress bars
 
-# <codecell>
+# In[3]:
 
 def startprogress(title):
     """
@@ -224,11 +214,10 @@ def endprogress():
     sys.stdout.write("\r" + title_global + ": [" +"#" * 40 + "]100% -- Done! \n")
     sys.stdout.flush()
 
-# <markdowncell>
 
 # Create a class for handling the luts
 
-# <codecell>
+# In[4]:
 
 class lut:
     """
@@ -294,11 +283,10 @@ class lut:
         self.pcoef = self.norm_par()
         
 
-# <markdowncell>
 
 # Create a new class for spectra that returns easy plotting, normalization, parameters, etc.
 
-# <codecell>
+# In[1]:
 
 class Sp:
     """ 
@@ -627,7 +615,7 @@ class Sp:
                 raise LookupError
         self.sp = sp
     
-    def normsp(self,sp):
+    def normsp(self,sp,iws=None):
         " Function to return the normalized spectra list"
         import numpy as np
         import warnings
@@ -705,6 +693,8 @@ class Sp:
         return stdpar
             
 
-# <codecell>
+
+# In[ ]:
+
 
 
