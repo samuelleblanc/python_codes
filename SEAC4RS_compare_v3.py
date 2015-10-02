@@ -285,7 +285,7 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[6]:
+# In[85]:
 
 import load_modis
 reload(load_modis)
@@ -325,7 +325,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[13]:
+# In[83]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -334,19 +334,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[14]:
+# In[86]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[15]:
+# In[87]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[34]:
+# In[88]:
 
 mea['w'][0][1068]
 
@@ -372,7 +372,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[18]:
+# In[107]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -383,12 +383,12 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[19]:
+# In[108]:
 
 meas.sp.shape
 
 
-# In[21]:
+# In[109]:
 
 fig = plt.figure()
 color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -399,7 +399,17 @@ plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 plt.title('All radiance spectra')
 
 
-# In[26]:
+# In[96]:
+
+isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
+
+
+# In[103]:
+
+meas.sp.shape
+
+
+# In[111]:
 
 fig = plt.figure()
 color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -407,29 +417,50 @@ for i in range(len(meas.utc)):
     plt.plot(meas.wvl,meas.norm[i,:])
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Normalized Radiance')
+plt.ylim([0,1])
+plt.title('All normalized radiance spectra')
+
+
+# In[128]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Measurement number')
+plt.title('All radiance spectra [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+
+
+# In[127]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1)
+plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Measurement number')
 plt.title('All normalized radiance spectra')
 
 
 # ## Run the retrieval on 4STAR data
 
-# In[27]:
+# In[129]:
 
 from Sp_parameters import smooth
 
 
-# In[28]:
+# In[130]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[29]:
+# In[131]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[30]:
+# In[132]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -437,18 +468,18 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[35]:
+# In[133]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[36]:
+# In[134]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
-# In[37]:
+# In[135]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -467,11 +498,11 @@ ax[3].plot(meas.utc,meas.ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([18.5,19.05])
-plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.png',dpi=600)
-plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
+plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
+#plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
 
 
-# In[21]:
+# In[136]:
 
 from Sp_parameters import smooth
 fig,ax = plt.subplots(4,sharex=True)
@@ -491,13 +522,13 @@ ax[3].plot(meas.utc,meas.ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([18.5,19.05])
-plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.png',dpi=600)
-plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
+plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
+#plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
 
 
 # Smooth out the retrieved 4STAR data
 
-# In[41]:
+# In[137]:
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
@@ -505,7 +536,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[13]:
+# In[138]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -513,14 +544,16 @@ if 'lm' in locals():
 from load_modis import load_ict
 
 
-# In[14]:
+# ### First load the ER2 files
+
+# In[139]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[15]:
+# In[140]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -529,7 +562,7 @@ print er2['Start_UTC']
 print np.min(er2['Solar_Zenith_Angle'])
 
 
-# In[16]:
+# In[141]:
 
 plt.figure()
 feet2meter=0.3048
@@ -542,12 +575,27 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[17]:
+# In[142]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
 print er2['Pressure_Altitude'][12000]
 
+
+# In[145]:
+
+plt.figure()
+feet2meter=0.3048
+plt.plot(er2['Start_UTC'],er2['Roll_Angle'],'b.',label="Roll")
+plt.plot(er2['Start_UTC'],er2['Pitch_Angle'],'g.',label="Pitch")
+plt.grid(True)
+plt.xlabel('Time [UTC]')
+plt.ylabel('ER-2 Atitude [$^{\circ}$]')
+plt.legend(frameon=False)
+plt.savefig(fp+'plots\\20130913_er2_roll_pitch.png',dpi=600,transparent=True)
+
+
+# ### Now load the SSFR files from the ER2
 
 # In[18]:
 

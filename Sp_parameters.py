@@ -114,13 +114,19 @@ def nan_helper(y):
     """
     return np.isnan(y), lambda z: z.nonzero()[0]
 
-def norm2max(x):
+def norm2max(x,iws=None):
     " Returns a spectrum, x, that is normalized by its maximum value, ignores nans "
     import warnings
     warnings.simplefilter("ignore",RuntimeWarning)
-    return x/np.nanmax(x)    
+    try:
+        if not iws:
+            import numpy as np
+            iws = np.where(x)[0]
+    except ValueError:
+        pass
+    return x/np.nanmax(x[iws])    
     
-def param(sp,wvlin):
+def param(sp,wvlin,iws=None):
     " Calculates the parameters from a spectrum."
     from linfit import linfit
     from Sp_parameters import nanmasked, norm2max, smooth, deriv, find_closest
@@ -128,7 +134,7 @@ def param(sp,wvlin):
     spc, mask = nanmasked(sp)
     wvl = wvlin[mask]
     try:
-        norm = norm2max(spc)
+        norm = norm2max(spc,iws=iws)
     except ValueError:
         par = np.zeros(npar)*np.nan
         return par
@@ -294,7 +300,9 @@ class Sp:
     Includes tools for building look up tables
     
     Modified (v1.1): Samuel LeBlanc, NASA Ames, 2015-05-14
-                    - added in _init_ for checking if using radiance subset instead of all radiances (rad vs. rads), in matlab loaded values 
+                    - added in _init_ for checking if using radiance subset instead of all radiances (rad vs. rads), in matlab loaded values
+    Modified (v1.2): Samuel LeBlanc, NASA Ames, 2015-10-01
+                    - added subset of wavelengths for normalization
     """    
     import numpy as np
     def params(self):
@@ -520,7 +528,8 @@ class Sp:
         print len(self.iwvls), len(self.wvl)
         self.wvl = np.sort(self.wvl)
         self.wvlsort(s,irrad)
-        self.norm = self.normsp(self.sp)
+        self.isubwvl = self.wvl_for_norm(self.wvl,wrange=[315.0,940.0])
+        self.norm = self.normsp(self.sp,iws=self.isubwvl)
         print self.sp.shape
         if self.sp.ndim > 2:
             self.tau = s['tau']
@@ -614,17 +623,27 @@ class Sp:
             else: 
                 raise LookupError
         self.sp = sp
+        
+    def wvl_for_norm(self,wvl,wrange=[315.0,940.0]):
+        " Function that gets the indices for the wavelengths to be used in normalization "
+        import numpy as np
+        return np.where((wvl>=wrange[0])&(wvl<=wrange[1]))[0]
     
     def normsp(self,sp,iws=None):
         " Function to return the normalized spectra list"
         import numpy as np
         import warnings
         warnings.simplefilter("ignore",RuntimeWarning)
+        try:
+            if not iws:
+                iws = np.where(self.wvl)[0]
+        except ValueError:
+            pass
         idxwvl = [i for i in range(sp.ndim) if sp.shape[i] == len(self.wvl)]
         if sp.ndim == 2:
-            norm = sp/np.nanmax(sp,axis=idxwvl[0])[:,None]
+            norm = sp/np.nanmax(sp[:,iws],axis=idxwvl[0])[:,None]
         elif sp.ndim == 5:
-            norm = sp/np.nanmax(sp,axis=idxwvl[0])[:,None,:,:,:]
+            norm = sp/np.nanmax(sp[:,iws,:,:,:],axis=idxwvl[0])[:,None,:,:,:]
         return norm
     
     def reshape_lut(self,phase=None):
