@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -48,7 +46,7 @@
 # 
 #     Wrtten: Samuel LeBlanc, NASA Ames, from Santa Cruz, 2015-06-26
 
-# <codecell>
+# In[182]:
 
 def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     """
@@ -126,7 +124,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     if verbose:
         print('..File finished write_cloud_file, closed')
 
-# <codecell>
+
+# In[204]:
 
 def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False):
     """
@@ -222,7 +221,8 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     if verbose:
         print('..File finished write_aerosol_file_explicit, closed')
 
-# <codecell>
+
+# In[184]:
 
 def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False):
     """
@@ -292,7 +292,8 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
     if verbose:
         print('..File finished write_aerosol_file_explicit_wvl, closed')
 
-# <codecell>
+
+# In[45]:
 
 def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbose=False):
     """
@@ -371,7 +372,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
     if verbose:
         print('..File finished write_cloud_file_moments, closed')
 
-# <codecell>
+
+# In[2]:
 
 def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False):
     """
@@ -439,7 +441,8 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
     if verbose:
         print('..File write_cloud_file_moments_wvl finished, closed')
 
-# <codecell>
+
+# In[185]:
 
 def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     """
@@ -498,7 +501,8 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     if verbose:
         print('..File write_albedo_file finished, closed')
 
-# <codecell>
+
+# In[ ]:
 
 def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     """
@@ -565,7 +569,8 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
 
     return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:,:],moms_dict['nmom'][ir,:]
 
-# <codecell>
+
+# In[1]:
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                     verbose=False,make_base=False,fp_base_file=None,set_quiet=True):
@@ -833,7 +838,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         base.close()
     if verbose: print 'Finished printing main input file: Closing file'   
 
-# <codecell>
+
+# In[178]:
 
 def merge_dicts(*dict_args):
     """
@@ -845,7 +851,8 @@ def merge_dicts(*dict_args):
         result.update(dictionary)
     return result
 
-# <codecell>
+
+# In[1]:
 
 def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar'):
     """
@@ -948,7 +955,8 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
         return None
     return pmom
 
-# <codecell>
+
+# In[3]:
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
                     wvl_file_sol=None,wvl_file_thm=None,aero_clear=False):
@@ -1146,7 +1154,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         del input_mmm
         file_list.close()
 
-# <codecell>
+
+# In[43]:
 
 def read_libradtran(fp,zout=[0,3,100]):
     """
@@ -1206,7 +1215,8 @@ def read_libradtran(fp,zout=[0,3,100]):
               'int_dif_up':dat[:,6]}
     return output
 
-# <codecell>
+
+# In[47]:
 
 def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
     """
@@ -1332,14 +1342,16 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
             output['LW_irr_up_avg'][:,ilat,ilon] = np.mean(output['LW_irr_up_utc'][:,ilat,ilon,:],axis=1)
     return output
 
-# <codecell>
+
+# In[ ]:
 
 def read_all_aac():
     """
     Simple program to run the read_aac for the files and paths saved
     """
 
-# <codecell>
+
+# In[102]:
 
 def run_from_ipython():
     try:
@@ -1348,134 +1360,156 @@ def run_from_ipython():
     except NameError:
         return False
 
-# <codecell>
+
+# In[ ]:
 
 if __name__=='__main__':
 
-# <codecell>
 
-    import numpy as np
+# In[3]:
 
-# <codecell>
+import numpy as np
 
-    ext = np.array([[0.5,0.4,0.3],[0,0,0]])
-    ssa = ext*1.9
-    asy = ext*1.7
-    ext.shape
 
-# <codecell>
+# In[41]:
 
-    z_arr = np.array([3,4])
-    wvl_arr = np.array([350.,500.,650.])
+ext = np.array([[0.5,0.4,0.3],[0,0,0]])
+ssa = ext*1.9
+asy = ext*1.7
+ext.shape
 
-# <codecell>
 
-    write_aerosol_file_explicit('C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
+# In[43]:
 
-# <codecell>
+z_arr = np.array([3,4])
+wvl_arr = np.array([350.,500.,650.])
 
-    write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
 
-# <codecell>
+# In[46]:
 
-    write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
+write_aerosol_file_explicit('C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
 
-# <codecell>
 
-    write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
-                    verbose=True)
+# In[49]:
 
-# <codecell>
+write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
 
-    import Run_libradtran
-    reload(Run_libradtran)
 
-# <codecell>
+# In[57]:
 
-    mie = make_pmom_inputs()
+write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
 
-# <codecell>
 
-    geo = {'zout':[0,3,100],
-           'lat':-14.0,
-           'lon':-85.0,
-           'year':2007,'month':2,'day':10,'hour':10,'minute':0,'second':0}
-    aero = {'ext':[  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
-         4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
-         3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
-         2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
-         2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
-         1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
-         4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
-         1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
-         7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
-         1.69683997e-04,   8.10304392e-05,   3.35441191e-05],
-            'ssa':[ 0.94027621,  0.94451989,  0.94726128,  0.94923121,  0.95027106,
-        0.95172633,  0.95389696,  0.95572622,  0.9572892 ,  0.95868109,
-        0.9598034 ,  0.9607617 ,  0.96177931,  0.96326677,  0.95907986,
-        0.94878827,  0.92993408,  0.90942679,  0.87588452,  0.85667554,
-        0.83186815,  0.80753487,  0.78811889,  0.76859549,  0.741118  ,
-        0.70538566,  0.66048003,  0.58568778,  0.46758827,  0.27607095],
-            'asy':[ 0.7852096 ,  0.78103743,  0.77684837,  0.77285771,  0.77073574,
-        0.767068  ,  0.76026127,  0.75438874,  0.74906518,  0.74499582,
-        0.74245588,  0.7404872 ,  0.73816073,  0.73253394,  0.72113882,
-        0.70217822,  0.66814234,  0.63567558,  0.58822783,  0.56218055,
-        0.52791341,  0.49239392,  0.4624792 ,  0.43165396,  0.38933818,
-        0.34021788,  0.28974332,  0.22683931,  0.1585286 ,  0.08400939],
-            'z_arr':[3.0,4.0],
-            'wvl_arr':np.array([  0.20005,   0.2343 ,   0.2648 ,   0.2921 ,   0.3105 ,   0.34   ,
-          0.3975 ,   0.4675 ,   0.54625,   0.6423 ,   0.742  ,   0.8415 ,
-          0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
-          4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
-         11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
-    cloud = {'tau':7.6,'ref':12.47,'ztop':3.0,'zbot':2.0,
-             'phase':'wc','write_moments_file':True,'moms_dict':mie}
-    source = {'wvl_range':[202,5600],
-              'source':'solar',
-              'integrate_values':True}
-    albedo = {'create_albedo_file':False,
-              'albedo':0.2}
+# In[109]:
 
-# <codecell>
+write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
+                verbose=True)
 
-    write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
 
-# <codecell>
+# In[44]:
 
-    fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
+import Run_libradtran
+reload(Run_libradtran)
 
-# <codecell>
 
-    import pandas as pd
+# In[92]:
 
-# <codecell>
+mie = make_pmom_inputs()
 
-    d = pd.read_csv(fp,delim_whitespace=True,engine='c')
 
-# <codecell>
+# In[93]:
 
-    d
+geo = {'zout':[0,3,100],
+       'lat':-14.0,
+       'lon':-85.0,
+       'year':2007,'month':2,'day':10,'hour':10,'minute':0,'second':0}
+aero = {'ext':[  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
+     4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
+     3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
+     2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
+     2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
+     1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
+     4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
+     1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
+     7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
+     1.69683997e-04,   8.10304392e-05,   3.35441191e-05],
+        'ssa':[ 0.94027621,  0.94451989,  0.94726128,  0.94923121,  0.95027106,
+    0.95172633,  0.95389696,  0.95572622,  0.9572892 ,  0.95868109,
+    0.9598034 ,  0.9607617 ,  0.96177931,  0.96326677,  0.95907986,
+    0.94878827,  0.92993408,  0.90942679,  0.87588452,  0.85667554,
+    0.83186815,  0.80753487,  0.78811889,  0.76859549,  0.741118  ,
+    0.70538566,  0.66048003,  0.58568778,  0.46758827,  0.27607095],
+        'asy':[ 0.7852096 ,  0.78103743,  0.77684837,  0.77285771,  0.77073574,
+    0.767068  ,  0.76026127,  0.75438874,  0.74906518,  0.74499582,
+    0.74245588,  0.7404872 ,  0.73816073,  0.73253394,  0.72113882,
+    0.70217822,  0.66814234,  0.63567558,  0.58822783,  0.56218055,
+    0.52791341,  0.49239392,  0.4624792 ,  0.43165396,  0.38933818,
+    0.34021788,  0.28974332,  0.22683931,  0.1585286 ,  0.08400939],
+        'z_arr':[3.0,4.0],
+        'wvl_arr':np.array([  0.20005,   0.2343 ,   0.2648 ,   0.2921 ,   0.3105 ,   0.34   ,
+      0.3975 ,   0.4675 ,   0.54625,   0.6423 ,   0.742  ,   0.8415 ,
+      0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
+      4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
+     11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
+cloud = {'tau':7.6,'ref':12.47,'ztop':3.0,'zbot':2.0,
+         'phase':'wc','write_moments_file':True,'moms_dict':mie}
+source = {'wvl_range':[202,5600],
+          'source':'solar',
+          'integrate_values':True}
+albedo = {'create_albedo_file':False,
+          'albedo':0.2}
 
-# <codecell>
 
-    dat = np.array(d)
+# In[94]:
 
-# <codecell>
+write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
 
-    dat
 
-# <codecell>
+# In[39]:
 
-    #if run_from_ipython():
-    #    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
-    #    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
-    #    %timeit gg = np.loadtxt(fp)
-    #    %timeit gh = np.genfromtxt(fp)
+fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
 
-# <codecell>
 
-    Run_libradtran.read_libradtran(fp)
+# In[48]:
 
-# <codecell>
+import pandas as pd
+
+
+# In[81]:
+
+d = pd.read_csv(fp,delim_whitespace=True,engine='c')
+
+
+# In[82]:
+
+d
+
+
+# In[83]:
+
+dat = np.array(d)
+
+
+# In[84]:
+
+dat
+
+
+# In[106]:
+
+#if run_from_ipython():
+#    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
+#    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
+#    %timeit gg = np.loadtxt(fp)
+#    %timeit gh = np.genfromtxt(fp)
+
+
+# In[45]:
+
+Run_libradtran.read_libradtran(fp)
+
+
+# In[ ]:
+
 
 
