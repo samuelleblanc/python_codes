@@ -45,6 +45,8 @@
 # Modification History:
 # 
 #     Wrtten: Samuel LeBlanc, NASA Ames, from Santa Cruz, 2015-06-26
+#     Modified: Samuel LeBlanc, NASA Ames, 2015-10-06
+#             - added function to write out the write_aac dictionaries to a version file
 
 # In[182]:
 
@@ -584,7 +586,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         Writes the libradtran input file with defined defaults, see below
         outputs libradtran input files in ascii format
         
-        ** There is a multitude of other default parameters. These should be changed for any other type of input files to be written
+        ** There is a multitude of other default parameters. 
+        ** These should be changed for any other type of input files to be written
     
     Input: 
   
@@ -593,8 +596,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             sza: solar zenith angle (libradtran default is 0)
             lat: latitude
             lon: longitude
-            doy: day of year
-            year: year (YYYY format)
+            doy: day of year  # for calculating sun earth distance
+            year: year (YYYY format) # used if you want uvspec to calculate the sza
             month: month (MM format)
             day: day of the month (DD format)
             hour: hour of the day, 24h format, UTC
@@ -603,14 +606,14 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             zout: at what altitude should be outputted, in km, default is 0 and 100
         aero: dictionary with aerosol properties
             ext: value of aerosol extinction coefficient at each altitude and wavelength [alt,wvl]
-              To define the top most layer, ext must be zero at that altitude
+                 To define the top most layer, ext must be zero at that altitude
             ssa: value of aerosol single scattering albedo at each altitude and wavelength [alt,wvl]
             asy: value of aerosol asymmetry parameter at each altitude and wavelength [alt,wvl]
             z_arr: value of altitudes to use with ext,ssa,asy
             wvl_arr: array of wavelengths in nm
             link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to aero dict
             file_name: file name and paths of explicit file for aerosol defined. 
-                        By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
+                       By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
         cloud: dictionary with cloud properties
             tau: value of cloud optical thickness
             ref: value of effective radius in microns
@@ -618,17 +621,18 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             zbot: location in km of cloud bottom
             phase: either 'ic' for ice cloud or 'wc' for water cloud
             write_moments_file: (default False) if True, writes out moments into an ascii file instead 
-              of reading directly from the netcdf file. Requires the moments to be put in the cloud dict and the nmom.
+                                of reading directly from the netcdf file. 
+                                Requires the moments to be put in the cloud dict and the nmom.
             moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. To be used when building the moments file
             link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to cloud dict
             file_name: file name and paths of moments file for cloud defined. 
-                        By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
+                       By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
             dat_path: data path to be used. Defaults to pleaides values (/u/sleblan2/libradtran/libRadtran-2.0-beta/data/)
             integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
-                            if set to False, returns per_nm irradiance values
+                              if set to False, returns per_nm irradiance values
             wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
             run_fuliou: if set to True, then runs fu liou instead of sbdart (default is False)
         albedo: dictionary with albedo properties
@@ -638,13 +642,15 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             alb: wavelength dependent value of albedo for use when create_albedo_file is set to True
             alb_wvl: wavelength grid of albedo for use when create_albedo_file is set to True
             sea_surface_albedo: (default False) If True, sets the sea surface to be parameterized by cox and munk, 
-                            requires wind_speed to be set.
+                                requires wind_speed to be set.
             wind_speed: [m/s] (default to 10 m/s) Only used if sea_surface_albedo is set to True. 
-                            wind speed over water for parameterization of cox_and_munk
+                        wind speed over water for parameterization of cox_and_munk
         make_base: boolean to set if the base file is to be written out
-                    if False, no base file is saved
+                   if False, no base file is saved.
+                   Base file contains quiet flag, data path, source, rad transfer solver, 
+                     output process, wavelength source file, 
         fp_base_file: full file path for base file. 
-                    If set to a file path and make_base to False, then include path is printed to input file. 
+                      If set to a file path and make_base to False, then include path is printed to input file. 
         set_quiet: if True then quiet is set in the input file, if False, quiet is not set. (default True)
     
     Output:
@@ -682,6 +688,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - possibility of using the fuliou codes instead of sbdart
                 - added link_to_mom_file to cloud and aero dict
                 - added file_name in cloud and aero dict
+        Modified: Samuel LeBlanc, 2015-10-06, NASA Ames, CA
+                - modified comments
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -1343,12 +1351,40 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
     return output
 
 
+# In[4]:
+
+def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},tau=[None],ref=[None],sza=[None]):
+    'Program to write an ascii file to print out the version and set up info'
+    from Run_libradtran import writeDict
+    f = open(filename,'a')
+    f.write('UVSpec input file version: {} \n'.format(vv))
+    f.write('sza = {} \n'.format(sza))
+    f.write('tau = {} \n'.format(tau))
+    f.write('ref = {} \n'.format(ref))
+    f.close()
+    writeDict(geo,'geo',filename)
+    writeDict(aero,'aero',filename)
+    writeDict(cloud,'cloud',filename)
+    writeDict(source,'source',filename)
+    writeDict(albedo,'albedo',filename)    
+
+
+# In[3]:
+
+def writeDict(dict_in, dict_name, filename):
+    with open(filename, "a") as f:
+        f.write("{}\n".format(dict_name))
+        for i,v in dict_in.items():            
+            f.write("  {}: {}\n".format(i,v))
+
+
 # In[ ]:
 
 def read_all_aac():
     """
     Simple program to run the read_aac for the files and paths saved
     """
+    pass
 
 
 # In[102]:
@@ -1364,152 +1400,128 @@ def run_from_ipython():
 # In[ ]:
 
 if __name__=='__main__':
+    import numpy as np
+    ext = np.array([[0.5,0.4,0.3],[0,0,0]])
+    ssa = ext*1.9
+    asy = ext*1.7
+    ext.shape
 
+    z_arr = np.array([3,4])
+    wvl_arr = np.array([350.,500.,650.])
 
-# In[3]:
-
-import numpy as np
-
-
-# In[41]:
-
-ext = np.array([[0.5,0.4,0.3],[0,0,0]])
-ssa = ext*1.9
-asy = ext*1.7
-ext.shape
-
-
-# In[43]:
-
-z_arr = np.array([3,4])
-wvl_arr = np.array([350.,500.,650.])
-
-
-# In[46]:
-
-write_aerosol_file_explicit('C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
+    write_aerosol_file_explicit('C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
 
 
 # In[49]:
 
-write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
+if __name__=='__main__':
+    write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
 
 
 # In[57]:
 
-write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
+if __name__=='__main__':
+    write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
 
 
 # In[109]:
 
-write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
-                verbose=True)
+if __name__=='__main__':
+    write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
+                    verbose=True)
 
 
 # In[44]:
 
-import Run_libradtran
-reload(Run_libradtran)
+if __name__=='__main__':
+    import Run_libradtran
+    reload(Run_libradtran)
 
 
 # In[92]:
 
-mie = make_pmom_inputs()
+if __name__=='__main__':
+    mie = make_pmom_inputs()
 
 
 # In[93]:
 
-geo = {'zout':[0,3,100],
-       'lat':-14.0,
-       'lon':-85.0,
-       'year':2007,'month':2,'day':10,'hour':10,'minute':0,'second':0}
-aero = {'ext':[  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
-     4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
-     3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
-     2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
-     2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
-     1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
-     4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
-     1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
-     7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
-     1.69683997e-04,   8.10304392e-05,   3.35441191e-05],
-        'ssa':[ 0.94027621,  0.94451989,  0.94726128,  0.94923121,  0.95027106,
-    0.95172633,  0.95389696,  0.95572622,  0.9572892 ,  0.95868109,
-    0.9598034 ,  0.9607617 ,  0.96177931,  0.96326677,  0.95907986,
-    0.94878827,  0.92993408,  0.90942679,  0.87588452,  0.85667554,
-    0.83186815,  0.80753487,  0.78811889,  0.76859549,  0.741118  ,
-    0.70538566,  0.66048003,  0.58568778,  0.46758827,  0.27607095],
-        'asy':[ 0.7852096 ,  0.78103743,  0.77684837,  0.77285771,  0.77073574,
-    0.767068  ,  0.76026127,  0.75438874,  0.74906518,  0.74499582,
-    0.74245588,  0.7404872 ,  0.73816073,  0.73253394,  0.72113882,
-    0.70217822,  0.66814234,  0.63567558,  0.58822783,  0.56218055,
-    0.52791341,  0.49239392,  0.4624792 ,  0.43165396,  0.38933818,
-    0.34021788,  0.28974332,  0.22683931,  0.1585286 ,  0.08400939],
-        'z_arr':[3.0,4.0],
-        'wvl_arr':np.array([  0.20005,   0.2343 ,   0.2648 ,   0.2921 ,   0.3105 ,   0.34   ,
-      0.3975 ,   0.4675 ,   0.54625,   0.6423 ,   0.742  ,   0.8415 ,
-      0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
-      4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
-     11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
-cloud = {'tau':7.6,'ref':12.47,'ztop':3.0,'zbot':2.0,
-         'phase':'wc','write_moments_file':True,'moms_dict':mie}
-source = {'wvl_range':[202,5600],
-          'source':'solar',
-          'integrate_values':True}
-albedo = {'create_albedo_file':False,
-          'albedo':0.2}
+if __name__=='__main__':
+    geo = {'zout':[0,3,100],
+           'lat':-14.0,
+           'lon':-85.0,
+           'year':2007,'month':2,'day':10,'hour':10,'minute':0,'second':0}
+    aero = {'ext':[  4.85364736e-02,   4.66139195e-02,   4.47312609e-02,
+         4.30849589e-02,   4.19923201e-02,   4.03355801e-02,
+         3.74764159e-02,   3.45595009e-02,   3.19684762e-02,
+         2.94772306e-02,   2.74202103e-02,   2.57334360e-02,
+         2.39507641e-02,   2.08731768e-02,   1.67933569e-02,
+         1.29016393e-02,   9.04034361e-03,   6.65431703e-03,
+         4.35758656e-03,   3.47793084e-03,   2.59552084e-03,
+         1.92045503e-03,   1.48977972e-03,   1.14460091e-03,
+         7.92407241e-04,   5.10274383e-04,   3.17954425e-04,
+         1.69683997e-04,   8.10304392e-05,   3.35441191e-05],
+            'ssa':[ 0.94027621,  0.94451989,  0.94726128,  0.94923121,  0.95027106,
+        0.95172633,  0.95389696,  0.95572622,  0.9572892 ,  0.95868109,
+        0.9598034 ,  0.9607617 ,  0.96177931,  0.96326677,  0.95907986,
+        0.94878827,  0.92993408,  0.90942679,  0.87588452,  0.85667554,
+        0.83186815,  0.80753487,  0.78811889,  0.76859549,  0.741118  ,
+        0.70538566,  0.66048003,  0.58568778,  0.46758827,  0.27607095],
+            'asy':[ 0.7852096 ,  0.78103743,  0.77684837,  0.77285771,  0.77073574,
+        0.767068  ,  0.76026127,  0.75438874,  0.74906518,  0.74499582,
+        0.74245588,  0.7404872 ,  0.73816073,  0.73253394,  0.72113882,
+        0.70217822,  0.66814234,  0.63567558,  0.58822783,  0.56218055,
+        0.52791341,  0.49239392,  0.4624792 ,  0.43165396,  0.38933818,
+        0.34021788,  0.28974332,  0.22683931,  0.1585286 ,  0.08400939],
+            'z_arr':[3.0,4.0],
+            'wvl_arr':np.array([  0.20005,   0.2343 ,   0.2648 ,   0.2921 ,   0.3105 ,   0.34   ,
+          0.3975 ,   0.4675 ,   0.54625,   0.6423 ,   0.742  ,   0.8415 ,
+          0.9655 ,   1.226  ,   1.6574 ,   2.2024 ,   3.0044 ,   3.7544 ,
+          4.9    ,   5.57   ,   6.51   ,   7.57   ,   8.545  ,   9.645  ,
+         11.35   ,  13.7    ,  16.7    ,  21.75   ,  30.35   ,  50.     ])*1000.0}
+    cloud = {'tau':7.6,'ref':12.47,'ztop':3.0,'zbot':2.0,
+             'phase':'wc','write_moments_file':True,'moms_dict':mie}
+    source = {'wvl_range':[202,5600],
+              'source':'solar',
+              'integrate_values':True}
+    albedo = {'create_albedo_file':False,
+              'albedo':0.2}
 
 
 # In[94]:
 
-write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
+if __name__=='__main__':
+    write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
 
 
 # In[39]:
 
-fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
+if __name__=='__main__':
+    fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
 
+    import pandas as pd
 
-# In[48]:
-
-import pandas as pd
-
-
-# In[81]:
-
-d = pd.read_csv(fp,delim_whitespace=True,engine='c')
+    d = pd.read_csv(fp,delim_whitespace=True,engine='c')
 
 
 # In[82]:
 
-d
+if __name__=='__main__':
+    d
 
 
 # In[83]:
 
-dat = np.array(d)
+if __name__=='__main__':
+    dat = np.array(d)
 
+    dat
 
-# In[84]:
+    #if run_from_ipython():
+    #    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
+    #    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
+    #    %timeit gg = np.loadtxt(fp)
+    #    %timeit gh = np.genfromtxt(fp)
 
-dat
-
-
-# In[106]:
-
-#if run_from_ipython():
-#    %timeit rr = np.fromfile(fp,sep=' ').reshape((3,7))
-#    %timeit dd = np.array(pd.read_csv(fp,delim_whitespace=True,engine='c'))
-#    %timeit gg = np.loadtxt(fp)
-#    %timeit gh = np.genfromtxt(fp)
-
-
-# In[45]:
-
-Run_libradtran.read_libradtran(fp)
-
-
-# In[ ]:
-
-
+    Run_libradtran.read_libradtran(fp)
 
