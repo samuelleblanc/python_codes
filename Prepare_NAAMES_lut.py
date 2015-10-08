@@ -121,7 +121,9 @@ source = {'wvl_range':[350,1750],
           'source':'solar',
           'integrate_values':False,
           'run_fuliou':False,
-          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
+          'atm_file':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/atmmod/afglmw.dat',
+          'zenith':True}
 albedo = {'create_albedo_file':False,
           'sea_surface_albedo':True,
           'wind_speed':14.0}

@@ -636,6 +636,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
             run_fuliou: if set to True, then runs fu liou instead of sbdart (default is False)
             slit_file: (defaults to None) Full file path of slit file to use for calculating the radiative transfer.
+            atm_file: (defaults to None) Full file path of the atmosphere file to use, 
+                      if not set, libradtran calculates from position and time on Earth
+            zenith: (defaults to False) if True, prepares the input file for returning zenith radiances
+                    adds a zenith viewing angle (umu=-1), azimuth viewing angle (phi=130) and solar azimuth angle (phi0=130)
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -712,6 +716,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         Modified: Samuel LeBlanc, 2015-10-06, NASA Ames, CA
                 - modified comments
                 - added slit_file to source options
+                - added atm_file to source options
+                - added zenith radiance keyword
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -741,7 +747,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                           'source':'solar',
                           'wvl_range':[250.0,500.0],
                           'integrate_values':True,
-                          'run_fuliou':False},source)
+                          'run_fuliou':False,
+                          'zenith':False},source)
     albedo = merge_dicts({'create_albedo_file':False,'sea_surface_albedo':False,'wind_speed':10,
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
@@ -769,6 +776,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             output.write('mol_abs_param sbdart\n')
         output.write('rte_solver disort\n')
+    
     
     if verbose: print '..write out source dict values'
     if make_base:
@@ -804,6 +812,16 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         
     if source.get('slit_file'):
         output.write('slit_function_file\t%s\n'%source['slit_file'])
+        
+    if source.get('atm_file'):
+        output.write('atmosphere_file\t%s\n'%source['atm_file'])
+        
+    if source['zenith']:
+        output.write('umu\t-1.0\n')
+        output.write('phi\t130.0\n')
+        output.write('phi0\t130.0\n')
+    
+    
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
