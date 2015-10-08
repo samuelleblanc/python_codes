@@ -67,7 +67,7 @@ if os.sys.platform == 'win32':
 elif os.sys.platform == 'linux2':
     fp = '/u/sleblan2/NAAMES/'
     fp_rtm = '/nobackup/sleblan2/rtm/'
-    fp_uvpsec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
+    fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
 else:
     raise Exception
 
@@ -135,8 +135,8 @@ RL.print_version_details(fp_rtm+'NAAMES_lut_%s.txt'%vv,vv,geo=geo,
 
 # In[71]:
 
-fp_in = fp_rtm+'input\\%s_NAAMES\\'%vv
-fp_out = fp_rtm+'output\\%s_NAAMES\\'%vv
+fp_in = os.path.join(fp_rtm,'input','%s_NAAMES'%vv)
+fp_out = os.path.join(fp_rtm,'output','%s_NAAMES'%vv)
 
 
 # In[72]:
@@ -149,11 +149,7 @@ if not os.path.exists(fp_out):
 
 # In[79]:
 
-f_list = open(fp+'run\\NAAMES_list_%s.sh'%vv,'w')
-
-
-# In[80]:
-
+f_list = open(os.path.join(fp,'run','NAAMES_list_%s.sh'%vv),'w')
 print f_list.name
 
 
@@ -170,24 +166,24 @@ for s in sza:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'w0.dat'
                 source['wvl_range'] = [400.,981.]
-                RL.write_input_aac(fp_in+fname0,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+fp_in+fname0+' > '+fp_out+fname0+'\n')
                 fname1 = fname+'_'+cloud['phase']+'w1.dat'
                 source['wvl_range'] = [981.,1700.]
-                RL.write_input_aac(fp_in+fname1,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+fp_in+fname1+' > '+fp_out+fname1+'\n')
             if r<=30.0:
                 cloud['phase'] = 'wc'
                 fname0 = fname+'_'+cloud['phase']+'w0.dat'
                 source['wvl_range'] = [400.,981.]
-                RL.write_input_aac(fp_in+fname0,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+fp_in+fname0+' > '+fp_out+fname0+'\n')
                 fname1 = fname+'_'+cloud['phase']+'w1.dat'
                 source['wvl_range'] = [981.,1700.]
-                RL.write_input_aac(fp_in+fname1,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+fp_in+fname1+' > '+fp_out+fname1+'\n')                
             print s,t,r
