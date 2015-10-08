@@ -45,20 +45,20 @@
 
 # # Prepare the python environment
 
-# In[1]:
+# In[66]:
 
 import numpy as np
 import scipy.io as sio
 import os
 
 
-# In[45]:
+# In[67]:
 
 import Run_libradtran as RL
 reload(RL)
 
 
-# In[62]:
+# In[68]:
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\NAAMES\\'
@@ -74,7 +74,7 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[24]:
+# In[69]:
 
 vv = 'v1'
 
@@ -86,7 +86,7 @@ sza = np.arange(40,90,2)
 
 # In[19]:
 
-sza
+print sza
 
 
 # In[55]:
@@ -99,15 +99,15 @@ ref = np.append(np.arange(2,30),np.arange(30,61,2.5))
 
 # In[57]:
 
-ref.shape
+print ref.shape
 
 
 # In[58]:
 
-tau.shape
+print tau.shape
 
 
-# In[59]:
+# In[70]:
 
 geo = {'lat':47.6212167,
        'lon':52.74245,
@@ -133,13 +133,13 @@ RL.print_version_details(fp_rtm+'NAAMES_lut_%s.txt'%vv,vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
 
 
-# In[63]:
+# In[71]:
 
 fp_in = fp_rtm+'input\\%s_NAAMES\\'
 fp_out = fp_rtm+'output\\%s_NAAMES\\'
 
 
-# In[64]:
+# In[72]:
 
 if not os.path.exists(fp_in):
     os.makedirs(fp_in)
@@ -147,9 +147,14 @@ if not os.path.exists(fp_out):
     os.makedirs(fp_out)
 
 
-# In[ ]:
+# In[79]:
 
 f_list = open(fp+'run\\NAAMES_list_%s.sh'%vv,'w')
+
+
+# In[80]:
+
+print f_list.name
 
 
 # In[ ]:
