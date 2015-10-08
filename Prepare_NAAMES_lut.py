@@ -139,6 +139,12 @@ fp_in = os.path.join(fp_rtm,'input','%s_NAAMES'%vv)
 fp_out = os.path.join(fp_rtm,'output','%s_NAAMES'%vv)
 
 
+# In[82]:
+
+f_slit_vis = os.path.join(fp_rtm,'4STAR_vis_slit_1nm.dat')
+f_slit_nir = os.path.join(fp_rtm,'4STAR_nir_slit_1nm.dat')
+
+
 # In[72]:
 
 if not os.path.exists(fp_in):
@@ -166,11 +172,13 @@ for s in sza:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
+                source['slit_file'] = f_slit_vis
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
+                source['slit_file'] = f_slit_nir
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')
@@ -178,11 +186,13 @@ for s in sza:
                 cloud['phase'] = 'wc'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
+                source['slit_file'] = f_slit_vis
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
+                source['slit_file'] = f_slit_nir
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
