@@ -135,8 +135,8 @@ RL.print_version_details(fp_rtm+'NAAMES_lut_%s.txt'%vv,vv,geo=geo,
 
 # In[71]:
 
-fp_in = fp_rtm+'input\\%s_NAAMES\\'
-fp_out = fp_rtm+'output\\%s_NAAMES\\'
+fp_in = fp_rtm+'input\\%s_NAAMES\\'%vv
+fp_out = fp_rtm+'output\\%s_NAAMES\\'%vv
 
 
 # In[72]:
