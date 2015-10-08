@@ -129,7 +129,7 @@ albedo = {'create_albedo_file':False,
 
 # In[60]:
 
-RL.print_version_details(fp_rtm+'NAAMES_lut_%s.txt'%vv,vv,geo=geo,
+RL.print_version_details(fp+'NAAMES_lut_%s.txt'%vv,vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
 
 
@@ -164,28 +164,28 @@ for s in sza:
             cloud['ref'] = r
             if r>=5.0:
                 cloud['phase'] = 'ic'
-                fname0 = fname+'_'+cloud['phase']+'w0.dat'
+                fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
-                f_list.write(fp_uvspec+' < '+fp_in+fname0+' > '+fp_out+fname0+'\n')
-                fname1 = fname+'_'+cloud['phase']+'w1.dat'
+                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
+                fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
-                f_list.write(fp_uvspec+' < '+fp_in+fname1+' > '+fp_out+fname1+'\n')
+                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')
             if r<=30.0:
                 cloud['phase'] = 'wc'
-                fname0 = fname+'_'+cloud['phase']+'w0.dat'
+                fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
-                f_list.write(fp_uvspec+' < '+fp_in+fname0+' > '+fp_out+fname0+'\n')
-                fname1 = fname+'_'+cloud['phase']+'w1.dat'
+                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
+                fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
-                f_list.write(fp_uvspec+' < '+fp_in+fname1+' > '+fp_out+fname1+'\n')                
+                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
             print s,t,r
 
 
