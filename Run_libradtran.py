@@ -635,6 +635,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                               if set to False, returns per_nm irradiance values
             wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
             run_fuliou: if set to True, then runs fu liou instead of sbdart (default is False)
+            slit_file: (defaults to None) Full file path of slit file to use for calculating the radiative transfer.
         albedo: dictionary with albedo properties
             create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
             albedo_file: path of albedo file to use if already created 
@@ -671,8 +672,28 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         none
     
     Example:
-
-        ...
+        
+        Example taken from lut creation for NAAMES, 
+            uses St John's Newfoundland location, on Nov. 19th for low clouds (from 0.5km to 1.5km) over ocean
+            returns zenith radiances and irradiance at 0.2,3.0 and 100 km
+            uses internal cloud properties
+            for vis spectral range, with slit function
+            no aerosol
+            cloud tau=2.0, ref=5.0, sza=40.0
+        
+        >>> geo = {'lat':47.6212167,'lon':52.74245,'doy':322,'zout':[0.2,3.0,100.0]}
+        >>> aero = {} # none
+        >>> cloud = {'ztop':1.5,'zbot':0.5,'write_moments_file':False}
+        >>> source = {'wvl_range':[400.0,981.0],'source':'solar','integrate_values':False,'run_fuliou':False,
+                      'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+        >>> albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':14.0}
+        >>> cloud['phase'] = 'wc'
+        >>> geo['sza'] = 40.0
+        >>> cloud['tau'] = 2.0
+        >>> cloud['ref'] = 5.0
+        
+        >>> RL.write_input_aac('/u/sleblan2/NAAMES/runs/NAAMES_v1.dat',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
         
     Modification History:
     
@@ -690,6 +711,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added file_name in cloud and aero dict
         Modified: Samuel LeBlanc, 2015-10-06, NASA Ames, CA
                 - modified comments
+                - added slit_file to source options
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -779,6 +801,9 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             print 'wvl_range starting too low, setting to 250 nm'
             source['wvl_range'][0] = 250.0
         output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+        
+    if source.get('slit_file'):
+        output.write('slit_function_file\t%s\n'%source['slit_file'])
     
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
@@ -1356,7 +1381,7 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
 def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},tau=[None],ref=[None],sza=[None]):
     'Program to write an ascii file to print out the version and set up info'
     from Run_libradtran import writeDict
-    f = open(filename,'a')
+    f = open(filename,'w')
     f.write('UVSpec input file version: {} \n'.format(vv))
     f.write('sza = {} \n'.format(sza))
     f.write('tau = {} \n'.format(tau))
