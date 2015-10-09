@@ -182,7 +182,7 @@ print f_list.name
 for s in sza:
     for t in tau:
         for r in ref:
-            fname = 'lut_sza%02i_ref%02.1f_tau%03.1f' % (s,t,r)
+            fname = 'lut_sza%02i_tau%06.2f_ref%04.1f' % (s,t,r)
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
