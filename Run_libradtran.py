@@ -874,7 +874,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         elif cloud['phase']=='wc':
             if verbose: print '..Liquid water cloud'
             output.write('wc_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
-            output.write('wc_properties mie\n')
+            output.write('wc_properties mie \t %s\n' %('interpolate' if not source['run_fuliou']))
         else:
             raise ValueError('phase value in cloud dict not recognised')
         if cloud['write_moments_file']:
