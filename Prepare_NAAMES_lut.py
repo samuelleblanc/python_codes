@@ -74,37 +74,53 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[69]:
+# In[84]:
 
-vv = 'v1'
-
-
-# In[16]:
-
-sza = np.arange(40,90,2)
+vv = 'v2'
 
 
-# In[19]:
+# In[136]:
 
-print sza
-
-
-# In[55]:
-
-tau = np.array([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,
-       6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,25.0,30.0,35.0,40.0,45.0,50.0,
-       60.0,70.0,80.0,90.0,100.0])
-ref = np.append(np.arange(2,30),np.arange(30,61,2.5))
+mu = np.arange(1.05,4.0,0.2)
 
 
-# In[57]:
+# In[137]:
 
-print ref.shape
+mu.shape
 
 
-# In[58]:
+# In[139]:
 
-print tau.shape
+sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
+
+
+# In[87]:
+
+#sza = np.arange(40,91,5)
+
+
+# In[140]:
+
+print(sza)
+
+
+# In[108]:
+
+tau = np.array([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,2.5,3.0,4.0,5.0,
+       6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,25.0,30.0,40.0,50.0,
+       60.0,70.0,80.0,100.0])
+ref = np.append(np.append(np.arange(2,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,2.5)))
+
+
+# In[109]:
+
+ref
+
+
+# In[112]:
+
+print(ref.shape)
+print(tau.shape)
 
 
 # In[70]:
