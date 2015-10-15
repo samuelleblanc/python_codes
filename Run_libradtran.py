@@ -1271,6 +1271,8 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
     else:
         arr_len = 7
     dat = np.fromfile(fp,sep=' ')
+    if len(dat)==0 :
+        raise IOError('File {} empty'.format(fp))
     dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
     output = {'wvl':dat[:,0,0].squeeze(),
               'zout':zout,
