@@ -29,9 +29,9 @@
 # Dependencies:
 # 
 #     - numpy
-#     - scipy : for saving and reading
+#     - hdf5storage : for saving and reading
 #     - Run_Libradtran
-# 
+#     - os
 #   
 # Needed Files:
 # 
@@ -43,11 +43,11 @@
 
 # # Prepare the python environment
 
-# In[2]:
+# In[9]:
 
 import numpy as np
 import Run_libradtran as RL
-import scipy.io as sio
+import hdf5storage as hs
 import os
 
 
@@ -95,7 +95,7 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 print 'Saving matlab file'
 
 
-# In[ ]:
+# In[10]:
 
-sio.savemat(fp+'{}_NAAMES_lut.mat'.format(vv),dat)
+hs.savemat(fp+'{}_NAAMES_lut.mat'.format(vv),dat)
 
