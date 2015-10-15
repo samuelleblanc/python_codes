@@ -1451,7 +1451,7 @@ def combine_wvl(dat1,dat2):
 # In[ ]:
 
 def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
-             phase=['wc','ic'],fmt='lut_sza{sza:02i}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1i}.dat',
+             phase=['wc','ic'],fmt='lut_sza{sza:02d}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',
              split_wvl=True):
     """
     Purpose:
