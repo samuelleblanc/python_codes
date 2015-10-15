@@ -50,10 +50,6 @@
 import numpy as np
 import scipy.io as sio
 import os
-
-
-# In[67]:
-
 import Run_libradtran as RL
 reload(RL)
 
@@ -77,30 +73,14 @@ else:
 # In[84]:
 
 vv = 'v2'
-
-
-# In[136]:
-
 mu = np.arange(1.05,4.0,0.2)
-
-
-# In[137]:
-
 mu.shape
 
 
 # In[139]:
 
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
-
-
-# In[87]:
-
 #sza = np.arange(40,91,5)
-
-
-# In[140]:
-
 print(sza)
 
 

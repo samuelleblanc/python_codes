@@ -1208,29 +1208,35 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
 
 # In[43]:
 
-def read_libradtran(fp,zout=[0,3,100]):
+def read_libradtran(fp,zout=[0,3,100],num_rad=0):
     """
     Purpose:
     
-        Program to read the output of libradtran irradiance files
-        Very simple output of 3 zout, one wavelength
+        Program to read the output of libradtran irradiance and radiance files
+        output irradiance for any number of wavelengths, and number of zouts
+        in addition to any number of radiance zenith directions, and only one azimuth direction
     
     Inputs:
     
         fp: full path of file to read
         zout: array of zout values
+        num_rad: to load radiance set to number of zenith angle directions (defaults to none)
         
     Outputs:
     
         out: dictionary with
-            wvl:
-            zout:
+            wvl: wavelength array 
+            zout: zout values
             direct_down: irradiance down from direct beam
             diffuse_down: irradiance down from diffuse soruces
             diffuse_up: irradiance upwwelling
             int_dir_dn: average intensity direct down
             int_dif_dn: average intensity diffuse down
             int_dif_up: average intensity diffuse up
+            umu: (if radiance set to more than one) returns the cosine of the zenith angle direction of the radiance values
+            phi: (if rad set) returns a singular azimuth angle of the radiance value
+            rad: radiance array at zouts, at a single phi, and at the wavelengths (uu in libradtran notation)
+            rad_avg : azimuthally averaged radiance values, not intensity corrected (u0u in libradtran notation)
         
     Dependencies:
     
@@ -1248,6 +1254,8 @@ def read_libradtran(fp,zout=[0,3,100]):
     Modification History:
     
         Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2015-10-14, NASA Ames, Santa Cruz, CA
+                  - added handling of radiance values
         
     """
     #import os
@@ -1255,15 +1263,35 @@ def read_libradtran(fp,zout=[0,3,100]):
     #if not os.path.isfile(fp):
     #    raise IOError('File not found')
     #    return
-    dat = np.fromfile(fp,sep=' ').reshape((len(zout),7))
-    output = {'wvl':dat[:,0],
+    zout_len = len(zout)
+    if num_rad:
+        arr_len = 11
+        if num_rad>1:
+            arr_len += 3*(num_rad-1)
+    else:
+        arr_len = 7
+    dat = np.fromfile(fp,sep=' ')
+    dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
+    output = {'wvl':dat[:,0,0].squeeze(),
               'zout':zout,
-              'direct_down':dat[:,1],
-              'diffuse_down':dat[:,2],
-              'diffuse_up':dat[:,3],
-              'int_dir_dn':dat[:,4],
-              'int_dif_dn':dat[:,5],
-              'int_dif_up':dat[:,6]}
+              'direct_down':dat[:,:,1].squeeze(),
+              'diffuse_down':dat[:,:,2].squeeze(),
+              'diffuse_up':dat[:,:,3].squeeze(),
+              'int_dir_dn':dat[:,:,4].squeeze(),
+              'int_dif_dn':dat[:,:,5].squeeze(),
+              'int_dif_up':dat[:,:,6].squeeze()}
+    if num_rad:
+        output['rad'] = dat[:,:,10].squeeze()
+        output['rad_avg'] = dat[:,:,9].squeeze()
+        output['phi'] = dat[0,0,7]
+        output['umu'] = np.array([dat[0,0,8]])
+        if num_rad>1:
+            output['rad'] = output['rad'][...,np.newaxis]
+            output['rad_avg'] = output['rad_avg'][...,np.newaxis]
+        for i in range(num_rad-1):
+            output['umu'] = np.append(output['umu'],dat[0,0,11+i*3])
+            output['rad'][:,:,:,i+1] = dat[:,:,13+i*3]
+            output['rad_avg'][:,:,:,i+1] = dat[:,:,12+i*3]
     return output
 
 
@@ -1392,6 +1420,128 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
             output['LW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['LW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
             output['LW_irr_up_avg'][:,ilat,ilon] = np.mean(output['LW_irr_up_utc'][:,ilat,ilon,:],axis=1)
     return output
+
+
+# In[ ]:
+
+def combine_wvl(dat1,dat2):
+    """
+    Program to combine the output of read_libradtran along the wavelength dimension
+    """
+    import numpy as np
+    dat = dat1
+    if not (dat1['phi']==dat2['phi']):
+        print '*** Possible problem, the two arrays do not match in phi'
+    if not (dat1['zout']==dat2['zout']):
+        print '*** Possible problem, the two arrays do not match in zout'
+    if not (dat1['umu']==dat2['umu']):
+        print '*** Possible problem, the two arrays do not match in umu'
+    dat['rad_avg'] = np.vstack((dat1['rad_avg'],dat2['rad_avg']))
+    dat['direct_down'] = np.vstack((dat1['direct_down'],dat2['direct_down']))
+    dat['diffuse_up'] = np.vstack((dat1['diffuse_up'],dat2['diffuse_up']))
+    dat['diffuse_down'] = np.vstack((dat1['diffuse_down'],dat2['diffuse_down']))
+    dat['int_dif_up'] = np.vstack((dat1['int_dif_up'],dat2['int_dif_up']))
+    dat['int_dir_dn'] = np.vstack((dat1['int_dir_dn'],dat2['int_dir_dn']))
+    dat['int_dif_dn'] = np.vstack((dat1['int_dif_dn'],dat2['int_dif_dn']))
+    dat['rad'] = np.vstack((dat1['rad'],dat2['rad']))
+    dat['wvl'] = np.hstack((dat1['wvl'],dat2['wvl']))
+    return dat
+
+
+# In[ ]:
+
+def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
+             phase=['wc','ic'],fmt='lut_sza{sza:02i}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1i}.dat',
+             split_wvl=True):
+    """
+    Purpose:
+    
+        Simple program to read all the output of the libradtran runs for LUT creation
+        Program to read the output of libradtran irradiance and radiance files
+    
+    Inputs:
+    
+        fp_out: full path of the directory with the files to read
+        zout: array of altitude out values (km)
+        tau: array of tau values
+        ref: array of ref values
+        sza: array of solar zenith angles to read (if not set, will not run through the solar zenith angles)
+        phase: array of string values linked to phase
+        fmt: format line used to create the files (with new >2.7 format string type, including '{}')
+             should include full file name with extension, 
+             and named format characters for 'tau', 'ref', 'sza','phase','iwvl' 
+             If file name does not require any of these, program doe snot freeze by omission 
+        split_wvl: (defaults to True) if set then files are split per wavelength 
+                   loads two seperate file per combination of tau, ref, sza, and phase
+        
+    Outputs:
+    
+        out: dictionary with the saved output 
+        
+    Dependencies:
+    
+        Run_libradtran (this file)
+        os
+        numpy
+        
+    Required files:
+    
+        files of libradtran output
+        
+    Example:
+    
+        ...
+        
+    Modification History:
+    
+        Written: Samuel LeBlanc, 2015-10-14, NASA Ames, Santa Cruz, CA
+        
+    """
+    import Run_libradtran as RL
+    import os 
+    import numpy as np
+    
+    #test of single load of file
+    dat1 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
+                              zout=zout,num_rad=1)
+    if split_wvl:
+        dat2 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
+                                  zout=zout,num_rad=1)
+        dat = RL.combine_wvl(dat1,dat2)
+    else:
+        dat = dat1
+    output = {'rad':np.zeros((len(phase),len(dat['wvl']),
+                              len(zout),len(ref),len(tau),len(sza))),
+              'wvl':dat['wvl'],
+              'zout':zout,
+              'irr_dn':np.zeros((len(phase),len(dat['wvl']),
+                                 len(zout),len(ref),len(tau),len(sza))),
+              'irr_up':np.zeros((len(phase),len(dat['wvl']),
+                                 len(zout),len(ref),len(tau),len(sza))),
+              'irr_dn_diff':np.zeros((len(phase),len(dat['wvl']),
+                                      len(zout),len(ref),len(tau),len(sza))),
+              'tau':tau,
+              'ref':ref,
+              'sza':sza,
+              'phase':phase}
+    for iz,s in enumerate(sza):
+        for it,t in enumerate(tau):
+            for ir,r in enumerate(ref):
+                for ip,p in enumerate(phase):
+                    dat1 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
+                                              zout=zout,num_rad=1)
+                    if split_wvl:
+                        dat2 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
+                                                  zout=zout,num_rad=1)            
+                        dat1 = RL.combine_wvl(dat1,dat2)
+                    output['rad'][ip,:,:,ir,it,iz] = dat1['rad']
+                    output['irr_up'][ip,:,:,ir,it,iz] = dat1['diffuse_up']
+                    output['irr_dn'][ip,:,:,ir,it,iz] = dat1['direct_down']+dat1['diffuse_down']
+                    output['irr_dn_diff'][ip,:,:,ir,it,iz] = dat1['diffuse_down']
+                    print s,t,r
+    return output               
+#'lut_sza%02i_tau%06.2f_ref%04.1f'
+#'lut_sza%02i_ref%02.1f_tau%03.1f'
 
 
 # In[4]:
