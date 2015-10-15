@@ -1528,12 +1528,15 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
         for it,t in enumerate(tau):
             for ir,r in enumerate(ref):
                 for ip,p in enumerate(phase):
-                    dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
-                                              zout=zout,num_rad=1)
-                    if split_wvl:
-                        dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
-                                                  zout=zout,num_rad=1)            
-                        dat1 = RL.combine_wvl(dat1,dat2)
+                    try:
+                        dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
+                                                  zout=zout,num_rad=1)
+                        if split_wvl:
+                            dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
+                                                      zout=zout,num_rad=1)            
+                            dat1 = RL.combine_wvl(dat1,dat2)
+                    except IOError:
+                        continue
                     output['rad'][ip,:,:,ir,it,iz] = dat1['rad']
                     output['irr_up'][ip,:,:,ir,it,iz] = dat1['diffuse_up']
                     output['irr_dn'][ip,:,:,ir,it,iz] = dat1['direct_down']+dat1['diffuse_down']
