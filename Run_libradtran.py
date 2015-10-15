@@ -1502,10 +1502,10 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
     import numpy as np
     
     #test of single load of file
-    dat1 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
+    dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
                               zout=zout,num_rad=1)
     if split_wvl:
-        dat2 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
+        dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
                                   zout=zout,num_rad=1)
         dat = RL.combine_wvl(dat1,dat2)
     else:
@@ -1528,10 +1528,10 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
         for it,t in enumerate(tau):
             for ir,r in enumerate(ref):
                 for ip,p in enumerate(phase):
-                    dat1 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
+                    dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
                                               zout=zout,num_rad=1)
                     if split_wvl:
-                        dat2 = RL.read_libradtran(os.path.join(fp,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
+                        dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
                                                   zout=zout,num_rad=1)            
                         dat1 = RL.combine_wvl(dat1,dat2)
                     output['rad'][ip,:,:,ir,it,iz] = dat1['rad']
