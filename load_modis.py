@@ -215,7 +215,7 @@ def mat2py_time(matlab_datenum):
 
 def toutc(pydatetime):
     "Convert python datetime to utc fractional hours"
-    utc_fx = lambda x: float(x.hour)+float(x.minute)/60.0+float(x.second)/3600.0+float(x.microsecond)/360000000.0
+    utc_fx = lambda x: float(x.hour)+float(x.minute)/60.0+float(x.second)/3600.0+float(x.microsecond)/3600000000.0
     try: 
         return utc_fx(pydatetime)
     except:
