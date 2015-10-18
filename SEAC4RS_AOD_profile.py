@@ -36,6 +36,7 @@
 #     - mpl_toolkits
 #     - plotting_utils (user defined plotting routines)
 #     - map_utils, dependent on geopy
+#     - Basemap
 #   
 # Needed Files:
 # 
@@ -133,7 +134,7 @@ ii = np.where((star['Alt']>2100)&(star['utc']<14.75))[0][1]
 ii
 
 
-# In[159]:
+# In[163]:
 
 fig = plt.figure()
 ax = plt.subplot2grid((4,4),(0,0),colspan=3,rowspan=3)
@@ -141,7 +142,7 @@ cb = ax.pcolorfast(star['w'].flatten()*1000.0,star['Alt'][it].flatten(),star['ta
                    cmap='gist_ncar',vmin=0,vmax=1.0)
 ax2 = plt.subplot2grid((4,4),(0,3),sharey=ax,rowspan=3)
 ax2.plot(star['tau_aero'][it,i515],star['Alt'][it],'k.-')
-axc = plt.colorbar(cb)
+axc = plt.colorbar(cb,extend='max')
 axc.set_label('Aerosol Optical Thickness')
 ax.set_ylabel('Altitude [m]')
 ax.set_ylim([1000,8000])
@@ -160,6 +161,11 @@ plt.setp(ax.get_xticklabels(), visible=False)
 plt.savefig(fp+'plots\\AOD_Alt_profile_20130816.png',dpi=600,transparent=True)
 
 
+# In[164]:
+
+star['Alt'][ii]
+
+
 # In[148]:
 
 plt.figure()
@@ -172,4 +178,48 @@ plt.ylim([0,2.0])
 
 plt.figure()
 plt.plot(star['tau_aero'][it,i515],star['Alt'][it],'k.')
+
+
+# In[165]:
+
+from mpl_toolkits.basemap import Basemap,cm
+
+
+# In[167]:
+
+star.keys()
+
+
+# In[172]:
+
+fig,ax = plt.subplots(1,1)
+m = Basemap(projection='stere',lon_0=-95,lat_0=30,
+            llcrnrlon=-97, llcrnrlat=28,
+            urcrnrlon=-93, urcrnrlat=32,resolution='h',ax=ax)
+m.drawcoastlines()
+    #m.fillcontinents(color='#AAAAAA')
+m.drawstates()
+m.drawcountries()
+m.drawmeridians([-93,-94,-95,-96,-97,-98],labels=[0,0,0,1])
+m.drawparallels([26,27,28,29,30,31,32,33],labels=[1,0,0,0])
+xt,yt = m(-95.3831,29.7628)
+ax.text(xt,yt,'+')
+ax.text(xt,yt,'Houston, TX',horizontalalignment='right',verticalalignment='top')
+m.plot(star['Lon'][it],star['Lat'][it],'b.',latlon=True)
+plt.savefig(fp+'plots\\map_take_off_profile_20130816.png',dpi=600,transparent=True)
+
+
+# In[173]:
+
+import map_utils as mu
+
+
+# In[180]:
+
+pos1,pos2 = [star['Lat'][it][0][0],star['Lon'][it][0][0]],[star['Lat'][it][-1][0],star['Lon'][it][-1][0]]
+
+
+# In[182]:
+
+mu.spherical_dist(pos1,pos2)
 
