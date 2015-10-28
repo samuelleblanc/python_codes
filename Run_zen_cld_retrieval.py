@@ -70,6 +70,7 @@ import argparse
 from load_modis import mat2py_time, toutc
 import Sp_parameters as Sp
 from mpltools import color
+import scipy.io as sio
 
 
 # ## Prepare command line argument parser
@@ -146,12 +147,12 @@ else:
     fp_zencld = fp
 
 
-# In[78]:
+# In[93]:
 
 if in_.get('fp_lut_mat'):
     fp_lut_mat = in_.get('fp_lut_mat')
 else:
-    fp_lut_mat = fp+'v2_NAAMES_lut.mat'
+    fp_lut_mat = fp+'/v2_NAAMES_lut.mat'
 
 
 # # Load starzen files and the look up table
@@ -173,7 +174,6 @@ print 'loading file {}'.format(fp_starzen)
 try:
     mea = hs.loadmat(fp_starzen)
 except: 
-    import scipy.io as sio
     mea = sio.loadmat(fp_starzen)
 
 
@@ -194,36 +194,72 @@ meas.params()
 
 # In[ ]:
 
+print('Making plots...')
+
+
+# In[ ]:
+
 fig1 = Sp.plt_zenrad(meas)
-fig1.savefig(fp_zencld_plot+'{datestr}_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig1.savefig(fp_zencld_plot+'{datestr}_zenrad.png'.format(datestr=datestr),
+             dpi=600,transparent=True)
+print('zenrad...'),
 
 
 # In[ ]:
 
 fig1n = Sp.plt_norm_zenrad(meas)
-fig1n.savefig(fp_zencld_plot+'{datestr}_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig1n.savefig(fp_zencld_plot+'{datestr}_norm_zenrad.png'.format(datestr=datestr),
+              dpi=600,transparent=True)
+print('norm zenrad...'),
 
 
 # In[ ]:
 
 fig2 = Sp.curtain_zenrad(meas,utc=True)
-fig2.savefig(fp_zencld_plot+'{datestr}_curtain_utc_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig2.savefig(fp_zencld_plot+'{datestr}_curtain_utc_zenrad.png'.format(datestr=datestr),
+             dpi=600,transparent=True)
+print('utc curtain zenrad...'),
 
 
 # In[ ]:
 
 fig2n = Sp.curtain_norm_zenrad(meas,utc=True)
-fig2n.savefig(fp_zencld_plot+'{datestr}_curtain_utc_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig2n.savefig(fp_zencld_plot+'{datestr}_curtain_utc_norm_zenrad.png'.format(datestr=datestr),
+              dpi=600,transparent=True)
+print('utc curtain norm zenrad...'),
 
 
 # In[ ]:
 
 fig3 = Sp.curtain_zenrad(meas,utc=False)
-fig3.savefig(fp_zencld_plot+'{datestr}_curtain_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig3.savefig(fp_zencld_plot+'{datestr}_curtain_zenrad.png'.format(datestr=datestr),
+             dpi=600,transparent=True)
+print('curtain zenrad...'),
 
 
 # In[ ]:
 
 fig3n = Sp.curtain_norm_zenrad(meas,utc=False)
-fig3n.savefig(fp_zencld_plot+'{datestr}_curtain_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+fig3n.savefig(fp_zencld_plot+'{datestr}_curtain_norm_zenrad.png'.format(datestr=datestr),
+              dpi=600,transparent=True)
+print('curtain norm zenrad...'),
+
+
+# ### Load the lut file
+
+# In[90]:
+
+print('Loading the lut file:{}'.format(fp_lut_mat))
+if not os.path.isfile(fp_lu_mat):
+    print('File {} does not exist'.format(fp_lut_mat))
+    raise IOError('File not fun')
+try:
+    luts = hs.loadmat(fp_lut_mat)
+except:
+    luts = sio.loadmat(fp_lut_mat)
+
+
+# In[ ]:
+
+luts.keys()
 
