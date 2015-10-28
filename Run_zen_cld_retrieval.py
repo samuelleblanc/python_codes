@@ -45,6 +45,9 @@
 #     - matplotlib
 #     - argparse
 #     - Tkinter (for file open dialogs)
+#     - Sp_parameter
+#     - mpltools for color cycle
+#     - load_modis for mat2py_time and toutc
 #   
 # Needed Files:
 # 
@@ -55,7 +58,7 @@
 # 
 #     Written: Samuel LeBlanc, NASA Ames, 2015-10-26
 
-# In[80]:
+# In[81]:
 
 import sys
 import os
@@ -65,6 +68,8 @@ import hdf5storage as hs
 import numpy as np
 import argparse
 from load_modis import mat2py_time, toutc
+import Sp_parameters as Sp
+from mpltools import color
 
 
 # ## Prepare command line argument parser
@@ -160,11 +165,65 @@ if not os.path.isfile(fp_starzen):
 
 # In[ ]:
 
-mea = hs.loadmat(fp_starzen)
+print 'loading file {}'.format(fp_starzen)
+
+
+# In[ ]:
+
+try:
+    mea = hs.loadmat(fp_starzen)
+except: 
+    import scipy.io as sio
+    mea = sio.loadmat(fp_starzen)
 
 
 # In[ ]:
 
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
+
+
+# In[ ]:
+
+print 'Running the parameter calculations on measured spectra'
+meas = Sp.Sp(mea)
+meas.params()
+
+
+# ### plot out the different spectra
+
+# In[ ]:
+
+fig1 = Sp.plt_zenrad(meas)
+fig1.savefig(fp_zencld_plot+'{datestr}_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+fig1n = Sp.plt_norm_zenrad(meas)
+fig1n.savefig(fp_zencld_plot+'{datestr}_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+fig2 = Sp.curtain_zenrad(meas,utc=True)
+fig2.savefig(fp_zencld_plot+'{datestr}_curtain_utc_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+fig2n = Sp.curtain_norm_zenrad(meas,utc=True)
+fig2n.savefig(fp_zencld_plot+'{datestr}_curtain_utc_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+fig3 = Sp.curtain_zenrad(meas,utc=False)
+fig3.savefig(fp_zencld_plot+'{datestr}_curtain_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+fig3n = Sp.curtain_norm_zenrad(meas,utc=False)
+fig3n.savefig(fp_zencld_plot+'{datestr}_curtain_norm_zenrad.png'.format(datestr=datestr),dpi=600,transparent=True)
 

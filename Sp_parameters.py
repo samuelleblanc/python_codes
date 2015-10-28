@@ -713,7 +713,143 @@ class Sp:
             
 
 
-# In[ ]:
+# ## Create some plotting functions for use with the Sp class
+
+# In[1]:
+
+def plt_zenrad(meas):
+    """
+    Purpose:
+        Plot each zzenith radiance spectra on the same scale. 
+    Input:
+        meas : Sp_parameters.Sp object with params already run
+    Output: 
+        matplotlib fig value
+    Keywords:
+        None
+    Dependencies:
+        - matplotlib
+        - mpltools for color
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+    """
+    import matploltib.pyplot as plt
+    from mpltools import color
+    fig = plt.figure()
+    color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
+    for i in range(len(meas.utc)):
+        plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    plt.title('All radiance spectra')
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar)
+    scalarmap.set_array(meas.utc)
+    cba = plt.colorbar(scalarmap)
+    cba.set_label('UTC [h]')
+    return fig
 
 
+# In[2]:
+
+def plt_norm_zenrad(meas):
+    """
+    Purpose:
+        Plot each normalized zenith radiance spectra on the same scale. 
+    Input:
+        meas : Sp_parameters.Sp object with params already run
+    Output: 
+        matplotlib fig value
+    Keywords:
+        None
+    Dependencies:
+        - matplotlib
+        - mpltools for color
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+    """
+    import matploltib.pyplot as plt
+    from mpltools import color
+    fig = plt.figure()
+    color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
+    for i in range(len(meas.utc)):
+        plt.plot(meas.wvl,meas.norm[i,:])
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel('Normalized Radiance')
+    plt.ylim([0,1])
+    plt.title('All normalized radiance spectra')
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar)
+    scalarmap.set_array(meas.utc)
+    cba = plt.colorbar(scalarmap)
+    cba.set_label('UTC [h]')
+    return fig
+
+
+# In[3]:
+
+def curtain_zenrad(meas,utc=True):
+    """
+    Purpose:
+     Create a figure of a curtain containing each zenith radiance spectra on the same color scale along the time axis in y. 
+    Input:
+        meas : Sp_parameters.Sp object with params already run
+    Output: 
+        matplotlib fig value
+    Keywords:
+        utc: (default true) if set plots the curtain as a function of UTC time. 
+             If false, plots as a function of measurements number
+    Dependencies:
+        - matplotlib
+        - mpltools for color
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+    """
+    import matploltib.pyplot as plt
+    from mpltools import color
+    fig,ax = plt.subplots(1,1,figsize=(8,14))
+    if utc:
+        pco = ax.pcolorfast(meas.wvl,meas.utc,meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+        ax.set_ylabel('UTC [h]')
+    else:
+        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+        ax.set_ylabel('Measurement number')
+    cba = plt.colorbar(pco)
+    cba.set_label('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    ax.set_xlabel('Wavelength [nm]')
+    ax.set_title('All radiance spectra [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    return fig
+
+
+# In[5]:
+
+def curtain_norm_zenrad_num(meas, utc=True):
+    """
+    Purpose:
+     Create a figure of a curtain containing each *Normalized* zenith radiance spectra on the same color scale along the time axis in y. 
+    Input:
+        meas : Sp_parameters.Sp object with params already run
+    Output: 
+        matplotlib fig value
+    Keywords:
+         utc: (default true) if set plots the curtain as a function of UTC time. 
+             If false, plots as a function of measurements number
+    Dependencies:
+        - matplotlib
+        - mpltools for color
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+    """
+    import matploltib.pyplot as plt
+    from mpltools import color
+    fig,ax = plt.subplots(1,1,figsize=(8,14))
+    if utc:
+        pco = ax.pcolorfast(meas.wvl,meas.utc,meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
+        ax.set_ylabel('UTC [h]')
+    else:
+        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
+        ax.set_ylabel('Measurement number')
+    cba = plt.colorbar(pco)
+    cba.set_label('Normalized Radiance')
+    ax.set_xlabel('Wavelength [nm]')
+    ax.set_title('All radiance spectra [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    return fig
 

@@ -66,7 +66,7 @@
 #             - ported from version 3, to 4
 #             - new normalization of radiance spectra applied, new SSFR data used
 
-# In[2]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -86,7 +86,7 @@ import Sp_parameters as Sp
 #mpld3.enable_notbeook()
 
 
-# In[3]:
+# In[2]:
 
 get_ipython().magic(u'matplotlib notebook')
 
@@ -97,7 +97,7 @@ import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[5]:
+# In[3]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -288,7 +288,7 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[85]:
+# In[7]:
 
 import load_modis
 reload(load_modis)
@@ -328,7 +328,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[83]:
+# In[4]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -337,19 +337,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[86]:
+# In[8]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[87]:
+# In[9]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[88]:
+# In[10]:
 
 mea['w'][0][1068]
 
@@ -375,7 +375,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[107]:
+# In[11]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -386,12 +386,12 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[108]:
+# In[12]:
 
 meas.sp.shape
 
 
-# In[109]:
+# In[15]:
 
 fig = plt.figure()
 color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -400,6 +400,10 @@ for i in range(len(meas.utc)):
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 plt.title('All radiance spectra')
+scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar)
+scalarmap.set_array(meas.utc)
+cba = plt.colorbar(scalarmap)
+cba.set_label('UTC [h]')
 
 
 # In[96]:
