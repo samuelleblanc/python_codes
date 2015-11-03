@@ -303,8 +303,69 @@ class Sp:
                     - added in _init_ for checking if using radiance subset instead of all radiances (rad vs. rads), in matlab loaded values
     Modified (v1.2): Samuel LeBlanc, NASA Ames, 2015-10-01
                     - added subset of wavelengths for normalization
+    Modified (v1.3): Samuel LeBlanc, NASA Ames, 2015-11-02
+                    - added __getitem__ method for calling like a dict
+                    - added method for obtaining the valid ref ranges for ice or liquid, making Sp more general.
     """    
     import numpy as np
+    def __init__(self,s,irrad=False):
+        import numpy as np
+        if 'nm' in s:
+            self.wvl = np.array([item for sublist in s['nm'] for item in sublist])
+        if 'zenlambda' in s:
+            self.wvl = s['zenlambda']
+        if 'wvl' in s:
+            self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
+        if 'w' in s:
+            self.wvl = np.array([item for sublist in s['w'] for item in sublist])
+        if self.wvl[0] < 100.0:
+            self.wvl = self.wvl*1000.0
+        self.iwvls = np.argsort(self.wvl)
+        print len(self.iwvls), len(self.wvl)
+        self.wvl = np.sort(self.wvl)
+        self.wvlsort(s,irrad)
+        self.isubwvl = self.wvl_for_norm(self.wvl,wrange=[315.0,940.0])
+        self.norm = self.normsp(self.sp,iws=self.isubwvl)
+        print self.sp.shape
+        if self.sp.ndim > 2:
+            self.tau = s['tau']
+            self.ref = s['ref']
+        else:
+            self.utc = s['utc'][self.iset]
+            if 'good' in s.keys():
+                if isinstance(s['good'],tuple):
+                    self.good = s['good'][0]
+                else:
+                    self.good = s['good']
+            else:
+                print 'No indexed good values, choosing all times that are greater than 0'
+                self.good = np.where(self.utc>0.0)[0]
+            if 'Alt' in s:
+                self.alt = s['Alt'][self.iset]
+            if 'Lat' in s:
+                self.lat = s['Lat'][self.iset]
+            if 'Lon' in s:
+                self.lon = s['Lon'][self.iset]
+        if 'sza' in s:
+            self.sza = s['sza']
+        # initiate with NANs the values that need to be populated
+        self.npar = np.nan
+        self.par = np.zeros_like(self.sp)*np.nan
+        self.parn = np.zeros_like(self.par)*np.nan
+        self.meansp = np.zeros_like(self.wvl)*np.nan
+        self.stdsp = np.zeros_like(self.wvl)*np.nan
+        self.stdpar = np.zeros((16))*np.nan
+        self.stdparn = np.zeros((16))*np.nan
+        self.sphires = False
+        self.parhires = False
+        self.hiresirrad = False
+        self.irrad = irrad
+        self.reflect = np.zeros_like(self.sp)*np.nan
+    
+    def __getitem__(self,i):
+        'Method to call only the variables in the SP class like a dict'
+        return self.__dict__get(i)
+    
     def params(self):
         " Runs through each spectrum in the sp array to calculate the parameters"
         useezmap = False
@@ -360,7 +421,7 @@ class Sp:
             import gc; gc.collect()
             par_hires = np.zeros([2,len(ref_hires),len(tau_hires),self.npar])*np.nan
             startprogress('Running interpolation on params')
-            refranges = (range(0,23),range(3,35))
+            refranges = self.get_refrange()
             for ph in [0,1]:
                 for tt in xrange(1,self.tau.size-1):
                     for rr in refranges[ph]:
@@ -380,6 +441,17 @@ class Sp:
         self.ref = ref_hires
         self.parhires = True
         return
+    
+    def get_refrange(self):
+        """
+        Simple program that returns the ref ranges with valid first parameter for two phases
+        """
+        if np.all(np.isnan(self.par)):
+            print 'Run params() before'
+            return
+        ice_r = [r for r in xrange(len(self.ref)) if ~ np.isnan(self.par[1,r,10,0])]
+        liq_r = [r for r in xrange(len(self.ref)) if ~ np.isnan(self.par[0,r,10,0])]
+        return (liq_r,ice_r)
     
     def sp_hires(self,doirrad=False):
         """
@@ -511,60 +583,6 @@ class Sp:
             pcoef = {'coef':pco,'add':padd}
             self.parn = parn
             return pcoef
-    
-    def __init__(self,s,irrad=False):
-        import numpy as np
-        if 'nm' in s:
-            self.wvl = np.array([item for sublist in s['nm'] for item in sublist])
-        if 'zenlambda' in s:
-            self.wvl = s['zenlambda']
-        if 'wvl' in s:
-            self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
-        if 'w' in s:
-            self.wvl = np.array([item for sublist in s['w'] for item in sublist])
-        if self.wvl[0] < 100.0:
-            self.wvl = self.wvl*1000.0
-        self.iwvls = np.argsort(self.wvl)
-        print len(self.iwvls), len(self.wvl)
-        self.wvl = np.sort(self.wvl)
-        self.wvlsort(s,irrad)
-        self.isubwvl = self.wvl_for_norm(self.wvl,wrange=[315.0,940.0])
-        self.norm = self.normsp(self.sp,iws=self.isubwvl)
-        print self.sp.shape
-        if self.sp.ndim > 2:
-            self.tau = s['tau']
-            self.ref = s['ref']
-        else:
-            self.utc = s['utc'][self.iset]
-            if 'good' in s.keys():
-                if isinstance(s['good'],tuple):
-                    self.good = s['good'][0]
-                else:
-                    self.good = s['good']
-            else:
-                print 'No indexed good values, choosing all times that are greater than 0'
-                self.good = np.where(self.utc>0.0)[0]
-            if 'Alt' in s:
-                self.alt = s['Alt'][self.iset]
-            if 'Lat' in s:
-                self.lat = s['Lat'][self.iset]
-            if 'Lon' in s:
-                self.lon = s['Lon'][self.iset]
-        if 'sza' in s:
-            self.sza = s['sza']
-        # initiate with NANs the values that need to be populated
-        self.npar = np.nan
-        self.par = np.zeros_like(self.sp)*np.nan
-        self.parn = np.zeros_like(self.par)*np.nan
-        self.meansp = np.zeros_like(self.wvl)*np.nan
-        self.stdsp = np.zeros_like(self.wvl)*np.nan
-        self.stdpar = np.zeros((16))*np.nan
-        self.stdparn = np.zeros((16))*np.nan
-        self.sphires = False
-        self.parhires = False
-        self.hiresirrad = False
-        self.irrad = irrad
-        self.reflect = np.zeros_like(self.sp)*np.nan
         
     def wvlsort(self,s,irrad):
         """

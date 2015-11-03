@@ -160,8 +160,7 @@ else:
 # In[79]:
 
 if not os.path.isfile(fp_starzen):
-    print 'file {} is not found'.format(fp_starzen)
-    raise IOError
+    raise IOError()'file {} is not found'.format(fp_starzen))
 
 
 # In[ ]:
@@ -252,11 +251,28 @@ print('curtain norm zenrad...'),
 print('Loading the lut file:{}'.format(fp_lut_mat))
 if not os.path.isfile(fp_lu_mat):
     print('File {} does not exist'.format(fp_lut_mat))
-    raise IOError('File not fun')
+    raise IOError('LUT File not found: {}'.format(fp_lut_mat))
 try:
     luts = hs.loadmat(fp_lut_mat)
 except:
     luts = sio.loadmat(fp_lut_mat)
+
+
+# ### run through the lut for each sza/airmass
+
+# In[ ]:
+
+lut = []
+
+
+# In[ ]:
+
+for s in xrange(len(luts['sza'])):
+    sptemp = luts
+    sptemp['wvl'] = [luts['wvl']]
+    sptemp['rad'] = luts['rad'][:,:,:,:,:,i]
+    ltemp = Sp.Sp(sptemp)
+    
 
 
 # In[ ]:

@@ -406,6 +406,24 @@ cba = plt.colorbar(scalarmap)
 cba.set_label('UTC [h]')
 
 
+# In[21]:
+
+fig = plt.figure()
+n=100
+color.cycle_cmap(len(meas.utc)/n,cmap=plt.cm.gist_ncar,ax=plt.gca())
+for i in range(len(meas.utc)):
+    if not i%n:
+        plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+plt.title('All radiance spectra')
+scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar)
+scalarmap.set_array(meas.utc)
+cba = plt.colorbar(scalarmap)
+cba.set_label('UTC [h]')
+plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
+
+
 # In[96]:
 
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
@@ -428,14 +446,28 @@ plt.ylim([0,1])
 plt.title('All normalized radiance spectra')
 
 
-# In[128]:
+# In[23]:
 
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
-plt.colorbar(pco)
+cba = plt.colorbar(pco)
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Measurement number')
-plt.title('All radiance spectra [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+plt.title('All zenith radiance spectra')
+cba.set_label('Zenith radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+plt.savefig(fp+'plots/20130913_curtain_zenrad_num.png',dpi=600,transparent=True)
+
+
+# In[24]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(meas.wvl,meas.utc,meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+cba = plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('UTC [h]')
+plt.title('All zenith radiance spectra')
+cba.set_label('Zenith radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+plt.savefig(fp+'plots/20130913_curtain_zenrad_utc.png',dpi=600,transparent=True)
 
 
 # In[127]:
