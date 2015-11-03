@@ -258,7 +258,7 @@ except:
     luts = sio.loadmat(fp_lut_mat)
 
 
-# ### run through the lut for each sza/airmass
+# ### run through the lut for each sza/airmass and create the lut params in hires
 
 # In[ ]:
 
@@ -272,10 +272,19 @@ for s in xrange(len(luts['sza'])):
     sptemp['wvl'] = [luts['wvl']]
     sptemp['rad'] = luts['rad'][:,:,:,:,:,i]
     ltemp = Sp.Sp(sptemp)
-    
+    ltemp.params()
+    ltemp.param_hires()
+    lut.append(ltemp)
 
 
 # In[ ]:
 
-luts.keys()
+airmass = 1./np.cos(ltemp.sza*np.pi/180.0)
+
+
+# ## Define the good points and start doing the retrieval
+
+# In[ ]:
+
+
 

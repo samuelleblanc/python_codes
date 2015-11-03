@@ -499,7 +499,7 @@ class Sp:
         import gc; gc.collect()
         sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
-        refranges = (range(0,23),range(3,35))
+        refranges = self.get_refrange() #(range(0,23),range(3,35))
         for ph in [0,1]:
             for tt in xrange(1,len(tau)-1):
                 for rr in refranges[ph]:
