@@ -23,6 +23,11 @@ def closestindex(a,x):
     return (np.abs(a - x)).argmin()
 
 def find_closest(A, target):
+    """
+    Function to get the indices of the closest values
+    For every value in target, finds the closest element in A
+    returns array of size(target) with indices matching to items in A
+    """
     idx = A.searchsorted(target)
     idx = np.clip(idx, 1, len(A)-1)
     left = A[idx-1]
@@ -364,7 +369,7 @@ class Sp:
     
     def __getitem__(self,i):
         'Method to call only the variables in the SP class like a dict'
-        return self.__dict__get(i)
+        return self.__dict__.get(i)
     
     def params(self):
         " Runs through each spectrum in the sp array to calculate the parameters"

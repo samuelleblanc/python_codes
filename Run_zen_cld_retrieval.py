@@ -93,6 +93,7 @@ parser.add_argument('-o','--fp_zencld_plot',nargs='?',help="""(optional) the ful
                         if omitted uss the same directory as starzen.mat""")
 parser.add_argument('-lut','--fp_lut_mat',nargs='?',help='Put in special look up table file path')
 parser.add_argument('-f',nargs='?',help='not used')
+parser.add_argument('-n','--noplot',nargs='?',help='if set, will not output plots')
 
 
 # ## Parse command line and get appropriate paths
@@ -155,12 +156,20 @@ else:
     fp_lut_mat = fp+'/v2_NAAMES_lut.mat'
 
 
+# In[ ]:
+
+if in_.get('noplot'):
+    noplot = True
+else:
+    noplot = False
+
+
 # # Load starzen files and the look up table
 
 # In[79]:
 
 if not os.path.isfile(fp_starzen):
-    raise IOError()'file {} is not found'.format(fp_starzen))
+    raise IOError('file {} is not found'.format(fp_starzen))
 
 
 # In[ ]:
@@ -193,55 +202,37 @@ meas.params()
 
 # In[ ]:
 
-print('Making plots...')
+if not noplot:
+    print('Making plots...')
+    fig1 = Sp.plt_zenrad(meas)
+    fig1.savefig(fp_zencld_plot+'{datestr}_zenrad.png'.format(datestr=datestr),
+                 dpi=600,transparent=True)
+    print('zenrad...'),
 
+    fig1n = Sp.plt_norm_zenrad(meas)
+    fig1n.savefig(fp_zencld_plot+'{datestr}_norm_zenrad.png'.format(datestr=datestr),
+                  dpi=600,transparent=True)
+    print('norm zenrad...'),
 
-# In[ ]:
+    fig2 = Sp.curtain_zenrad(meas,utc=True)
+    fig2.savefig(fp_zencld_plot+'{datestr}_curtain_utc_zenrad.png'.format(datestr=datestr),
+                 dpi=600,transparent=True)
+    print('utc curtain zenrad...'),
 
-fig1 = Sp.plt_zenrad(meas)
-fig1.savefig(fp_zencld_plot+'{datestr}_zenrad.png'.format(datestr=datestr),
-             dpi=600,transparent=True)
-print('zenrad...'),
+    fig2n = Sp.curtain_norm_zenrad(meas,utc=True)
+    fig2n.savefig(fp_zencld_plot+'{datestr}_curtain_utc_norm_zenrad.png'.format(datestr=datestr),
+                  dpi=600,transparent=True)
+    print('utc curtain norm zenrad...'),
 
+    fig3 = Sp.curtain_zenrad(meas,utc=False)
+    fig3.savefig(fp_zencld_plot+'{datestr}_curtain_zenrad.png'.format(datestr=datestr),
+                 dpi=600,transparent=True)
+    print('curtain zenrad...'),
 
-# In[ ]:
-
-fig1n = Sp.plt_norm_zenrad(meas)
-fig1n.savefig(fp_zencld_plot+'{datestr}_norm_zenrad.png'.format(datestr=datestr),
-              dpi=600,transparent=True)
-print('norm zenrad...'),
-
-
-# In[ ]:
-
-fig2 = Sp.curtain_zenrad(meas,utc=True)
-fig2.savefig(fp_zencld_plot+'{datestr}_curtain_utc_zenrad.png'.format(datestr=datestr),
-             dpi=600,transparent=True)
-print('utc curtain zenrad...'),
-
-
-# In[ ]:
-
-fig2n = Sp.curtain_norm_zenrad(meas,utc=True)
-fig2n.savefig(fp_zencld_plot+'{datestr}_curtain_utc_norm_zenrad.png'.format(datestr=datestr),
-              dpi=600,transparent=True)
-print('utc curtain norm zenrad...'),
-
-
-# In[ ]:
-
-fig3 = Sp.curtain_zenrad(meas,utc=False)
-fig3.savefig(fp_zencld_plot+'{datestr}_curtain_zenrad.png'.format(datestr=datestr),
-             dpi=600,transparent=True)
-print('curtain zenrad...'),
-
-
-# In[ ]:
-
-fig3n = Sp.curtain_norm_zenrad(meas,utc=False)
-fig3n.savefig(fp_zencld_plot+'{datestr}_curtain_norm_zenrad.png'.format(datestr=datestr),
-              dpi=600,transparent=True)
-print('curtain norm zenrad...'),
+    fig3n = Sp.curtain_norm_zenrad(meas,utc=False)
+    fig3n.savefig(fp_zencld_plot+'{datestr}_curtain_norm_zenrad.png'.format(datestr=datestr),
+                  dpi=600,transparent=True)
+    print('curtain norm zenrad...'),
 
 
 # ### Load the lut file
@@ -286,5 +277,61 @@ airmass = 1./np.cos(ltemp.sza*np.pi/180.0)
 
 # In[ ]:
 
+meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
 
+
+# In[ ]:
+
+idx = Sp.find_closest(airmass,meas.airmass)
+
+
+# In[ ]:
+
+(meas.tau,meas.ref,meas.phase,meas.ki) = (np.zeros_like(utc),np.zeros_like(utc),np.zeros_like(utc),np.zeros_like(utc))
+
+
+# In[ ]:
+
+print 'Running through the airmasses'
+for i in np.unique(idx):
+    print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
+    meas.good,= np.where(idx==i)
+    tau,ref,phase,ki = k.run_retrieval(meas,lut[i])
+    meas.tau[meas.good] = tau
+    meas.ref[meas.good] = ref
+    meas.phase[meas.good] = phase
+    meas.ki[meas.good] = ki
+
+
+# ## Save the retrieval results
+
+# In[ ]:
+
+fp_out = fp+'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr)
+print 'saving to file: {fp_out}'.format(fp_out=fp_out)
+hs.savemat(fp_out,meas)
+
+
+# ## Make output plots
+
+# In[ ]:
+
+if not noplot:
+    fig,ax = plt.subplots(4,sharex=True)
+    ax[0].set_title('Retrieval results time trace')
+    ax[0].plot(meas.utc,meas.tau,'rx')
+    ax[0].plot(meas.utc[meas.good],smooth(meas.tau[meas.good],20),'k')
+    ax[0].set_ylabel('$\\tau$')
+    ax[1].plot(meas.utc,meas.ref,'g+')
+    ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
+    ax[1].plot(meas.utc[meas.good],smooth(meas.ref[meas.good],20),'k')
+    ax[2].plot(meas.utc,meas.phase,'k.')
+    ax[2].set_ylabel('Phase')
+    ax[2].set_ylim([-0.5,1.5])
+    ax[2].set_yticks([0,1])
+    ax[2].set_yticklabels(['liq','ice'])
+    ax[3].plot(meas.utc,meas.ki)
+    ax[3].set_ylabel('$\\chi^{2}$')
+    ax[3].set_xlabel('UTC [Hours]')
+    plt.savefig(fp_zencld_plot+'{datestr}_retrieval_out.png'.format(datestr=datestr),dpi=600,transparent=True)
 
