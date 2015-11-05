@@ -58,19 +58,9 @@
 # 
 #     Written: Samuel LeBlanc, NASA Ames, 2015-10-26
 
-# In[81]:
+# In[ ]:
 
-import sys
-import os
-import matplotlib.pyplot as plt
-import Run_libradtran as RL
-import hdf5storage as hs
-import numpy as np
 import argparse
-from load_modis import mat2py_time, toutc
-import Sp_parameters as Sp
-from mpltools import color
-import scipy.io as sio
 
 
 # ## Prepare command line argument parser
@@ -96,12 +86,29 @@ parser.add_argument('-f',nargs='?',help='not used')
 parser.add_argument('-n','--noplot',nargs='?',help='if set, will not output plots')
 
 
-# ## Parse command line and get appropriate paths
-
 # In[70]:
 
 in_ = vars(parser.parse_args())
 
+
+# ## Import rest of needed modules
+
+# In[ ]:
+
+import sys
+import os
+import matplotlib.pyplot as plt
+import Run_libradtran as RL
+import hdf5storage as hs
+import numpy as np
+from load_modis import mat2py_time, toutc
+import Sp_parameters as Sp
+from mpltools import color
+import scipy.io as sio
+from mpl_toolkits.basemap import Basemap
+
+
+# ## Parse command line and get appropriate paths
 
 # In[74]:
 
@@ -317,6 +324,7 @@ hs.savemat(fp_out,meas)
 # In[ ]:
 
 if not noplot:
+    print 'making the retrieval plots'
     fig,ax = plt.subplots(4,sharex=True)
     ax[0].set_title('Retrieval results time trace')
     ax[0].plot(meas.utc,meas.tau,'rx')
@@ -334,4 +342,24 @@ if not noplot:
     ax[3].set_ylabel('$\\chi^{2}$')
     ax[3].set_xlabel('UTC [Hours]')
     plt.savefig(fp_zencld_plot+'{datestr}_retrieval_out.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+if not noplot:
+    fig,ax = plt.subplots(1,2)
+    ax[0].plot(meas.lon,meas.lat)
+    ss = ax[0].scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
+    ax[0].set_ylabel('Latitude')
+    ax[0].set_xlabel('Longitude')
+    cba = plt.colorbar(ss)
+    cba.set_label('Cloud optical thickness')
+    
+    ax[1].plot(meas.lon,meas.lat)
+    sr = ax[1].scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
+    ax[1].set_ylabel('Latitude')
+    ax[1].set_xlabel('Longitude')
+    cbb = plt.colorbar(sr)
+    cbb.set_label('Effective radius [$\mu$m]')
+    plt.savefig(fp_zencld_plot+'{datestr}_map_retr_zencld.png'.format(datestr=datestr),dpi=600,transparent=True)
 
