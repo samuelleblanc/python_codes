@@ -251,7 +251,7 @@ if not noplot:
 # In[90]:
 
 print('Loading the lut file:{}'.format(fp_lut_mat))
-if not os.path.isfile(fp_lu_mat):
+if not os.path.isfile(fp_lut_mat):
     print('File {} does not exist'.format(fp_lut_mat))
     raise IOError('LUT File not found: {}'.format(fp_lut_mat))
 try:
