@@ -272,7 +272,7 @@ lut = []
 for s in xrange(len(luts['sza'])):
     sptemp = luts
     sptemp['wvl'] = [luts['wvl']]
-    sptemp['rad'] = luts['rad'][:,:,:,:,:,i]
+    sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp)
     ltemp.params()
     ltemp.param_hires()
