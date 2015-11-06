@@ -756,7 +756,7 @@ def plt_zenrad(meas):
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
     """
-    import matploltib.pyplot as plt
+    import matplotlib.pyplot as plt
     from mpltools import color
     fig = plt.figure()
     color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -790,7 +790,7 @@ def plt_norm_zenrad(meas):
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
     """
-    import matploltib.pyplot as plt
+    import matplotlib.pyplot as plt
     from mpltools import color
     fig = plt.figure()
     color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -826,7 +826,7 @@ def curtain_zenrad(meas,utc=True):
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
     """
-    import matploltib.pyplot as plt
+    import matplotlib.pyplot as plt
     from mpltools import color
     fig,ax = plt.subplots(1,1,figsize=(8,14))
     if utc:
@@ -861,7 +861,7 @@ def curtain_norm_zenrad_num(meas, utc=True):
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
     """
-    import matploltib.pyplot as plt
+    import matplotlib.pyplot as plt
     from mpltools import color
     fig,ax = plt.subplots(1,1,figsize=(8,14))
     if utc:
