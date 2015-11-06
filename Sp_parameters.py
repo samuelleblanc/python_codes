@@ -844,7 +844,7 @@ def curtain_zenrad(meas,utc=True):
 
 # In[5]:
 
-def curtain_norm_zenrad_num(meas, utc=True):
+def curtain_norm_zenrad(meas, utc=True):
     """
     Purpose:
      Create a figure of a curtain containing each *Normalized* zenith radiance spectra on the same color scale along the time axis in y. 
