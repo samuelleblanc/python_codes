@@ -105,7 +105,11 @@ from load_modis import mat2py_time, toutc
 import Sp_parameters as Sp
 from mpltools import color
 import scipy.io as sio
-from mpl_toolkits.basemap import Basemap
+try:
+    from mpl_toolkits.basemap import Basemap
+    isbasemap = True
+except:
+    isbasemap = False
 
 
 # ## Parse command line and get appropriate paths
