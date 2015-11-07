@@ -311,10 +311,12 @@ class Sp:
     Modified (v1.3): Samuel LeBlanc, NASA Ames, 2015-11-02
                     - added __getitem__ method for calling like a dict
                     - added method for obtaining the valid ref ranges for ice or liquid, making Sp more general.
+                    - added verbose keyword during init
     """    
     import numpy as np
-    def __init__(self,s,irrad=False):
+    def __init__(self,s,irrad=False,verbose=True):
         import numpy as np
+        self.verbose = verbose
         if 'nm' in s:
             self.wvl = np.array([item for sublist in s['nm'] for item in sublist])
         if 'zenlambda' in s:
@@ -326,12 +328,12 @@ class Sp:
         if self.wvl[0] < 100.0:
             self.wvl = self.wvl*1000.0
         self.iwvls = np.argsort(self.wvl)
-        print len(self.iwvls), len(self.wvl)
+        if verbose: print len(self.iwvls), len(self.wvl)
         self.wvl = np.sort(self.wvl)
         self.wvlsort(s,irrad)
         self.isubwvl = self.wvl_for_norm(self.wvl,wrange=[315.0,940.0])
         self.norm = self.normsp(self.sp,iws=self.isubwvl)
-        print self.sp.shape
+        if verbose: print self.sp.shape
         if self.sp.ndim > 2:
             self.tau = s['tau']
             self.ref = s['ref']
@@ -343,7 +345,7 @@ class Sp:
                 else:
                     self.good = s['good']
             else:
-                print 'No indexed good values, choosing all times that are greater than 0'
+                if verbose: print 'No indexed good values, choosing all times that are greater than 0'
                 self.good = np.where(self.utc>0.0)[0]
             if 'Alt' in s:
                 self.alt = s['Alt'][self.iset]
@@ -376,7 +378,7 @@ class Sp:
         useezmap = False
         from Sp_parameters import param
         import warnings
-        print('Running Parameters')
+        if self.verbose: print('Running Parameters')
         if useezmap:
             import ezmap
             from ezmap import map as zmap
@@ -411,7 +413,7 @@ class Sp:
         " Runs through the parameter space and interpolates to create a hires res version, should be run instead of sp_hires "
         from Sp_parameters import param
         from scipy import interpolate
-        print('Running parameter hires')
+        if self.verbose: print('Running parameter hires')
         if np.all(np.isnan(self.par)):
             print 'Run params() before'
             return
@@ -421,8 +423,8 @@ class Sp:
         if self.sp.ndim == 5:
             tau_hires = np.concatenate((np.arange(self.tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,self.tau[-1]+1.0,1.0)))
             ref_hires = np.arange(self.ref[0],self.ref[-1]+1.0)
-            print tau_hires.shape
-            print ref_hires.shape
+            if self.verbose: print tau_hires.shape
+            if self.verbose: print ref_hires.shape
             import gc; gc.collect()
             par_hires = np.zeros([2,len(ref_hires),len(tau_hires),self.npar])*np.nan
             startprogress('Running interpolation on params')
@@ -499,8 +501,8 @@ class Sp:
             return
         tau_hires = np.concatenate((np.arange(tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,tau[-1]+1.0,1.0)))
         ref_hires = np.arange(ref[0],ref[-1]+1.0)
-        print tau_hires.shape 
-        print ref_hires.shape
+        if self.verbose: print tau_hires.shape 
+        if self.verbose: print ref_hires.shape
         import gc; gc.collect()
         sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
@@ -518,13 +520,13 @@ class Sp:
                 progress((w+len(wvl)*ph)/(len(wvl)*2)*100.0)
         endprogress()
         if doirrad:
-            print('Creating reflect spectra with tau, and ref of the new high resolution values')
+            if self.verbose: print('Creating reflect spectra with tau, and ref of the new high resolution values')
             self.reflect = sp_hires
             self.hiresirrad = True
             self.tausp = tau
             self.refsp = ref
         else:
-            print('Overwriting the current sp, tau, and ref with the new high resolution values')
+            if self.verbose: print('Overwriting the current sp, tau, and ref with the new high resolution values')
             self.sp = sp_hires
             self.sphires = True
             self.tausp = tau
@@ -600,23 +602,23 @@ class Sp:
         if sorted(iwvls) is iwvls:
             print '*** wvls are already sorted, there may be a problem! ***'
         if 'sp' in s:
-            print 'in sp'
-            print s['sp'].shape
+            if self.verbose: print 'in sp'
+            if self.verbose: print s['sp'].shape
             ui = [i for i in range(s['sp'].ndim) if s['sp'].shape[i] == len(self.wvl)]
             if 1 in ui:
                 sp = s['sp'][:,iwvls,:,:,:]
             else: 
                 raise LookupError
         if 'rads' in s:
-            print 'in rads'
-            print s['rads'].shape, s['rads'].ndim, len(iwvls)
+            if self.verbose: print 'in rads'
+            if self.verbose: print s['rads'].shape, s['rads'].ndim, len(iwvls)
             ui = [i for i in range(s['rads'].ndim) if s['rads'].shape[i] == len(self.wvl)]
             #print ui
             if 1 in ui:
-                print '1 in ui'
+                if self.verbose: print '1 in ui'
                 sp = s['rads'][:,iwvls]
             else: 
-                print 'not 1 in ui'
+                if self.verbose: print 'not 1 in ui'
                 sp = s['rads'][iwvls,:]
             if 'iset' in s:
                 if s['iset'].ndim>1:
@@ -626,19 +628,19 @@ class Sp:
             else:
                 print '** Problem, rads present (radiance subset), but not the subset integers **'
         elif 'rad' in s:
-            print 'in rad'
-            print s['rad'].shape, s['rad'].ndim, len(iwvls)
+            if self.verbose: print 'in rad'
+            if self.verbose: print s['rad'].shape, s['rad'].ndim, len(iwvls)
             ui = [i for i in range(s['rad'].ndim) if s['rad'].shape[i] == len(self.wvl)]
             #print ui
             if 1 in ui:
-                print '1 in ui'
+                if self.verbose: print '1 in ui'
                 sp = s['rad'][:,iwvls]
             else: 
-                print 'not 1 in ui'
+                if self.verbose: print 'not 1 in ui'
                 sp = s['rad'][iwvls,:]
             self.iset = np.where(s['rad'][:,0])[0]
         if irrad:
-            print 'in irrad'
+            if self.verbose: print 'in irrad'
             ui = [i for i in range(s['sp_irrdn'].ndim) if s['sp_irrdn'].shape[i] == len(self.wvl)]
             if 1 in ui:
                 self.sp_irrdn = s['sp_irrdn'][:,iwvls,:,:,:]

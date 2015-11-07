@@ -206,7 +206,7 @@ mea['utc'] = toutc(tt)
 # In[ ]:
 
 print 'Running the parameter calculations on measured spectra'
-meas = Sp.Sp(mea)
+meas = Sp.Sp(mea,verbose=False)
 meas.params()
 
 
@@ -283,7 +283,7 @@ for s in xrange(len(luts['sza'])):
     sptemp['irr_up'] = luts['irr_up'][:,:,:,:,:,s]
     sptemp['wvl'] = [luts['wvl']]
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
-    ltemp = Sp.Sp(sptemp)
+    ltemp = Sp.Sp(sptemp,verbose=False)
     ltemp.params()
     ltemp.param_hires()
     lut.append(ltemp)
@@ -308,7 +308,7 @@ idx = Sp.find_closest(airmass,meas.airmass)
 
 # In[ ]:
 
-(meas.tau,meas.ref,meas.phase,meas.ki) = (np.zeros_like(utc),np.zeros_like(utc),np.zeros_like(utc),np.zeros_like(utc))
+(meas.tau,meas.ref,meas.phase,meas.ki) = (np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc))
 
 
 # In[ ]:
