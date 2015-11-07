@@ -272,6 +272,7 @@ lut = []
 # In[ ]:
 
 for s in xrange(len(luts['sza'])):
+    sptemp = {}
     sptemp['tau'] = luts['tau']
     sptemp['ref'] = luts['ref']
     sptemp['zout'] = luts['zout']
