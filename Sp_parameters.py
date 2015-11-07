@@ -873,6 +873,6 @@ def curtain_norm_zenrad(meas, utc=True):
     cba = plt.colorbar(pco)
     cba.set_label('Normalized Radiance')
     ax.set_xlabel('Wavelength [nm]')
-    ax.set_title('All radiance spectra [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    ax.set_title('All radiance spectra [Normalized]')
     return fig
 

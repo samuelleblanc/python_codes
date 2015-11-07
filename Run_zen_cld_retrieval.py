@@ -192,7 +192,8 @@ print 'loading file {}'.format(fp_starzen)
 
 try:
     mea = hs.loadmat(fp_starzen)
-except: 
+except Exception as ei:
+    print 'Exception occured: {}'.format(ei)
     mea = sio.loadmat(fp_starzen)
 
 
@@ -256,7 +257,8 @@ if not os.path.isfile(fp_lut_mat):
     raise IOError('LUT File not found: {}'.format(fp_lut_mat))
 try:
     luts = hs.loadmat(fp_lut_mat)
-except:
+except Exception as ei:
+    print 'Exception occured when loading lut : {}'.format(ei)
     luts = sio.loadmat(fp_lut_mat)
 
 
@@ -270,7 +272,14 @@ lut = []
 # In[ ]:
 
 for s in xrange(len(luts['sza'])):
-    sptemp = luts
+    sptemp['tau'] = luts['tau']
+    sptemp['ref'] = luts['ref']
+    sptemp['zout'] = luts['zout']
+    sptemp['sza'] = luts['sza']
+    sptemp['phase'] = luts['phase']
+    sptemp['irr_dn_diff'] = luts['irr_dn_diff'][:,:,:,:,:,s]
+    sptemp['irr_dn'] = luts['irr_dn'][:,:,:,:,:,s]
+    sptemp['irr_up'] = luts['irr_up'][:,:,:,:,:,s]
     sptemp['wvl'] = [luts['wvl']]
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp)
