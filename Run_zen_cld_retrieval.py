@@ -316,7 +316,7 @@ idx = Sp.find_closest(airmass,meas.airmass)
 print 'Running through the airmasses'
 for i in np.unique(idx):
     print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
-    meas.good,= np.where(idx==i)
+    meas.good = np.where(idx==i)[0]
     tau,ref,phase,ki = k.run_retrieval(meas,lut[i])
     meas.tau[meas.good] = tau
     meas.ref[meas.good] = ref
