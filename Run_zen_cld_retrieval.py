@@ -105,6 +105,7 @@ from load_modis import mat2py_time, toutc
 import Sp_parameters as Sp
 from mpltools import color
 import scipy.io as sio
+import run_kisq_retrieval as rk
 try:
     from mpl_toolkits.basemap import Basemap
     isbasemap = True
@@ -317,7 +318,7 @@ print 'Running through the airmasses'
 for i in np.unique(idx):
     print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
     meas.good = np.where(idx==i)[0]
-    tau,ref,phase,ki = k.run_retrieval(meas,lut[i])
+    tau,ref,phase,ki = rk.run_retrieval(meas,lut[i])
     meas.tau[meas.good] = tau
     meas.ref[meas.good] = ref
     meas.phase[meas.good] = phase
