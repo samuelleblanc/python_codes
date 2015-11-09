@@ -441,6 +441,8 @@ class Sp:
                     par_hires[ph,:,:,pp] = fx(ref_hires,tau_hires)
                     progress(float(pp+self.npar*ph)/(self.npar*2)*100.0)
             endprogress()
+        else: 
+            print 'Problem with param_hires: number of dimensions not matched {}'.format(self.sp.ndim  )
         self.par = par_hires
         self.tausp = tau
         self.refsp = ref
