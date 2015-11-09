@@ -312,7 +312,7 @@ idx = Sp.find_closest(airmass,meas.airmass)
 
 print 'Running through the airmasses'
 for i in np.unique(idx):
-    print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
+    print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max()-idx.min())
     meas.good = np.where(idx==i)[0]
     try:
         print lut[i].__dict__.keys()
@@ -336,9 +336,15 @@ meas.tau = meas.taut
 
 # In[ ]:
 
+mdict = {'tau':meas.tau,'ref':meas.ref,'phase':meas.phase,'ki':meas.ki,
+         'utc':meas.utc,'sza':meas.sza,'lat':meas.lat,'lon':meas.lon,'alt':meas.alt}
+
+
+# In[ ]:
+
 fp_out = fp+'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr)
 print 'saving to file: {fp_out}'.format(fp_out=fp_out)
-hs.savemat(fp_out,meas)
+hs.savemat(fp_out,mdict)
 
 
 # ## Make output plots
