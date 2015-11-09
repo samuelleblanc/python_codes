@@ -314,7 +314,11 @@ print 'Running through the airmasses'
 for i in np.unique(idx):
     print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
     meas.good = np.where(idx==i)[0]
-    print lut[i].__dict__.keys()
+    try:
+        print lut[i].__dict__.keys()
+    except Exception as ei:
+        print 'exception: {}'.format(ei)
+        import pdb; pdb.set_trace()
     print 'meas.good lengh: {},meas.utc length: {}'.format(meas.good.shape,meas.utc.shape)
     tau,ref,phase,ki = rk.run_retrieval(meas,lut[i])
     meas.taut[meas.good] = tau

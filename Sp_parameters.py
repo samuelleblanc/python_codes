@@ -337,6 +337,8 @@ class Sp:
         if self.sp.ndim > 2:
             self.tau = s['tau']
             self.ref = s['ref']
+            if 'sza' in s:
+                self.sza = s['sza']
         else:
             self.utc = s['utc'][self.iset]
             if 'good' in s.keys():
@@ -353,11 +355,8 @@ class Sp:
                 self.lat = s['Lat'][self.iset]
             if 'Lon' in s:
                 self.lon = s['Lon'][self.iset]
-        if 'sza' in s:
-            if hasattr(self,'iset'):
+            if 'sza' in s:
                 self.sza = s['sza'][self.iset]
-            else:
-                self.sza = s['sza']
         # initiate with NANs the values that need to be populated
         self.npar = np.nan
         self.par = np.zeros_like(self.sp)*np.nan
