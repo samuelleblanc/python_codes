@@ -354,7 +354,10 @@ class Sp:
             if 'Lon' in s:
                 self.lon = s['Lon'][self.iset]
         if 'sza' in s:
-            self.sza = s['sza']
+            if hasattr(self,'iset'):
+                self.sza = s['sza'][self.iset]
+            else:
+                self.sza = s['sza']
         # initiate with NANs the values that need to be populated
         self.npar = np.nan
         self.par = np.zeros_like(self.sp)*np.nan

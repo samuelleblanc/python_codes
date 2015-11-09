@@ -300,16 +300,12 @@ airmass = 1./np.cos(ltemp.sza*np.pi/180.0)
 # In[ ]:
 
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
-
-
-# In[ ]:
-
 idx = Sp.find_closest(airmass,meas.airmass)
 
 
 # In[ ]:
 
-(meas.tau,meas.ref,meas.phase,meas.ki) = (np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc))
+(meas.taut,meas.ref,meas.phase,meas.ki) = (np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc))
 
 
 # In[ ]:
@@ -318,12 +314,18 @@ print 'Running through the airmasses'
 for i in np.unique(idx):
     print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max())
     meas.good = np.where(idx==i)[0]
-    print lut[i].keys()
+    print lut[i].__dict__.keys()
+    print 'meas.good lengh: {},meas.utc length: {}'.format(meas.good.shape,meas.utc.shape)
     tau,ref,phase,ki = rk.run_retrieval(meas,lut[i])
-    meas.tau[meas.good] = tau
+    meas.taut[meas.good] = tau
     meas.ref[meas.good] = ref
     meas.phase[meas.good] = phase
     meas.ki[meas.good] = ki
+
+
+# In[ ]:
+
+meas.tau = meas.taut
 
 
 # ## Save the retrieval results
