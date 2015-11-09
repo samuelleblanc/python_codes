@@ -356,11 +356,17 @@ if not noplot:
     fig,ax = plt.subplots(4,sharex=True)
     ax[0].set_title('Retrieval results time trace')
     ax[0].plot(meas.utc,meas.tau,'rx')
-    ax[0].plot(meas.utc[meas.good],Sp.smooth(meas.tau[meas.good],20),'k')
+    try:
+        ax[0].plot(meas.utc[meas.good],Sp.smooth(meas.tau[meas.good],20),'k')
+    except:
+        pass
     ax[0].set_ylabel('$\\tau$')
     ax[1].plot(meas.utc,meas.ref,'g+')
     ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
-    ax[1].plot(meas.utc[meas.good],Sp.smooth(meas.ref[meas.good],20),'k')
+    try:
+        ax[1].plot(meas.utc[meas.good],Sp.smooth(meas.ref[meas.good],20),'k')
+    except:
+        pass
     ax[2].plot(meas.utc,meas.phase,'k.')
     ax[2].set_ylabel('Phase')
     ax[2].set_ylim([-0.5,1.5])
