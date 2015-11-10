@@ -916,12 +916,16 @@ def plot_zen_cld_retrieval(meas):
         pass
     ax[0].set_ylabel('$\\tau$')
     ax[0].set_ylim([0,60])
+    plt.grid()
+    
     ax[1].plot(meas.utc,meas.ref,'g+')
     ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
     try:
         ax[1].plot(meas.utc[meas.good],Sp.smooth(meas.ref[meas.good],20),'k')
     except:
         pass
+    plt.grid()
+    
     ax[2].plot(meas.utc,meas.phase,'k.')
     ax[2].set_ylabel('Phase')
     ax[2].set_ylim([-0.5,1.5])
@@ -930,6 +934,7 @@ def plot_zen_cld_retrieval(meas):
     ax[3].plot(meas.utc,meas.ki)
     ax[3].set_ylabel('$\\chi^{2}$')
     ax[3].set_xlabel('UTC [Hours]')
+    plt.tight_layout()
     
     return fig
 
@@ -963,7 +968,7 @@ def plot_map_cld_retrieval(meas):
     meas.lon[meas.lon==0] = np.nan
     meas.lat[meas.lat==0] = np.nan
     plt.plot(meas.lon,meas.lat)
-    ss = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
+    ss = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow,edgecolors='None')
     ax0.set_ylabel('Latitude')
     ax0.set_xlabel('Longitude')
     ax0.set_title('$\\tau$')
@@ -973,14 +978,15 @@ def plot_map_cld_retrieval(meas):
     
     ax1 = plt.subplot(1,2,2)
     plt.plot(meas.lon,meas.lat)
-    sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
+    sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth,edgecolors='None')
     ax1.set_ylabel('Latitude')
     ax1.set_xlabel('Longitude')
     ax1.set_title('R$_{ef}$ [$\\mu$m]')
-    plt.grids()
+    plt.grid()
     cbb = plt.colorbar(sr)
     cbb.set_label('Effective radius [$\mu$m]')
     
+    plt.tight_layout()
     return fig
 
 
@@ -1030,6 +1036,7 @@ def plot_hist_cld_retrieval(meas):
     plt.subplot(1,3,3)
     n,bins,p = plt.hist(meas.phase_m,2,histtype='stepfilled', normed=True,alpha=0.7,color='k')
     plt.xticks([0.5,1.5],['Liquid','Ice'],rotation='vertical')
+    plt.tight_layout()
     
     return fig
 
