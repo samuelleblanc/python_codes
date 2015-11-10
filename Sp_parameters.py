@@ -882,3 +882,154 @@ def curtain_norm_zenrad(meas, utc=True):
     ax.set_title('All radiance spectra [Normalized]')
     return fig
 
+
+# In[ ]:
+
+def plot_zen_cld_retrieval(meas):
+    """
+    Purpose:
+        Create a multi panel plot for plotting the cloud zentih radiance retrieval results
+        4 panels, 1: tau, 2: ref, 3: phase, 4: ki^2 residual
+    Input:
+        meas : Sp_parameters.Sp object with params already run and tau and ref values save in array
+    Output: 
+        matplotlib fig value
+    Keywords:
+         None
+    Dependencies:
+        - matplotlib
+        - smooth from Sp_parameters
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-11-10, NASA Ames, CA
+    """
+    import matplotlib.pyplot as plt
+    import Sp_parameters as Sp
+    if not hasattr(meas,'tau'):
+        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        return None
+    fig,ax = plt.subplots(4,sharex=True)
+    ax[0].set_title('Retrieval results time trace')
+    ax[0].plot(meas.utc,meas.tau,'rx')
+    try:
+        ax[0].plot(meas.utc[meas.good],Sp.smooth(meas.tau[meas.good],20),'k')
+    except:
+        pass
+    ax[0].set_ylabel('$\\tau$')
+    ax[0].set_ylim([0,60])
+    ax[1].plot(meas.utc,meas.ref,'g+')
+    ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
+    try:
+        ax[1].plot(meas.utc[meas.good],Sp.smooth(meas.ref[meas.good],20),'k')
+    except:
+        pass
+    ax[2].plot(meas.utc,meas.phase,'k.')
+    ax[2].set_ylabel('Phase')
+    ax[2].set_ylim([-0.5,1.5])
+    ax[2].set_yticks([0,1])
+    ax[2].set_yticklabels(['liq','ice'])
+    ax[3].plot(meas.utc,meas.ki)
+    ax[3].set_ylabel('$\\chi^{2}$')
+    ax[3].set_xlabel('UTC [Hours]')
+    
+    return fig
+
+
+# In[ ]:
+
+def plot_map_cld_retrieval(meas):
+    """
+    Purpose:
+        Create a 2 panel map of cloud zentih radiance retrieval results (in color) over the flight track
+        2 panels: 1: tau, 2: ref
+    Input:
+        meas : Sp_parameters.Sp object with params already run and tau and ref values save in array
+    Output: 
+        matplotlib fig value
+    Keywords:
+         None
+    Dependencies:
+        - matplotlib
+        - 
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-11-10, NASA Ames, CA
+    """
+    import matplotlib.pyplot as plt
+    import Sp_parameters as Sp
+    if not hasattr(meas,'tau'):
+        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        return None
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    meas.lon[meas.lon==0] = np.nan
+    meas.lat[meas.lat==0] = np.nan
+    ax0, = plt.plot(meas.lon,meas.lat)
+    ss = ax0.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
+    ax0.set_ylabel('Latitude')
+    ax0.set_xlabel('Longitude')
+    ax0.set_title('$\\tau$')
+    plt.grid()
+    cba = plt.colorbar(ss)
+    cba.set_label('Cloud optical thickness')
+    
+    plt.subplot(1,2,2)
+    ax1, = plt.plot(meas.lon,meas.lat)
+    sr = ax1.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
+    ax1.set_ylabel('Latitude')
+    ax1.set_xlabel('Longitude')
+    ax1.set_title('R$_{ef}$ [$\\mu$m]')
+    plt.grids()
+    cbb = plt.colorbar(sr)
+    cbb.set_label('Effective radius [$\mu$m]')
+    
+    return fig
+
+
+# In[ ]:
+
+def plot_hist_cld_retrieval(meas):
+    """
+    Purpose:
+        Create a histogram of retrieved properties for a 3 panel view
+    Input:
+        meas : Sp_parameters.Sp object with params already run and tau and ref values save in array
+    Output: 
+        matplotlib fig value
+    Keywords:
+         None
+    Dependencies:
+        - matplotlib
+        - Sp_parameters (this file)
+    Modification History:
+        Writtten: Samuel LeBlanc, 2015-11-10, NASA Ames, CA
+    """
+    import matplotlib.pyplot as plt
+    import Sp_parameters as Sp
+    if not hasattr(meas,'tau'):
+        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        return None
+
+    # ensure inputs to histograms
+    meas.tau_m, meas.taui = Sp.nanmasked(meas.tau)
+    meas.ref_m, meas.refi = Sp.nanmasked(meas.ref)
+    meas.phase_m, meas.phasei = Sp.nanmasked(meas.phase)
+    
+    fig = plt.figure()
+    plt.subplot(1,3,1)
+    n,bins,p = plt.hist(meas.tau_m,30,histtype='stepfilled', normed=True,alpha=0.7,c='b')
+    plt.axvline(np.nanmean(meas.tau_m),label='Mean',c='b',lw=2)
+    plt.axvline(np.median(meas.tau_m),linestyle='--',label='Median',c='b',lw=2)
+    plt.xlabel('$\\tau$')
+    plt.legend(frameon=False)
+    
+    plt.subplot(1,3,2)
+    n,bins,p = plt.hist(meas.ref_m,30,histtype='stepfilled', normed=True,alpha=0.7,c='g')
+    plt.axvline(np.nanmean(meas.ref_m),color='g',lw=2)
+    plt.axvline(np.median(meas.ref_m),color='g',linestyle='--',lw=2)
+    plt.xlabel('R$_{ef}$ [$\\mu$m]')
+    
+    plt.subplot(1,3,3)
+    n,bins,p = plt.hist(meas.phase_m,2,histtype='stepfilled', normed=True,alpha=0.7,c='k')
+    plt.xticks([0.5,1.5],['Liquid','Ice'],rotation='vertical')
+    
+    return fig
+

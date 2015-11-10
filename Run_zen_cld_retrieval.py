@@ -353,47 +353,27 @@ hs.savemat(fp_out,mdict)
 
 if not noplot:
     print 'making the retrieval plots'
-    fig,ax = plt.subplots(4,sharex=True)
-    ax[0].set_title('Retrieval results time trace')
-    ax[0].plot(meas.utc,meas.tau,'rx')
-    try:
-        ax[0].plot(meas.utc[meas.good],Sp.smooth(meas.tau[meas.good],20),'k')
-    except:
-        pass
-    ax[0].set_ylabel('$\\tau$')
-    ax[1].plot(meas.utc,meas.ref,'g+')
-    ax[1].set_ylabel('R$_{ef}$ [$\\mu$m]')
-    try:
-        ax[1].plot(meas.utc[meas.good],Sp.smooth(meas.ref[meas.good],20),'k')
-    except:
-        pass
-    ax[2].plot(meas.utc,meas.phase,'k.')
-    ax[2].set_ylabel('Phase')
-    ax[2].set_ylim([-0.5,1.5])
-    ax[2].set_yticks([0,1])
-    ax[2].set_yticklabels(['liq','ice'])
-    ax[3].plot(meas.utc,meas.ki)
-    ax[3].set_ylabel('$\\chi^{2}$')
-    ax[3].set_xlabel('UTC [Hours]')
-    plt.savefig(fp_zencld_plot+'{datestr}_retrieval_out.png'.format(datestr=datestr),dpi=600,transparent=True)
+    figz = Sp.plot_zen_cld_retrieval(meas)
+    figz.savefig(fp_zencld_plot+'{datestr}_retrieval_out.png'.format(datestr=datestr),dpi=600,transparent=True)
 
 
 # In[ ]:
 
 if not noplot:
-    fig,ax = plt.subplots(1,2)
-    ax[0].plot(meas.lon,meas.lat)
-    ss = ax[0].scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
-    ax[0].set_ylabel('Latitude')
-    ax[0].set_xlabel('Longitude')
-    cba = plt.colorbar(ss)
-    cba.set_label('Cloud optical thickness')
-    
-    ax[1].plot(meas.lon,meas.lat)
-    sr = ax[1].scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
-    ax[1].set_ylabel('Latitude')
-    ax[1].set_xlabel('Longitude')
-    cbb = plt.colorbar(sr)
-    cbb.set_label('Effective radius [$\mu$m]')
-    plt.savefig(fp_zencld_plot+'{datestr}_map_retr_zencld.png'.format(datestr=datestr),dpi=600,transparent=True)
+    print 'making the retrieval histogram plots'
+    figh = Sp.plot_hist_cld_retrieval(meas)
+    figh.savefig(fp_zencld_plot+'{datestr}_retrieval_hist_out.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+if not noplot:
+    print 'making the map'
+    figm = Sp.plot_map_cld_retrieval(meas)
+    figm.savefig(fp_zencld_plot+'{datestr}_map_retr_zencld.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
 
