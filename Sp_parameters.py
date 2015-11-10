@@ -963,7 +963,7 @@ def plot_map_cld_retrieval(meas):
     meas.lon[meas.lon==0] = np.nan
     meas.lat[meas.lat==0] = np.nan
     ax0, = plt.plot(meas.lon,meas.lat)
-    ss = ax0.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
+    ss = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
     ax0.set_ylabel('Latitude')
     ax0.set_xlabel('Longitude')
     ax0.set_title('$\\tau$')
@@ -973,7 +973,7 @@ def plot_map_cld_retrieval(meas):
     
     plt.subplot(1,2,2)
     ax1, = plt.plot(meas.lon,meas.lat)
-    sr = ax1.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
+    sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
     ax1.set_ylabel('Latitude')
     ax1.set_xlabel('Longitude')
     ax1.set_title('R$_{ef}$ [$\\mu$m]')
