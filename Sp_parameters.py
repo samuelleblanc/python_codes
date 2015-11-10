@@ -1015,20 +1015,20 @@ def plot_hist_cld_retrieval(meas):
     
     fig = plt.figure()
     plt.subplot(1,3,1)
-    n,bins,p = plt.hist(meas.tau_m,30,histtype='stepfilled', normed=True,alpha=0.7,c='b')
-    plt.axvline(np.nanmean(meas.tau_m),label='Mean',c='b',lw=2)
-    plt.axvline(np.median(meas.tau_m),linestyle='--',label='Median',c='b',lw=2)
+    n,bins,p = plt.hist(meas.tau_m,30,histtype='stepfilled', normed=True,alpha=0.7,color='b')
+    plt.axvline(np.nanmean(meas.tau_m),label='Mean',color='b',lw=2)
+    plt.axvline(np.median(meas.tau_m),linestyle='--',label='Median',color='b',lw=2)
     plt.xlabel('$\\tau$')
     plt.legend(frameon=False)
     
     plt.subplot(1,3,2)
-    n,bins,p = plt.hist(meas.ref_m,30,histtype='stepfilled', normed=True,alpha=0.7,c='g')
+    n,bins,p = plt.hist(meas.ref_m,30,histtype='stepfilled', normed=True,alpha=0.7,color='g')
     plt.axvline(np.nanmean(meas.ref_m),color='g',lw=2)
     plt.axvline(np.median(meas.ref_m),color='g',linestyle='--',lw=2)
     plt.xlabel('R$_{ef}$ [$\\mu$m]')
     
     plt.subplot(1,3,3)
-    n,bins,p = plt.hist(meas.phase_m,2,histtype='stepfilled', normed=True,alpha=0.7,c='k')
+    n,bins,p = plt.hist(meas.phase_m,2,histtype='stepfilled', normed=True,alpha=0.7,color='k')
     plt.xticks([0.5,1.5],['Liquid','Ice'],rotation='vertical')
     
     return fig
