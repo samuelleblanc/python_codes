@@ -972,16 +972,18 @@ def plot_map_cld_retrieval(meas):
     ax0.set_ylabel('Latitude')
     ax0.set_xlabel('Longitude')
     ax0.set_title('$\\tau$')
+    plt.locator_params(axis='x',nbins=5)
     plt.grid()
     cba = plt.colorbar(ss)
     cba.set_label('Cloud optical thickness')
     
     ax1 = plt.subplot(1,2,2)
     plt.plot(meas.lon,meas.lat)
-    sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth,edgecolors='None')
+    sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.ref,cmap=plt.cm.gist_earth,edgecolors='None')
     ax1.set_ylabel('Latitude')
     ax1.set_xlabel('Longitude')
     ax1.set_title('R$_{ef}$ [$\\mu$m]')
+    plt.locator_params(axis='x',nbins=5)
     plt.grid()
     cbb = plt.colorbar(sr)
     cbb.set_label('Effective radius [$\mu$m]')
@@ -1034,8 +1036,10 @@ def plot_hist_cld_retrieval(meas):
     plt.xlabel('R$_{ef}$ [$\\mu$m]')
     
     plt.subplot(1,3,3)
-    n,bins,p = plt.hist(meas.phase_m,2,histtype='stepfilled', normed=True,alpha=0.7,color='k')
-    plt.xticks([0.5,1.5],['Liquid','Ice'],rotation='vertical')
+    n,bins,p = plt.hist(meas.phase_m,bins=[-1.0,0.0,1.0],histtype='stepfilled', normed=True,alpha=0.7,color='k')
+    plt.ylim([0,1.1])
+    plt.xlim([-1.1,1.1])
+    plt.xticks([-0.5,0.5],['Liquid','Ice'],rotation='vertical')
     plt.tight_layout()
     
     return fig
