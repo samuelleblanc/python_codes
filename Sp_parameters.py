@@ -959,10 +959,10 @@ def plot_map_cld_retrieval(meas):
         print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
         return None
     fig = plt.figure()
-    plt.subplot(1,2,1)
+    ax0 = plt.subplot(1,2,1)
     meas.lon[meas.lon==0] = np.nan
     meas.lat[meas.lat==0] = np.nan
-    ax0, = plt.plot(meas.lon,meas.lat)
+    plt.plot(meas.lon,meas.lat)
     ss = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_rainbow)
     ax0.set_ylabel('Latitude')
     ax0.set_xlabel('Longitude')
@@ -971,8 +971,8 @@ def plot_map_cld_retrieval(meas):
     cba = plt.colorbar(ss)
     cba.set_label('Cloud optical thickness')
     
-    plt.subplot(1,2,2)
-    ax1, = plt.plot(meas.lon,meas.lat)
+    ax1 = plt.subplot(1,2,2)
+    plt.plot(meas.lon,meas.lat)
     sr = plt.scatter(meas.lon,meas.lat,marker='o',c=meas.tau,cmap=plt.cm.gist_earth)
     ax1.set_ylabel('Latitude')
     ax1.set_xlabel('Longitude')
