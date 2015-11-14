@@ -53,7 +53,12 @@
 # 
 #   - lut .mat file created by Read_save_NAAMES_lut
 #   - starzen.mat file created by the matlab program : starzen.m
+#   
+# Example:
+# 
+#     >> python Run_zen_cld_retrieval.py -lut /nobackup/sleblan2/NAAMES/model/v2_NAAMES_lut.mat /nobackup/sleblan2/NAAMES/c130/20151112starzen.mat -o /u/sleblan2/NAAMES/plot/
 #     
+# 
 # History:
 # 
 #     Written: Samuel LeBlanc, NASA Ames, 2015-10-26
@@ -371,9 +376,4 @@ if not noplot:
     print 'making the map'
     figm = Sp.plot_map_cld_retrieval(meas)
     figm.savefig(fp_zencld_plot+'{datestr}_map_retr_zencld.png'.format(datestr=datestr),dpi=600,transparent=True)
-
-
-# In[ ]:
-
-
 
