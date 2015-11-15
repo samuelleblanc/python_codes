@@ -52,6 +52,7 @@
 #     - gdal (from osgeo)
 #     - plotting_utils (user defined plotting routines)
 #     - map_utils, dependent on geopy
+#     - hdf5storage
 #   
 # Needed Files:
 # 
@@ -65,6 +66,8 @@
 #     Modified: Samuel LeBlanc, NASA Ames, Santa Cruz, CA, 2015-10-05
 #             - ported from version 3, to 4
 #             - new normalization of radiance spectra applied, new SSFR data used
+#     Modified: Samuel LeBlanc, NASA Ames, Flying to St-John's, Newfoundland, 2015-11-14
+#             - added saving of retrieved properties in matlab format with hdf5storrage
 
 # In[1]:
 
@@ -81,6 +84,7 @@ import scipy.io as sio
 import math
 import os
 import Sp_parameters as Sp
+import hdf5storage as hs
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
@@ -91,13 +95,13 @@ import Sp_parameters as Sp
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[3]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[3]:
+# In[4]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -105,7 +109,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[8]:
+# In[6]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
@@ -118,7 +122,7 @@ iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[9]:
+# In[21]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -127,19 +131,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[10]:
+# In[22]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[11]:
+# In[23]:
 
 lut.sp_hires()
 
 
-# In[12]:
+# In[24]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -288,14 +292,14 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[7]:
+# In[25]:
 
 import load_modis
 reload(load_modis)
 from load_modis import mat2py_time, toutc, load_ict
 
 
-# In[7]:
+# In[26]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
@@ -310,7 +314,7 @@ plt.title('DC8 Altitude on 2013-09-13')
 plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 
-# In[9]:
+# In[27]:
 
 print dc8['TIME_UTC'][12000]/3600.0
 print dc8['G_ALT'][12000]
@@ -328,7 +332,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[4]:
+# In[28]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -337,19 +341,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[8]:
+# In[29]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[9]:
+# In[30]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[10]:
+# In[31]:
 
 mea['w'][0][1068]
 
@@ -375,7 +379,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[11]:
+# In[32]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -386,7 +390,7 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[12]:
+# In[33]:
 
 meas.sp.shape
 
@@ -424,12 +428,12 @@ cba.set_label('UTC [h]')
 plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
 
 
-# In[96]:
+# In[34]:
 
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
 
 
-# In[103]:
+# In[35]:
 
 meas.sp.shape
 
@@ -482,24 +486,24 @@ plt.title('All normalized radiance spectra')
 
 # ## Run the retrieval on 4STAR data
 
-# In[129]:
+# In[36]:
 
 from Sp_parameters import smooth
 
 
-# In[130]:
+# In[37]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[131]:
+# In[38]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[132]:
+# In[39]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -507,12 +511,12 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[133]:
+# In[40]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[134]:
+# In[41]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
@@ -567,7 +571,7 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 # Smooth out the retrieved 4STAR data
 
-# In[137]:
+# In[42]:
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
@@ -575,7 +579,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[138]:
+# In[43]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -585,14 +589,14 @@ from load_modis import load_ict
 
 # ### First load the ER2 files
 
-# In[139]:
+# In[44]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[140]:
+# In[45]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -614,7 +618,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[142]:
+# In[46]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
@@ -636,7 +640,7 @@ plt.savefig(fp+'plots\\20130913_er2_roll_pitch.png',dpi=600,transparent=True)
 
 # ### Now load the SSFR files from the ER2
 
-# In[18]:
+# In[47]:
 
 ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
 ssfr_idl = sio.idl.readsav(ssfr_idl_file)
@@ -645,7 +649,7 @@ print np.shape(ssfr_idl['zspectra'])
 print np.shape(ssfr_idl['sat'])
 
 
-# In[19]:
+# In[48]:
 
 class object():
     pass
@@ -672,20 +676,20 @@ else:
     ssfr.Rnir[ssfr.Rnir>1] = np.nan
 
 
-# In[20]:
+# In[49]:
 
 print i500, i1650
 i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
 
 
-# In[21]:
+# In[50]:
 
 iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
 iu2 = np.argmin(abs(ssfr_er2['UTC']-18.5))
 print iu,iu2
 
 
-# In[22]:
+# In[51]:
 
 print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
 print ssfr_er2['DN500'][iu2+200], ssfr_idl['nspectra'][iu+200,i500], ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
@@ -696,7 +700,7 @@ rup500 = ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
 rdn500 = ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
 
 
-# In[23]:
+# In[52]:
 
 print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
 print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
@@ -707,18 +711,18 @@ rup1600 = ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
 rdn1600 = ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
 
 
-# In[24]:
+# In[53]:
 
 print rup500/rdn500
 
 
-# In[25]:
+# In[54]:
 
 ssfr.Rvis = ssfr.Rvis*rup500/rdn500
 ssfr.Rnir = ssfr.Rnir*rup1600/rdn1600
 
 
-# In[26]:
+# In[55]:
 
 print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
 print ssfr_idl['nadlambda'][i1650-2]
@@ -726,7 +730,7 @@ print i500, i1650
 print len(ssfr.utc), len(ssfr.Rvis)
 
 
-# In[27]:
+# In[56]:
 
 from scipy import interpolate
 sza_fx = interpolate.interp1d(er2['Start_UTC'],er2['Solar_Zenith_Angle'],bounds_error=False)
@@ -754,17 +758,17 @@ plt.xlim([17.8,19.2])
 
 # ##### Check the lut for reflectance
 
-# In[29]:
+# In[57]:
 
 lut.sp_hires(doirrad=True)
 
 
-# In[30]:
+# In[58]:
 
 lut.reflect.shape
 
 
-# In[31]:
+# In[59]:
 
 lut.ref
 
@@ -844,13 +848,13 @@ plt.show()
 
 # ### plot the lut
 
-# In[37]:
+# In[60]:
 
 w500 = np.argmin(abs(lut.wvl-500.0))
 w1700 = np.argmin(abs(lut.wvl-1700.0))
 
 
-# In[35]:
+# In[61]:
 
 lut.reflect.shape
 
@@ -880,19 +884,19 @@ plt.savefig(fp+'plots/Reflectance_lut_ice.png',dpi=600,transparent=True)
 
 # ### Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
-# In[70]:
+# In[62]:
 
 import run_2wvl_retrieval as rw
 if 'rw' in locals():
     reload(rw)
 
 
-# In[71]:
+# In[63]:
 
 (ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1600.0])
 
 
-# In[72]:
+# In[64]:
 
 ssfr.tau[ssfr.ref==60] = np.nan
 ssfr.ref[ssfr.ref==60] = np.nan
@@ -915,7 +919,7 @@ axsr[2].set_xlim([18.0,19.2])
 
 # ## Load data from CPL to compare flight profiles of DC8 and ER2 to cloud layers
 
-# In[73]:
+# In[65]:
 
 cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
 import load_modis as lm
@@ -924,7 +928,7 @@ from load_modis import load_cpl_layers
 cpl_layers = load_cpl_layers(cpl_layer_file)
 
 
-# In[74]:
+# In[66]:
 
 cpl_layers.dtype
 
@@ -1007,7 +1011,7 @@ ax.legend(frameon=False)
 plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath_grey.png',dpi=600,transparent=True)
 
 
-# In[75]:
+# In[67]:
 
 ia = abs(cpl_layers['utc']-19.03).argmin()
 print cpl_layers['top'][ia,0]
@@ -1016,7 +1020,7 @@ print cpl_layers['bot'][ia,:]
 
 # ## Get the data from MODIS to compare
 
-# In[44]:
+# In[68]:
 
 from mpl_toolkits.basemap import Basemap,cm
 myd06_file = fp+'modis\\20130913\\MYD06_L2.A2013256.1910.006.2014267222159.hdf'
@@ -1025,7 +1029,7 @@ print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
 
-# In[45]:
+# In[69]:
 
 import load_modis as lm
 reload(lm)
@@ -1034,7 +1038,7 @@ if 'modis' in locals():
     import gc; gc.collect()
 
 
-# In[46]:
+# In[70]:
 
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
@@ -1104,25 +1108,25 @@ plt.show()
 
 # ## Import eMAS values
 
-# In[47]:
+# In[71]:
 
 if 'lm' in locals():
     reload(lm)
 from load_modis import load_emas, load_hdf
 
 
-# In[48]:
+# In[72]:
 
 emas_file = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
 print os.path.isfile(emas_file)
 
 
-# In[49]:
+# In[73]:
 
 emas,emas_dicts = load_hdf(emas_file)
 
 
-# In[50]:
+# In[74]:
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas,emas_dicts = load_hdf(emas_file,values=emas_values)
@@ -1140,7 +1144,7 @@ plt.plot(emas['tau'])
 
 # There is multiple eMAS files, representing each a different time slice. Load all of them.
 
-# In[212]:
+# In[75]:
 
 emas_file_v1_10 = fp+'emas/20130913/EMASL2_13965_10_20130913_1815_1828_V01.hdf'
 emas_file_v1_11 = fp+'emas/20130913/EMASL2_13965_11_20130913_1832_1845_V01.hdf'
@@ -1150,24 +1154,24 @@ emas_file_v1 = fp+'emas/20130913/EMASL2_13965_13_20130913_1905_1918_V01.hdf'
 print os.path.isfile(emas_file_v1)
 
 
-# In[81]:
+# In[76]:
 
 print fp
 print emas_file_v1
 
 
-# In[52]:
+# In[77]:
 
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
 
 
-# In[55]:
+# In[78]:
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 
-# In[214]:
+# In[79]:
 
 emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values, verbose=False)
 emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values, verbose=False)
@@ -1175,12 +1179,12 @@ emas_v1_12,emas_dicts_v1_12 = load_hdf(emas_file_v1_12, values=emas_values, verb
 emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values, verbose=False)
 
 
-# In[56]:
+# In[80]:
 
 emas_dicts_v1['tau']
 
 
-# In[57]:
+# In[81]:
 
 from map_utils import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -1188,7 +1192,7 @@ dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['g
 
 # Create different good filters for each different time slice
 
-# In[225]:
+# In[82]:
 
 mea['good_10'] = np.where((mea['utc']>18.15) & (mea['utc']<18.50) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
 mea['good_11'] = np.where((mea['utc']>18.50) & (mea['utc']<18.85) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
@@ -1197,30 +1201,30 @@ mea['good_13'] = np.where((mea['utc']>19.00) & (mea['utc']<19.35) & (mea['Str'].
 mea['good_14'] = np.where((mea['utc']>19.25) & (mea['utc']<19.60) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
 
 
-# In[227]:
+# In[83]:
 
 mea['good_13']
 
 
-# In[238]:
+# In[84]:
 
 print mea['Lat'][mea['good_13']].min(), mea['Lat'][mea['good_13']].max()
 print mea['Lon'][mea['good_13']].min(), mea['Lon'][mea['good_13']].max()
 
 
-# In[239]:
+# In[85]:
 
 print emas_v1['lat'].min(), emas_v1['lat'].max()
 print emas_v1['lon'].min(), emas_v1['lon'].max()
 
 
-# In[256]:
+# In[86]:
 
 import map_utils as mu
 reload(mu)
 
 
-# In[257]:
+# In[87]:
 
 dc8_ind_10 = mu.map_ind(emas_v1_10['lon'],emas_v1_10['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_10'])
 dc8_ind_11 = mu.map_ind(emas_v1_11['lon'],emas_v1_11['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_11'])
@@ -1238,7 +1242,7 @@ print dc8_ind_12.shape
 print dc8_ind_14.shape
 
 
-# In[59]:
+# In[88]:
 
 print dc8_ind[0,-1],dc8_ind[1,-1]
 print emas['lon'][388,715],emas['lat'][388,715]
@@ -1247,14 +1251,14 @@ print emas['lon'][388,714],emas['lat'][388,714]
 sdist= lambda lon1,lat1,lon2,lat2:1000.0 * 3958.75 * np.arccos(np.cos(np.radians(lat1)-np.radians(lat2)) - np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * (1 - np.cos(np.radians(lon1)-np.radians(lon2))))
 
 
-# In[125]:
+# In[89]:
 
 print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][385,714],emas['lat'][385,714])
 
 
 # ### Now combine all eMAS results
 
-# In[271]:
+# In[90]:
 
 emas_full = dict()
 emas_full['lon'] = np.concatenate([emas_v1_10['lon'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
@@ -1281,7 +1285,7 @@ emas_full['ref'] = np.concatenate([emas_v1_10['ref'][dc8_ind_10[0,:],dc8_ind_10[
 
 # Do the mods calculations
 
-# In[60]:
+# In[91]:
 
 from map_utils import map_ind
 dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -1289,7 +1293,7 @@ dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_goo
 
 # ## Load APR-2 HDF files for DC8 radar images
 
-# In[11]:
+# In[92]:
 
 fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
 fe = '_R23.h4'
@@ -1297,17 +1301,17 @@ files = ['180527','181019','182329','184933','190145','192149','194031']
 aprfiles = [fa+s+fe for s in files]
 
 
-# In[12]:
+# In[93]:
 
 aprfiles
 
 
-# In[38]:
+# In[94]:
 
 reload(load_modis)
 
 
-# In[39]:
+# In[95]:
 
 from load_modis import load_apr
 apr = load_apr(aprfiles)
@@ -1321,14 +1325,14 @@ csz = plt.contourf(apr['lonz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
 plt.colorbar(csz)
 
 
-# In[41]:
+# In[96]:
 
 apr['utcz'] = apr['lonz']*0.0
 for i in xrange(len(apr['utc'])):
     apr['utcz'][:,i] = apr['utc'][i]
 
 
-# In[42]:
+# In[97]:
 
 levels = np.arange(0,7000,30)
 
@@ -1380,7 +1384,7 @@ plt.xlabel('Longitude [$^{\circ}$]')
 plt.ylabel('Latitude [$^{\circ}$]')
 
 
-# In[48]:
+# In[98]:
 
 def t2str(t):
     'Simple function to transform decimal time to string of time HH:MM'
@@ -1389,18 +1393,18 @@ def t2str(t):
     return '%2i:%02i'% (hh,mm)
 
 
-# In[53]:
+# In[99]:
 
 apr_t[:-6]
 
 
-# In[54]:
+# In[ ]:
 
 for t in apr_t[:-6]:
     print t2str(t)
 
 
-# In[60]:
+# In[ ]:
 
 it = np.abs(apr['utc']-19.1).argmin()
 
@@ -1422,13 +1426,13 @@ plt.plot(apr['dbz'][:,0],apr['altflt'][:,0],'+')
 plt.ylim([6000,8000])
 
 
-# In[68]:
+# In[100]:
 
 inoisezone = apr['dbz'][:,2000].argmax()
 inoisezone
 
 
-# In[97]:
+# In[101]:
 
 apr['dbz'][:,]
 
@@ -1473,20 +1477,20 @@ ax.plot(dc8['TIME_UTC'],dc8['G_ALT'],label="DC8",color='k')
 ax.legend(frameon=False)
 
 
-# In[69]:
+# In[102]:
 
 it = np.abs(apr['utc']-19.19).argmin()
 inoisezone = apr['dbz'][:,it].argmax()
 i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
 
 
-# In[99]:
+# In[103]:
 
 print 0.19*60
 print 0.10*60
 
 
-# In[70]:
+# In[104]:
 
 apr['utc'][it]
 
@@ -1511,19 +1515,19 @@ plt.legend(frameon=False)
 
 # ## Load the cloud probe data
 
-# In[71]:
+# In[105]:
 
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
-# In[72]:
+# In[106]:
 
 print probes[:,1]
 print probes[:,2]
 
 
-# In[73]:
+# In[107]:
 
 print probes.shape
 print probes[:,7]
@@ -1533,7 +1537,7 @@ plt.hist(probes[:,7])
 
 # ## Load 2DS data for effective radius at specific times
 
-# In[74]:
+# In[108]:
 
 twoDS = load_ict(fp+'dc8/20130913/seac4rs-2DS_DC8_20130913_R0.ict')
 
@@ -1558,7 +1562,7 @@ plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
 
 
-# In[75]:
+# In[109]:
 
 # filter the data and only show a part
 twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
@@ -1585,7 +1589,7 @@ plt.ylabel('Altitude [m]')
 
 # ## Load CCN results
 
-# In[681]:
+# In[110]:
 
 ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict',return_header=True)
 
@@ -1595,7 +1599,7 @@ ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict',return_
 ccnhead
 
 
-# In[685]:
+# In[111]:
 
 ccn['Number_Concentration'][ccn['Number_Concentration']==-8888]=np.nan
 ccn['Number_Concentration_STP'][ccn['Number_Concentration_STP']==-8888]=np.nan
@@ -1641,13 +1645,13 @@ plt.plot(ccn['UTC_mid'],np.log(ccn['Number_Concentration']))
 plt.xlim([18,19.5])
 
 
-# In[689]:
+# In[112]:
 
 from Sp_parameters import find_closest
 id = find_closest(dc8['TIME_UTC'],ccn['UTC_mid'])
 
 
-# In[690]:
+# In[113]:
 
 ccn_good = np.where((ccn['UTC_mid']>18.0)&(ccn['UTC_mid']<19.5)& (np.isfinite(ccn['Number_Concentration'])))[0]
 
@@ -1662,7 +1666,7 @@ plt.title('CCN number concentration from DC8')
 
 # ## Load RSP results
 
-# In[301]:
+# In[114]:
 
 rsp,rsp_header = load_ict(fp+'er2/20130913/SEAC4RS-RSP-ICECLD_ER2_20130913_R2.ict',return_header=True)
 print rsp['Phase']
@@ -1687,12 +1691,12 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots/20130913_RSP_reff.png',dpi=600,transparent=True)
 
 
-# In[87]:
+# In[115]:
 
 print rsp_good[0][-1]
 
 
-# In[88]:
+# In[116]:
 
 # get the distance between two points for RSP
 from map_utils import spherical_dist
@@ -1704,7 +1708,7 @@ print spherical_dist(np.array((rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0
 
 # ## Calculate the histogram for each comparisons
 
-# In[272]:
+# In[117]:
 
 from Sp_parameters import nanmasked
 modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
@@ -1724,13 +1728,13 @@ rsp_tau,irs = nanmasked(rsp['COT'][rsp_good[0]])
 rsp_ref,irs = nanmasked(rsp['R_eff159'][rsp_good[0]])
 
 
-# In[90]:
+# In[119]:
 
-star_g = np.where((meas.utc>19.0)&(meas.utc<19.2)&isfinite(meas.tau))
+star_g = np.where((meas.utc>19.0)&(meas.utc<19.2)&np.isfinite(meas.tau))
 print '4STAR',meas.tau[star_g[0][0]], meas.ref[star_g[0][0]]
-ssfr_g = np.where((ssfr.utc>19.0)&(ssfr.utc<19.2)&isfinite(ssfr.tau[:,1]))
+ssfr_g = np.where((ssfr.utc>19.0)&(ssfr.utc<19.2)&np.isfinite(ssfr.tau[:,1]))
 print 'ssfr reflect',ssfr.tau[ssfr_g[0][0],1],ssfr.ref[ssfr_g[0][0],1]
-rsp_g = np.where((rsp['UTC']>19.0)&(rsp['UTC']<19.2)&isfinite(rsp['COT']))
+rsp_g = np.where((rsp['UTC']>19.0)&(rsp['UTC']<19.2)&np.isfinite(rsp['COT']))
 print 'rsp',rsp['COT'][rsp_g[0][0]],rsp['R_eff159'][rsp_g[0][0]]
 print 'emas',emas['tau'][dc8_ind[0,0],dc8_ind[1,0]],emas['ref'][dc8_ind[0,0],dc8_ind[1,0]]
 print 'emas_v1',emas_v1['tau'][dc8_ind[0,0],dc8_ind[1,0]],emas_v1['ref'][dc8_ind[0,0],dc8_ind[1,0]]
@@ -1773,24 +1777,49 @@ def plot_median_mean(x,lbl=False,color='k'):
 #  - GOES: 1km
 #  - SSFR: 180 degrees, Pi rads
 
-# In[92]:
+# In[122]:
 
 cld_base = 13610.0
 cld_top = 16489.0
 er2_hgt = 19018.0
 dc8_hgt = 8047.0
-r_eMAS = (er2_hgt - cld_top)*tan(0.0025)
-r_RSP = (er2_hgt - cld_top)*tan(0.014)
-r_SSFR = (er2_hgt - cld_top)*tan(pi/3)
-r_4STAR = (cld_base - dc8_hgt)*tan(0.0349)
+r_eMAS = (er2_hgt - cld_top)*np.tan(0.0025)
+r_RSP = (er2_hgt - cld_top)*np.tan(0.014)
+r_SSFR = (er2_hgt - cld_top)*np.tan(np.pi/3)
+r_4STAR = (cld_base - dc8_hgt)*np.tan(0.0349)
 
 
-# In[93]:
+# In[123]:
 
 print r_eMAS
 print r_RSP
 print r_SSFR
 print r_4STAR
+
+
+# ## Save the output of the retrievals and the other retrievals
+
+# In[125]:
+
+import datetime
+m_dict = {'time_created':datetime.datetime.today(),
+          'emas':{'tau':emas_tau_full,'ref':emas_ref_full},
+          'modis':{'tau':modis_tau,'ref':modis_ref},
+          'ssfr':{'tau':ssfr_tau,'ref':ssfr_ref},
+          'rsp':{'tau':rsp_tau,'ref':rsp_ref},
+          'star':{'tau':star_tau,'ref':star_ref,'utc':meas.utc[meas.good][ist]}}
+
+
+# In[126]:
+
+hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
+
+
+# ### Optionally load the retrieval output for easier and faster plotting
+
+# In[ ]:
+
+m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
 # ## Plot histogram of different tau and ref comparison

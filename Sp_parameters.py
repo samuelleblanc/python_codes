@@ -431,6 +431,8 @@ class Sp:
             par_hires = np.zeros([2,len(ref_hires),len(tau_hires),self.npar])*np.nan
             startprogress('Running interpolation on params')
             refranges = self.get_refrange()
+            if ~hasattr(self,'refranges'):
+                self.refranges = refranges
             for ph in [0,1]:
                 for tt in xrange(1,self.tau.size-1):
                     for rr in refranges[ph]:
@@ -460,6 +462,8 @@ class Sp:
         if np.all(np.isnan(self.par)):
             print 'Run params() before'
             return
+        if hasattr(self,'refranges'):
+            return self.refranges
         ice_r = [r for r in xrange(len(self.ref)) if ~ np.isnan(self.par[1,r,10,0])]
         liq_r = [r for r in xrange(len(self.ref)) if ~ np.isnan(self.par[0,r,10,0])]
         return (liq_r,ice_r)
@@ -511,6 +515,8 @@ class Sp:
         sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
         refranges = self.get_refrange() #(range(0,23),range(3,35))
+        if ~hasattr(self,'refranges'):
+            self.refranges = refranges
         for ph in [0,1]:
             for tt in xrange(1,len(tau)-1):
                 for rr in refranges[ph]:
