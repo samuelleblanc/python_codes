@@ -56,8 +56,47 @@
 #   
 # Example:
 # 
-#     >> python Run_zen_cld_retrieval.py -lut /nobackup/sleblan2/NAAMES/model/v2_NAAMES_lut.mat /nobackup/sleblan2/NAAMES/c130/20151112starzen.mat -o /u/sleblan2/NAAMES/plot/
-#     
+#     >> python Run_zen_cld_retrieval.py -lut /nobackup/sleblan2/NAAMES/model/v2_NAAMES_lut.mat /nobackup/sleblan2/NAAMES/c130/20151114starzen.mat -o /u/sleblan2/NAAMES/plot/
+# loading file /nobackup/sleblan2/NAAMES/c130/20151114starzen.mat
+# Exception occured: unable to create file (File accessibilty: Unable to open file)
+# Running the parameter calculations on measured spectra
+# Making plots...
+# zenrad... norm zenrad... utc curtain zenrad... utc curtain norm zenrad... curtain zenrad... curtain norm zenrad... Loading the lut file: /nobackup/sleblan2/NAAMES/model/v2_NAAMES_lut.mat
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running interpolation on params: [########################################]100% -- Done!
+# Running through the airmasses
+# airmass: 3.2360679775, 11/3
+# ['tau', 'verbose', 'sza', 'stdparn', 'par', 'hiresirrad', 'meansp', 'iwvls', 'stdsp', 'ref', 'norm', 'iset', 'parn', 'stdpar', 'reflect', 'isubwvl', 'wvl', 'npar', 'sphires', 'refsp', 'parhires', 'sp', 'irrad', 'tausp']
+# meas.good lengh: (142,),meas.utc length: (850,)
+# In Rk, Measurement space length: (850,)
+# Retrieval progress over times: [########################################]100% -- Done!
+# airmass: 3.42030361983, 12/3
+# ['tau', 'verbose', 'sza', 'stdparn', 'par', 'hiresirrad', 'meansp', 'iwvls', 'stdsp', 'ref', 'norm', 'iset', 'parn', 'stdpar', 'reflect', 'isubwvl', 'wvl', 'npar', 'sphires', 'refsp', 'parhires', 'sp', 'irrad', 'tausp']
+# meas.good lengh: (48,),meas.utc length: (850,)
+# In Rk, Measurement space length: (850,)
+# Retrieval progress over times: [########################################]100% -- Done!
+# airmass: 3.86370330516, 14/3
+# ['tau', 'verbose', 'sza', 'stdparn', 'par', 'hiresirrad', 'meansp', 'iwvls', 'stdsp', 'ref', 'norm', 'iset', 'parn', 'stdpar', 'reflect', 'isubwvl', 'wvl', 'npar', 'sphires', 'refsp', 'parhires', 'sp', 'irrad', 'tausp']
+# meas.good lengh: (660,),meas.utc length: (850,)
+# In Rk, Measurement space length: (850,)
+# Retrieval progress over times: [########################################]100% -- Done!
+# saving to file: /nobackup/sleblan2/NAAMES/c13020151114_zen_cld_retrieved.mat
+# making the retrieval plots
+# making the retrieval histogram plots
+# making the map
 # 
 # History:
 # 
@@ -170,7 +209,7 @@ else:
 if in_.get('fp_lut_mat'):
     fp_lut_mat = in_.get('fp_lut_mat')
 else:
-    fp_lut_mat = fp+'/v2_NAAMES_lut.mat'
+    fp_lut_mat = fp+os.path.sep+'v2_NAAMES_lut.mat'
 
 
 # In[ ]:
@@ -347,7 +386,7 @@ mdict = {'tau':meas.tau,'ref':meas.ref,'phase':meas.phase,'ki':meas.ki,
 
 # In[ ]:
 
-fp_out = fp+'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr)
+fp_out = fp+os.path.sep+'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr)
 print 'saving to file: {fp_out}'.format(fp_out=fp_out)
 hs.savemat(fp_out,mdict)
 
