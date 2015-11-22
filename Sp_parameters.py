@@ -138,6 +138,9 @@ def param(sp,wvlin,iws=None):
     npar = 16
     spc, mask = nanmasked(sp)
     wvl = wvlin[mask]
+    if len(wvl)<600:
+        par = np.zeros(npar)*np.nan
+        return par
     try:
         norm = norm2max(spc,iws=iws)
     except ValueError:
