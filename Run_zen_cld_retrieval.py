@@ -386,7 +386,7 @@ mdict = {'tau':meas.tau,'ref':meas.ref,'phase':meas.phase,'ki':meas.ki,
 
 # In[ ]:
 
-fp_out = fp+os.path.sep+'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr)
+fp_out = os.path.join(fp,'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr))
 print 'saving to file: {fp_out}'.format(fp_out=fp_out)
 hs.savemat(fp_out,mdict)
 
