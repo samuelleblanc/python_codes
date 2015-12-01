@@ -109,7 +109,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[6]:
+# In[5]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
@@ -122,7 +122,7 @@ iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[21]:
+# In[6]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -131,19 +131,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[22]:
+# In[7]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[23]:
+# In[8]:
 
 lut.sp_hires()
 
 
-# In[24]:
+# In[9]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -292,19 +292,19 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[25]:
+# In[10]:
 
 import load_modis
 reload(load_modis)
 from load_modis import mat2py_time, toutc, load_ict
 
 
-# In[26]:
+# In[11]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
 
-# In[8]:
+# In[12]:
 
 plt.figure()
 plt.plot(dc8['TIME_UTC'],dc8['G_ALT'])
@@ -314,7 +314,7 @@ plt.title('DC8 Altitude on 2013-09-13')
 plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 
-# In[27]:
+# In[13]:
 
 print dc8['TIME_UTC'][12000]/3600.0
 print dc8['G_ALT'][12000]
@@ -332,7 +332,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[28]:
+# In[14]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -341,19 +341,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[29]:
+# In[15]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[30]:
+# In[16]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[31]:
+# In[17]:
 
 mea['w'][0][1068]
 
@@ -379,7 +379,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[32]:
+# In[18]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -390,7 +390,7 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[33]:
+# In[19]:
 
 meas.sp.shape
 
@@ -428,12 +428,12 @@ cba.set_label('UTC [h]')
 plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
 
 
-# In[34]:
+# In[20]:
 
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
 
 
-# In[35]:
+# In[21]:
 
 meas.sp.shape
 
@@ -486,24 +486,24 @@ plt.title('All normalized radiance spectra')
 
 # ## Run the retrieval on 4STAR data
 
-# In[36]:
+# In[22]:
 
 from Sp_parameters import smooth
 
 
-# In[37]:
+# In[23]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[38]:
+# In[24]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[39]:
+# In[25]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -511,18 +511,18 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[40]:
+# In[26]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[41]:
+# In[27]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
-# In[135]:
+# In[28]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -571,7 +571,7 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 # Smooth out the retrieved 4STAR data
 
-# In[42]:
+# In[29]:
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
@@ -579,7 +579,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[43]:
+# In[30]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -596,7 +596,7 @@ ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[45]:
+# In[90]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -618,7 +618,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[46]:
+# In[91]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
@@ -640,16 +640,41 @@ plt.savefig(fp+'plots\\20130913_er2_roll_pitch.png',dpi=600,transparent=True)
 
 # ### Now load the SSFR files from the ER2
 
-# In[47]:
+# In[32]:
 
-ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
+if False:
+    # old ssfr file
+    ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
+else:
+    # newest SSFR file, updated on 2015-10-02 from Sebastian, attcorr v2
+    ssfr_idl_file = fp+'er2/20130913/er2_20130913_calibspcs_attcorr_v2.out'
 ssfr_idl = sio.idl.readsav(ssfr_idl_file)
-print ssfr_idl.keys()
-print np.shape(ssfr_idl['zspectra'])
-print np.shape(ssfr_idl['sat'])
 
 
 # In[48]:
+
+print ssfr_idl.keys()
+print np.shape(ssfr_idl['zspectra'])
+print ssfr_idl['tmhrs'].shape
+
+
+# In[46]:
+
+ssfr_idl['status']
+
+
+# In[47]:
+
+ssfr_idl['comment']
+
+
+# In[111]:
+
+ssfr_idl['zspectra'][ssfr_idl['zspectra']==-999]=np.nan
+ssfr_idl['nspectra'][ssfr_idl['nspectra']<0]=np.nan
+
+
+# In[125]:
 
 class object():
     pass
@@ -668,75 +693,144 @@ else:
     ssfr.utc = ssfr_idl['tmhrs']
     i500 = np.argmin(abs(ssfr_idl['zenlambda']-500.0))
     i1650 = np.argmin(abs(ssfr_idl['zenlambda']-1700.0))
-    ssfr.Rvis = ssfr_idl['zspectra'][:,i500]/ssfr_idl['nspectra'][:,i500]
-    ssfr.Rnir = ssfr_idl['zspectra'][:,i1650]/ssfr_idl['nspectra'][:,i1650-1]
+    ssfr.Rvis = ssfr_idl['nspectra'][:,i500]/ssfr_idl['zspectra'][:,i500]
+    ssfr.Rnir = ssfr_idl['nspectra'][:,i1650]/ssfr_idl['zspectra'][:,i1650]
     ssfr.Rvis[ssfr.Rvis<0] = np.nan
     ssfr.Rvis[ssfr.Rvis>1] = np.nan
     ssfr.Rnir[ssfr.Rnir<0] = np.nan
     ssfr.Rnir[ssfr.Rnir>1] = np.nan
 
 
-# In[49]:
+# In[54]:
 
-print i500, i1650
-i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
+print ssfr_idl['zspectra'].shape, ssfr_idl['nspectra'].shape
 
 
-# In[50]:
+# In[117]:
 
-iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
-iu2 = np.argmin(abs(ssfr_er2['UTC']-18.5))
-print iu,iu2
+plt.figure()
+plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,150])
+plt.xlabel('UTC [H]')
+plt.ylabel('Nadir irradiance at {:3.0f} nm'.format(ssfr_idl['nadlambda'][150]))
+
+
+# In[126]:
+
+plt.figure()
+plt.plot(ssfr.utc,ssfr.Rvis,'r',label='Reflectance in Vis')
+plt.plot(ssfr.utc,ssfr.Rnir,'b',label='Reflectance in NIR')
+plt.xlabel('UTC [H]')
+plt.ylabel('Reflectance')
+plt.legend(frameon=False)
+
+
+# In[62]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(ssfr_idl['zenlambda'],ssfr.utc[:,0],ssfr_idl['zspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=2.5)
+plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('UTC [H]')
+plt.title('Zenith Irradiance spectra')
+
+
+# In[72]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(ssfr_idl['nadlambda'],ssfr.utc[:,0],ssfr_idl['nspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=2.5)
+plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('UTC [H]')
+plt.title('Nadir Irradiance spectra')
+
+
+# In[68]:
+
+fig,ax = plt.subplots(1,1,figsize=(8,14))
+pco = ax.pcolorfast(ssfr_idl['zenlambda'],ssfr.utc[:,0],ssfr_idl['nspectra'][:-1,:-1]/ssfr_idl['zspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
+plt.colorbar(pco)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('UTC [H]')
+plt.title('Reflectance spectra')
+
+
+# In[36]:
+
+if False:
+    print i500, i1650
+    i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
+
+
+# In[37]:
+
+if False:
+    iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
+    iu2 = np.argmin(abs(ssfr_er2['UTC']-18.5))
+    print iu,iu2
 
 
 # In[51]:
 
-print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
-print ssfr_er2['DN500'][iu2+200], ssfr_idl['nspectra'][iu+200,i500], ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
-print ssfr_er2['UTC'][iu2+200]
-print ssfr_idl['tmhrs'][iu+200]
-print ssfr_idl['nspectra'][iu+200,i500]
-rup500 = ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
-rdn500 = ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
+if False:
+    print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
+    print ssfr_er2['DN500'][iu2+200], ssfr_idl['nspectra'][iu+200,i500], ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
+    print ssfr_er2['UTC'][iu2+200]
+    print ssfr_idl['tmhrs'][iu+200]
+    print ssfr_idl['nspectra'][iu+200,i500]
+    rup500 = ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
+    rdn500 = ssfr_er2['DN500'][iu2+200]/ssfr_idl['nspectra'][iu+200,i500]
 
 
 # In[52]:
 
-print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
-print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
-print ssfr_er2['UTC'][iu2+200]
-print ssfr_idl['tmhrs'][iu+200]
-print ssfr_idl['nspectra'][iu+200,i500]
-rup1600 = ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
-rdn1600 = ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
+if False:
+    print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
+    print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
+    print ssfr_er2['UTC'][iu2+200]
+    print ssfr_idl['tmhrs'][iu+200]
+    print ssfr_idl['nspectra'][iu+200,i500]
+    rup1600 = ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
+    rdn1600 = ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
 
 
 # In[53]:
 
-print rup500/rdn500
+if False:
+    print rup500/rdn500
 
 
 # In[54]:
 
-ssfr.Rvis = ssfr.Rvis*rup500/rdn500
-ssfr.Rnir = ssfr.Rnir*rup1600/rdn1600
+if False:
+    ssfr.Rvis = ssfr.Rvis*rup500/rdn500
+    ssfr.Rnir = ssfr.Rnir*rup1600/rdn1600
 
 
 # In[55]:
 
-print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
-print ssfr_idl['nadlambda'][i1650-2]
-print i500, i1650
-print len(ssfr.utc), len(ssfr.Rvis)
+if False:
+    print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
+    print ssfr_idl['nadlambda'][i1650-2]
+    print i500, i1650
+    print len(ssfr.utc), len(ssfr.Rvis)
 
 
-# In[56]:
+# In[137]:
 
 from scipy import interpolate
 sza_fx = interpolate.interp1d(er2['Start_UTC'],er2['Solar_Zenith_Angle'],bounds_error=False)
-ssfr.sza = sza_fx(ssfr.utc)
+ssfr.sza = sza_fx(ssfr.utc)[:,0]
 print sza_fx(18.41)
-print ssfr.utc[17000], ssfr.sza[17000]
+print ssfr.utc[3000], ssfr.sza[3000]
+
+
+# In[132]:
+
+fig = plt.figure()
+plt.plot(ssfr.utc,ssfr.sza)
+plt.title('SZA for SSFR on ER2')
+plt.xlabel('UTC [H]')
+plt.ylabel('SZA [$^{\circ}$]')
 
 
 # In[28]:
@@ -756,21 +850,39 @@ plt.xlim([17.8,19.2])
 #plt.ylim([0.22,0.32])
 
 
+# In[113]:
+
+fig = plt.figure()
+plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500],label='Zenith 500 nm')
+plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,i500],'r', label='Nadir 500 nm')
+plt.plot(ssfr.utc,(ssfr_idl['nspectra']/ssfr_idl['zspectra'])[:,i500],'g',label='reflectance 500 nm')
+plt.xlim([17.8,19.2])
+plt.ylim([0,2.5])
+plt.legend(frameon=False)
+plt.xlabel('UTC [H]')
+plt.ylabel('Irradiance or reflectance')
+
+
 # ##### Check the lut for reflectance
 
-# In[57]:
+# In[75]:
 
 lut.sp_hires(doirrad=True)
 
 
-# In[58]:
+# In[76]:
 
 lut.reflect.shape
 
 
-# In[59]:
+# In[77]:
 
 lut.ref
+
+
+# In[133]:
+
+lut.sza
 
 
 # In[80]:
@@ -848,13 +960,13 @@ plt.show()
 
 # ### plot the lut
 
-# In[60]:
+# In[78]:
 
 w500 = np.argmin(abs(lut.wvl-500.0))
 w1700 = np.argmin(abs(lut.wvl-1700.0))
 
 
-# In[61]:
+# In[79]:
 
 lut.reflect.shape
 
@@ -884,25 +996,25 @@ plt.savefig(fp+'plots/Reflectance_lut_ice.png',dpi=600,transparent=True)
 
 # ### Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
-# In[62]:
+# In[80]:
 
 import run_2wvl_retrieval as rw
 if 'rw' in locals():
     reload(rw)
 
 
-# In[63]:
+# In[139]:
 
-(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1600.0])
+(ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1650.0])
 
 
-# In[64]:
+# In[102]:
 
 ssfr.tau[ssfr.ref==60] = np.nan
 ssfr.ref[ssfr.ref==60] = np.nan
 
 
-# In[371]:
+# In[124]:
 
 figsr,axsr = plt.subplots(3,1,sharex=True)
 axsr[0].plot(ssfr.utc,ssfr.tau[:,1])
