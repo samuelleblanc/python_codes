@@ -112,7 +112,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 # In[5]:
 
 # load the idl save file containing the modeled radiances
-vv = 'v2'
+vv = 'v4'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 print s.keys()
 print 'sp', s.sp.shape
@@ -154,7 +154,7 @@ print lut.ref
 print lut.par.shape
 
 
-# In[9]:
+# In[20]:
 
 fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
@@ -189,7 +189,7 @@ plt.savefig(fp+'plots/20130913_'+vv+'_param_liq_vs_tau.png',dpi=600,transparent=
 plt.show()
 
 
-# In[48]:
+# In[21]:
 
 fig4,ax4 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax4 = ax4.ravel()
@@ -224,7 +224,7 @@ plt.savefig(fp+'plots/20130913_'+vv+'_param_liq_vs_ref.png',dpi=600,transparent=
 plt.show()
 
 
-# In[49]:
+# In[22]:
 
 fig5,ax5 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax5 = ax5.ravel()
@@ -257,7 +257,7 @@ plt.savefig(fp+'plots/20130913_'+vv+'_param_ice_vs_tau.png',dpi=600,transparent=
 plt.show()
 
 
-# In[50]:
+# In[23]:
 
 fig6,ax6 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax6 = ax6.ravel()
@@ -314,7 +314,7 @@ plt.title('DC8 Altitude on 2013-09-13')
 plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 
-# In[13]:
+# In[12]:
 
 print dc8['TIME_UTC'][12000]/3600.0
 print dc8['G_ALT'][12000]
@@ -332,7 +332,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[14]:
+# In[13]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -341,19 +341,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[15]:
+# In[14]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[16]:
+# In[15]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[17]:
+# In[16]:
 
 mea['w'][0][1068]
 
@@ -379,7 +379,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[18]:
+# In[17]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -390,7 +390,7 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[19]:
+# In[18]:
 
 meas.sp.shape
 
@@ -428,12 +428,12 @@ cba.set_label('UTC [h]')
 plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
 
 
-# In[20]:
+# In[19]:
 
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
 
 
-# In[21]:
+# In[20]:
 
 meas.sp.shape
 
@@ -486,24 +486,24 @@ plt.title('All normalized radiance spectra')
 
 # ## Run the retrieval on 4STAR data
 
-# In[22]:
+# In[21]:
 
 from Sp_parameters import smooth
 
 
-# In[23]:
+# In[22]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[24]:
+# In[23]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[25]:
+# In[24]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -511,18 +511,18 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[26]:
+# In[25]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[27]:
+# In[26]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
-# In[28]:
+# In[32]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -541,7 +541,7 @@ ax[3].plot(meas.utc,meas.ki)
 ax[3].set_ylabel('$\\chi^{2}$')
 ax[3].set_xlabel('UTC [Hours]')
 ax[3].set_xlim([18.5,19.05])
-plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
+plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_lut{}.png'.format(vv),dpi=600)
 #plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v3.pdf',bbox='tight')
 
 
@@ -571,7 +571,7 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 # Smooth out the retrieved 4STAR data
 
-# In[29]:
+# In[27]:
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
@@ -579,7 +579,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[30]:
+# In[28]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -589,14 +589,14 @@ from load_modis import load_ict
 
 # ### First load the ER2 files
 
-# In[44]:
+# In[29]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[90]:
+# In[30]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -618,7 +618,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[91]:
+# In[31]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
@@ -651,30 +651,30 @@ else:
 ssfr_idl = sio.idl.readsav(ssfr_idl_file)
 
 
-# In[48]:
+# In[33]:
 
 print ssfr_idl.keys()
 print np.shape(ssfr_idl['zspectra'])
 print ssfr_idl['tmhrs'].shape
 
 
-# In[46]:
+# In[34]:
 
 ssfr_idl['status']
 
 
-# In[47]:
+# In[35]:
 
 ssfr_idl['comment']
 
 
-# In[111]:
+# In[36]:
 
 ssfr_idl['zspectra'][ssfr_idl['zspectra']==-999]=np.nan
 ssfr_idl['nspectra'][ssfr_idl['nspectra']<0]=np.nan
 
 
-# In[125]:
+# In[37]:
 
 class object():
     pass
@@ -701,12 +701,12 @@ else:
     ssfr.Rnir[ssfr.Rnir>1] = np.nan
 
 
-# In[54]:
+# In[38]:
 
 print ssfr_idl['zspectra'].shape, ssfr_idl['nspectra'].shape
 
 
-# In[117]:
+# In[45]:
 
 plt.figure()
 plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,150])
@@ -714,7 +714,7 @@ plt.xlabel('UTC [H]')
 plt.ylabel('Nadir irradiance at {:3.0f} nm'.format(ssfr_idl['nadlambda'][150]))
 
 
-# In[126]:
+# In[41]:
 
 plt.figure()
 plt.plot(ssfr.utc,ssfr.Rvis,'r',label='Reflectance in Vis')
@@ -815,7 +815,7 @@ if False:
     print len(ssfr.utc), len(ssfr.Rvis)
 
 
-# In[137]:
+# In[39]:
 
 from scipy import interpolate
 sza_fx = interpolate.interp1d(er2['Start_UTC'],er2['Solar_Zenith_Angle'],bounds_error=False)
@@ -850,7 +850,7 @@ plt.xlim([17.8,19.2])
 #plt.ylim([0.22,0.32])
 
 
-# In[113]:
+# In[43]:
 
 fig = plt.figure()
 plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500],label='Zenith 500 nm')
@@ -865,29 +865,29 @@ plt.ylabel('Irradiance or reflectance')
 
 # ##### Check the lut for reflectance
 
-# In[75]:
+# In[40]:
 
 lut.sp_hires(doirrad=True)
 
 
-# In[76]:
+# In[41]:
 
 lut.reflect.shape
 
 
-# In[77]:
+# In[42]:
 
 lut.ref
 
 
-# In[133]:
+# In[43]:
 
 lut.sza
 
 
-# In[80]:
+# In[53]:
 
-figref = plt.figure(15,16)
+#figref = plt.figure(15,16)
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
 axref = axref.ravel()
 for i in range(lut.ref.size/2-1):
@@ -918,11 +918,11 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
 cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
-plt.savefig(fp+'plots/Spectral_reflectance_model_ice.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/Spectral_reflectance_model_ice_{}.png'.format(vv),dpi=600,transparent=True)
 #plt.show()
 
 
-# In[64]:
+# In[52]:
 
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
 axref = axref.ravel()
@@ -954,24 +954,27 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
 cba.ax.set_ylabel('$\\tau$')
 labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
-plt.savefig(fp+'plots/Spectral_reflectance_model_liq.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/Spectral_reflectance_model_liq_{}.png'.format(vv),dpi=600,transparent=True)
 plt.show()
 
 
 # ### plot the lut
 
-# In[78]:
+# In[44]:
 
 w500 = np.argmin(abs(lut.wvl-500.0))
+w750 = np.argmin(abs(lut.wvl-742.0))
 w1700 = np.argmin(abs(lut.wvl-1700.0))
+w1650 = np.argmin(abs(lut.wvl-1650.0))
+w1250 = np.argmin(abs(lut.wvl-1250.0))
 
 
-# In[79]:
+# In[45]:
 
 lut.reflect.shape
 
 
-# In[79]:
+# In[56]:
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -991,30 +994,461 @@ plt.xlabel('Reflectance at 500 nm')
 plt.ylabel('Reflectance at 1700 nm')
 plt.xlim([0.45,1.05])
 plt.ylim([0.25,0.8])
-plt.savefig(fp+'plots/Reflectance_lut_ice.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/Reflectance_lut_ice_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[78]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w500,1,ir,:],lut.reflect[1,w1650,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w500,1,ir,-1]+0.01,lut.reflect[1,w1650,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w500,1,:,it],lut.reflect[1,w1650,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.02,lut.reflect[1,w1650,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.01,lut.reflect[1,w1650,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 500 nm') 
+plt.ylabel('Reflectance at 1650 nm')
+plt.title('LUT for cirrus reflectivity at midvisible and 1650 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,0.8])
+plt.savefig(fp+'plots/Reflectance_lut_ice_{}_1650nm.png'.format(vv),dpi=600,transparent=True)
+
+
+# ### The LUT is plotted agains the reflectance values from SSFR, using different pairs of wavelengths
+
+# In[113]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w500,1,ir,:],lut.reflect[1,w1250,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w500,1,ir,-1]+0.01,lut.reflect[1,w1250,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w500,1,:,it],lut.reflect[1,w1250,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.02,lut.reflect[1,w1250,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.01,lut.reflect[1,w1250,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 500 nm') 
+plt.ylabel('Reflectance at 1250 nm')
+plt.title('LUT for cirrus reflectivity at midvisible and 1250 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,1.0])
+plt.scatter(ssfr_reflect[ssfr.i[:,0],i500],
+            ssfr_reflect[ssfr.i[:,0],i1250])
+plt.savefig(fp+'plots/Reflectance_lut_ice_{}_1250nm.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[46]:
+
+i750 = np.argmin(abs(ssfr_idl['zenlambda']-742.0))
+i1700 = np.argmin(abs(ssfr_idl['zenlambda']-1700.0))
+i500 = np.argmin(abs(ssfr_idl['zenlambda']-500.0))
+i1250 = np.argmin(abs(ssfr_idl['zenlambda']-1250.0))
+
+
+# In[120]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w750,1,ir,:],lut.reflect[1,w1700,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w750,1,ir,-1]+0.01,lut.reflect[1,w1700,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w750,1,:,it],lut.reflect[1,w1700,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w750,1,-1,it]-0.02,lut.reflect[1,w1700,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w750,1,-1,it]-0.01,lut.reflect[1,w1700,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 750 nm') 
+plt.ylabel('Reflectance at 1700 nm')
+plt.title('LUT for cirrus reflectivity at endvisible and 1700 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,0.85])
+plt.scatter(ssfr_reflect[ssfr.i[:,0],i750],
+            ssfr_reflect[ssfr.i[:,0],i1700])
+plt.savefig(fp+'plots/Reflectance_lut_ice_{}_750nm_1700nm.png'.format(vv),dpi=600,transparent=True)
+
+
+# #### Trying to calculate the optical thickness at 750 to get an estimate of COD first
+
+# In[47]:
+
+from scipy import interpolate
+fip = interpolate.interp1d(lut.reflect[1,w750,1,-1,:],lut.tau,bounds_error=False)
+
+
+# In[53]:
+
+ssfrtau = fip(ssfr_reflect[ssfr.i[:,0],i750])
+
+
+# In[54]:
+
+ssfrtau
+
+
+# In[55]:
+
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfrtau)
+plt.xlabel('UTC [h]')
+plt.ylabel('COD, at 750 nm')
+plt.title('SSFR calculated COD when assuming a r$_{eff}$ at 60 $\\mu$m')
+
+
+# In[56]:
+
+plt.figure()
+plt.hist(ssfrtau,range=[0,50],bins=50)
+plt.xlabel('COD')
+plt.ylabel('\# of Occurences')
+plt.title('SSFR histogram of COD')
+
+
+# In[57]:
+
+ssfr.i = (ssfr.utc>17.8)&(ssfr.utc<19.2)
+
+
+# In[58]:
+
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rvis[ssfr.i[:,0]]*ssfr.sza[ssfr.i[:,0]]/lut.sza,'b',label='Vis reflectance')
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rnir[ssfr.i[:,0]]*ssfr.sza[ssfr.i[:,0]]/lut.sza,'r',label='NIR reflectance')
+plt.xlabel('UTC [h]')
+plt.ylabel('Reflectance')
+plt.title('Reflectance normalized by mean SZA from LUT')
+plt.legend(frameon=False)
+
+
+# In[59]:
+
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.sza[ssfr.i[:,0]]/lut.sza,label='SZA')
+plt.plot(ssfr.utc[ssfr.i[:,0]],1.0/np.cos(ssfr.sza[ssfr.i[:,0]]*np.pi/180.0)/
+         1.0/np.cos(lut.sza*np.pi/180.0),'r',label='Airmass factor')
+plt.ylabel('Value of normalization')
+plt.xlabel('UTC [h]')
+plt.title('Observing the value of the SZA normalization')
+plt.legend(frameon=False)
+
+
+# In[60]:
+
+lut.sza
+
+
+# In[222]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w500,1,ir,:],lut.reflect[1,w1650,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w500,1,ir,-1]+0.01,lut.reflect[1,w1650,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w500,1,:,it],lut.reflect[1,w1650,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.02,lut.reflect[1,w1650,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w500,1,-1,it]-0.01,lut.reflect[1,w1650,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 500 nm') 
+plt.ylabel('Reflectance at 1650 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,0.8])
+plt.scatter(ssfr.Rvis[ssfr.i[:,0]],
+            ssfr.Rnir[ssfr.i[:,0]])
+plt.title('COD and ref grid with respect to reflectances - not corrected')
+
+
+# #### Testing possible corrections to Reflected irradiance to take out the 3D effects
+
+# In[61]:
+
+wavenum = 10000000.0/ssfr_idl['zenlambda']
+
+
+# In[62]:
+
+iii = np.where(ssfr.i[:,0])[0][1000]
+plt.figure()
+plt.plot(ssfr_idl['zenlambda'],ssfr_idl['nspectra'][iii,:]/ssfr_idl['zspectra'][iii,:])
+plt.plot(ssfr_idl['zenlambda'],wavenum**4.0*25e-20+0.48,'k-')
+
+
+# In[63]:
+
+iii = np.where(ssfr.i[:,0])[0][1000]
+plt.figure()
+plt.plot(ssfr_idl['zenlambda'],ssfr_idl['nspectra'][iii,:]/ssfr_idl['zspectra'][iii,:])
+plt.plot(ssfr_idl['zenlambda'],wavenum**4.0*25e-20+0.48,'k-')
+
+
+# ## Presenting the measured SSFR spectra
+
+# In[51]:
+
+plt.figure()
+ssfr_reflect = ssfr_idl['nspectra']*0.0
+for ii in np.where(ssfr.i[:,0])[0]:
+    plt.plot(ssfr_idl['zenlambda'],ssfr_idl['nspectra'][ii,:]/ssfr_idl['zspectra'][ii,:])
+    ssfr_reflect[ii,:] = ssfr_idl['nspectra'][ii,:]/ssfr_idl['zspectra'][ii,:]
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Reflectivity')
+plt.grid()
+plt.title('All measured reflectance from SSFR during the time subset')
+plt.xlim([300,2150])
+
+
+# In[52]:
+
+fig, ax = plt.subplots(2,1,sharex=True)
+ax = ax.ravel()
+for ii in np.where(ssfr.i[:,0])[0]:
+    ax[0].plot(ssfr_idl['zenlambda'],ssfr_idl['nspectra'][ii,:])
+    ax[1].plot(ssfr_idl['zenlambda'],ssfr_idl['zspectra'][ii,:])
+ax[1].set_xlabel('Wavelength [nm]')
+ax[1].set_ylabel('Downwelling')
+ax[0].set_ylabel('Upwelling')
+ax[0].grid()
+ax[1].grid()
+ax[0].set_title('All measured irradiance spectra from SSFR during the time subset')
+ax[1].set_xlim([300,2150])
+
+
+# ## Estimate the value of the slope in the visible, and find relationships
+
+# In[64]:
+
+def sl_vis(wvl,sp,wv_norm=852.0,wv_min=450.0,wv_max=600.0):
+    'get the slope in vis, nomalized at 852 nm, the slope between wv_min (default 450 nm) and wv_max (default 600 nm)'
+    from linfit import linfit
+    wnorm = np.argmin(abs(wvl-wv_norm))
+    wmin = np.argmin(abs(wvl-wv_min))
+    wmax = np.argmin(abs(wvl-wv_max))
+    fit,_ = linfit(wvl[wmin:wmax],sp[wmin:wmax])
+    return fit[0],sp[wnorm]
+
+
+# In[65]:
+
+wmin = np.argmin(abs(ssfr_idl['zenlambda']-450.0))
+wmax = np.argmin(abs(ssfr_idl['zenlambda']-600.0))
+wnorm = np.argmin(abs(ssfr_idl['zenlambda']-852.0))
+
+
+# In[66]:
+
+slope = ssfr.utc*0.0
+base = ssfr.utc*0.0
+for ii in np.where(ssfr.i[:,0])[0]:
+    slope[ii], base[ii] = sl_vis(ssfr_idl['zenlambda'],ssfr_reflect[ii,:])
+
+
+# In[159]:
+
+plt.figure()
+plt.plot(slope)
+
+
+# In[137]:
+
+plt.figure()
+plt.plot(w[wmin:wmax],ssfr_reflect[iii,wmin:wmax]/ssfr_reflect[iii,wnorm])
+fit,_ = linfit(w[wmin:wmax],ssfr_reflect[iii,wmin:wmax]/ssfr_reflect[iii,wnorm])
+plt.plot(w[wmin:wmax],fit[1]+fit[0]*w[wmin:wmax],'k-')
+
+
+# In[67]:
+
+ntau = len(lut.tau)
+nref = len(lut.ref)
+
+
+# In[68]:
+
+lut_slope = np.zeros((ntau,nref))
+lut_base = np.zeros((ntau,nref))
+
+
+# In[69]:
+
+for t in xrange(ntau):
+    for r in xrange(nref):
+        lut_slope[t,r],lut_base[t,r] = sl_vis(lut.wvl,lut.reflect[1,:,1,r,t])
+
+
+# In[70]:
+
+lut_slope.shape
+
+
+# ### Calculate the expected slope in the visible with modeled irradiance
+
+# In[71]:
+
+plt.figure()
+plt.plot(lut.tau,lut_slope)
+
+
+# ### Compared calculated slope from measurements to expected slope
+# The expected slope is calculated by getting a COD from the setting ref at 60 microns, then relating the reflectance at 750 nm to cod directly.
+# Then the relationship between the slope and tau from the modeled irradiance is used to predict the slope in visible in the measured reflectane
+
+# In[72]:
+
+ft = interpolate.interp1d(lut.tau,lut_slope[:,10],bounds_error=False)
+ssfr_slope = ft(ssfrtau)
+
+
+# In[73]:
+
+ratio_increase = slope[ssfr.i[:,0]][:,0]/ssfr_slope
+
+
+# In[208]:
+
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr_slope,label='Expected slope related to COD')
+plt.plot(ssfr.utc[ssfr.i[:,0]],slope[ssfr.i[:,0]],label='Calculated slope')
+plt.xlabel('UTC [h]')
+plt.ylabel('Slope in the visible')
+plt.legend(frameon=False)
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ratio_increase, label='ratio increase in slope')
+plt.xlabel('UTC [h]')
+plt.ylabel('Ratio of slope increase')
+plt.title('Increase in expected slope')
+
+
+# In[231]:
+
+plt.figure()
+plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rnir[ssfr.i[:,0]],label='Original')
+Rnir_corr = 1.0-(1.0-ssfr.Rnir[ssfr.i[:,0]])/ratio_increase
+plt.plot(ssfr.utc[ssfr.i[:,0]],Rnir_corr,'g',label='Corrected via slope ratio')
+plt.legend(frameon=False)
+plt.xlabel('UTC [h]')
+plt.ylabel('NIR Reflectance')
+plt.title('comparing the effect of correcting for 3D effects')
+
+
+# #### Applying the slope ratio correction, and looking at the result in terms of tau vs. ref grid
+
+# In[232]:
+
+plt.figure()
+taus = [1,2,3,4,6,8,10,15,20,30,50,100]
+refs = [1,5,10,15,20,25,30,35,40,50,60]
+for ir,r in enumerate(lut.ref):
+    if r in refs: 
+        plt.plot(lut.reflect[1,w750,1,ir,:],lut.reflect[1,w1650,1,ir,:],'k-')
+        plt.annotate('%2i $\mu$m'%r,xy=(lut.reflect[1,w750,1,ir,-1]+0.01,lut.reflect[1,w1650,1,ir,-1]-0.01))
+for it,t in enumerate(lut.tau):
+    if t in taus:
+        plt.plot(lut.reflect[1,w750,1,:,it],lut.reflect[1,w1650,1,:,it],'k--')
+        if t<6:
+            plt.annotate('$\\tau$=%2i'%t,xy=(lut.reflect[1,w750,1,-1,it]-0.02,lut.reflect[1,w1650,1,-1,it]-0.025))
+        else:
+            plt.annotate('%2i'%t,xy=(lut.reflect[1,w750,1,-1,it]-0.01,lut.reflect[1,w1650,1,-1,it]-0.025))
+plt.xlabel('Reflectance at 750 nm') 
+plt.ylabel('Corrected Reflectance at 1650 nm')
+plt.title('LUT for cirrus reflectivity at endvisible and corrected 1650 nm')
+plt.xlim([0.45,1.05])
+plt.ylim([0.25,0.85])
+plt.scatter(ssfr_reflect[ssfr.i[:,0],i750],
+            Rnir_corr)
+plt.savefig(fp+'plots/Reflectance_lut_ice_{}_750nm_1650nm_corr.png'.format(vv),dpi=600,transparent=True)
+
+
+# Compare the reflectance spectrum of measured SSFR and calculated Plane parrallel
+
+# In[254]:
+
+fig, ax = plt.subplots(3,1,sharex=True)
+ax = ax.ravel()
+iis = [500,1000,1200]
+
+for n,nn in enumerate(iis):
+    iii = np.where(ssfr.i[:,0])[0][nn]
+    ax[n].plot(ssfr_idl['zenlambda'],ssfr_reflect[iii,:],label='Measured')
+    itau = np.argmin(abs(ssfrtau[nn]-lut.tau))
+    ax[n].plot(lut.wvl,lut.reflect[1,:,1,-1,itau],'r',label='Modeled')
+    ax[n].set_ylabel('Reflectance')
+    ax[n].set_title('UTC {:.2f}'.format(ssfr.utc[iii,0]))
+    ax[n].set_ylim([0,1])
+    ax[n].grid()
+ax[n].set_xlim([350,2150])
+ax[n].legend(frameon=False)
+ax[n].set_xlabel('Wavelength [nm]')
+
+
+# In[74]:
+
+from scipy import interpolate
+fig, ax = plt.subplots(3,1,sharex=True)
+ax = ax.ravel()
+iis = [500,1000,1200]
+plt.title('Difference model minus measurements')
+for n,nn in enumerate(iis):
+    iii = np.where(ssfr.i[:,0])[0][nn]
+    fre = interpolate.interp1d(ssfr_idl['zenlambda'],ssfr_reflect[iii,:],bounds_error=False)
+    measrefl = fre(lut.wvl)
+    itau = np.argmin(abs(ssfrtau[nn]-lut.tau))
+    ax[n].plot(lut.wvl,lut.reflect[1,:,1,-1,itau]-measrefl)    
+    ax[n].set_ylabel('Reflectance diff')
+    ax[n].set_title('UTC {:.2f}'.format(ssfr.utc[iii,0]))
+    ax[n].grid()
+    ax[n].set_ylim([-0.1,0.1])
+ax[n].set_xlim([350,1750])
+ax[n].legend(frameon=False)
+ax[n].set_xlabel('Wavelength [nm]')
+
+
+# Try some curve fitting to find the power of the rayleigh scattering
+
+# In[5]:
+
+from scipy.optimize import curve_fit
 
 
 # ### Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
-# In[80]:
+# In[63]:
 
 import run_2wvl_retrieval as rw
 if 'rw' in locals():
     reload(rw)
 
 
-# In[139]:
+# In[64]:
 
 (ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,lut,wvls=[500.0,1650.0])
 
 
-# In[102]:
+# In[52]:
 
 ssfr.tau[ssfr.ref==60] = np.nan
 ssfr.ref[ssfr.ref==60] = np.nan
 
 
-# In[124]:
+# In[65]:
 
 figsr,axsr = plt.subplots(3,1,sharex=True)
 axsr[0].plot(ssfr.utc,ssfr.tau[:,1])
@@ -1132,7 +1566,7 @@ print cpl_layers['bot'][ia,:]
 
 # ## Get the data from MODIS to compare
 
-# In[68]:
+# In[6]:
 
 from mpl_toolkits.basemap import Basemap,cm
 myd06_file = fp+'modis\\20130913\\MYD06_L2.A2013256.1910.006.2014267222159.hdf'
@@ -1141,7 +1575,7 @@ print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
 
-# In[69]:
+# In[7]:
 
 import load_modis as lm
 reload(lm)
@@ -1150,14 +1584,14 @@ if 'modis' in locals():
     import gc; gc.collect()
 
 
-# In[70]:
+# In[8]:
 
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 
 # Now plot the resulting imagery
 
-# In[75]:
+# In[9]:
 
 #set up a easy plotting function
 def seac_map(ax=plt.gca()):
@@ -1171,6 +1605,40 @@ def seac_map(ax=plt.gca()):
     m.drawmeridians(np.linspace(-85,-99,8),labels=[0,0,0,1])
     m.drawparallels(np.linspace(18,32,8),labels=[1,0,0,0])
     return m
+
+
+# In[12]:
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
+m1 = seac_map(axm2[0])
+xt,yt = m1(-95.3831,29.7628)
+axm2[0].text(xt,yt,'+')
+axm2[0].text(xt,yt,'Houston, TX',horizontalalignment='right',verticalalignment='top')
+xh,yh = m1(-95.3,19.1)
+axm2[0].text(xh,yh,'+')
+axm2[0].text(xh,yh,'Tropical Storm Ingrid',horizontalalignment='left',verticalalignment='bottom')
+m2 = seac_map(axm2[1])
+x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,80,41)
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+
+clevels2 = np.linspace(0,60,31)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
+cbar = m2.colorbar(cs2)
+cbar.set_label('R$_{eff}$ [$\\mu$m]')
+#m2.scatter(x1,y1,c=meas.ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+figm2.subplots_adjust(wspace=0.3)
+plt.savefig(fp+'plots/modis_tau_ref_20130913.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
+plt.show()
+
+
+# In[15]:
+
+1-(40)/356.0
 
 
 # In[37]:
