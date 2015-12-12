@@ -818,6 +818,89 @@ def remove_field_name(a, name):
     return b
 
 
+# In[ ]:
+
+def load_netcdf(datfile,values=None,verbose=True):
+    """
+    Name:
+
+        load_netcdf
+    
+    Purpose:
+
+        To compile the functions required to load a netcdf4 file in a similar manner as hdf files
+    
+    Calling Sequence:
+
+        cdf_data,cdf_dict = load_netcdf(datfile,Values=None,verbose=True) 
+    
+    Input: 
+  
+        datfile name (netcdf files)
+    
+    Output:
+
+        cdf_data: dictionary with the names of values saved, with associated dictionary values
+        cdf_dict: metadate for each of the variables
+    
+    Keywords: 
+
+        values: if ommitted, only outputs the names of the variables in file
+                needs to be a tuple of 2 element tuples (first: name of variable to be outputted,
+                second: indes of full name in variables)
+                example: modis_values=(('tau',35),('lat',22),('lon',23))
+        verbose: if true (default), then everything is printed. if false, nothing is printed
+    
+    Dependencies:
+
+        netcdf4
+        
+    Required files:
+   
+        dat files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2015-12-07, NASA Ames
+        
+    """
+    import netCDF4 as nc
+    if verbose:
+        print 'Reading file: '+datfile
+    f = nc.Dataset(datfile,'r')
+    varnames = f.variables.keys()
+    
+    if verbose: 
+        print 'Outputting the Data subdatasets:'
+        for i in range(len(varnames)):
+            if values:
+                if any(i in val for val in values):
+                    print '\x1b[1;36m{0}: {1}\x1b[0m'.format(i,varnames[i])
+                else:
+                    print '{0}: {1}'.format(i,varnames[i])
+            else:
+                print '{0}: {1}'.format(i,varnames[i])
+    if not values:
+        if verbose:
+            print 'Done going through file... Please supply pairs of name and index for reading file'
+            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
+            print " where namei is the name of the returned variable, and indexi is the index of the variable (from above)"
+        return None, None
+    
+    cdf_dict = {}
+    cdf_data = {}
+    for i,j in values:
+        cdf_dict[i] = f.variables[varnames[j]]
+        cdf_data[i] = f.variables[varnames[j]][:]
+    if verbose:
+        print cdf_dict.keys()
+    return cdf_data,cdf_dict
+
+
 # Testing of the script:
 
 # In[4]:
