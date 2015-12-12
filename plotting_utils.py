@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <codecell>
+# coding: utf-8
+
+# In[ ]:
 
 def __init__():
     """
@@ -13,7 +13,8 @@ def __init__():
     """
     pass
 
-# <codecell>
+
+# In[ ]:
 
 def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     """
@@ -91,7 +92,8 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     ax.add_collection(collection)
     return collection
 
-# <codecell>
+
+# In[5]:
 
 def plot_color_maps(reverse=False):
     """
@@ -121,11 +123,43 @@ def plot_color_maps(reverse=False):
         plt.imshow(a,aspect='auto',cmap=plt.get_cmap(m),origin="lower")
         plt.text(1.01,0.5,m,fontdict=title_dict,transform=plt.gca().transAxes)
 
-# <codecell>
 
-def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2):
+# In[ ]:
+
+def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2,bins=30):
     """
-    function to plot a 'bean' like vertical histogram
+    Purpose:
+        function to plot a 'bean' like vertical histogram
+    
+    Input:
+        fig: figure object for reference and plotting
+        ax1: axis object to plot on
+        y: values to be plotted in histogram fashion
+        pos: position along axis to create the bean plot
+        ylim: range of plotted axis [min,max]
+        color: (default to grey) color of the plotted histogram
+        label: (default to none) if included, the label for the color squares of this histogram
+        legend: (default to False) If True adds a legend on the location 
+        onlyhist: (default to True) only plots the histogram bean, not the mean and median lines
+        loc: (default to 2) location of the legend
+        bins: (default to 30) number of bins to plot
+    
+    Output:
+        only the histogram plot on top of an existing plot
+    
+    Dependencies:
+        - numpy
+        - Sp_parameters
+        - plotting_utils : this file
+    
+    Required files:
+        None
+    
+    Modification History:
+        Written: Samuel LeBlanc, NASA Ames
+        Modified: Samuel LeBlanc, NASA Ames in Santa Cruz, 2015-12-09
+                  - added comments
+                  - added the bins keyword to be used
     """
     import Sp_parameters as Sp
     import numpy as np
@@ -134,7 +168,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos,0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,label=label,range=ylim)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=0.5,label=label,range=ylim)
     if onlyhist:
         label_mean = None
         label_median = None
@@ -148,11 +182,12 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos+0.01,-0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                    labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=30,alpha=0.5,range=ylim)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=0.5,range=ylim)
     ax.axhline(np.mean(ymask),color='red',linewidth=2)
     ax.axhline(np.median(ymask),color='k',linewidth=2,linestyle='--')
 
-# <codecell>
+
+# In[ ]:
 
 def data2figpoints(x,dx,fig,ax1):
     "function to tranform data locations to relative figure coordinates (in fractions of total figure"
@@ -168,7 +203,8 @@ def data2figpoints(x,dx,fig,ax1):
     height = top[1]-bot[1] 
     return left,bottom,width,height
 
-# <codecell>
+
+# In[1]:
 
 def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None,*args,**kwargs):
     """
@@ -242,7 +278,8 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
         y_up,y_down = confidence_envelope(xx, p, perr, ci=ci)
         ax.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
 
-# <codecell>
+
+# In[ ]:
 
 def lin(p,x):
     """ 
@@ -251,7 +288,8 @@ def lin(p,x):
     """
     return p[0]+p[1]*x
 
-# <codecell>
+
+# In[ ]:
 
 def confidence_envelope(xn,p,p_err,ci=95,size=1000):
     """
