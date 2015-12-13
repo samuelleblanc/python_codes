@@ -109,19 +109,19 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[5]:
+# In[24]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[6]:
+# In[25]:
 
 s.keys()
 
 
-# In[7]:
+# In[26]:
 
 #print s.keys()
 print 'sp', s.sp.shape
@@ -138,7 +138,7 @@ vv = 'v4'
 s2 = sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[9]:
+# In[27]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -147,19 +147,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[10]:
+# In[28]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[11]:
+# In[29]:
 
 lut.sp_hires()
 
 
-# In[12]:
+# In[30]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -317,14 +317,14 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[16]:
+# In[21]:
 
 import load_modis
 reload(load_modis)
 from load_modis import mat2py_time, toutc, load_ict
 
 
-# In[17]:
+# In[22]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
@@ -357,7 +357,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[19]:
+# In[31]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -366,26 +366,30 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[20]:
+# In[32]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[21]:
+# In[33]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[22]:
+# In[34]:
 
 mea['w'][0][1068]
 
 
-# In[39]:
+# In[36]:
 
+plt.figure()
 plt.plot(mea['w'][0])
+plt.xlabel('Index of wavelength')
+plt.ylabel('Wavelength [nm]')
+plt.title('4STAR wavelength registration')
 
 
 # In[16]:
@@ -404,7 +408,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[23]:
+# In[37]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -415,10 +419,12 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[24]:
+# In[38]:
 
 meas.sp.shape
 
+
+# ## Plot the 4STAR zenith radiances
 
 # In[15]:
 
@@ -453,12 +459,12 @@ cba.set_label('UTC [h]')
 plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
 
 
-# In[25]:
+# In[39]:
 
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
 
 
-# In[26]:
+# In[40]:
 
 meas.sp.shape
 
@@ -507,6 +513,13 @@ plt.colorbar(pco)
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Measurement number')
 plt.title('All normalized radiance spectra')
+
+
+# ## Plot a zenith radiance against modeled data for illustration purposes Similar to TCAP
+
+# In[ ]:
+
+
 
 
 # ## Run the retrieval on 4STAR data
@@ -604,7 +617,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[35]:
+# In[18]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -614,14 +627,14 @@ from load_modis import load_ict
 
 # ### First load the ER2 files
 
-# In[36]:
+# In[19]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[37]:
+# In[20]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -1724,7 +1737,7 @@ print cpl_layers['bot'][ia,:]
 
 # ## Get the data from MODIS to compare
 
-# In[89]:
+# In[13]:
 
 from mpl_toolkits.basemap import Basemap,cm
 myd06_file = fp+'modis\\20130913\\MYD06_L2.A2013256.1910.006.2014267222159.hdf'
@@ -1733,7 +1746,7 @@ print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
 
-# In[90]:
+# In[14]:
 
 import load_modis as lm
 reload(lm)
@@ -1742,14 +1755,14 @@ if 'modis' in locals():
     import gc; gc.collect()
 
 
-# In[91]:
+# In[15]:
 
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 
 # Now plot the resulting imagery
 
-# In[92]:
+# In[16]:
 
 #set up a easy plotting function
 def seac_map(ax=plt.gca()):
@@ -1790,6 +1803,42 @@ cbar.set_label('R$_{eff}$ [$\\mu$m]')
 #m2.scatter(x1,y1,c=meas.ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
 plt.savefig(fp+'plots/modis_tau_ref_20130913.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
+plt.show()
+
+
+# In[23]:
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
+m1 = seac_map(axm2[0])
+xt,yt = m1(-95.3831,29.7628)
+axm2[0].text(xt,yt,'+')
+axm2[0].text(xt,yt,'Houston, TX',horizontalalignment='right',verticalalignment='top')
+xh,yh = m1(-95.3,19.1)
+axm2[0].text(xh,yh,'+')
+axm2[0].text(xh,yh,'Tropical Storm Ingrid',horizontalalignment='left',verticalalignment='bottom')
+m2 = seac_map(axm2[1])
+x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,80,41)
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+xer2,yer2 = m1(er2['Longitude'],er2['Latitude'])
+xdc8,ydc8 = m1(dc8['G_LONG'],dc8['G_LAT'])
+xx1,yy1 = m1(-93.8,27.8)
+xx2,yy2 = m1(-96.5,28)
+
+clevels2 = np.linspace(0,60,31)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
+cbar = m2.colorbar(cs2)
+cbar.set_label('R$_{eff}$ [$\\mu$m]')
+m2.plot(xer2,yer2,'r',lw=2)
+m2.plot(xdc8,ydc8,'b',lw=2)
+plt.text(xx1,yy1,'ER2',color='r')
+plt.text(xx2,yy2,'DC8',color='b')
+figm2.subplots_adjust(wspace=0.3)
+plt.savefig(fp+'plots/modis_tau_ref_flt_20130913.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
 plt.show()
 
@@ -2606,9 +2655,32 @@ hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
 # ### Optionally load the retrieval output for easier and faster plotting
 
-# In[ ]:
+# In[5]:
 
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
+
+
+# In[6]:
+
+m_dict.keys()
+
+
+# In[7]:
+
+m_dict['rsp']
+
+
+# In[10]:
+
+if not 'emas_tau_full' in vars():
+    print 'not defined, loading from file'
+    emas_tau_full = m_dict['emas'][1]; emas_ref_full = m_dict['emas'][3]
+    modis_tau = m_dict['modis'][1]; modis_ref = m_dict['modis'][3]
+    ssfr_tau = m_dict['ssfr'][1]; ssfr_ref = m_dict['ssfr'][3]
+    rsp_tau = m_dict['rsp'][1]; rsp_ref = m_dict['rsp'][3]
+    star_tau = m_dict['star'][1]; star_ref = m_dict['star'][3]
+    goes_tau = m_dict['goes'][1]; goes_ref = m_dict['goes'][3]
+    
 
 
 # ## Plot histogram of different tau and ref comparison
@@ -2719,12 +2791,6 @@ plt.ylim([0,0.3])
 plt.savefig(fp+'plots/hist_modis_4star_ref_v5_fill.png',dpi=600,transparent=True)
 
 
-# In[131]:
-
-plt.figure()
-plt.boxplot(smooth(modis_tau,6),vert=False,color='m')
-
-
 # In[132]:
 
 fig,(ax1,ax2) = plt.subplots(2,figsize=(9,6))
@@ -2774,12 +2840,12 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # ## Plot histogram of retrieved properties (tau and ref) in new 'bean' plots
 
-# In[140]:
+# In[11]:
 
 from plotting_utils import plot_vert_hist
 
 
-# In[141]:
+# In[12]:
 
 import plotting_utils
 reload(plotting_utils)
