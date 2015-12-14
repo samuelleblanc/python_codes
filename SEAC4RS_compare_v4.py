@@ -85,6 +85,8 @@ import math
 import os
 import Sp_parameters as Sp
 import hdf5storage as hs
+from load_modis import mat2py_time, toutc, load_ict
+from Sp_parameters import smooth
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
@@ -109,19 +111,19 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[24]:
+# In[5]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[25]:
+# In[6]:
 
 s.keys()
 
 
-# In[26]:
+# In[7]:
 
 #print s.keys()
 print 'sp', s.sp.shape
@@ -138,7 +140,7 @@ vv = 'v4'
 s2 = sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[27]:
+# In[9]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -147,19 +149,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[28]:
+# In[10]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[29]:
+# In[11]:
 
 lut.sp_hires()
 
 
-# In[30]:
+# In[12]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -170,7 +172,7 @@ print lut.ref
 print lut.par.shape
 
 
-# In[15]:
+# In[13]:
 
 #redo the same with the second s2
 luti = Sp.Sp(s2,irrad=True)
@@ -317,11 +319,10 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[21]:
+# In[19]:
 
 import load_modis
 reload(load_modis)
-from load_modis import mat2py_time, toutc, load_ict
 
 
 # In[22]:
@@ -357,7 +358,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[31]:
+# In[14]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -366,19 +367,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[32]:
+# In[20]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[33]:
+# In[21]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[34]:
+# In[22]:
 
 mea['w'][0][1068]
 
@@ -408,7 +409,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[37]:
+# In[23]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -419,7 +420,7 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[38]:
+# In[24]:
 
 meas.sp.shape
 
@@ -517,31 +518,47 @@ plt.title('All normalized radiance spectra')
 
 # ## Plot a zenith radiance against modeled data for illustration purposes Similar to TCAP
 
-# In[ ]:
+# In[71]:
+
+plt.figure()
+plt.plot(meas.norm[647,:])
 
 
+# In[101]:
+
+iww = range(0,981)+       [984,987,991,994,998,1001,1005,1008,1012,1015,
+        1019,1022,1026,1029,1032,1036,1039,1043,1046,1050,1053,
+        1057,1060,1063,1067,1070]+range(1072,1548)
+
+
+# In[103]:
+
+plt.figure()
+plt.plot(meas.wvl[iww],meas.norm[647,iww],'k')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Radiance')
 
 
 # ## Run the retrieval on 4STAR data
 
-# In[27]:
+# In[52]:
 
 from Sp_parameters import smooth
 
 
-# In[28]:
+# In[49]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[29]:
+# In[50]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[30]:
+# In[51]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -549,18 +566,24 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[31]:
+# In[52]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[32]:
+# In[53]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
-# In[33]:
+# In[57]:
+
+plt.figure()
+plt.plot(meas.ref,'x')
+
+
+# In[54]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -2301,13 +2324,13 @@ plt.legend(frameon=False)
 
 # ## Load the cloud probe data
 
-# In[115]:
+# In[60]:
 
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
-# In[116]:
+# In[61]:
 
 print probes[:,1]
 print probes[:,2]
@@ -2655,22 +2678,22 @@ hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
 # ### Optionally load the retrieval output for easier and faster plotting
 
-# In[5]:
+# In[54]:
 
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
-# In[6]:
+# In[55]:
 
 m_dict.keys()
 
 
-# In[7]:
+# In[56]:
 
 m_dict['rsp']
 
 
-# In[10]:
+# In[57]:
 
 if not 'emas_tau_full' in vars():
     print 'not defined, loading from file'
@@ -2840,12 +2863,12 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # ## Plot histogram of retrieved properties (tau and ref) in new 'bean' plots
 
-# In[11]:
+# In[50]:
 
 from plotting_utils import plot_vert_hist
 
 
-# In[12]:
+# In[49]:
 
 import plotting_utils
 reload(plotting_utils)
@@ -2878,6 +2901,34 @@ ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 
+# In[68]:
+
+fig = plt.figure(figsize=(6,3))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,5.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([0,1,2,3,4,5])
+ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','GOES\n(reflected)','4STAR\n(transmitted)'])
+ax1.yaxis.grid()
+plot_vert_hist(fig,ax1,smooth(modis_tau,6),0,[0,60],legend=True,onlyhist=False,loc=2,color='m',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(emas_tau_full,60),1,[0,60],legend=True,color='k',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),2,[0,60],legend=True,color='g',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(rsp_tau,70),3,[0,60],legend=True,color='c',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(goes_tau,2),4,[0,60],legend=True,color='b',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(star_tau,40),5,[0,60],legend=True,color='r',bins=50,alpha=0.2)
+(_,caps,_) = ax1.errorbar([0,1,2,3,4,5],
+             [np.nanmean(smooth(modis_tau,6)),
+              np.nanmean(smooth(emas_tau_full,60)),
+              np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2)),
+              np.nanmean(smooth(rsp_tau,70)),
+              np.nanmean(smooth(goes_tau,2)),
+              np.nanmean(smooth(star_tau,40))],yerr=[2,0,7.8,2,7.8,2],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+ax1.legend(frameon=False,numpoints=1)
+plt.savefig(fp+'plots/vert_hist_tau_v5_light.png',dpi=600,transparent=True)
+
+
 # In[145]:
 
 fig = plt.figure(figsize=(8,4))
@@ -2904,6 +2955,35 @@ for cap in caps:
     cap.set_markeredgewidth(3)
 ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_ref_v5.png',dpi=600,transparent=True)
+
+
+# In[69]:
+
+fig = plt.figure(figsize=(7,3))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,6.5])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([0,1,2,3,4,5,6])
+ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','GOES\n(reflected)','4STAR\n(transmitted)','Cloud probes\n(In Situ)'])
+ax1.yaxis.grid()
+plot_vert_hist(fig,ax1,smooth(modis_ref,6),0,[0,60],legend=True,onlyhist=False,loc=2,color='m',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(emas_ref_full,60),1,[0,60],legend=True,color='k',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(ssfr_ref,2),2,[0,60],legend=True,color='g',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(rsp_ref,70),3,[0,60],legend=True,color='c',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(goes_ref,2),4,[0,60],legend=True,color='b',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(star_ref+17,40),5,[0,60],legend=True,color='r',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax1,probes[:,7],6,[0,60],legend=True,color='y',bins=50,alpha=0.2)
+(_,caps,_) = ax1.errorbar([0,1,2,3,4,5],
+             [np.nanmean(smooth(modis_ref,6)),
+              np.nanmean(smooth(emas_ref_full,60)),
+              np.nanmean(smooth(ssfr_ref,2)),
+              np.nanmean(smooth(rsp_ref,70)),
+              np.nanmean(smooth(goes_ref,2)),
+              np.nanmean(smooth(star_ref+17,40))],yerr=[1.7,0,4.7,1.7,4.7,1.8],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+ax1.legend(frameon=False,numpoints=1)
+plt.savefig(fp+'plots/vert_hist_ref_v5_light.png',dpi=600,transparent=True)
 
 
 # ## Scatter plots of the different effective radius

@@ -124,9 +124,9 @@ def plot_color_maps(reverse=False):
         plt.text(1.01,0.5,m,fontdict=title_dict,transform=plt.gca().transAxes)
 
 
-# In[ ]:
+# In[1]:
 
-def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2,bins=30):
+def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2,bins=30,alpha=0.5):
     """
     Purpose:
         function to plot a 'bean' like vertical histogram
@@ -143,6 +143,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
         onlyhist: (default to True) only plots the histogram bean, not the mean and median lines
         loc: (default to 2) location of the legend
         bins: (default to 30) number of bins to plot
+        alpha: (defautl to 0.5) value of transparency (0 to 1)
     
     Output:
         only the histogram plot on top of an existing plot
@@ -160,6 +161,8 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
         Modified: Samuel LeBlanc, NASA Ames in Santa Cruz, 2015-12-09
                   - added comments
                   - added the bins keyword to be used
+        Modified: Samuel LeBlanc, NASA Ames in Santa Cruz, 2015-12-12
+                  - added alpha keyword
     """
     import Sp_parameters as Sp
     import numpy as np
@@ -168,7 +171,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos,0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=0.5,label=label,range=ylim)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=alpha,label=label,range=ylim)
     if onlyhist:
         label_mean = None
         label_median = None
@@ -182,7 +185,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
     ax = fig.add_axes(data2figpoints(pos+0.01,-0.4,fig=fig,ax1=ax1),frameon=False,ylim=ylim)
     ax.tick_params(axis='both', which='both', labelleft='off', labelright='off',bottom='off',top='off',
                    labelbottom='off',labeltop='off',right='off',left='off')
-    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=0.5,range=ylim)
+    ax.hist(ymask,orientation='horizontal',normed=True,color=color,edgecolor='None',bins=bins,alpha=alpha,range=ylim)
     ax.axhline(np.mean(ymask),color='red',linewidth=2)
     ax.axhline(np.median(ymask),color='k',linewidth=2,linestyle='--')
 
