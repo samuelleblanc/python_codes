@@ -748,7 +748,18 @@ class Sp:
         stdpar = np.nanstd(par_noisy,axis=notaxis)
         self.stdpar = stdpar
         return stdpar
-            
+    
+    def make_agree_vis_nir(self,rad):
+        """
+        Function that goes through measured spectra to ensure that the vis and nir agree on the wavelength range of 980 mn
+        ratio the NIR protion of the spectrum to the ratio difference NIR and VIS at 980 nm, VIS does not change
+        """
+        print 'Ratio-ing the NIR spectra to match VIS *** Only for 4STAR ***'
+        ivis = range(1055,1069)
+        inir = range(1004,1037)
+        mean_vis = np.nanmean(mea['rad'][600,ivis])
+        mean_nir = np.nanmean(mea['rad'][600,inir])
+        s_ratio_vis_nir = mean_vis/mean_nir
 
 
 # ## Create some plotting functions for use with the Sp class

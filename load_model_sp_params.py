@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -57,15 +55,15 @@
 #   - sp_v1_20130219_4STAR.out : modeled spectra output for TCAP in idl save file
 #   - 20130219starzen_rad.mat : special zenith radiance 4star matlab file 
 
-# <codecell>
+# In[1]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np, h5py
 #import plotly.plotly as py
 import scipy.io as sio
@@ -76,17 +74,20 @@ import Sp_parameters as Sp
 #import mpld3
 #mpld3.enable_notbeook()
 
-# <codecell>
+
+# In[2]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
-# <codecell>
+
+# In[3]:
 
 # set the basic directory path
 fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
 
-# <codecell>
+
+# In[4]:
 
 # load the idl save file containing the modeled radiances
 s=sio.idl.readsav(fp+'model/sp_v1_20130219_4STAR.out')
@@ -97,7 +98,8 @@ print 'sp (wp, wvl, z, re, ta)'
 iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
-# <codecell>
+
+# In[5]:
 
 # load the matlab file containing the measured TCAP radiances
 m = sio.loadmat(fp+'4STAR/20130219starzen_rad.mat')
@@ -109,11 +111,10 @@ print np.nanmax(sm.rad[sm.good[100],:])
 sm.good[100]
 print sm.good.shape, sm.good.max()
 
-# <headingcell level=4>
 
-# Next section loads a few functions that can be used for typical analysis
+# #### Next section loads a few functions that can be used for typical analysis
 
-# <codecell>
+# In[6]:
 
 from Sp_parameters import nanmasked, closestindex, norm2max
     
@@ -121,11 +122,10 @@ time_ref=17.22
 ii = closestindex(sm.utc,time_ref)
 rad,mask = nanmasked(sm.rad[sm.good[ii],:])
 
-# <headingcell level=4>
 
-# Plotting functions defined
+# #### Plotting functions defined
 
-# <codecell>
+# In[9]:
 
 # set up plotting of a few of the zenith radiance spectra
 def pltzen(fig=None,ax=None, tit='Zenith spectra'):
@@ -146,7 +146,7 @@ def pltzen(fig=None,ax=None, tit='Zenith spectra'):
     #plot_url = py.plot_mpl(fig)
     return fig,ax
 
-def norm(fig=None,ax=None):
+def norm(fig=None,ax=None,dolegend=True):
     "Plotting of zenith measurements in normalized radiance"
     if ax is None:
         fig,ax = plt.subplots()
@@ -160,7 +160,8 @@ def norm(fig=None,ax=None):
         plt.xlabel('Wavelength [nm]')
         plt.xlim([350,1700])
         plt.ylim([0,1.0])
-        plt.legend(frameon=False)
+        if dolegend:
+            plt.legend(frameon=False)
     #plot_url = py.plot_mpl(fig)
     return fig,ax
 
@@ -220,19 +221,17 @@ def plot_greys(fig=None,ax=None):
     plt.axvspan(1565,1634,color=cl); #eta15
     
 
-# <headingcell level=3>
 
-# Plotting iterations
+# ### Plotting iterations
 
-# <codecell>
+# In[9]:
 
 fig,ax=pltzen()
 
-# <markdowncell>
 
 # Next figure with modeled spectra
 
-# <codecell>
+# In[10]:
 
 # now go through and add the different modeled spectra
 fig,ax=pltzen()
@@ -253,11 +252,18 @@ plt.legend([alow[0],ahigh[0]],
 ax.text(600,0.19,'4STAR Measurement from TCAP')
 pltzen(fig,ax)
 
-# <headingcell level=3>
 
-# Next figure with normalized spectra and areas of parameters
+# ### Next figure with normalized spectra and areas of parameters
 
-# <codecell>
+# In[13]:
+
+fig,ax = norm(dolegend=False)
+plt.axvspan(350,1700,color='#FFFFFF')
+ax.text(600,0.19/0.22,'4STAR Measurement')
+plt.savefig(fp+'plots/zen_spectra_nomodel.png',dpi=600,transparent=True)
+
+
+# In[11]:
 
 fig,ax=norm()
 lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
@@ -275,15 +281,15 @@ plot_greys()
 plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/zen_spectra_model.eps')
 
-# <markdowncell>
 
 # Plot the same but with squeezed axes
 
-# <codecell>
+# In[17]:
 
 fp
 
-# <codecell>
+
+# In[16]:
 
 fig,ax=norm()
 fig.set_figheight(5)
@@ -302,32 +308,32 @@ plt.axvspan(350,1700,color='#FFFFFF')
 plot_greys()
 plt.savefig(fp+'plots/zen_spectra_model_squeeze.png',dpi=600,transparent=True)
 
-# <headingcell level=3>
 
-# Now calculate the parameters for the measured spectra
+# ### Now calculate the parameters for the measured spectra
 
-# <codecell>
+# In[12]:
 
 map(lambda x:x*x,[-1,1,24])
 
-# <codecell>
+
+# In[13]:
 
 reload(Sp)
 if 'meas' in locals():
     del meas
     import gc; gc.collect()
 
-# <codecell>
+
+# In[14]:
 
 # first convert measurements to Sp class, with inherent parameters defined
 meas = Sp.Sp(m)
 meas.params()
 
-# <markdowncell>
 
 # Plot the parameters for the specified time
 
-# <codecell>
+# In[15]:
 
 fig2,ax2 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax2 = ax2.ravel()
@@ -342,34 +348,37 @@ for i in range(meas.npar-1):
 fig2.tight_layout()
 plt.show()
 
-# <headingcell level=3>
 
-# Prepare the LUT for the modeled spectra
+# ### Prepare the LUT for the modeled spectra
 
-# <codecell>
+# In[ ]:
 
 reload(Sp)
 if 'lut' in locals():
     del lut
     import gc; gc.collect()
 
-# <codecell>
+
+# In[16]:
 
 lut = Sp.Sp(s)
 lut.params()
 lut.param_hires()
 
-# <codecell>
+
+# In[17]:
 
 import gc; gc.collect()
 import sys
 print sys.version
 
-# <codecell>
+
+# In[18]:
 
 lut.sp_hires()
 
-# <codecell>
+
+# In[19]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -377,18 +386,18 @@ print lut.sp.ndim
 print lut.par.size
 print lut.par.shape
 
-# <codecell>
+
+# In[20]:
 
 print lut.ref
 print lut.sp[0,400,0,23,10]
 print lut.sp[1,400,0,:,10]
 print lut.par.shape
 
-# <markdowncell>
 
 # Now plot the resulting lut of parameters
 
-# <codecell>
+# In[21]:
 
 fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
@@ -416,7 +425,8 @@ cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
 
 plt.show()
 
-# <codecell>
+
+# In[22]:
 
 fig4,ax4 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax4 = ax4.ravel()
@@ -445,7 +455,8 @@ cba.ax.set_yticklabels(labels);
 
 plt.show()
 
-# <codecell>
+
+# In[23]:
 
 fig5,ax5 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax5 = ax5.ravel()
@@ -471,7 +482,8 @@ cba.ax.set_ylabel('R$_{ef}$ [$\\mu$m]')
 cba.ax.set_yticklabels(np.linspace(lut.ref[0],lut.ref[-1],6));
 plt.show()
 
-# <codecell>
+
+# In[24]:
 
 fig6,ax6 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax6 = ax6.ravel()
@@ -497,24 +509,26 @@ labels = ['%5.1f' %F for F in np.linspace(lut.tau[0],lut.tau[-1],6)]
 cba.ax.set_yticklabels(labels);
 plt.show()
 
-# <markdowncell>
 
 # Now run through a few spectra for double checking the input to make sure everythin matches
 
-# <codecell>
+# In[25]:
 
 print lut.sp.shape
 print lut.tau[80]
 
-# <codecell>
+
+# In[26]:
 
 print meas.par.shape
 
-# <codecell>
+
+# In[27]:
 
 print meas.par[meas.good[200],13]
 
-# <codecell>
+
+# In[28]:
 
 plt.figure()
 color.cycle_cmap(31,cmap=plt.cm.gist_ncar)
@@ -530,7 +544,8 @@ cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6))
 cba.ax.set_ylabel('R$_{ef}$ [$\\mu$m]')
 cba.ax.set_yticklabels(np.linspace(lut.ref[0],lut.ref[30],6));
 
-# <codecell>
+
+# In[29]:
 
 all_zeros = not np.any(lut.sp[0,:,0,40,39])
 print all_zeros
@@ -545,7 +560,8 @@ plt.title('Liquid water cloud with R$_{ef}$ = '+str(lut.ref[28])+' at varying $\
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
-# <codecell>
+
+# In[30]:
 
 plt.figure()
 plt.plot(lut.wvl,lut.sp[0,:,0,28,70])
@@ -553,18 +569,21 @@ plt.title('Liquid water cloud with R$_{ef}$ = '+str(lut.ref[28])+' at $\\tau$ '+
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
-# <codecell>
+
+# In[31]:
 
 print np.any(lut.sp[0,:,0,28,70])
 print lut.ref[3]
 
-# <codecell>
+
+# In[32]:
 
 ro = (range(1,20),range(4,50))
 print ro[1]
 print ro[0]
 
-# <codecell>
+
+# In[33]:
 
 from scipy import interpolate
 print np.shape([lut.tau[69],lut.tau[71]])
@@ -572,7 +591,8 @@ print np.shape([lut.sp[0,:,0,28,69],lut.sp[0,:,0,28,69]])
 fs = interpolate.interp1d([lut.tau[69],lut.tau[71]],[lut.sp[0,:,0,28,69],lut.sp[0,:,0,28,69]],axis=0)
 sss = fs(lut.tau[70])
 
-# <codecell>
+
+# In[34]:
 
 print np.shape(sss)
 plt.figure()
@@ -583,11 +603,10 @@ plt.title('Liquid water cloud with R$_{ef}$ = '+str(lut.ref[28])+' interpolated 
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
-# <headingcell level=2>
 
-# Now run through the retrieval scheme
+# ## Now run through the retrieval scheme
 
-# <codecell>
+# In[35]:
 
 import run_kisq_retrieval as rk
 reload(rk)
@@ -596,29 +615,35 @@ reload(Sp)
 #del lut
 #del meas
 
-# <codecell>
+
+# In[36]:
 
 print max(meas.good)
 
-# <codecell>
+
+# In[37]:
 
 (tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
 
-# <codecell>
+
+# In[38]:
 
 del lut
 
-# <codecell>
+
+# In[39]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
-# <codecell>
+
+# In[40]:
 
 reload(Sp)
 from Sp_parameters import smooth
 
-# <codecell>
+
+# In[41]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -640,28 +665,25 @@ ax[3].set_xlim([17,19.05])
 plt.savefig(fp+'plots/TCAP_retri_results.png',dpi=600)
 #plt.savefig(fp+'plots/TCAP_retri_results.eps')
 
-# <markdowncell>
 
 # Now save the smoothed values
 
-# <codecell>
+# In[42]:
 
 print tau.shape
 
-# <codecell>
+
+# In[43]:
 
 tau[meas.good[:,0],0] = smooth(tau[meas.good[:,0],0],20)
 ref[meas.good[:,0],0] = smooth(ref[meas.good[:,0],0],20)
 
-# <headingcell level=3>
 
-# Now load the results from MODIS to compare
-
-# <markdowncell>
+# ### Now load the results from MODIS to compare
 
 # Check the day of year
 
-# <codecell>
+# In[44]:
 
 import datetime
 doy = datetime.datetime(2013,2,19)
@@ -669,22 +691,23 @@ print doy.timetuple().tm_yday
 dd = datetime.datetime(2014,9,19)
 print dd.timetuple().tm_yday
 
-# <markdowncell>
 
 # Now import the hdf files of MODIS
 
-# <codecell>
+# In[45]:
 
 from mpl_toolkits.basemap import Basemap,cm
 
-# <codecell>
+
+# In[46]:
 
 myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
 myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
 print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
-# <codecell>
+
+# In[47]:
 
 import load_modis as lm
 reload(lm)
@@ -693,25 +716,27 @@ if 'modis' in locals():
     import gc; gc.collect()
     
 
-# <markdowncell>
 
 # Load the geolocated data:
 
-# <codecell>
+# In[48]:
 
 print 'after import'
 import gc; gc.collect()
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
-# <codecell>
+
+# In[49]:
 
 print modis_dicts['qa']['description']
 
-# <codecell>
+
+# In[50]:
 
 modis['qa'].shape
 
-# <codecell>
+
+# In[51]:
 
 bb = modis['qa'][100,100,:]
 print bb
@@ -721,30 +746,33 @@ def bin(x):
     return ''.join(x & (1 << i) and '1' or '0' for i in range(7,-1,-1))
 bin(bb[0])
 
-# <codecell>
+
+# In[52]:
 
 bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
 
-# <codecell>
+
+# In[53]:
 
 mqa = modis['qa']
 
-# <codecell>
+
+# In[54]:
 
 for i in mqa:
     print i
 
-# <codecell>
+
+# In[55]:
 
 if bin8(bb[1])[-4]:
     print 'yes'
 bin8(bb[1])[-4]
 
-# <markdowncell>
 
 # Now plot the resulting imagery
 
-# <codecell>
+# In[56]:
 
 #set up a easy plotting function
 def tcap_map(ax=plt.gca()):
@@ -759,7 +787,8 @@ def tcap_map(ax=plt.gca()):
     m.drawparallels(np.linspace(40,45,5),labels=[1,0,0,0])
     return m
 
-# <codecell>
+
+# In[57]:
 
 figm = plt.figure()
 axm = figm.add_axes([0.1,0.1,0.8,0.8])
@@ -771,11 +800,13 @@ cbar = m.colorbar(cs)
 cbar.set_label('$\\tau$')
 axm.set_title('MODIS - AQUA Cloud optical Thickness')
 
-# <codecell>
 
-plt.savefig?
+# In[58]:
 
-# <codecell>
+get_ipython().magic(u'pinfo plt.savefig')
+
+
+# In[59]:
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -798,15 +829,15 @@ plt.show()
 plt.savefig(fp+'plots/modis_only_tau_ref_comp.png',dpi=600)
 plt.savefig(fp+'plots/modis_only_tau_ref_comp.pdf',bbox='tight')
 
-# <markdowncell>
 
 # Now load the aircraft telemetry onto the plot
 
-# <codecell>
+# In[60]:
 
 reload(lm)
 
-# <codecell>
+
+# In[61]:
 
 # load the ict file and check out the results
 iwg = lm.load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
@@ -816,11 +847,13 @@ print iwg['Date_Time'][0]
 print type(iwg['Date_Time'][0])
 iwg['Lat']
 
-# <codecell>
+
+# In[62]:
 
 iwg_utch = np.array([i.hour+i.minute/60.+i.second/3600.+i.microsecond/3600000. for i in iwg['Date_Time']])
 
-# <codecell>
+
+# In[86]:
 
 fig = plt.figure()
 fig.add_subplot(3,1,1)
@@ -835,15 +868,15 @@ plt.plot(iwg_utch,iwg['GPS_MSL_Alt'])
 plt.xlabel('UTC [hours]')
 plt.ylabel('Altitude [m]')
 
-# <headingcell level=2>
 
-# interpolate the lat and lons and alts to retrieved values
+# ## interpolate the lat and lons and alts to retrieved values
 
-# <codecell>
+# In[64]:
 
 from scipy import interpolate
 
-# <codecell>
+
+# In[65]:
 
 flat = interpolate.interp1d(iwg_utch,iwg['Lat'])
 meas.lat = flat(meas.utc)
@@ -852,11 +885,10 @@ meas.lon = flon(meas.utc)
 falt = interpolate.interp1d(iwg_utch,iwg['GPS_MSL_Alt'])
 meas.alt = falt(meas.utc)
 
-# <markdowncell>
 
 # Now plot on top of the maps
 
-# <codecell>
+# In[92]:
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -888,7 +920,8 @@ plt.savefig(fp+'plots/modis_g1_tau_ref_path.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
 #plt.show()
 
-# <codecell>
+
+# In[94]:
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -919,16 +952,16 @@ plt.savefig(fp+'plots/modis_g1_tau_ref_comp.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/modis_g1_tau_ref_comp.pdf',bbox='tight')
 plt.show()
 
-# <markdowncell>
 
 # Now find the modis points along flight track that match the most
 
-# <codecell>
+# In[67]:
 
 from Sp_parameters import closestindex,startprogress,progress,endprogress
 import scipy.spatial
 
-# <codecell>
+
+# In[68]:
 
 if max(meas.good) > meas.utc.size:
     meas.good = sm.good
@@ -940,17 +973,20 @@ print meas.good.max()
 plt.figure()
 plt.plot(meas.good)
 
-# <codecell>
+
+# In[69]:
 
 imodis = np.logical_and(np.logical_and(modis['lon']>min(meas.lon[meas.good])-0.02 , modis['lon']<max(meas.lon[meas.good])+0.02),
                         np.logical_and(modis['lat']>min(meas.lat[meas.good])-0.02 , modis['lat']<max(meas.lat[meas.good])+0.02))
 
-# <codecell>
+
+# In[70]:
 
 wimodis = np.where(imodis)
 print np.shape(wimodis)
 
-# <codecell>
+
+# In[71]:
 
 def spherical_dist(pos1, pos2, r=3958.75):
     pos1 = pos1 * np.pi / 180
@@ -961,7 +997,8 @@ def spherical_dist(pos1, pos2, r=3958.75):
     cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
     return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
 
-# <codecell>
+
+# In[72]:
 
 N1 = modis['lon'][imodis].size
 modis_grid = np.hstack([modis['lon'][imodis].reshape((N1,1)),modis['lat'][imodis].reshape((N1,1))])
@@ -973,11 +1010,10 @@ meas_grid = np.hstack([np.array(meas.lon[meas.good]).reshape((N2,1)),np.array(me
 meas_in = meas_grid.astype(int)
 print len(meas_grid[0])
 
-# <markdowncell>
 
 # Test if the spherical dist works for one point along the track
 
-# <codecell>
+# In[73]:
 
 d = spherical_dist(meas_grid[0],modis_grid)
 print d.shape
@@ -987,14 +1023,16 @@ print len(wimodis[1])
 print wimodis[0][np.argmin(d)]
 print wimodis[1][np.argmin(d)]
 
-# <codecell>
+
+# In[74]:
 
 print meas.lat[0]
 print meas.lon[0]
 print modis['lon'][292,891]
 print modis['lat'][292,891]
 
-# <codecell>
+
+# In[75]:
 
 meas.ind = np.array([meas.good.ravel()*0,meas.good.ravel()*0])
 print np.shape(meas.ind)
@@ -1002,11 +1040,10 @@ meas.ind[0,0] = 2
 meas.ind[1,0] = 3
 print meas.ind[:,0]
 
-# <markdowncell>
 
 # The spherical distance works for one point along track, now loop through all values
 
-# <codecell>
+# In[76]:
 
 startprogress('Running through flight track')
 for i in xrange(meas.good.size):
@@ -1016,7 +1053,8 @@ for i in xrange(meas.good.size):
     progress(float(i)/len(meas.good)*100)
 endprogress()
 
-# <codecell>
+
+# In[77]:
 
 print modis['tau'].shape
 print np.shape(modis['tau'][meas.ind])
@@ -1024,11 +1062,10 @@ print modis['tau'][meas.ind[0,:],meas.ind[1,:]]
 print meas.utc[meas.good].ravel().shape
 print meas.good.shape
 
-# <headingcell level=2>
 
-# Now plot MODIS and the retrieval result
+# ## Now plot MODIS and the retrieval result
 
-# <codecell>
+# In[78]:
 
 fig = plt.figure()
 plt.plot(modis['lat'][meas.ind[0,:],meas.ind[1,:]],modis['lon'][meas.ind[0,:],meas.ind[1,:]])
@@ -1036,18 +1073,21 @@ plt.title('Nearest MODIS points')
 plt.ylabel('Latitude')
 plt.xlabel('longitude')
 
-# <codecell>
+
+# In[79]:
 
 fig = plt.figure()
 plt.plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]])
 plt.title('raw tau values')
 plt.xlabel('UTC [Hours]')
 
-# <codecell>
+
+# In[80]:
 
 modis_dicts['phase']
 
-# <codecell>
+
+# In[81]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -1076,11 +1116,10 @@ ax[3].set_xlim([17,19.05])
 plt.savefig(fp+'plots/modis_4star_time_comp.png',dpi=600)
 plt.savefig(fp+'plots/modis_4star_time_comp.pdf',bbox='tight')
 
-# <markdowncell>
 
 # Redo plot above, but with only tau and ref for comparison
 
-# <codecell>
+# In[82]:
 
 fig,ax = plt.subplots(2,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -1109,11 +1148,10 @@ ax[1].set_xlim([17.25,19.05])
 plt.savefig(fp+'plots/modis_4star_time_comp_tau_ref.png',dpi=600)
 #plt.savefig(fp+'plots/modis_4star_time_comp_tau_ref.pdf',bbox='tight')
 
-# <markdowncell>
 
 # plot onto a map the points that were selected
 
-# <codecell>
+# In[83]:
 
 figs2,axs2 = plt.subplots(1,2,figsize=(13,13))
 ma1 = tcap_map(axs2[0])
@@ -1136,32 +1174,32 @@ ma2.scatter(xi,yi,c=ref[meas.good],
             cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],
             vmax=clevels2[-1],alpha=0.5,edgecolors='#FFFFFF',linewidth=0.15)
 
-# <headingcell level=2>
 
-# Build the comparison of histograms
-
-# <markdowncell>
+# ## Build the comparison of histograms
 
 # build a filter for only showing 1-1 plots
 
-# <codecell>
+# In[256]:
 
 utc = meas.utc[meas.good].ravel()
 print utc.shape
 ut = (utc > 17.25) & (utc < 17.75)
 
-# <codecell>
+
+# In[279]:
 
 reload(Sp)
 from Sp_parameters import doublenanmask
 mtau,meastau = doublenanmask(modis['tau'][meas.ind[0,ut],meas.ind[1,ut]],tau[meas.good[ut]].ravel())
 
-# <codecell>
+
+# In[280]:
 
 print len(meastau)
 print len(mtau)
 
-# <codecell>
+
+# In[291]:
 
 plt.figure()
 plt.hist(mtau, bins=10, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
@@ -1178,15 +1216,15 @@ plt.xlim([0,15])
 plt.savefig(fp+'plots/hist_modis_4star_tau.png',dpi=600)
 plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
-# <markdowncell>
 
 # Now for Ref
 
-# <codecell>
+# In[282]:
 
 mref,measref = doublenanmask(modis['ref'][meas.ind[0,ut],meas.ind[1,ut]],ref[meas.good[ut]].ravel())
 
-# <codecell>
+
+# In[283]:
 
 plt.figure()
 plt.hist(mref, bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')

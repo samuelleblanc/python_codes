@@ -409,6 +409,53 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
+# In[138]:
+
+mea['rad'].shape
+
+
+# In[163]:
+
+plt.figure()
+plt.plot(mea['w'][0],mea['rad'][600,:],'+')
+plt.text(mea['w'][0][300],mea['rad'][600,300],'{}'.format(300))
+for i,w in enumerate(mea['w'][0]):
+    if ((i%5)==0)&(w>0.5):
+        #print mea['w'][0][i],mea['rad'][600,i],'%i' %i
+        plt.text(mea['w'][0][i],mea['rad'][600,i],'%i' %i)
+
+
+# In[164]:
+
+ivis = range(1055,1069)
+inir = range(1004,1037)
+mean_vis = np.nanmean(mea['rad'][600,ivis])
+mean_nir = np.nanmean(mea['rad'][600,inir])
+s_ratio_vis_nir = mean_vis/mean_nir
+
+
+# In[165]:
+
+print s_ratio_vis_nir
+
+
+# In[166]:
+
+iw_nir = range(1045,1556)
+
+
+# In[167]:
+
+ss = mea['rad'][600,:]
+ss[iw_nir] = ss[iw_nir]/s_ratio_vis_nir
+
+
+# In[168]:
+
+plt.figure()
+plt.plot(mea['w'][0],ss)
+
+
 # In[23]:
 
 reload(Sp)
@@ -531,12 +578,117 @@ iww = range(0,981)+       [984,987,991,994,998,1001,1005,1008,1012,1015,
         1057,1060,1063,1067,1070]+range(1072,1548)
 
 
-# In[103]:
+# In[106]:
 
 plt.figure()
-plt.plot(meas.wvl[iww],meas.norm[647,iww],'k')
+plt.plot(meas.wvl[iww],meas.norm[647,iww],'k',lw=2)
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Normalized Radiance')
+plt.text(600,0.85,'4STAR measurement')
+plt.xlim([350,1700])
+plt.savefig(fp+'plots/20130913_norm_rad_example_0.png',dpi=600,transparent=True)
+
+
+# In[107]:
+
+def plot_greys(fig=None,ax=None):
+    " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
+    cl = '#DDDDDD'
+    plt.axvspan(1000,1077,color=cl) #eta1
+    plt.axvspan(1192,1194,color=cl) #eta2
+    plt.axvspan(1492,1494,color=cl) #eta3
+    plt.axvspan(1197,1199,color=cl); plt.axvspan(1235,1237,color=cl);  #eta4
+    plt.axvspan(1248,1270,color=cl) #eta5
+    plt.axvspan(1565,1644,color=cl) #eta6
+    plt.axvspan(1000,1050,color=cl) #eta7
+    plt.axvspan(1493,1600,color=cl) #eta8
+    plt.axvspan(1000,1077,color=cl) #eta9
+    plt.axvspan(1200,1300,color=cl) #eta10
+    plt.axvspan(530 ,610 ,color=cl) #eta11
+    plt.axvspan(1039,1041,color=cl) #eta12
+    plt.axvspan(999 ,1001,color=cl); plt.axvspan(1064,1066,color=cl);  #eta13
+    plt.axvspan(599 ,601 ,color=cl); plt.axvspan(869 ,871 ,color=cl);  #eta14
+    plt.axvspan(1565,1634,color=cl); #eta15
+
+
+# In[111]:
+
+def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=False):
+    """ Make multiple lines on the subplot ax of the spectra s, for the case defined by names with the cmap
+      for one particular phase (iphase), range of refs (irefs) and at one itau. Returns the axis handles for the thin and thick ref """
+    rf = range(irefs[0],irefs[1])
+    colors = plt.cm._generate_cmap(cmap,int(len(rf)*2.25))
+    for ir in rf:
+        a1 = ax.plot(lut.wvl,lut.norm[iphase,iwvls,0,ir,itau],
+                    color=(0.2,0.2,0.2),
+                    lw=1.0+1.4*float(ir)/irefs[1])
+        ax.plot(lut.wvl,lut.norm[iphase,iwvls,0,ir,itau],
+                color=colors(ir),
+                lw=1.0+1.3*float(ir)/irefs[1])    
+        ax.text(pos[0],pos[1]/0.22,names,color=colors(irefs[1]))
+        if ir == rf[0]:
+            alow = a1
+        if ir == rf[-1]:
+            ahigh = a1
+    return [alow,ahigh]
+
+
+# In[110]:
+
+lut.norm.shape
+
+
+# In[122]:
+
+lut.sp.shape
+
+
+# In[125]:
+
+norm_sp = lut.normsp(lut.sp)
+
+
+# In[126]:
+
+norm_sp.shape
+
+
+# In[127]:
+
+lut.norm=norm_sp
+
+
+# In[131]:
+
+def get_iref_itau(ref,tau):
+    'simple program to find the iref and itau in lut'
+    iref = np.argmin(abs(ref-lut.ref))
+    itau = np.argmin(abs(tau-lut.tau))
+    return iref,itau
+
+
+# In[137]:
+
+plt.figure()
+plt.plot(meas.wvl[iww],meas.norm[647,iww],'k',lw=2)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Radiance')
+plt.text(600,0.85,'4STAR measurement')
+plt.xlim([350,1700])
+
+iref,itau = get_iref_itau(15,0)
+plt.plot(lut.wvl[iww],lut.norm[0,iww,0,iref,itau],'r')
+plt.plot(lut.wvl[iww],lut.norm[1,iww,0,iref,itau],'g')
+iref,itau = get_iref_itau(40,13)
+plt.plot(lut.wvl[iww],lut.norm[1,iww,0,iref,itau],'b')
+
+#lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
+#         ('Ice Cloud Model, $\\tau$=0.5','Greens',1,[13,34],1,[380,0.02]),
+#         ('Liquid Cloud Model, $\\tau$=10','RdPu',0,[0,13],9,[700,0.16]),
+#         ('Ice Cloud Model, $\\tau$=10','Blues',1,[13,34],9,[750,0.15])]
+#for names,cmap,iphase,irefs,itau,pos in lines:
+#    [alow,ahigh] = plot_line_gradients(plt.gca(),s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=True)
+#plt.savefig(fp+'plots/20130913_norm_rad_example_1.png',dpi=600,transparent=True)
 
 
 # ## Run the retrieval on 4STAR data
@@ -546,19 +698,19 @@ plt.ylabel('Normalized Radiance')
 from Sp_parameters import smooth
 
 
-# In[49]:
+# In[114]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[50]:
+# In[115]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[51]:
+# In[116]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -566,7 +718,7 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[52]:
+# In[117]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
@@ -575,6 +727,12 @@ print type(mea['good'][0])
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
+
+
+# In[118]:
+
+plt.figure()
+plt.plot(meas.tau,'x')
 
 
 # In[57]:
@@ -636,6 +794,11 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
+
+
+# In[112]:
+
+
 
 
 # ## Get SSFR data from ER2
@@ -2901,9 +3064,9 @@ ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 
-# In[68]:
+# In[170]:
 
-fig = plt.figure(figsize=(6,3))
+fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,5.5])
 ax1.set_ylabel('$\\tau$')
 ax1.set_xticks([0,1,2,3,4,5])
@@ -2957,9 +3120,9 @@ ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_ref_v5.png',dpi=600,transparent=True)
 
 
-# In[69]:
+# In[169]:
 
-fig = plt.figure(figsize=(7,3))
+fig = plt.figure(figsize=(8,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,6.5])
 ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
 ax1.set_xticks([0,1,2,3,4,5,6])
@@ -2982,7 +3145,7 @@ plot_vert_hist(fig,ax1,probes[:,7],6,[0,60],legend=True,color='y',bins=50,alpha=
              color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
 for cap in caps:
     cap.set_markeredgewidth(3)
-ax1.legend(frameon=False,numpoints=1)
+#ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_ref_v5_light.png',dpi=600,transparent=True)
 
 
