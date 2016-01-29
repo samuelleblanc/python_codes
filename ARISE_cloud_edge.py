@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -60,15 +58,15 @@
 #  
 #      Written: by Samuel LeBlanc, NASA Ames
 
-# <codecell>
+# In[1]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np, h5py
 import scipy.io as sio
 import scipy
@@ -79,17 +77,17 @@ IPython.InteractiveShell.cache_size = 0
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/ARISE/'
 
-# <headingcell level=2>
 
-# Get the AMSR data for 2014-09-19
+# ## Get the AMSR data for 2014-09-19
 
-# <codecell>
+# In[2]:
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.hdf'
 fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
-# <codecell>
+
+# In[3]:
 
 def plt_amsr(ax='None'):
     from mpl_toolkits.basemap import Basemap
@@ -110,7 +108,8 @@ def plt_amsr(ax='None'):
     return m
 m = plt_amsr()
 
-# <codecell>
+
+# In[4]:
 
 def plt_amsr_zoom(ax='None',colorbar=True):
     from mpl_toolkits.basemap import Basemap
@@ -132,29 +131,31 @@ def plt_amsr_zoom(ax='None',colorbar=True):
     return m
 plt_amsr_zoom()
 
-# <headingcell level=2>
 
-# Load C130 nav data
+# ## Load C130 nav data
 
-# <codecell>
+# In[5]:
 
 fnav = fp+'c130/20140919_ARISE_Flight_13/arise-C130-Hskping_c130_20140919_RA_Preliminary.ict'
-nav,nav_header = lm.load_ict(fnav,header=True)
+nav,nav_header = lm.load_ict(fnav,return_header=True)
 
-# <codecell>
+
+# In[6]:
 
 nav_header
 
-# <codecell>
+
+# In[7]:
 
 nav['Longitude'][nav['Longitude']==0.0] = np.NaN
 nav['Latitude'][nav['Latitude']<0.0] = np.NaN
 
-# <codecell>
+
+# In[9]:
 
 plt.figure()
 #plt.plot(nav['Longitude'],nav['Latitude'])
-ss = plt.scatter(nav['Longitude'],nav['Latitude'],c=nav['Start_UTC'],edgecolor='None',cmap=cm.gist_ncar)
+ss = plt.scatter(nav['Longitude'],nav['Latitude'],c=nav['Start_UTC'],edgecolor='None',cmap=plt.cm.gist_ncar)
 plt.grid()
 cbar = plt.colorbar(ss)
 cbar.set_label('UTC [h]')
@@ -162,17 +163,20 @@ plt.ylabel('Latitude')
 plt.xlabel('Longitude')
 plt.savefig(fp+'plots/20140919_flightpath.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[9]:
 
 m = plt_amsr()
 m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor='r')
 plt.savefig(fp+'plots/20140919_map_ice_conc.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[8]:
 
 flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitude']<0.0))[0]
 
-# <codecell>
+
+# In[11]:
 
 plt.figure()
 plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -185,7 +189,8 @@ cbar = plt.colorbar(ss)
 cbar.set_label('UTC [h]')
 plt.savefig(fp+'plots/20140919_proile_alt.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[12]:
 
 plt.figure()
 plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -198,7 +203,8 @@ cbar = plt.colorbar(ss)
 cbar.set_label('Static Air temp [$^{o}$C]')
 plt.savefig(fp+'plots/20140919_proile_alt_temp.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[13]:
 
 plt.figure()
 plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -211,32 +217,32 @@ cbar = plt.colorbar(ss)
 cbar.set_label('Relative humidity [\\%]')
 plt.savefig(fp+'plots/20140919_proile_alt_RH.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Load Cloud probe data
+# ## Load Cloud probe data
 
-# <codecell>
+# In[9]:
 
 fprobe = fp+'c130/20140919_ARISE_Flight_13/ARISE-LARGE-PROBES_C130_20140919_R0.ict'
 probe,prb_header = lm.load_ict(fprobe,header=True)
 
-# <codecell>
+
+# In[15]:
 
 prb_header
 
-# <markdowncell>
 
 # To Note from Lee Thornhill about this version of the archived data, received (2015-05-27 5:03 am PST):
 # 
 # The CDP size distributions are in dN, not dlogD. I make a mistake on that label. Usually I put size distributions into the archive as dNdlogD, but I missed a step in doing that. I will correct that with the next archive file update. 
 
-# <codecell>
+# In[10]:
 
 flt_prb = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0))
 probe['TWC_gm3'][probe['TWC_gm3']<0.0] = np.NaN
 feet2meter = 0.3048
 
-# <codecell>
+
+# In[17]:
 
 plt.figure()
 #plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -253,15 +259,15 @@ cbar = plt.colorbar(ss)
 cbar.set_label('Drop number concentration [cm$^{-3}$]')
 plt.savefig(fp+'plots/20140919_proile_alt_ndrop.png',dpi=600,transparent=True)
 
-# <markdowncell>
 
 # plotting of drop size distribution
 
-# <codecell>
+# In[11]:
 
 bin_diameters = np.array([3,4,5,6,7,8,9,10,11,12,13,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50])
 
-# <codecell>
+
+# In[12]:
 
 nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_dNdlogD'],
                      probe['CDP04_dNdlogD'],probe['CDP05_dNdlogD'],probe['CDP06_dNdlogD'],
@@ -274,11 +280,13 @@ nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_
                      probe['CDP25_dNdlogD'],probe['CDP26_dNdlogD'],probe['CDP27_dNdlogD'],
                      probe['CDP28_dNdlogD'],probe['CDP29_dNdlogD'],probe['CDP30_dNdlogD']))
 
-# <codecell>
+
+# In[13]:
 
 nd_dist[nd_dist<0.5] = np.nan
 
-# <codecell>
+
+# In[21]:
 
 clevels = np.arange(0,51)
 vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
@@ -289,7 +297,8 @@ plt.ylabel('$D_{eff}$ [$\\mu$m]')
 plt.title('CDP cloud drop size density')
 plt.savefig(fp+'plots/20140919_utc_dndlogd.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[22]:
 
 clevels = np.arange(0,51)
 vv = plt.contourf(probe['UTC_mid'],bin_diameters,nd_dist,clevels,cmap=plt.cm.gist_ncar_r,extend='both')
@@ -301,11 +310,8 @@ plt.title('CDP cloud drop size density')
 plt.xlim([19.5,23])
 plt.savefig(fp+'plots/20140919_utc_dndlogd_zoom.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Convert the drop size distribution to $r_{eff}$
-
-# <markdowncell>
+# ## Convert the drop size distribution to $r_{eff}$
 
 # Trying to replicate the $r_{eff}$ equation:
 # 
@@ -314,23 +320,21 @@ plt.savefig(fp+'plots/20140919_utc_dndlogd_zoom.png',dpi=600,transparent=True)
 # 
 # With $Q_{ext}(r)$ representing the extinction efficiency, $r$ the radius of the particle, $n(r)$ the drop size distribution
 
-# <markdowncell>
-
 # Load $Q_{ext}(r)$ for mie
-
-# <markdowncell>
 
 # For now use Q_ext = parameterized values with exponenetial decrease determined from Mie_Calc ipython notebook for lambda at 1.70 $\mu$m 
 
-# <codecell>
+# In[23]:
 
 nd_dist.shape
 
-# <codecell>
+
+# In[24]:
 
 nd_dist[:,1000]
 
-# <codecell>
+
+# In[14]:
 
 from Sp_parameters import nanmasked
 def calc_ref(nd,diameter):
@@ -342,21 +346,23 @@ def calc_ref(nd,diameter):
     if not any(ndi):
         re = np.NaN
     else:
-        re = np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**3.0*nda)/ \
-            np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**2.0*nda)
+        re = np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**3.0*nda)/             np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**2.0*nda)
     return re
 
-# <codecell>
+
+# In[15]:
 
 print calc_ref(nd_dist[:,14000],bin_diameters)
 
-# <codecell>
+
+# In[16]:
 
 ref = np.zeros(len(nd_dist[0,:]))
 for i in xrange(len(nd_dist[0,:])):
     ref[i] = calc_ref(nd_dist[:,i],bin_diameters)
 
-# <codecell>
+
+# In[28]:
 
 plt.plot(probe['UTC_mid'],ref)
 plt.title('Calculated effective radius from cloud probes')
@@ -364,11 +370,13 @@ plt.xlabel('UTC [H]')
 plt.ylabel('$r_{eff}$ [$\\mu$m]')
 plt.savefig(fp+'plots/20140919_utc_probes_ref.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[17]:
 
 probe_ref = Sp.smooth(ref,10,nan=False)
 
-# <codecell>
+
+# In[143]:
 
 plt.figure()
 #plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -385,7 +393,8 @@ cbar = plt.colorbar(ss)
 cbar.set_label('$r_{eff}$ [$\\mu$m]')
 plt.savefig(fp+'plots/20140919_proile_alt_ref_calc.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[179]:
 
 plt.figure()
 plt.plot(probe['Longitude_deg'][flt_prb],probe_ref[flt_prb],label='Raw')
@@ -397,20 +406,18 @@ plt.ylabel('$r_{eff}$ [$\\mu$m]')
 plt.legend(frameon=False)
 plt.savefig(fp+'plots/20140919_lon_ref_calc.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Load the MODIS cloud properties
-
-# <markdowncell>
+# ## Load the MODIS cloud properties
 
 # Get the data from MODIS for the proper day of year
 
-# <codecell>
+# In[18]:
 
 from datetime import datetime
 datetime(2014,9,19).timetuple().tm_yday
 
-# <codecell>
+
+# In[19]:
 
 fmodis_aqua = fp+'MODIS/MYD06_L2.A2014262.1955.006.2014282222048.hdf'
 fmodis_aqua_geo = fp+'MODIS/MYD03.A2014262.1955.006.2014272205731.hdf'
@@ -418,23 +425,28 @@ fmodis_terra = fp+'MODIS/MOD06_L2.A2014262.2115.006.2015077072247.hdf'
 fmodis_terra_geo = fp+'MODIS/MOD03.A2014262.2115.006.2014272205802.hdf'
 fviirs = fp+'' #not yet
 
-# <codecell>
+
+# In[20]:
 
 aqua,aqua_dicts = lm.load_modis(fmodis_aqua_geo,fmodis_aqua)
 
-# <codecell>
+
+# In[21]:
 
 terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
 
-# <codecell>
+
+# In[34]:
 
 terra_dicts['tau']
 
-# <codecell>
+
+# In[22]:
 
 flt_aqua = np.where(nav['Start_UTC']<19.9)
 
-# <codecell>
+
+# In[36]:
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,2,1)
@@ -457,7 +469,8 @@ plt.title('19:55 UTC')
 
 plt.savefig(fp+'plots/20140919_map_aqua.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[37]:
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,2,1)
@@ -480,11 +493,13 @@ plt.title('19:55 UTC')
 
 plt.savefig(fp+'plots/20140919_map_zoom_aqua.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[23]:
 
 flt_terra = np.where(nav['Start_UTC']<21.25)
 
-# <codecell>
+
+# In[39]:
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,2,1)
@@ -507,7 +522,8 @@ plt.title('21:15 UTC')
 
 plt.savefig(fp+'plots/20140919_map_terra.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[40]:
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,2,1)
@@ -530,30 +546,33 @@ plt.title('21:15 UTC')
 
 plt.savefig(fp+'plots/20140919_map_zoom_terra.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Load MERRA Reanalysis
+# ## Load MERRA Reanalysis
 
-# <codecell>
+# In[24]:
 
 fmerra = fp+'MERRA\MERRA300.prod.assim.inst6_3d_ana_Nv.20140919.SUB.hdf'
 merra,merra_dict = lm.load_hdf_sd(fmerra)
 
-# <codecell>
+
+# In[42]:
 
 merra_dict['delp']
 
-# <codecell>
+
+# In[25]:
 
 def p2alt(p):
     "convert pressure (in hpa) to altitude (in meter)"
     return (1.0-np.power(p/1013.25,1.0/5.25588))/2.25577E-5
 
-# <codecell>
+
+# In[44]:
 
 p2alt(merra['levels'][-10])
 
-# <codecell>
+
+# In[45]:
 
 fig,ax = plt.subplots(1,1)
 plt.plot(merra['levels'],'b+-')
@@ -562,7 +581,8 @@ ax2.plot(p2alt(merra['levels']),'g+-')
 ax2.set_ylabel('Altitude [m]',color='g')
 ax.set_ylabel('Pressure [hPa]',color='b')
 
-# <codecell>
+
+# In[46]:
 
 plt.figure(figsize=(5,10))
 m = plt_amsr()
@@ -576,16 +596,19 @@ m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor
 #m.contour(mlon,mlat,merra['delp'][3,-10,:,:],latlon=True,zorder=10)
 plt.savefig(fp+'plots/20140919_map_wind.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[47]:
 
 merra['longitude'][50:78]
 
-# <codecell>
+
+# In[48]:
 
 print merra['latitude'].shape
 print merra['v'].shape
 
-# <codecell>
+
+# In[49]:
 
 plt.figure(figsize=(5,10))
 m = plt_amsr_zoom()
@@ -598,34 +621,32 @@ plt.quiverkey(q,x0,y0,10,'10 m/s',coordinates='data',color='r')
 m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor='k')
 plt.savefig(fp+'plots/20140919_map_zoom_wind.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[50]:
 
 plt.quiver(mlon,mlat,merra['u'][3,-10,:,:],merra['v'][3,-10,:,:])
 plt.ylabel('Latitude')
 plt.xlabel('Longitude')
 
-# <headingcell level=2>
 
-# Plotting of profiles
-
-# <markdowncell>
+# ## Plotting of profiles
 
 # First get the indices in ice concentration linked to the flight path
 
-# <codecell>
+# In[2]:
 
 import map_utils as mu
 
-# <markdowncell>
 
 # Create a lat lon slice to use for correlating the sea ice concentration
 
-# <codecell>
+# In[27]:
 
 points_lat = [73.2268,71.817716]
 points_lon = [-135.3189167,-128.407833]
 
-# <codecell>
+
+# In[28]:
 
 from scipy import interpolate
 flat = interpolate.interp1d([0,100],points_lat)
@@ -633,21 +654,24 @@ flon = interpolate.interp1d([0,100],points_lon)
 path_lat = flat(np.arange(100))
 path_lon = flon(np.arange(100))
 
-# <codecell>
+
+# In[29]:
 
 ind = np.zeros((2,len(path_lat)), dtype=numpy.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
     ind[:,i] = np.unravel_index(np.nanargmin(np.square(amsr['lat']-x)+np.square(amsr['lon']-360.0-y)),amsr['lat'].shape)
 
-# <codecell>
+
+# In[55]:
 
 plt.plot(path_lon,amsr['ice'][ind[0,:],ind[1,:]])
 plt.ylabel('Ice Concentration [\%]')
 plt.xlabel('Longitude')
 plt.title('Below flight path ice concentration')
 
-# <codecell>
+
+# In[56]:
 
 plt.plot(amsr['lon'].reshape(amsr['lon'].size)-360,amsr['lat'].reshape(amsr['lon'].size),'g+-')
 plt.plot(amsr['lon'][ind[0,:],ind[1,:]]-360.0,amsr['lat'][ind[0,:],ind[1,:]],'r+')
@@ -660,7 +684,8 @@ plt.ylabel('Latitude')
 plt.xlabel('Longitude')
 plt.title('AMSR ice concentration for along C130 flight path')
 
-# <codecell>
+
+# In[57]:
 
 plt.figure()
 plt.plot(nav['Longitude'][flt],nav['GPS_Altitude'][flt])
@@ -678,7 +703,8 @@ cbar.set_label('Ice Concentration [\%]')
 
 plt.savefig(fp+'plots/20140919_proile_alt_ice.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[182]:
 
 plt.figure()
 plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,'k',linewidth=0.6)
@@ -702,7 +728,8 @@ cbar.set_label('Ice Concentration [\%]')
 
 plt.savefig(fp+'plots/20140919_profile_alt_cloud_ice.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[183]:
 
 plt.figure()
 plt.plot(probe['Longitude_deg'][flt_prb],probe['PressAlt_ft'][flt_prb]*feet2meter,'k',linewidth=0.6)
@@ -726,46 +753,51 @@ cbar.set_label('Ice Concentration [\%]')
 
 plt.savefig(fp+'plots/20140919_proile_zoom_alt_cloud_ice.png',dpi=600,transparent=True)
 
-# <markdowncell>
 
 # Now get a MERRA profile of winds on top of this.
 
-# <codecell>
+# In[59]:
 
 
-# <headingcell level=2>
 
-# Load the 4STAR data
 
-# <codecell>
+# ## Load the 4STAR data
+
+# In[10]:
 
 fstar = fp+'starzen/20140919starzen.mat'
 star = sio.loadmat(fstar)
 star.keys()
 
-# <codecell>
+
+# In[11]:
 
 star['iset']
 
-# <codecell>
+
+# In[12]:
 
 star['utc'] = lm.toutc(lm.mat2py_time(star['t']))
 star['utcr'] = lm.toutc(lm.mat2py_time(star['t_rad']))
 
-# <codecell>
+
+# In[13]:
 
 flt_star_ice = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Lon'][star['iset']]<-133) & (star['Alt'][star['iset']]<900.0))[0]
 flt_star_wat = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Lon'][star['iset']]>-133) & (star['Alt'][star['iset']]<900.0))[0]
 
-# <codecell>
+
+# In[14]:
 
 star['utc'].shape
 
-# <codecell>
+
+# In[15]:
 
 flt_star_ice
 
-# <codecell>
+
+# In[36]:
 
 fig = plt.figure()
 fig.add_subplot(1,2,1)
@@ -785,65 +817,69 @@ plt.ylim([0,60])
 plt.title('at %.3f $\mu$m' % star['w'][0,1200])
 plt.legend(frameon=False)
 
-# <headingcell level=3>
 
-# Define 4STAR zenith data as an SP object and prepare for calculations
+# ### Define 4STAR zenith data as an SP object and prepare for calculations
 
-# <codecell>
+# In[16]:
 
 import Sp_parameters as Sp
 reload(Sp)
 
-# <codecell>
+
+# In[17]:
 
 star['good'] = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Alt'][star['iset'][:,0],0]<900.0))[0]
 len(star['good'])
 
-# <codecell>
+
+# In[18]:
 
 stars = Sp.Sp(star)
 stars.params()
 
-# <headingcell level=3>
 
-# Now load the different luts
+# ### Now load the different luts
 
-# <codecell>
+# In[19]:
 
 sice = sio.idl.readsav(fp+'model/sp_v2_20140919_ice_4STAR.out')
 swat = sio.idl.readsav(fp+'model/sp_v2_20140919_wat_4STAR.out')
 print sice.keys()
 print swat.keys()
 
-# <codecell>
+
+# In[20]:
 
 lutice = Sp.Sp(sice)
 
-# <codecell>
+
+# In[21]:
 
 lutwat = Sp.Sp(swat)
 
-# <codecell>
+
+# In[22]:
 
 lutice.params()
 lutice.param_hires()
 lutice.sp_hires()
 
-# <codecell>
+
+# In[23]:
 
 lutwat.params()
 lutwat.param_hires()
 lutwat.sp_hires()
 
-# <headingcell level=2>
 
-# Plot the 4STAR zenith radiance measurement and model
+# ## Plot the 4STAR zenith radiance measurement and model
 
-# <codecell>
+# In[24]:
 
 from Sp_parameters import nanmasked, closestindex, norm2max
 
-# <codecell>
+
+# In[25]:
 
 def plot_greys(fig=None,ax=None):
     " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
@@ -864,20 +900,24 @@ def plot_greys(fig=None,ax=None):
     plt.axvspan(599 ,601 ,color=cl); plt.axvspan(869 ,871 ,color=cl);  #eta14
     plt.axvspan(1565,1634,color=cl); #eta15
 
-# <codecell>
+
+# In[28]:
 
 print stars.utc[fltice[200]]
 print stars.utc[fltwat[200]]
 
-# <codecell>
+
+# In[29]:
 
 stars.norm.shape
 
-# <codecell>
+
+# In[30]:
 
 stars.sp.shape
 
-# <codecell>
+
+# In[67]:
 
 fig,ax = plt.subplots()
 ax.plot(stars.wvl,stars.norm[fltice,:].T)
@@ -888,7 +928,8 @@ ax.set_xlim([350,1700])
 ax.set_ylim([0,1.0])
 ax.plot(stars.wvl,stars.norm[fltice[400],:],'k',linewidth=3)
 
-# <codecell>
+
+# In[74]:
 
 fig,ax = plt.subplots()
 ax.plot(stars.wvl,stars.norm[fltwat,:].T)
@@ -899,34 +940,41 @@ ax.set_xlim([350,1700])
 ax.set_ylim([0,1.0])
 ax.plot(stars.wvl,stars.norm[fltwat[400],:],'k',linewidth=3)
 
-# <codecell>
+
+# In[31]:
 
 lutice.norm
 
-# <codecell>
+
+# In[32]:
 
 lutice.tau.shape
 
-# <codecell>
+
+# In[33]:
 
 lutice.tau[25]
 
-# <codecell>
+
+# In[34]:
 
 lutice.sp.shape
 
-# <codecell>
+
+# In[36]:
 
 spwat = stars.norm[fltwat[400],:]
-spwat[1066:1072] = nan
-spwat[979] = nan
+spwat[1066:1072] = np.nan
+spwat[979] = np.nan
 
-# <codecell>
+
+# In[37]:
 
 spice = stars.norm[fltice[400],:]
-spwat[1066:1072] = nan
+spwat[1066:1072] = np.nan
 
-# <codecell>
+
+# In[66]:
 
 fig,ax = plt.subplots()
 ax.plot(stars.wvl,Sp.smooth(stars.norm[fltwat[400],:],2),'k-')
@@ -937,10 +985,10 @@ ax.set_xlabel('Wavelength [nm]')
 ax.set_xlim([400,1680])
 ax.set_ylim([0,1.0])
 plot_greys()
-lines = [('$\\tau$=0.5, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[0],'Reds',0,[0,13],3,[460,0.009]),
-         ('$\\tau$=0.5, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[13],'Greens',0,[13,34],3,[420,0.02]),
-         ('$\\tau$=15, r$_{eff}$=%2.0f $\\mu$m'% lutice.ref[0],'RdPu',0,[0,13],25,[800,0.14]),
-         ('$\\tau$=15, r$_{eff}$=%2.0f $\\mu$m' % lutice.ref[13],'Blues',0,[13,34],25,[750,0.152])]
+lines = [('$\\tau$=%2.1f, r$_{eff}$=%2.0f $\\mu$m' % (lutice.tau[2],lutice.ref[13]),'Reds',0,[13,13],2,[460,0.009]),
+         ('$\\tau$=%2.0f, r$_{eff}$=%2.0f $\\mu$m' % (lutice.tau[75],lutice.ref[38]),'Greens',0,[38,34],75,[420,0.02]),
+         ('$\\tau$=%2.0f, r$_{eff}$=%2.0f $\\mu$m'% (lutice.tau[24],lutice.ref[0]),'RdPu',0,[0,13],24,[800,0.14]),
+         ('$\\tau$=%2.0f, r$_{eff}$=%2.0f $\\mu$m' % (lutice.tau[22],lutice.ref[38]),'Blues',0,[38,38],22,[750,0.152])]
 iwvls = lutice.iwvls
 lutice.wv = lutice.wvl
 for names,cmap,iphase,irefs,itau,pos in lines:
@@ -957,8 +1005,10 @@ ax.plot(stars.wvl,Sp.smooth(spwat,2),'k-',linewidth=2, label='Over open water')
 ax.plot(stars.wvl,Sp.smooth(spice,2),'k--',linewidth=2, label='Over sea-ice')
 ax.legend(frameon=False,loc=(0.6,0.2),fontsize=12)
 plt.savefig(fp+'plots/20140919_4STAR_mod_meas_zenrad.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/20140919_4STAR_mod_meas_zenrad.pdf', format='pdf', dpi=900)
 
-# <codecell>
+
+# In[ ]:
 
 # set up plotting of a few of the zenith radiance spectra
 def pltzen(fig=None,ax=None, tit='Zenith spectra'):
@@ -1005,7 +1055,8 @@ def dashlen(dashlength,dashseperation,fig=plt.gcf()):
     f=lambda i: dashlength if i%2==0 else dashseperation-dashlength
     return tuple([f(i) for i in range(numdash)])
 
-# <codecell>
+
+# In[78]:
 
 def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=False):
     """ Make multiple lines on the subplot ax of the spectra s, for the case defined by names with the cmap
@@ -1035,7 +1086,8 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
             ahigh = a1
     return [alow,ahigh]
 
-# <codecell>
+
+# In[ ]:
 
 fig,ax=norm()
 lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
@@ -1052,37 +1104,36 @@ plt.axvspan(350,1700,color='#FFFFFF')
 plot_greys()
 plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 
-# <headingcell level=3>
 
-# Now load and run the retrieval on 4STAR data subset
+# ### Now load and run the retrieval on 4STAR data subset
 
-# <codecell>
+# In[45]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
-# <codecell>
+
+# In[46]:
 
 (stars.icetau,stars.iceref,stars.icephase,stars.iceki) = rk.run_retrieval(stars,lutice,force_liq=True)
 
-# <codecell>
+
+# In[47]:
 
 (stars.wattau,stars.watref,stars.watphase,stars.watki) = rk.run_retrieval(stars,lutwat,force_liq=True)
 
-# <headingcell level=3>
 
-# Plot the resulting retrieved properties
-
-# <markdowncell>
+# ### Plot the resulting retrieved properties
 
 # Assure that the retrieved properties make sense first, remove bad data
 
-# <codecell>
+# In[48]:
 
 stars.icetau[stars.icetau>=80] = np.nan
 stars.wattau[stars.wattau>=80] = np.nan
 
-# <codecell>
+
+# In[49]:
 
 stars.iceref[stars.iceref>=60] = np.nan
 stars.watref[stars.watref>=60] = np.nan
@@ -1093,25 +1144,24 @@ stars.watref[stars.watref==17] = np.nan
 #stars.iceref[stars.iceref==40] = np.nan
 #stars.watref[stars.watref==40] = np.nan
 
-# <markdowncell>
 
 # Now smooth over data to reduce variability
 
-# <codecell>
+# In[50]:
 
 stars.icetau = Sp.smooth(stars.icetau[:],5,nan=False)
 stars.wattau = Sp.smooth(stars.wattau[:],5,nan=False)
 
-# <codecell>
+
+# In[51]:
 
 stars.iceref = Sp.smooth(stars.iceref[:],5,nan=False)
 stars.watref = Sp.smooth(stars.watref[:],5,nan=False)
 
-# <markdowncell>
 
 # Plot the resulting figures
 
-# <codecell>
+# In[89]:
 
 plt.plot(stars.lon,stars.icetau,label='All clouds over ice')
 plt.plot(stars.lon,stars.wattau,label='All clouds over water')
@@ -1125,13 +1175,15 @@ plt.legend(frameon=False,loc=2)
 plt.savefig(fp+'plots/20140919_tau_retrieved.png',dpi=600,transparent=True)
 #savemetapng(fp+'plots/20140919_tau_retrieved.png',theNotebookName)
 
-# <codecell>
+
+# In[ ]:
 
 from PIL import Image
 im2 = Image.open(fp+'plots/20140919_tau_retrieved.png')
 print im2.info
 
-# <codecell>
+
+# In[90]:
 
 plt.plot(stars.lon,stars.iceref,label='All clouds over ice')
 plt.plot(stars.lon,stars.watref,label='All clouds over water')
@@ -1143,21 +1195,22 @@ plt.ylabel('r$_{eff}$ [$\\mu$m]')
 plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
 
-# <headingcell level=3>
 
-# Compile into statistics over water and over ice
+# ### Compile into statistics over water and over ice
 
-# <codecell>
+# In[27]:
 
 fltice = np.where(stars.lon<-132.0)[0]
 fltwat = np.where(stars.lon>-131.0)[0]
 
-# <codecell>
+
+# In[53]:
 
 (stars.wattaumask,stars.iwattau) = Sp.nanmasked(stars.wattau[fltwat])
 (stars.icetaumask,stars.iicetau) = Sp.nanmasked(stars.icetau[fltice])
 
-# <codecell>
+
+# In[54]:
 
 def data2figpoints(x,dx):
     "function to tranform data locations to relative figure coordinates (in fractions of total figure"
@@ -1173,7 +1226,8 @@ def data2figpoints(x,dx):
     height = top[1]-bot[1] 
     return left,bottom,width,height
 
-# <codecell>
+
+# In[55]:
 
 def plot_vert_hist(fig,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2):
     "function to plot a 'bean' like vertical histogram"
@@ -1200,7 +1254,8 @@ def plot_vert_hist(fig,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=
     ax.axhline(mean(ymask),color='red',linewidth=2)
     ax.axhline(median(ymask),color='k',linewidth=2,linestyle='--')
 
-# <codecell>
+
+# In[56]:
 
 fig = plt.figure()
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[-1,7])
@@ -1218,7 +1273,8 @@ plot_vert_hist(fig,stars.wattau[fltwat[stars.watphase[fltwat]==0]],6,[0,40],colo
 ax1.set_title('Distribution of $\\tau$ over different surfaces')
 plt.savefig(fp+'plots/20140919_pdf_surf_tau.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[ ]:
 
 fig = plt.figure()
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
@@ -1235,7 +1291,8 @@ plot_vert_hist(fig,stars.watref[fltwat[stars.watphase[fltwat]==0]],6,[0,60],colo
 ax1.set_title('Distribution of Effective Radius over different surfaces')
 plt.savefig(fp+'plots/20140919_pdf_surf_ref.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[118]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0,2])
@@ -1248,14 +1305,16 @@ plot_vert_hist(fig,stars.watref[fltwat],1.5,[0,30],color='grey')
 ax1.set_title('Distribution of r$_{eff}$ over different surfaces')
 plt.savefig(fp+'plots/20140919_pdf_surf_tot_ref_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[138]:
 
 print np.nanmean(stars.iceref[fltice])
 print np.nanmean(stars.watref[fltwat])
 print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
 print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])/np.nanmean(stars.watref[fltwat])*100.0
 
-# <codecell>
+
+# In[119]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0,2])
@@ -1267,7 +1326,8 @@ plot_vert_hist(fig,stars.wattau[fltwat],1.5,[0,60],color='grey')
 ax1.set_title('Distribution of $\\tau$ over different surfaces')
 plt.savefig(fp+'plots/20140919_pdf_surf_tot_tau_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[120]:
 
 ntau,intau = Sp.nanmasked(stars.icetau[fltice])
 plt.figure()
@@ -1280,25 +1340,26 @@ plt.axvline(np.median(ntau),color='k',linestyle='--',label='Median',linewidth=2)
 plt.legend(frameon=False)
 plt.savefig(fp+'plots/20140919_hist_tau_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[100]:
 
 print np.nanmean(stars.icetau[fltice])
 print np.nanmean(stars.wattau[fltwat])
 print np.nanmean(stars.wattau[fltwat])-np.nanmean(stars.icetau[fltice])
 print (np.nanmean(stars.wattau[fltwat])-np.nanmean(stars.icetau[fltice]))/np.nanmean(stars.wattau[fltwat])*100.0
 
-# <codecell>
+
+# In[101]:
 
 print np.nanmean(stars.iceref[fltice])
 print np.nanmean(stars.watref[fltwat])
 print np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice])
 print (np.nanmean(stars.watref[fltwat])-np.nanmean(stars.iceref[fltice]))/np.nanmean(stars.watref[fltwat])*100.0
 
-# <markdowncell>
 
 # Plotting the over ice, tau and reff together, and also over ocean tau and ref together
 
-# <codecell>
+# In[122]:
 
 fig = plt.figure(figsize=(3,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
@@ -1310,7 +1371,8 @@ plot_vert_hist(fig,stars.icetau[fltice],1,[0,60],color='grey',legend=True,onlyhi
 ax1.set_title('Optical thickness')
 plt.savefig(fp+'plots/20140919_hist_tau_over_ice_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[123]:
 
 fig = plt.figure(figsize=(3,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[0.5,1.5])
@@ -1322,7 +1384,8 @@ plot_vert_hist(fig,stars.wattau[fltwat],1,[0,60],color='grey',legend=True,onlyhi
 ax1.set_title('Optical thickness')
 plt.savefig(fp+'plots/20140919_hist_tau_over_ocean_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[124]:
 
 fig = plt.figure(figsize=(3,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0.5,1.5])
@@ -1339,7 +1402,8 @@ plot_vert_hist(fig,stars.iceref[fltice],1,[0,30],color='green',legend=True,onlyh
 ax1.set_title('Effective radius')
 plt.savefig(fp+'plots/20140919_hist_ref_over_ice_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[125]:
 
 fig = plt.figure(figsize=(3,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[0.5,1.5])
@@ -1356,52 +1420,53 @@ plot_vert_hist(fig,stars.watref[fltwat],1,[0,30],color='green',legend=True,onlyh
 ax1.set_title('Effective radius')
 plt.savefig(fp+'plots/20140919_hist_ref_over_ocean_forceliq.png',dpi=600,transparent=True)
 
-# <markdowncell>
 
 # Testing other types of plots
 
-# <codecell>
+# In[106]:
 
 import statsmodels.api as sm
 
-# <codecell>
+
+# In[107]:
 
 fig = sm.graphics.beanplot([stars.wattaumask,stars.icetaumask],
                            labels=['Over water','Over ice'],
                            jitter=True,
                            plot_opts={'jitter_marker':'+','jitter_marker_size':2})
 
-# <headingcell level=2>
 
-# Now Match MODIS points to flight path
+# ## Now Match MODIS points to flight path
 
-# <codecell>
+# In[108]:
 
 aqua.keys()
 
-# <codecell>
+
+# In[109]:
 
 aqua['lon'].shape
 
-# <codecell>
+
+# In[110]:
 
 ind_aqua = np.zeros((2,len(path_lat)), dtype=numpy.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
     ind_aqua[:,i] = np.unravel_index(np.nanargmin(np.square(aqua['lat']-x)+np.square(aqua['lon']-y)),aqua['lat'].shape)
 
-# <codecell>
+
+# In[111]:
 
 ind_terra = np.zeros((2,len(path_lat)), dtype=numpy.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
     ind_terra[:,i] = np.unravel_index(np.nanargmin(np.square(terra['lat']-x)+np.square(terra['lon']-y)),terra['lat'].shape)
 
-# <headingcell level=2>
 
-# Plotting resulting MODIS cloud properties
+# ## Plotting resulting MODIS cloud properties
 
-# <codecell>
+# In[112]:
 
 plt.plot(path_lon,aqua['tau'][ind_aqua[0,:],ind_aqua[1,:]],'b+-',label='Aqua')
 plt.plot(path_lon,terra['tau'][ind_terra[0,:],ind_terra[1,:]],'g+-',label='Terra')
@@ -1410,7 +1475,8 @@ plt.ylabel('$\\tau$')
 plt.xlabel('Longitude')
 plt.title('MODIS Cloud optical depth along flight path')
 
-# <codecell>
+
+# In[113]:
 
 plt.plot(path_lon,aqua['ref'][ind_aqua[0,:],ind_aqua[1,:]],'b+-',label='Aqua')
 plt.plot(path_lon,terra['ref'][ind_terra[0,:],ind_terra[1,:]],'g+-',label='Terra')
@@ -1419,16 +1485,16 @@ plt.ylabel('r$_{eff}$ [$\\mu$m]')
 plt.xlabel('Longitude')
 plt.title('MODIS Cloud effective radius along flight path')
 
-# <codecell>
+
+# In[114]:
 
 pathice = np.where(path_lon<-132.0)[0]
 pathwat = np.where(path_lon>-131.0)[0]
 
-# <headingcell level=2>
 
-# Build MODIS and 4STAR comparison plot
+# ## Build MODIS and 4STAR comparison plot
 
-# <codecell>
+# In[126]:
 
 fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-1,7])
@@ -1446,7 +1512,8 @@ plot_vert_hist(fig,terra['tau'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,
 ax1.set_title('Distribution of $\\tau$ over different surfaces')
 plt.savefig(fp+'plots/20140919_comp_modis_tau_forceliq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[127]:
 
 fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[-1,7])
@@ -1464,20 +1531,21 @@ plot_vert_hist(fig,terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]],6,[0,
 ax1.set_title('Distribution of Effective Radius over different surfaces')
 plt.savefig(fp+'plots/20140919_comp_modis_ref_forceliq.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Compare to $r_{eff}$ derived from Cloud probes
+# ## Compare to $r_{eff}$ derived from Cloud probes
 
-# <codecell>
+# In[130]:
 
 probe.dtype.names
 
-# <codecell>
+
+# In[180]:
 
 flt_probe_ice = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']<-133.5))[0]
 flt_probe_wat = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0) & (probe['Longitude_deg']>-130.0))[0] 
 
-# <codecell>
+
+# In[181]:
 
 fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,30],xlim=[-1,5])
@@ -1496,18 +1564,18 @@ plot_vert_hist(fig,probe_ref[flt_probe_wat],4,[0,30],color='blue',label='Probes'
 ax1.set_title('Distribution of Effective Radius over different surfaces')
 plt.savefig(fp+'plots/20140919_comp_probes_ref_forceliq.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Testing different programs for metadata saving for pngs and python files
+# ## Testing different programs for metadata saving for pngs and python files
 
-# <codecell>
+# In[ ]:
 
 def getname(): 
     import IPython
     IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookName = " + "\'"+IPython.notebook.notebook_name+"\'");'))
     IPython.display.display(IPython.display.Javascript('IPython.notebook.kernel.execute("theNotebookPath = " + "\'"+IPython.notebook.notebook_path+"\'");'))
 
-# <codecell>
+
+# In[ ]:
 
 getname()
 thisfilepath = os.getcwd()+os.path.sep+theNotebookPath+theNotebookName
@@ -1518,7 +1586,8 @@ time_of_mod = datetime.datetime.fromtimestamp(fstat.st_mtime).strftime('%Y-%m-%d
 import getpass
 user = getpass.getuser()
 
-# <codecell>
+
+# In[ ]:
 
 def savemetapng(filein,Notebookname,Notes=None):
     from PIL import Image
@@ -1542,6 +1611,8 @@ def savemetapng(filein,Notebookname,Notes=None):
         meta.add_text(x, metadata[x])
     im.save(filein, "png", pnginfo=meta)
 
-# <codecell>
+
+# In[ ]:
+
 
 
