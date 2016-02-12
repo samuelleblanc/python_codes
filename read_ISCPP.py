@@ -34,80 +34,90 @@
 # 
 #     Written: Samuel LeBlanc, NASA Ames, Santa Cruz, CA, 2015-12-07
 
-# In[12]:
+# In[ ]:
+
+print 'yes'
+
+
+# In[ ]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
+
+
+# In[ ]:
+
+
 import struct
 from mpl_toolkits.basemap import Basemap
 get_ipython().magic(u'matplotlib notebook')
 import numpy as np
 
 
-# In[13]:
+# In[ ]:
 
 fp='C:/Users/sleblan2/Research/sat/iscpp/'
 
 
 # ## Load the ieee file
 
-# In[17]:
+# In[ ]:
 
 ff = fp+'ISCPP_D2_CLDCOVER_sq_20151207.ieee'
 f = open(ff,'rb')
 
 
-# In[18]:
+# In[ ]:
 
 n = 10368
 num = struct.unpack('{}f'.format(n),f.read(4*n))
 
 
-# In[19]:
+# In[ ]:
 
 f.close()
 
 
-# In[20]:
+# In[ ]:
 
 cld = np.array(num)
 
 
-# In[21]:
+# In[ ]:
 
 cld.shape
 
 
-# In[35]:
+# In[ ]:
 
 lat = np.arange(72)*2.5-90.0+1.25
 lon = np.arange(144)*2.5-180.0+1.25
 
 
-# In[36]:
+# In[ ]:
 
 lat
 
 
-# In[51]:
+# In[ ]:
 
 cv = cld.reshape(72,144)
 
 
-# In[53]:
+# In[ ]:
 
 fig,ax = plt.subplots(1)
 ax.pcolorfast(lon,lat,cv,cmap=plt.cm.rainbow_r)
 
 
-# In[55]:
+# In[ ]:
 
 print 'Average cloud cover at :{}'.format(cv.mean())
 
 
-# In[54]:
+# In[ ]:
 
 m = Basemap(projection='moll',lon_0=0,resolution='c')
 m.drawcoastlines()
@@ -121,8 +131,13 @@ cbar.set_label('Cloud Cover [\%]')
 plt.savefig(fp+'ISCPP_CLDCOVER_mean_annual.png',dpi=600,transparent=True)
 
 
-# In[46]:
+# In[ ]:
 
 import cmaps
 cmaps.cmaps()
+
+
+# In[ ]:
+
+
 

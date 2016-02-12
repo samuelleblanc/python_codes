@@ -1,6 +1,7 @@
 
 # coding: utf-8
 
+# # Info
 # Name:  
 # 
 #     SEAC4RS_compare_v4
@@ -71,6 +72,11 @@
 
 # In[1]:
 
+print 'yes'
+
+
+# In[2]:
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -87,23 +93,24 @@ import Sp_parameters as Sp
 import hdf5storage as hs
 from load_modis import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
+import cPickle as pickle
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
 
 
-# In[2]:
+# In[3]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[4]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[4]:
+# In[5]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -111,7 +118,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[5]:
+# In[ ]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
@@ -319,13 +326,13 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[14]:
+# In[22]:
 
 import load_modis
 reload(load_modis)
 
 
-# In[15]:
+# In[23]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
@@ -340,7 +347,7 @@ plt.title('DC8 Altitude on 2013-09-13')
 plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 
-# In[16]:
+# In[24]:
 
 print dc8['TIME_UTC'][12000]/3600.0
 print dc8['G_ALT'][12000]
@@ -358,7 +365,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[17]:
+# In[25]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -367,19 +374,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[18]:
+# In[26]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[19]:
+# In[27]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[20]:
+# In[28]:
 
 mea['w'][0][1068]
 
@@ -409,7 +416,7 @@ plt.xlabel('UTC [hours]')
 plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 
-# In[21]:
+# In[29]:
 
 mea['rad'].shape
 
@@ -425,7 +432,7 @@ for i,w in enumerate(mea['w'][0]):
         plt.text(mea['w'][0][i],mea['rad'][600,i],'%i' %i)
 
 
-# In[22]:
+# In[30]:
 
 ivis = range(1055,1069)
 inir = range(1004,1037)
@@ -439,12 +446,12 @@ s_ratio_vis_nir = mean_vis/mean_nir
 print s_ratio_vis_nir
 
 
-# In[24]:
+# In[32]:
 
 iw_nir = range(1045,1556)
 
 
-# In[25]:
+# In[33]:
 
 ss = mea['rad'][600,:]
 ss[iw_nir] = ss[iw_nir]/s_ratio_vis_nir
@@ -798,7 +805,7 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # ## Get SSFR data from ER2
 
-# In[43]:
+# In[54]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -808,14 +815,14 @@ from load_modis import load_ict
 
 # ### First load the ER2 files
 
-# In[44]:
+# In[55]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
 
 
-# In[45]:
+# In[56]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -837,7 +844,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 
-# In[46]:
+# In[7]:
 
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
@@ -2076,25 +2083,25 @@ plt.show()
 
 # ## Import eMAS values
 
-# In[115]:
+# In[61]:
 
 if 'lm' in locals():
     reload(lm)
 from load_modis import load_emas, load_hdf
 
 
-# In[116]:
+# In[62]:
 
 emas_file = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
 print os.path.isfile(emas_file)
 
 
-# In[117]:
+# In[63]:
 
 emas,emas_dicts = load_hdf(emas_file)
 
 
-# In[118]:
+# In[64]:
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas,emas_dicts = load_hdf(emas_file,values=emas_values)
@@ -2112,7 +2119,7 @@ plt.plot(emas['tau'])
 
 # There is multiple eMAS files, representing each a different time slice. Load all of them.
 
-# In[119]:
+# In[65]:
 
 emas_file_v1_10 = fp+'emas/20130913/EMASL2_13965_10_20130913_1815_1828_V01.hdf'
 emas_file_v1_11 = fp+'emas/20130913/EMASL2_13965_11_20130913_1832_1845_V01.hdf'
@@ -2122,24 +2129,24 @@ emas_file_v1 = fp+'emas/20130913/EMASL2_13965_13_20130913_1905_1918_V01.hdf'
 print os.path.isfile(emas_file_v1)
 
 
-# In[120]:
+# In[66]:
 
 print fp
 print emas_file_v1
 
 
-# In[121]:
+# In[67]:
 
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
 
 
-# In[122]:
+# In[68]:
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 
-# In[123]:
+# In[69]:
 
 emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values, verbose=False)
 emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values, verbose=False)
@@ -2147,7 +2154,7 @@ emas_v1_12,emas_dicts_v1_12 = load_hdf(emas_file_v1_12, values=emas_values, verb
 emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values, verbose=False)
 
 
-# In[124]:
+# In[70]:
 
 emas_dicts_v1['tau']
 
@@ -2157,7 +2164,7 @@ emas_dicts_v1['tau']
 emas_dicts_v1_12['lat']
 
 
-# In[126]:
+# In[71]:
 
 from map_utils import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -2165,7 +2172,7 @@ dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['g
 
 # Create different good filters for each different time slice
 
-# In[136]:
+# In[73]:
 
 mea['good_10'] = np.where((mea['utc']>18.15) & (mea['utc']<18.50) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
 mea['good_11'] = np.where((mea['utc']>18.50) & (mea['utc']<18.85) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
@@ -2174,30 +2181,30 @@ mea['good_13'] = np.where((mea['utc']>19.00) & (mea['utc']<19.35) & (mea['Str'].
 mea['good_14'] = np.where((mea['utc']>19.25) & (mea['utc']<19.60) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
 
 
-# In[137]:
+# In[74]:
 
 mea['good_13']
 
 
-# In[138]:
+# In[75]:
 
 print mea['Lat'][mea['good_13']].min(), mea['Lat'][mea['good_13']].max()
 print mea['Lon'][mea['good_13']].min(), mea['Lon'][mea['good_13']].max()
 
 
-# In[139]:
+# In[76]:
 
 print emas_v1['lat'].min(), emas_v1['lat'].max()
 print emas_v1['lon'].min(), emas_v1['lon'].max()
 
 
-# In[140]:
+# In[77]:
 
 import map_utils as mu
 reload(mu)
 
 
-# In[132]:
+# In[78]:
 
 dc8_ind_10 = mu.map_ind(emas_v1_10['lon'],emas_v1_10['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_10'])
 dc8_ind_11 = mu.map_ind(emas_v1_11['lon'],emas_v1_11['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_11'])
@@ -2206,7 +2213,7 @@ dc8_ind_13 = mu.map_ind(emas_v1['lon'],emas_v1['lat'],mea['Lon'],mea['Lat'],meas
 dc8_ind_14 = mu.map_ind(emas_v1_14['lon'],emas_v1_14['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_14'])
 
 
-# In[141]:
+# In[79]:
 
 print np.shape(dc8_ind)
 print dc8_ind_10.shape
@@ -2215,7 +2222,7 @@ print dc8_ind_12.shape
 print dc8_ind_14.shape
 
 
-# In[142]:
+# In[80]:
 
 print dc8_ind[0,-1],dc8_ind[1,-1]
 print emas['lon'][388,715],emas['lat'][388,715]
@@ -2224,14 +2231,14 @@ print emas['lon'][388,714],emas['lat'][388,714]
 sdist= lambda lon1,lat1,lon2,lat2:1000.0 * 3958.75 * np.arccos(np.cos(np.radians(lat1)-np.radians(lat2)) - np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * (1 - np.cos(np.radians(lon1)-np.radians(lon2))))
 
 
-# In[143]:
+# In[81]:
 
 print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][385,714],emas['lat'][385,714])
 
 
 # ### Now combine all eMAS results
 
-# In[144]:
+# In[82]:
 
 emas_full = dict()
 emas_full['lon'] = np.concatenate([emas_v1_10['lon'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
@@ -2256,14 +2263,14 @@ emas_full['ref'] = np.concatenate([emas_v1_10['ref'][dc8_ind_10[0,:],dc8_ind_10[
                     emas_v1_14['ref'][dc8_ind_14[0,:],dc8_ind_14[1,:]]])
 
 
-# In[145]:
+# In[83]:
 
 emas_v1_11['lon'].shape,emas_v1_12['lon'].shape
 
 
 # #### Combine the data to form a UTC variable for eMAS
 
-# In[146]:
+# In[84]:
 
 emas_10_utc_range = [18.26333332,18.442777778] #[18:15:48,18:26:34]
 emas_11_utc_range = [18.53611111,18.755833333] #[18:32:10,18:45:21]
@@ -2272,7 +2279,7 @@ emas_13_utc_range = [19.08499999,19.300555555] #[19:05:06,19:18:02]
 emas_14_utc_range = [19.36027778,19.570555554] #[19:21:37,19:34:14]
 
 
-# In[147]:
+# In[85]:
 
 emas_utc_10 = np.linspace(emas_10_utc_range[0],emas_10_utc_range[1],emas_v1_10['lon'].shape[0])
 emas_utc_11 = np.linspace(emas_11_utc_range[0],emas_11_utc_range[1],emas_v1_11['lon'].shape[0])
@@ -2281,7 +2288,7 @@ emas_utc_13 = np.linspace(emas_13_utc_range[0],emas_13_utc_range[1],emas_v1['lon
 emas_utc_14 = np.linspace(emas_14_utc_range[0],emas_14_utc_range[1],emas_v1_14['lon'].shape[0])
 
 
-# In[148]:
+# In[86]:
 
 emas_full['utc'] = np.concatenate([emas_utc_10[dc8_ind_10[0,:]],
                                    emas_utc_11[dc8_ind_11[0,:]],
@@ -2292,7 +2299,7 @@ emas_full['utc'] = np.concatenate([emas_utc_10[dc8_ind_10[0,:]],
 
 # Do the mods calculations
 
-# In[149]:
+# In[87]:
 
 from map_utils import map_ind
 dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -2847,7 +2854,7 @@ def plot_median_mean(x,lbl=False,color='k'):
 #  - GOES: 1km
 #  - SSFR: 180 degrees, Pi rads
 
-# In[167]:
+# In[34]:
 
 cld_base = 13610.0
 cld_top = 16489.0
@@ -2859,7 +2866,7 @@ r_SSFR = (er2_hgt - cld_top)*np.tan(np.pi/3)
 r_4STAR = (cld_base - dc8_hgt)*np.tan(0.0349)
 
 
-# In[168]:
+# In[35]:
 
 print r_eMAS
 print r_RSP
@@ -2893,22 +2900,22 @@ hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
 # ### Optionally load the retrieval output for easier and faster plotting
 
-# In[5]:
+# In[6]:
 
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
-# In[151]:
+# In[7]:
 
 m_dict.keys()
 
 
-# In[152]:
+# In[8]:
 
 m_dict['rsp']
 
 
-# In[12]:
+# In[9]:
 
 if not 'emas_tau_full' in vars():
     print 'not defined, loading from file'
@@ -2923,22 +2930,22 @@ if not 'emas_tau_full' in vars():
 
 # ## Plot the time trace of the retrieved values
 
-# In[171]:
+# In[10]:
 
 print modis_tau.shape,goes_utc.shape,star_utc.shape
 
 
-# In[172]:
+# In[11]:
 
 print emas_tau_full.shape, ssfr_tau.shape,rsp_tau.shape,goes_tau.shape,star_tau.shape
 
 
-# In[173]:
+# In[12]:
 
 print goes_tau.shape, goes_utc.shape
 
 
-# In[174]:
+# In[13]:
 
 plt.figure()
 plt.plot(star_utc,smooth(modis_tau,6),'m>',label='MODIS',markeredgecolor='none')
@@ -2966,6 +2973,22 @@ plt.legend(frameon=False,numpoints=1)
 plt.grid()
 plt.xlabel('UTC [H]')
 plt.ylabel('r$_{eff}$ [$\\mu$m]')
+
+
+# In[14]:
+
+if not 'stats' in vars():
+    stats = pickle.load(open(fp+'20130913_stats_output.p',"rb"))
+
+
+# In[15]:
+
+stats.keys()
+
+
+# In[16]:
+
+stats['ssfr_tau'].keys()
 
 
 # ## Plot histogram of different tau and ref comparison
@@ -4499,12 +4522,17 @@ s_dict = {''}
 
 # ## Get GOES imagery - New method with netcdf4
 
-# In[194]:
+# In[41]:
+
+import load_modis as lm
+
+
+# In[42]:
 
 goes_files = os.listdir(fp+'dc8/20130913/goes/')
 
 
-# In[195]:
+# In[43]:
 
 g_data = []
 g_dict = []
@@ -4518,18 +4546,18 @@ for f in goes_files:
 
 # get the distance between two points on the map
 
-# In[196]:
+# In[44]:
 
 g_data[0]['lat'][200,100]
 g_data[0]['lon'][200,100]
 
 
-# In[197]:
+# In[47]:
 
 mu.spherical_dist([g_data[0]['lat'][200,100],g_data[0]['lon'][200,100]],[g_data[0]['lat'][200,101],g_data[0]['lon'][200,101]])
 
 
-# In[198]:
+# In[48]:
 
 mu.spherical_dist([g_data[0]['lat'][200,100],g_data[0]['lon'][200,100]],[g_data[0]['lat'][201,100],g_data[0]['lon'][201,100]])
 
@@ -4562,14 +4590,14 @@ for i,dat in enumerate(g_data):
     ax.set_title('On iteration : {}'.format(goes_files[i]))
 
 
-# In[199]:
+# In[49]:
 
 print g_data[1]['lat'][258,135], g_data[1]['lon'][258,135]
 
 
 # ## Plot out FOV of each instrument on eMAS figure
 
-# In[200]:
+# In[50]:
 
 from plotting_utils import circles
 from map_utils import radius_m2deg, spherical_dist
@@ -4601,12 +4629,12 @@ cbar.set_label('$\\tau$')
 plt.savefig(fp+'plots/emas_FOV.png',dpi=600,transparent=True)
 
 
-# In[275]:
+# In[51]:
 
 r_eMAS,r_RSP
 
 
-# In[201]:
+# In[52]:
 
 vg = [[g_data[1]['lon'][257,135],g_data[1]['lat'][257,135]],
       [g_data[1]['lon'][257,136],g_data[1]['lat'][257,136]],
@@ -4615,7 +4643,7 @@ vg = [[g_data[1]['lon'][257,135],g_data[1]['lat'][257,135]],
       [g_data[1]['lon'][257,135],g_data[1]['lat'][257,135]]]
 
 
-# In[202]:
+# In[57]:
 
 ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))[0]
 idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))[0]
@@ -4704,45 +4732,45 @@ plt.tight_layout()
 plt.savefig(fp+'plots/emas_FOV_comp.png',dpi=600,transparent=True)
 
 
-# In[203]:
+# In[58]:
 
 import map_utils
 reload(map_utils)
 from map_utils import stats_within_radius
 
 
-# In[204]:
+# In[59]:
 
 r_GOES = np.sqrt(spherical_dist([vg[0][1],vg[0][0]],[vg[1][1],vg[1][0]])*
                  spherical_dist([vg[2][1],vg[2][0]],[vg[1][1],vg[1][0]])/np.pi)*1000.0
 
 
-# In[205]:
+# In[88]:
 
 out_ssfrtau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR)
 out_ssfrref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_SSFR)
 
 
-# In[206]:
+# In[89]:
 
 out_rspref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_RSP)
 out_rsptau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_RSP)
 
 
-# In[207]:
+# In[90]:
 
 out_starref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_4STAR)
 out_startau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_4STAR)
 
 
-# In[208]:
+# In[91]:
 
 r_MODIS = 500.0
 out_modisref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_MODIS)
 out_modistau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_MODIS)
 
 
-# In[209]:
+# In[92]:
 
 out_goesref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_GOES)
 out_goestau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_GOES)
@@ -4752,13 +4780,13 @@ out_goestau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1
 
 # for emas 10
 
-# In[210]:
+# In[93]:
 
 ier2_10 = np.where((er2['Start_UTC']>emas_10_utc_range[0]) & (er2['Start_UTC']<emas_10_utc_range[1]))[0]
 idc8_10 = np.where((dc8['TIME_UTC']>emas_10_utc_range[0]) & (dc8['TIME_UTC']<emas_10_utc_range[1]))[0]
 
 
-# In[211]:
+# In[94]:
 
 out_ssfrtau_10 = stats_within_radius(er2['Latitude'][ier2_10[::10]],er2['Longitude'][ier2_10[::10]],emas_v1_10['lat'],emas_v1_10['lon'],emas_v1_10['tau'],r_SSFR)
 out_ssfrref_10 = stats_within_radius(er2['Latitude'][ier2_10[::10]],er2['Longitude'][ier2_10[::10]],emas_v1_10['lat'],emas_v1_10['lon'],emas_v1_10['ref'],r_SSFR)
@@ -4772,7 +4800,7 @@ out_goesref_10 = stats_within_radius(dc8['G_LAT'][idc8_10],dc8['G_LONG'][idc8_10
 out_goestau_10 = stats_within_radius(dc8['G_LAT'][idc8_10],dc8['G_LONG'][idc8_10],emas_v1_10['lat'],emas_v1_10['lon'],emas_v1_10['tau'],r_GOES)
 
 
-# In[212]:
+# In[95]:
 
 ier2_11 = np.where((er2['Start_UTC']>emas_11_utc_range[0]) & (er2['Start_UTC']<emas_11_utc_range[1]))[0]
 idc8_11 = np.where((dc8['TIME_UTC']>emas_11_utc_range[0]) & (dc8['TIME_UTC']<emas_11_utc_range[1]))[0]
@@ -4788,7 +4816,7 @@ out_goesref_11 = stats_within_radius(dc8['G_LAT'][idc8_11],dc8['G_LONG'][idc8_11
 out_goestau_11 = stats_within_radius(dc8['G_LAT'][idc8_11],dc8['G_LONG'][idc8_11],emas_v1_11['lat'],emas_v1_11['lon'],emas_v1_11['tau'],r_GOES)
 
 
-# In[213]:
+# In[96]:
 
 ier2_12 = np.where((er2['Start_UTC']>emas_12_utc_range[0]) & (er2['Start_UTC']<emas_12_utc_range[1]))[0]
 idc8_12 = np.where((dc8['TIME_UTC']>emas_12_utc_range[0]) & (dc8['TIME_UTC']<emas_12_utc_range[1]))[0]
@@ -4804,7 +4832,7 @@ out_goesref_12 = stats_within_radius(dc8['G_LAT'][idc8_12],dc8['G_LONG'][idc8_12
 out_goestau_12 = stats_within_radius(dc8['G_LAT'][idc8_12],dc8['G_LONG'][idc8_12],emas_v1_12['lat'],emas_v1_12['lon'],emas_v1_12['tau'],r_GOES)
 
 
-# In[214]:
+# In[97]:
 
 ier2_14 = np.where((er2['Start_UTC']>emas_14_utc_range[0]) & (er2['Start_UTC']<emas_14_utc_range[1]))[0]
 idc8_14 = np.where((dc8['TIME_UTC']>emas_14_utc_range[0]) & (dc8['TIME_UTC']<emas_14_utc_range[1]))[0]
@@ -4820,7 +4848,7 @@ out_goesref_14 = stats_within_radius(dc8['G_LAT'][idc8_14],dc8['G_LONG'][idc8_14
 out_goestau_14 = stats_within_radius(dc8['G_LAT'][idc8_14],dc8['G_LONG'][idc8_14],emas_v1_14['lat'],emas_v1_14['lon'],emas_v1_14['tau'],r_GOES)
 
 
-# In[215]:
+# In[98]:
 
 er2_lat = np.concatenate([er2['Latitude'][ier2_10[::10]],er2['Latitude'][ier2_11[::10]],er2['Latitude'][ier2_12[::10]],
                           er2['Latitude'][ier2[::10]],er2['Latitude'][ier2_14[::10]]])
@@ -4830,7 +4858,7 @@ er2_utc = np.concatenate([er2['Start_UTC'][ier2_10[::10]],er2['Start_UTC'][ier2_
                           er2['Start_UTC'][ier2[::10]],er2['Start_UTC'][ier2_14[::10]]])
 
 
-# In[216]:
+# In[99]:
 
 dc8_lat = np.concatenate([dc8['G_LAT'][idc8_10],dc8['G_LAT'][idc8_11],dc8['G_LAT'][idc8_12],
                           dc8['G_LAT'][idc8],dc8['G_LAT'][idc8_14]])
@@ -4840,17 +4868,59 @@ dc8_utc = np.concatenate([dc8['TIME_UTC'][idc8_10],dc8['TIME_UTC'][idc8_11],dc8[
                           dc8['TIME_UTC'][idc8],dc8['TIME_UTC'][idc8_14]])
 
 
-# In[ ]:
+# In[100]:
+
+out_ssfrref_10.keys()
+
+
+# In[101]:
+
+type(out_ssfrref_10['std'])
+
+
+# ### Concatenate results and save for later use
+
+# In[102]:
 
 def concat_stats(stat_arr):
     'Simple function to concatenate the various stats'
-    
-    
-    
-    
+    k = stat_arr[0].keys()
+    dic_out = dict()
+    for kk in k:
+        dic_out[kk] = stat_arr[0][kk]
+    for s in stat_arr[1:]:
+        for kk in k:
+            dic_out[kk] = np.concatenate([dic_out[kk],s[kk]])
+    return dic_out
+
+
+# In[103]:
+
+st_ssfr_ref = concat_stats([out_ssfrref_10,out_ssfrref_11,out_ssfrref_12,out_ssfrref,out_ssfrref_14])
+st_ssfr_ref = concat_stats([out_ssfrref_10,out_ssfrref_11,out_ssfrref_12,out_ssfrref,out_ssfrref_14])
+st_rsp_ref = concat_stats([out_rspref_10,out_rspref_11,out_rspref_12,out_rspref,out_rspref_14])
+st_star_ref = concat_stats([out_starref_10,out_starref_11,out_starref_12,out_starref,out_starref_14])
+st_modis_ref = concat_stats([out_modisref_10,out_modisref_11,out_modisref_12,out_modisref,out_modisref_14])
+st_goes_ref = concat_stats([out_goesref_10,out_goesref_11,out_goesref_12,out_goesref,out_goesref_14])
+st_ssfr_tau = concat_stats([out_ssfrtau_10,out_ssfrtau_11,out_ssfrtau_12,out_ssfrtau,out_ssfrtau_14])
+st_rsp_tau = concat_stats([out_rsptau_10,out_rsptau_11,out_rsptau_12,out_rsptau,out_rsptau_14])
+st_star_tau = concat_stats([out_startau_10,out_startau_11,out_startau_12,out_startau,out_startau_14])
+st_modis_tau = concat_stats([out_modistau_10,out_modistau_11,out_modistau_12,out_modistau,out_modistau_14])
+st_goes_tau = concat_stats([out_goestau_10,out_goestau_11,out_goestau_12,out_goestau,out_goestau_14])
 
 
 # Save the files in an matlab
+
+# In[104]:
+
+dict_outt = {'ssfr_ref':st_ssfr_ref,'rsp_ref':st_rsp_ref,'star_ref':st_star_ref,'modis_ref':st_modis_ref,'goes_ref':st_goes_ref,
+             'ssfr_tau':st_ssfr_tau,'rsp_tau':st_rsp_tau,'star_tau':st_star_tau,'modis_tau':st_modis_tau,'goes_tau':st_goes_tau}
+
+
+# In[105]:
+
+dict_outt['goes_tau'].items()[0][0]
+
 
 # In[307]:
 
@@ -4869,12 +4939,12 @@ dict_out = {'er2_lat':er2_lat,'er2_lon':er2_lon,'er2_utc':er2_utc,
            }
 
 
-# In[323]:
+# In[107]:
 
 dict_out['goes_tau'][0].items()[0][0]
 
 
-# In[315]:
+# In[106]:
 
 def dict_keys_to_unicode(d):
     out = dict()
@@ -4883,21 +4953,45 @@ def dict_keys_to_unicode(d):
     return out
 
 
-# In[322]:
+# In[107]:
 
-for n in dict_out.keys():
-    if type(dict_out[n]) is list:
+for n in dict_outt.keys():
+    if type(dict_outt[n]) is list:
         print n
-        for i,t in enumerate(dict_out[n]):
-            dict_out[n][i] = dict_keys_to_unicode(t)
+        for i,t in enumerate(dict_outt[n]):
+            dict_outt[n][i] = dict_keys_to_unicode(t)
+    else:
+        print 'no',n
+        dict_outt[n] = dict_keys_to_unicode(dict_outt[n])
+
+
+# In[108]:
+
+dict_outt.keys()
+
+
+# In[81]:
+
+import sys
+sys.getsizeof(dict_outt)
+
+
+# In[109]:
+
+import cPickle as pickle
+
+
+# In[110]:
+
+pickle.dump(dict_outt,open(fp+'20130913_stats_output.p',"wb"))
 
 
 # In[ ]:
 
-hs.savemat(fp+'20130913_stats_output.mat',dict_out)
+hs.savemat(fp+'20130913_stats_output.mat',dict_outt)
 
 
-# Make a plot of the results
+# ### Make a plot of the statistics results
 
 # In[263]:
 
