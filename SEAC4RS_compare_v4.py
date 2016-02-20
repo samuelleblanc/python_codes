@@ -2978,7 +2978,7 @@ plt.ylabel('r$_{eff}$ [$\\mu$m]')
 
 # ## Plot timetrace and the horizontal variance
 
-# ### first load the horizontal variance (see below) and interpolate to required times
+# ### first load the horizontal variance (see below
 
 # In[15]:
 
@@ -3006,6 +3006,138 @@ len(stats['ssfr_tau']['std'])
 len(star_utc)
 
 
+# In[71]:
+
+len(er2_utc)
+
+
+# In[72]:
+
+len(dc8_utc)
+
+
+# In[74]:
+
+len(stats['star_tau']['std'])
+
+
+# In[77]:
+
+star_utc.min(),star_utc.max()
+
+
+# In[79]:
+
+er2_utc.min(),er2_utc.max()
+
+
+# ### Interpolate horizontal variability to times with retrieved values
+
+# In[81]:
+
+len(stats['modis_tau']['std'])
+
+
+# In[80]:
+
+from scipy import interpolate
+
+
+# In[84]:
+
+# Do the tau
+modis_tau_stdfx = interpolate.interp1d(er2_utc,stats['modis_tau']['std'],bounds_error=False)
+modis_tau_std = modis_tau_stdfx(star_utc)
+
+#emas_tau_stdfx = interpolate.interp1d(er2_utc,stats['emas_tau']['std'],bounds_error=False)
+#emas_tau_std = emas_tau_stdfx(emas_utc_full)
+
+ssfr_tau_stdfx = interpolate.interp1d(er2_utc,stats['ssfr_tau']['std'],bounds_error=False)
+ssfr_tau_std = ssfr_tau_stdfx(ssfr_utc)
+
+rsp_tau_stdfx = interpolate.interp1d(er2_utc,stats['rsp_tau']['std'],bounds_error=False)
+rsp_tau_std = rsp_tau_stdfx(rsp_utc)
+
+goes_tau_stdfx = interpolate.interp1d(er2_utc,stats['goes_tau']['std'],bounds_error=False)
+goes_tau_std = goes_tau_stdfx(goes_utc)
+
+star_tau_stdfx = interpolate.interp1d(er2_utc,stats['star_tau']['std'],bounds_error=False)
+star_tau_std = star_tau_stdfx(star_utc)
+
+
+# In[86]:
+
+# Do the ref
+modis_ref_stdfx = interpolate.interp1d(er2_utc,stats['modis_ref']['std'],bounds_error=False)
+modis_ref_std = modis_ref_stdfx(star_utc)
+
+#emas_ref_stdfx = interpolate.interp1d(er2_utc,stats['emas_ref']['std'],bounds_error=False)
+#emas_ref_std = emas_ref_stdfx(emas_utc_full)
+
+ssfr_ref_stdfx = interpolate.interp1d(er2_utc,stats['ssfr_ref']['std'],bounds_error=False)
+ssfr_ref_std = ssfr_ref_stdfx(ssfr_utc)
+
+rsp_ref_stdfx = interpolate.interp1d(er2_utc,stats['rsp_ref']['std'],bounds_error=False)
+rsp_ref_std = rsp_ref_stdfx(rsp_utc)
+
+goes_ref_stdfx = interpolate.interp1d(er2_utc,stats['goes_ref']['std'],bounds_error=False)
+goes_ref_std = goes_ref_stdfx(goes_utc)
+
+star_ref_stdfx = interpolate.interp1d(er2_utc,stats['star_ref']['std'],bounds_error=False)
+star_ref_std = star_ref_stdfx(star_utc)
+
+
+# ### Plot time series with horizontal variability as uncertainty
+# 
+
+# In[93]:
+
+plt.figure(figsize=(9,7))
+ax1 = plt.subplot(211)
+ax1.plot(star_utc,smooth(modis_tau,6),'m->',label='MODIS',markeredgecolor='none')
+ax1.plot(emas_utc_full,smooth(emas_tau_full,60),'ko',label='eMAS',markeredgecolor='none')
+ax1.plot(ssfr_utc,smooth(ssfr_tau,2),'g-x',label='SSFR')
+ax1.plot(rsp_utc,smooth(rsp_tau,70),'c-+',label='RSP')
+ax1.plot(goes_utc,smooth(goes_tau,2),'b-*',label='GOES',markeredgecolor='none')
+ax1.plot(star_utc,smooth(star_tau,40),'r-s',label='4STAR',markeredgecolor='none')
+
+ax1.errorbar(star_utc,smooth(modis_tau,6),yerr=modis_tau_std*2.0,color='m')
+ax1.errorbar(ssfr_utc,smooth(ssfr_tau,2),yerr=ssfr_tau_std*2.0,color='g')
+ax1.errorbar(rsp_utc,smooth(rsp_tau,70),yerr=rsp_tau_std*2.0,color='c')
+ax1.errorbar(goes_utc,smooth(goes_tau,2),yerr=goes_tau_std*2.0,color='b')
+ax1.errorbar(star_utc,smooth(star_tau,40),yerr=star_tau_std*2.0,color='r')
+
+
+ax1.legend(frameon=False,numpoints=1)
+ax1.grid()
+#ax1.set_xlabel('UTC [H]')
+ax1.set_ylabel('$\\tau$')
+ax1.set_ylim([0,100])
+
+
+ax2 = plt.subplot(212,sharex=ax1)
+ax2.plot(star_utc,smooth(modis_ref,6),'m->',label='MODIS',markeredgecolor='none')
+ax2.plot(emas_utc_full,smooth(emas_ref_full,60),'k-o',label='eMAS',markeredgecolor='none')
+ax2.plot(ssfr_utc,smooth(ssfr_ref,2),'g-x',label='SSFR')
+ax2.plot(rsp_utc,smooth(rsp_ref,70),'c-+',label='RSP')
+ax2.plot(goes_utc,smooth(goes_ref,2),'b-*',label='GOES',markeredgecolor='none')
+ax2.plot(star_utc,smooth(star_ref,40),'r-s',label='4STAR',markeredgecolor='none')
+
+ax2.errorbar(star_utc,smooth(modis_ref,6),yerr=modis_ref_std*2.0,color='m')
+ax2.errorbar(ssfr_utc,smooth(ssfr_ref,2),yerr=ssfr_ref_std*2.0,color='g')
+ax2.errorbar(rsp_utc,smooth(rsp_ref,70),yerr=rsp_ref_std*2.0,color='c')
+ax2.errorbar(goes_utc,smooth(goes_ref,2),yerr=goes_ref_std*2.0,color='b')
+ax2.errorbar(star_utc,smooth(star_ref,40),yerr=star_ref_std*2.0,color='r')
+
+#ax2.legend(frameon=False,numpoints=1)
+ax2.grid()
+ax2.set_ylim([0,60])
+ax2.set_xlabel('UTC [H]')
+ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
+
+plt.savefig(fp+'plots/20130911_retrieved_horz_var.png',dpi=600,transparent=True)
+
+
 # ## Plot histogram of different tau and ref comparison
 
 # In[138]:
@@ -3030,8 +3162,8 @@ plt.fill_between([np.nanmean(smooth(star_tau,40))-2.0,np.nanmean(smooth(star_tau
 
 plt.hist(smooth(modis_tau,6),bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='Modis (Reflected)',range=(0,40))
 #plt.hist(smooth(emas_tau,60),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
-#plt.hist(smooth(emas_tau_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
-plt.hist(smooth(emas_tau_full,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+#plt.hist(smooth(emas_ref_v1,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
+plt.hist(smooth(emas_ref_full,60),bins=30, histtype='stepfilled', normed=True, color='k',alpha=0.6, label='eMAS (Reflected)',range=(0,40))
 plt.hist(smooth(ssfr_tau,2),bins=20, histtype='stepfilled', normed=True, color='g',alpha=0.6, label='SSFR (Reflected)',range=(5,30))
 plt.hist(smooth(rsp_tau,70),bins=30, histtype='stepfilled', normed=True, color='c',alpha=0.6, label='RSP (Reflected)',range=(0,40))
 plt.hist(smooth(goes_tau,2),bins=30, histtype='stepfilled', normed=True, color='b',alpha=0.6, label='GOES (Reflected)',range=(0,40))
@@ -3041,7 +3173,7 @@ plt.ylabel('Normed probability')
 plt.xlabel('$\\tau$')
 plot_median_mean(smooth(modis_tau,6),color='m')
 #plot_median_mean(smooth(emas_tau ,60),color='b')
-#plot_median_mean(smooth(emas_tau_v1,60),color='k')
+#plot_median_mean(smooth(emas_ref_v1,60),color='k')
 plot_median_mean(smooth(emas_tau_full,60),color='k')
 plot_median_mean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),color='g')
 plot_median_mean(smooth(star_tau,40),color='r',lbl=True)
@@ -3050,11 +3182,11 @@ plot_median_mean(smooth(goes_tau,2),color='b')
 
 xr = ax.get_xlim()
 yr = ax.get_ylim()
-ax.add_patch(plt.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.5,label='Horizontal variability'))
+ax.add_patch(ax2.Rectangle((0,0),0,0,color='none',edgecolor='g',hatch='x',linewidth=0.2,alpha=0.5,label='Horizontal variability'))
 ax.set_xlim(xr)
 ax.set_ylim(yr)
 
-plt.legend(frameon=False)
+ax2.legend(frameon=False)
 plt.xlim([0,60])
 plt.savefig(fp+'plots/hist_modis_4star_tau_v5_fill.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
