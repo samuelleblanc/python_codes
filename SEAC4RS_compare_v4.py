@@ -72,7 +72,7 @@
 
 # # Import initial modules and set default path
 
-# In[2]:
+# In[222]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -96,7 +96,7 @@ import cPickle as pickle
 #mpld3.enable_notbeook()
 
 
-# In[3]:
+# In[223]:
 
 get_ipython().magic(u'matplotlib notebook')
 
@@ -117,19 +117,24 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[ ]:
+# In[171]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[6]:
+# In[172]:
 
 s.keys()
 
 
-# In[7]:
+# In[173]:
+
+s['sza']
+
+
+# In[174]:
 
 #print s.keys()
 print 'sp', s.sp.shape
@@ -139,14 +144,19 @@ iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[8]:
+# In[175]:
 
 # load a second file, with different sza for irradiance calculations
 vv = 'v4'
 s2 = sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[9]:
+# In[177]:
+
+s2['sza']
+
+
+# In[176]:
 
 if 'Sp' in locals():
     reload(Sp)
@@ -155,19 +165,19 @@ if 'lut' in locals():
     import gc; gc.collect()
 
 
-# In[10]:
+# In[178]:
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[11]:
+# In[179]:
 
 lut.sp_hires()
 
 
-# In[12]:
+# In[180]:
 
 print lut.tau.shape
 print lut.ref.shape
@@ -178,7 +188,7 @@ print lut.ref
 print lut.par.shape
 
 
-# In[13]:
+# In[181]:
 
 #redo the same with the second s2
 luti = Sp.Sp(s2,irrad=True)
@@ -364,7 +374,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[30]:
+# In[182]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -373,19 +383,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[31]:
+# In[183]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[32]:
+# In[184]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[33]:
+# In[185]:
 
 mea['w'][0][1068]
 
@@ -462,7 +472,7 @@ plt.figure()
 plt.plot(mea['w'][0],ss)
 
 
-# In[26]:
+# In[190]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -473,7 +483,7 @@ meas = Sp.Sp(mea)
 meas.params()
 
 
-# In[27]:
+# In[191]:
 
 meas.sp.shape
 
@@ -699,24 +709,24 @@ plt.plot(lut.wvl[iww],lut.norm[1,iww,0,iref,itau],'b')
 
 # ## Run the retrieval on 4STAR data
 
-# In[36]:
+# In[186]:
 
 from Sp_parameters import smooth
 
 
-# In[37]:
+# In[187]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[38]:
+# In[188]:
 
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
-# In[39]:
+# In[192]:
 
 print max(meas.good)
 print type(mea['good'])
@@ -724,30 +734,34 @@ print isinstance(mea['good'],tuple)
 print type(mea['good'][0])
 
 
-# In[40]:
+# In[193]:
 
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
-# In[41]:
+# In[194]:
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
-# In[37]:
+# In[299]:
 
 plt.figure()
 plt.plot(meas.tau,'x')
+plt.plot(smooth(meas.tau,20,nan=True),'+')
+plt.plot(smooth(meas.tau[meas.good],20))
+plt.plot(meas.tau[meas.good],'o')
 
 
-# In[38]:
+# In[302]:
 
 plt.figure()
 plt.plot(meas.ref,'x')
+plt.plot(smooth(meas.ref,20),'b-')
 
 
-# In[54]:
+# In[303]:
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -796,13 +810,13 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 # Smooth out the retrieved 4STAR data
 
-# In[42]:
+# In[304]:
 
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 
-# In[54]:
+# In[305]:
 
 import load_modis as lm
 if 'lm' in locals():
@@ -812,7 +826,7 @@ from load_modis import load_ict
 
 # ## Load the ER2 nav files
 
-# In[53]:
+# In[306]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -2532,19 +2546,19 @@ plt.legend(frameon=False)
 
 # ## Load the cloud probe data
 
-# In[150]:
+# In[351]:
 
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
-# In[151]:
+# In[352]:
 
 print probes[:,1]
 print probes[:,2]
 
 
-# In[152]:
+# In[353]:
 
 print probes.shape
 print probes[:,7]
@@ -2996,95 +3010,76 @@ stats.keys()
 stats['ssfr_tau'].keys()
 
 
-# In[18]:
+# In[166]:
 
-len(stats['ssfr_tau']['std'])
-
-
-# In[19]:
-
-len(star_utc)
-
-
-# In[71]:
-
-len(er2_utc)
-
-
-# In[72]:
-
-len(dc8_utc)
-
-
-# In[74]:
-
-len(stats['star_tau']['std'])
-
-
-# In[77]:
-
-star_utc.min(),star_utc.max()
-
-
-# In[79]:
-
-er2_utc.min(),er2_utc.max()
+print len(stats['ssfr_tau']['std'])
+print len(star_utc)
+print len(er2_utc)
+print len(dc8_utc)
+print len(stats['star_tau']['std'])
+print star_utc.min(),star_utc.max()
+print er2_utc.min(),er2_utc.max()
 
 
 # ### Interpolate horizontal variability to times with retrieved values
-
-# In[81]:
-
-len(stats['modis_tau']['std'])
-
 
 # In[80]:
 
 from scipy import interpolate
 
 
-# In[84]:
+# In[125]:
 
 # Do the tau
 modis_tau_stdfx = interpolate.interp1d(er2_utc,stats['modis_tau']['std'],bounds_error=False)
 modis_tau_std = modis_tau_stdfx(star_utc)
+modis_tau_std[np.isnan(modis_tau_std)] = np.mean(stats['modis_tau']['std'])
 
 #emas_tau_stdfx = interpolate.interp1d(er2_utc,stats['emas_tau']['std'],bounds_error=False)
 #emas_tau_std = emas_tau_stdfx(emas_utc_full)
 
 ssfr_tau_stdfx = interpolate.interp1d(er2_utc,stats['ssfr_tau']['std'],bounds_error=False)
 ssfr_tau_std = ssfr_tau_stdfx(ssfr_utc)
+ssfr_tau_std[np.isnan(ssfr_tau_std)] = np.mean(stats['ssfr_tau']['std'])
 
 rsp_tau_stdfx = interpolate.interp1d(er2_utc,stats['rsp_tau']['std'],bounds_error=False)
 rsp_tau_std = rsp_tau_stdfx(rsp_utc)
+rsp_tau_std[np.isnan(rsp_tau_std)] = np.mean(stats['rsp_tau']['std'])
 
 goes_tau_stdfx = interpolate.interp1d(er2_utc,stats['goes_tau']['std'],bounds_error=False)
 goes_tau_std = goes_tau_stdfx(goes_utc)
+goes_tau_std[np.isnan(goes_tau_std)] = np.mean(stats['goes_tau']['std'])
 
 star_tau_stdfx = interpolate.interp1d(er2_utc,stats['star_tau']['std'],bounds_error=False)
 star_tau_std = star_tau_stdfx(star_utc)
+star_tau_std[np.isnan(star_tau_std)] = np.mean(stats['star_tau']['std'])
 
 
-# In[86]:
+# In[126]:
 
 # Do the ref
 modis_ref_stdfx = interpolate.interp1d(er2_utc,stats['modis_ref']['std'],bounds_error=False)
 modis_ref_std = modis_ref_stdfx(star_utc)
+modis_ref_std[np.isnan(modis_ref_std)] = np.mean(stats['modis_ref']['std'])
 
 #emas_ref_stdfx = interpolate.interp1d(er2_utc,stats['emas_ref']['std'],bounds_error=False)
 #emas_ref_std = emas_ref_stdfx(emas_utc_full)
 
 ssfr_ref_stdfx = interpolate.interp1d(er2_utc,stats['ssfr_ref']['std'],bounds_error=False)
 ssfr_ref_std = ssfr_ref_stdfx(ssfr_utc)
+ssfr_ref_std[np.isnan(ssfr_ref_std)] = np.mean(stats['ssfr_ref']['std'])
 
 rsp_ref_stdfx = interpolate.interp1d(er2_utc,stats['rsp_ref']['std'],bounds_error=False)
 rsp_ref_std = rsp_ref_stdfx(rsp_utc)
+rsp_ref_std[np.isnan(rsp_ref_std)] = np.mean(stats['rsp_ref']['std'])
 
 goes_ref_stdfx = interpolate.interp1d(er2_utc,stats['goes_ref']['std'],bounds_error=False)
 goes_ref_std = goes_ref_stdfx(goes_utc)
+goes_ref_std[np.isnan(goes_ref_std)] = np.mean(stats['goes_ref']['std'])
 
 star_ref_stdfx = interpolate.interp1d(er2_utc,stats['star_ref']['std'],bounds_error=False)
 star_ref_std = star_ref_stdfx(star_utc)
+star_ref_std[np.isnan(star_ref_std)] = np.mean(stats['star_ref']['std'])
 
 
 # ### Plot time series with horizontal variability as uncertainty
@@ -3107,13 +3102,11 @@ ax1.errorbar(rsp_utc,smooth(rsp_tau,70),yerr=rsp_tau_std*2.0,color='c')
 ax1.errorbar(goes_utc,smooth(goes_tau,2),yerr=goes_tau_std*2.0,color='b')
 ax1.errorbar(star_utc,smooth(star_tau,40),yerr=star_tau_std*2.0,color='r')
 
-
 ax1.legend(frameon=False,numpoints=1)
 ax1.grid()
 #ax1.set_xlabel('UTC [H]')
 ax1.set_ylabel('$\\tau$')
 ax1.set_ylim([0,100])
-
 
 ax2 = plt.subplot(212,sharex=ax1)
 ax2.plot(star_utc,smooth(modis_ref,6),'m->',label='MODIS',markeredgecolor='none')
@@ -3136,6 +3129,72 @@ ax2.set_xlabel('UTC [H]')
 ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
 
 plt.savefig(fp+'plots/20130911_retrieved_horz_var.png',dpi=600,transparent=True)
+
+
+# In[134]:
+
+import matplotlib.patches as mpatches
+
+
+# In[358]:
+
+plt.figure(figsize=(9,7))
+ax1 = plt.subplot(211)
+m1, = ax1.plot(star_utc,smooth(modis_tau,6),'m.',linestyle='-',linewidth=0.5,label='MODIS',markeredgecolor='none')
+e1, = ax1.plot(emas_utc_full,smooth(emas_tau_full,60),'ko',linestyle='-',linewidth=0.5,label='eMAS',markeredgecolor='none')
+f1, = ax1.plot(ssfr_utc,smooth(ssfr_tau,2),'g.',linestyle='-',linewidth=0.5,label='SSFR')
+r1, = ax1.plot(rsp_utc,smooth(rsp_tau,70),'c.',linestyle='-',linewidth=0.5,label='RSP',alpha=0.4)
+g1, = ax1.plot(goes_utc,smooth(goes_tau,2),'b.',linestyle='-',linewidth=0.5,label='GOES',markeredgecolor='none')
+s1, = ax1.plot(star_utc,smooth(star_tau,40),'r.',linestyle='-',linewidth=0.5,label='4STAR',markeredgecolor='none')
+
+ax1.fill_between(star_utc,smooth(modis_tau,6)-modis_tau_std*2.0,smooth(modis_tau,6)+modis_tau_std*2.0,color='m',alpha=0.2)
+ax1.fill_between(ssfr_utc[:,0],smooth(ssfr_tau,2)-ssfr_tau_std[:,0]*2.0,smooth(ssfr_tau,2)+ssfr_tau_std[:,0]*2.0,color='g',alpha=0.2)
+ax1.fill_between(rsp_utc,smooth(rsp_tau,70)-rsp_tau_std*2.0,smooth(rsp_tau,70)+rsp_tau_std*2.0,color='c',alpha=0.2)
+ax1.fill_between(goes_utc,smooth(goes_tau,2)-goes_tau_std*2.0,smooth(goes_tau,2)+goes_tau_std*2.0,color='b',alpha=0.2)
+ax1.fill_between(star_utc,smooth(star_tau,40)-star_tau_std*2.0,smooth(star_tau,40)+star_tau_std*2.0,color='r',alpha=0.2)
+
+m1f = ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='m',alpha=0.2))
+f1f= ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='g',alpha=0.2))
+r1f = ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='c',alpha=0.2))
+g1f = ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='b',alpha=0.2))
+s1f = ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='r',alpha=0.2))
+h1 = ax1.add_patch(mpatches.Rectangle((1,1),0,0,color='black', label='Horizontal\nvariability',alpha=0.2))
+
+ax1.legend(((m1,m1f),(e1,),(f1,f1f),(r1,r1f),(g1,g1f),(s1,s1f),(h1,)),
+           ('MODIS','eMAS','SSFR','RSP','GOES','4STAR','Horizontal\nvariability'),frameon=False,numpoints=1)
+ax1.grid()
+#ax1.set_xlabel('UTC [H]')
+ax1.set_ylabel('$\\tau$')
+ax1.yaxis.label.set_fontsize(20)
+ax1.set_ylim([0,100])
+
+ax2 = plt.subplot(212,sharex=ax1)
+ax2.plot(star_utc,smooth(modis_ref,6),'m.',linestyle='-',linewidth=0.5,label='MODIS',markeredgecolor='none')
+ax2.plot(emas_utc_full,smooth(emas_ref_full,60),'ko',linestyle='-',linewidth=0.5,label='eMAS',markeredgecolor='none')
+ax2.plot(ssfr_utc,smooth(ssfr_ref,2),'g.',linestyle='-',linewidth=0.5,label='SSFR')
+ax2.plot(rsp_utc,smooth(rsp_ref,70),'c.',linestyle='-',linewidth=0.5,label='RSP')
+ax2.plot(goes_utc,smooth(goes_ref,2),'b.',linestyle='-',linewidth=0.5,label='GOES',markeredgecolor='none')
+ax2.plot(star_utc,smooth(star_ref,40),'r.',linestyle='-',linewidth=0.5,label='4STAR',markeredgecolor='none')
+
+ax2.fill_between(star_utc,smooth(modis_ref,6)-modis_ref_std*2.0,smooth(modis_ref,6)+modis_ref_std*2.0,color='m',alpha=0.2)
+ax2.fill_between(ssfr_utc[:,0],smooth(ssfr_ref,2)-ssfr_ref_std[:,0]*2.0,smooth(ssfr_ref,2)+ssfr_ref_std[:,0]*2.0,color='g',alpha=0.2)
+ax2.fill_between(rsp_utc,smooth(rsp_ref,70)-rsp_ref_std*2.0,smooth(rsp_ref,70)+rsp_ref_std*2.0,color='c',alpha=0.2)
+ax2.fill_between(goes_utc,smooth(goes_ref,2)-goes_ref_std*2.0,smooth(goes_ref,2)+goes_ref_std*2.0,color='b',alpha=0.2)
+ax2.fill_between(star_utc,smooth(star_ref,40)-star_ref_std*2.0,smooth(star_ref,40)+star_ref_std*2.0,color='r',alpha=0.2)
+
+#ax2.errorbar(star_utc,smooth(modis_ref,6),'m>',yerr=modis_ref_std*2.0)
+#ax2.errorbar(ssfr_utc,smooth(ssfr_ref,2),'gx',yerr=ssfr_ref_std*2.0)
+#ax2.errorbar(rsp_utc,smooth(rsp_ref,70),'c+',yerr=rsp_ref_std*2.0)
+#ax2.errorbar(goes_utc,smooth(goes_ref,2),'b*',yerr=goes_ref_std*2.0)
+#ax2.errorbar(star_utc,smooth(star_ref,40),'rs',yerr=star_ref_std*2.0)
+
+#ax2.legend(frameon=False,numpoints=1)
+ax2.grid()
+ax2.set_ylim([10,60])
+ax2.set_xlabel('UTC [H]')
+ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax2.yaxis.label.set_fontsize(20)
+plt.savefig(fp+'plots/20130911_retrieved_horz_var_shade.png',dpi=600,transparent=True)
 
 
 # ## Plot histogram of different tau and ref comparison
@@ -3295,7 +3354,7 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # ## Plot histogram of retrieved properties (tau and ref) in new 'bean' plots
 
-# In[171]:
+# In[347]:
 
 from plotting_utils import plot_vert_hist
 
@@ -3306,7 +3365,7 @@ import plotting_utils
 reload(plotting_utils)
 
 
-# In[143]:
+# In[359]:
 
 fig = plt.figure(figsize=(7,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[-0.5,5.5])
@@ -3330,6 +3389,7 @@ plot_vert_hist(fig,ax1,smooth(star_tau,40),5,[0,40],legend=True,color='r',bins=5
 for cap in caps:
     cap.set_markeredgewidth(3)
 ax1.legend(frameon=False,numpoints=1)
+ax1.yaxis.label.set_fontsize(20)
 plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 
@@ -3376,7 +3436,7 @@ ax1.legend(frameon=False,numpoints=1)
 plt.savefig(fp+'plots/vert_hist_tau_v5_light.png',dpi=600,transparent=True)
 
 
-# In[145]:
+# In[360]:
 
 fig = plt.figure(figsize=(8,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,80],xlim=[-0.5,6.5])
@@ -3401,6 +3461,7 @@ plot_vert_hist(fig,ax1,probes[:,7],6,[0,80],legend=True,color='y',bins=50)
 for cap in caps:
     cap.set_markeredgewidth(3)
 ax1.legend(frameon=False,numpoints=1)
+ax1.yaxis.label.set_fontsize(20)
 plt.savefig(fp+'plots/vert_hist_ref_v5.png',dpi=600,transparent=True)
 
 
@@ -4037,17 +4098,29 @@ np.max(emas_ref_v1-emas_ref)
 
 # ## First find the mean tau and ref for each instrument
 
-# In[182]:
+# In[361]:
 
 print np.nanmean(modis_ref)
 
 
-# In[181]:
+# In[362]:
 
 print np.shape(modis_tau)
 
 
-# In[180]:
+# In[367]:
+
+class object():
+    pass
+
+
+# In[369]:
+
+emas_tau = emas_tau_full
+emas_ref = emas_ref_full
+
+
+# In[380]:
 
 means = object()
 means.tau = object()
@@ -4067,7 +4140,7 @@ means.tau.goes = np.nanmean(goes_tau)
 means.ref.goes = np.nanmean(goes_ref)
 
 
-# In[179]:
+# In[370]:
 
 median = object()
 median.tau = object()
@@ -4087,7 +4160,7 @@ median.tau.goes = np.nanmedian(goes_tau)
 median.ref.goes = np.nanmedian(goes_ref)
 
 
-# In[178]:
+# In[371]:
 
 sttaumod = np.nanstd(modis_tau)
 strefmod = np.nanstd(modis_ref)
@@ -4103,12 +4176,12 @@ sttaugoes = np.nanstd(goes_tau)
 strefgoes = np.nanstd(goes_ref)
 
 
-# In[326]:
+# In[372]:
 
 print luti
 
 
-# In[177]:
+# In[373]:
 
 print luti.sp_irrdn.shape
 print luti.tausp.shape
@@ -4118,19 +4191,19 @@ print luti.wvl.shape
 
 # interpolate the modeled irradiance at z=0 (dc8 altitude) to the retrieved values of tau and ref
 
-# In[176]:
+# In[374]:
 
 luti.sp_irrdn[1,:,0,4,0]
 
 
-# In[183]:
+# In[375]:
 
 from scipy import interpolate
 #fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,sp[ph,w,z,refranges[ph],:],kx=1,ky=1)
 #sp_hires[ph,w,z,:,:] = fx(ref_hires,tau_hires)
 
 
-# In[184]:
+# In[376]:
 
 def interpirr(re,ta):
     "interpolate over irradiance to get the spectrum at ta and re"
@@ -4142,7 +4215,7 @@ def interpirr(re,ta):
     return smooth(sp,20)
 
 
-# In[185]:
+# In[377]:
 
 def interpirr_up(re,ta):
     "interpolate over irradiance to get the spectrum at ta and re"
@@ -4156,7 +4229,7 @@ def interpirr_up(re,ta):
 
 # Use the mean and median of each tau and ref to interpolate to the proper irradiance values from the models
 
-# In[186]:
+# In[381]:
 
 sp_modis = interpirr(means.ref.modis,means.tau.modis)
 sp_emas = interpirr(means.ref.emas,means.tau.emas)
@@ -4172,7 +4245,7 @@ sp_rsp_no = interpirr(means.ref.rsp,means.tau.rsp*0.0)
 sp_goes_no = interpirr(means.ref.goes,means.tau.goes*0.0)
 
 
-# In[187]:
+# In[382]:
 
 spm_modis = interpirr(median.ref.modis,median.tau.modis)
 spm_emas = interpirr(median.ref.emas,median.tau.emas)
@@ -4188,7 +4261,7 @@ spm_rsp_no = interpirr(median.ref.rsp,median.tau.rsp*0.0)
 spm_goes_no = interpirr(median.ref.goes,median.tau.goes*0.0)
 
 
-# In[188]:
+# In[383]:
 
 sp_modisp = interpirr(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
 sp_emasp = interpirr(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
@@ -4198,7 +4271,7 @@ sp_rspp = interpirr(means.ref.rsp+sttaursp,means.tau.rsp+sttaursp)
 sp_goesp = interpirr(means.ref.goes+sttaugoes,means.tau.goes+sttaugoes)
 
 
-# In[189]:
+# In[384]:
 
 spm_modisp = interpirr(median.ref.modis+sttaumod,median.tau.modis+sttaumod)
 spm_emasp = interpirr(median.ref.emas+sttauemas,median.tau.emas+sttauemas)
@@ -4208,7 +4281,7 @@ spm_rspp = interpirr(median.ref.rsp+sttaursp,median.tau.rsp+sttaursp)
 spm_goesp = interpirr(median.ref.goes+sttaugoes,median.tau.goes+sttaugoes)
 
 
-# In[190]:
+# In[385]:
 
 sp_modisp_up = interpirr_up(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
 sp_emasp_up = interpirr_up(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
@@ -4218,7 +4291,7 @@ sp_rspp_up = interpirr_up(means.ref.rsp+sttaursp,means.tau.rsp+sttaursp)
 sp_goesp_up = interpirr_up(means.ref.goes+sttaugoes,means.tau.goes+sttaugoes)
 
 
-# In[191]:
+# In[386]:
 
 spm_modisp_up = interpirr_up(median.ref.modis+sttaumod,median.tau.modis+sttaumod)
 spm_emasp_up = interpirr_up(median.ref.emas+sttauemas,median.tau.emas+sttauemas)
@@ -4228,7 +4301,7 @@ spm_rspp_up = interpirr_up(median.ref.rsp+sttaursp,median.tau.rsp+sttaursp)
 spm_goesp_up = interpirr_up(median.ref.goes+sttaugoes,median.tau.goes+sttaugoes)
 
 
-# In[192]:
+# In[387]:
 
 sp_modis_up = interpirr_up(means.ref.modis,means.tau.modis)
 sp_emas_up = interpirr_up(means.ref.emas,means.tau.emas)
@@ -4244,7 +4317,7 @@ sp_rsp_no_up = interpirr_up(means.ref.rsp,means.tau.rsp*0.0)
 sp_goes_no_up = interpirr_up(means.ref.goes,means.tau.goes*0.0)
 
 
-# In[193]:
+# In[388]:
 
 spm_modis_up = interpirr_up(median.ref.modis,median.tau.modis)
 spm_emas_up = interpirr_up(median.ref.emas,median.tau.emas)
@@ -4262,14 +4335,14 @@ spm_goes_no_up = interpirr_up(median.ref.goes,median.tau.goes*0.0)
 
 # ### Prepare a first try at associating a spectral irradiance to mean values (put in by hand at this point)
 
-# In[336]:
+# In[389]:
 
 print list(enumerate(luti.refsp))
 print list(enumerate(luti.tausp))
 print luti.sp_irrdn.shape
 
 
-# In[341]:
+# In[390]:
 
 print means.tau.goes, means.ref.goes
 
@@ -4297,7 +4370,7 @@ print sp_rsp
 
 # Load the SSFR from the DC8
 
-# In[399]:
+# In[391]:
 
 ssfr_dc8 = sio.idl.readsav(fp+'dc8/20130913/20130913_calibspcs.out')
 print ssfr_dc8.keys()
@@ -4311,7 +4384,7 @@ print dn.shape
 up = np.nanmean(ssfr_dc8['nspectra'][iutc189:iutc191,:],axis=0)
 
 
-# In[401]:
+# In[392]:
 
 dn9_1 = np.nanmean(ssfr_dc8['zspectra'][iutc189:iutc191,:],axis=0)
 up9_1 = np.nanmean(ssfr_dc8['nspectra'][iutc189:iutc191,:],axis=0)
@@ -4378,7 +4451,7 @@ ax[0].grid()
 ax[1].grid()
 
 
-# In[458]:
+# In[393]:
 
 dn = dn9_2
 up = up9_2
@@ -4453,7 +4526,7 @@ plt.title('Comparing Model Irradiance and measured irradiance')
 
 # ## Load the SSFR irradiance from the DC8 archival to ensure proper full spectral values of the idl out file
 
-# In[351]:
+# In[394]:
 
 ssfr_dc8_ict = load_ict(fp+'dc8/20130913/SEAC4RS-SSFR_DC8_20130913_R0.ict')
 
@@ -4568,7 +4641,7 @@ plt.ylabel('Change in net irradiance [$Wm^{-2}nm^{-1}$]')
 plt.savefig(fp+'plots/sp_rad_effect_median_v5.png',dpi=600,transparent=True)
 
 
-# In[366]:
+# In[395]:
 
 radeff_modis = np.sum(((sp_modis[250:]-sp_modis_up[250:])-(sp_modis_no[250:]-sp_modis_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeff_emas = np.sum(((sp_emas[250:]-sp_emas_up[250:])-(sp_emas_no[250:]-sp_emas_no_up[250:]))*luti.wvl[250:]/1000.0)
@@ -4578,7 +4651,7 @@ radeff_goes = np.sum(((sp_goes[250:]-sp_goes_up[250:])-(sp_goes_no[250:]-sp_goes
 radeff_star = np.sum(((sp_star[250:]-sp_star_up[250:])-(sp_star_no[250:]-sp_star_no_up[250:]))*luti.wvl[250:]/1000.0)
 
 
-# In[367]:
+# In[396]:
 
 radeff_modisp = np.sum(((sp_modisp-sp_modisp_up)-(sp_modis_no-sp_modis_no_up))*luti.wvl/1000.0)
 radeff_emasp = np.sum(((sp_emasp-sp_emasp_up)-(sp_emas_no-sp_emas_no_up))*luti.wvl/1000.0)
@@ -4588,7 +4661,7 @@ radeff_goesp = np.sum(((sp_goesp-sp_goesp_up)-(sp_goes_no-sp_goes_no_up))*luti.w
 radeff_starp = np.sum(((sp_starp-sp_starp_up)-(sp_star_no-sp_star_no_up))*luti.wvl/1000.0)
 
 
-# In[473]:
+# In[397]:
 
 print 'Cloud radiative effet base on mean values'
 print 'Modis: ',radeff_modis, ' +/- ', radeff_modisp-radeff_modis
@@ -4599,7 +4672,7 @@ print 'GOES: ',radeff_goes, ' +/- ', radeff_goesp-radeff_goes
 print '4star: ', radeff_star, ' +/- ', radeff_starp-radeff_star
 
 
-# In[474]:
+# In[398]:
 
 radeffm_modis = np.sum(((spm_modis[250:]-spm_modis_up[250:])-(spm_modis_no[250:]-spm_modis_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeffm_emas = np.sum(((spm_emas[250:]-spm_emas_up[250:])-(spm_emas_no[250:]-spm_emas_no_up[250:]))*luti.wvl[250:]/1000.0)
@@ -4609,7 +4682,7 @@ radeffm_goes = np.sum(((spm_goes[250:]-spm_goes_up[250:])-(spm_goes_no[250:]-spm
 radeffm_star = np.sum(((spm_star[250:]-spm_star_up[250:])-(spm_star_no[250:]-spm_star_no_up[250:]))*luti.wvl[250:]/1000.0)
 
 
-# In[475]:
+# In[399]:
 
 radeffm_modisp = np.sum(((spm_modisp-spm_modisp_up)-(spm_modis_no-spm_modis_no_up))*luti.wvl/1000.0)
 radeffm_emasp = np.sum(((spm_emasp-spm_emasp_up)-(spm_emas_no-spm_emas_no_up))*luti.wvl/1000.0)
@@ -4619,7 +4692,7 @@ radeffm_goesp = np.sum(((spm_goesp-spm_goesp_up)-(spm_goes_no-spm_goes_no_up))*l
 radeffm_starp = np.sum(((spm_starp-spm_starp_up)-(spm_star_no-spm_star_no_up))*luti.wvl/1000.0)
 
 
-# In[476]:
+# In[400]:
 
 print 'Cloud radiative effet base on median values'
 print 'Modis: ',radeffm_modis, ' +/- ', radeffm_modisp-radeffm_modis
