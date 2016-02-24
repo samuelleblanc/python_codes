@@ -35,21 +35,48 @@ def find_closest(A, target):
     idx -= target - left < right - target
     return idx
 
-def smooth(x, window,nan=True):
+def smooth(x, window,nan=True,old=False,fill='mean'):
     """
     Moving average of 'x' with window size 'window'.
     If the nan keyword is set to True (default), the array is returned with the nans removed and substituted by an interpolated value
+    If the old value is set to False (default), the new type of smoothing is used where the signal is reflected for addressing the edge problems
+      Based on SignalSmooth in scipy cookbook: http://scipy-cookbook.readthedocs.org/items/SignalSmooth.html  
+    If the fill keyword is set to 'mean' (default), the filled values are going to be the mean. Other options include 'median' and 'zero'
     """
     if nan:
         from Sp_parameters import nanmasked
         from scipy import interpolate
         ix = np.arange(len(x))
         xmasked, mask = nanmasked(x)
-        fx = interpolate.interp1d(ix[mask],xmasked,bounds_error=False,fill_value=0)
+        if fill is 'mean':
+            fv = np.mean(xmasked)
+        elif fill is 'median':
+            fv = np.median(xmasked)
+        elif fill is 'zero':
+            fv = 0.0
+        else:
+            raise ValueError('the fill keyword doesnt match possible values, try mean, median, or zero')
+        fx = interpolate.interp1d(ix[mask],xmasked,bounds_error=False,fill_value=fv)
         xinterp = fx(ix)
-        xout = np.convolve(xinterp, np.ones(window)/window, 'same')
+        if old:
+            xout = np.convolve(xinterp, np.ones(window)/window, 'same')
+        else:
+            s = np.r_[xinterp[window-1:0:-1],xinterp,xinterp[-1:-window:-1]]
+            w = np.ones(window,'d')
+            xout = np.convolve(w/w.sum(),s,mode='valid')
+            istart = window/2
+            iend = -window/2+1
+            if iend==0:
+                iend = len(xout)
+            xout = xout[istart:iend]
     else:
-        xout = np.convolve(x, np.ones(window)/window, 'same')
+        if old:
+            xout = np.convolve(x, np.ones(window)/window, 'same')
+        else:
+            s = np.r_[x[window-1:0:-1],x,x[-1:-window:-1]]
+            w = np.ones(window,'d')
+            xout = np.convolve(w/w.sum(),s,mode='valid')
+            xout = xout[window/2:-window/2+1]
     return xout
 
 def deriv(y,x):
