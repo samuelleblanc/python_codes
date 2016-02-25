@@ -335,13 +335,13 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[22]:
+# In[440]:
 
 import load_modis
 reload(load_modis)
 
 
-# In[54]:
+# In[441]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
@@ -837,11 +837,18 @@ print np.min(er2['Solar_Zenith_Angle'])
 
 # ## Get SSFR data from ER2
 
-# In[55]:
+# In[463]:
 
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
+
+
+# In[473]:
+
+is9 = np.argmin(abs(ssfr_er2['UTC']-19.2))
+print ssfr_er2['UP1600'][is9], ssfr_er2['DN1600'][is9]
+ssfr_er2['UP1600'][is9]/ssfr_er2['DN1600'][is9]
 
 
 # In[141]:
@@ -1842,7 +1849,7 @@ plt.title('SSFR from ER2 efective radius')
 
 # ## Load data from CPL to compare flight profiles of DC8 and ER2 to cloud layers
 
-# In[108]:
+# In[420]:
 
 cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
 import load_modis as lm
@@ -2320,7 +2327,7 @@ dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_goo
 
 # ## Load APR-2 HDF files for DC8 radar images
 
-# In[126]:
+# In[401]:
 
 fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
 fe = '_R23.h4'
@@ -2328,23 +2335,23 @@ files = ['180527','181019','182329','184933','190145','192149','194031']
 aprfiles = [fa+s+fe for s in files]
 
 
-# In[127]:
+# In[402]:
 
 aprfiles
 
 
-# In[128]:
+# In[403]:
 
 reload(load_modis)
 
 
-# In[129]:
+# In[404]:
 
 from load_modis import load_apr
 apr = load_apr(aprfiles)
 
 
-# In[40]:
+# In[405]:
 
 levels = np.arange(0,7000,30)
 plt.figure()
@@ -2352,7 +2359,7 @@ csz = plt.contourf(apr['lonz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
 plt.colorbar(csz)
 
 
-# In[130]:
+# In[406]:
 
 apr['utcz'] = apr['lonz']*0.0
 for i in xrange(len(apr['utc'])):
@@ -2546,13 +2553,13 @@ plt.legend(frameon=False)
 
 # ## Load the cloud probe data
 
-# In[351]:
+# In[407]:
 
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
-# In[352]:
+# In[408]:
 
 print probes[:,1]
 print probes[:,2]
@@ -2568,7 +2575,7 @@ plt.hist(probes[:,7])
 
 # ## Load 2DS data for effective radius at specific times
 
-# In[126]:
+# In[409]:
 
 twoDS = load_ict(fp+'dc8/20130913/seac4rs-2DS_DC8_20130913_R0.ict')
 
@@ -2593,7 +2600,7 @@ plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
 
 
-# In[127]:
+# In[410]:
 
 # filter the data and only show a part
 twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
@@ -2620,7 +2627,7 @@ plt.ylabel('Altitude [m]')
 
 # ## Load CCN results
 
-# In[128]:
+# In[411]:
 
 ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict',return_header=True)
 
@@ -2630,7 +2637,7 @@ ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict',return_
 ccnhead
 
 
-# In[130]:
+# In[412]:
 
 ccn['Number_Concentration'][ccn['Number_Concentration']==-8888]=np.nan
 ccn['Number_Concentration_STP'][ccn['Number_Concentration_STP']==-8888]=np.nan
@@ -2676,13 +2683,13 @@ plt.plot(ccn['UTC_mid'],np.log(ccn['Number_Concentration']))
 plt.xlim([18,19.5])
 
 
-# In[131]:
+# In[413]:
 
 from Sp_parameters import find_closest
 id = find_closest(dc8['TIME_UTC'],ccn['UTC_mid'])
 
 
-# In[132]:
+# In[414]:
 
 ccn_good = np.where((ccn['UTC_mid']>18.0)&(ccn['UTC_mid']<19.5)& (np.isfinite(ccn['Number_Concentration'])))[0]
 
@@ -3136,7 +3143,7 @@ plt.savefig(fp+'plots/20130911_retrieved_horz_var.png',dpi=600,transparent=True)
 import matplotlib.patches as mpatches
 
 
-# In[358]:
+# In[422]:
 
 plt.figure(figsize=(9,7))
 ax1 = plt.subplot(211)
@@ -3975,19 +3982,19 @@ plt.savefig(fp+'plots/vert_hist_ACI_r_v5.png',dpi=600,transparent=True)
 
 # ## Combine the vertical information into one figure
 
-# In[264]:
+# In[415]:
 
 meas.good.shape
 
 
-# In[134]:
+# In[416]:
 
 it = np.abs(apr['utc']-19.19).argmin()
 inoisezone = apr['dbz'][:,it].argmax()
 i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
 
 
-# In[160]:
+# In[417]:
 
 plt.figure
 plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
@@ -4003,7 +4010,7 @@ plt.ylim([4000,18000])
 plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
 plt.title('Vertical profile of Effective radius')
-plt.savefig(fp+'plots/ref_profile_seac4rs.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plots/ref_profile_seac4rs.png',dpi=600,transparent=True)
 
 
 # In[159]:
@@ -4023,6 +4030,88 @@ plt.xlabel('Effective radius [$\\mu$m]')
 plt.ylabel('Altitude [m]')
 plt.title('Vertical profile of Effective radius')
 plt.savefig(fp+'plots/ref_profile_seac4rs_radar.png',dpi=600,transparent=True)
+
+
+# ### plot out the vertical information for only 4 time points
+
+# In[431]:
+
+tt = np.array([18.5948,18.7082,18.8377,18.9911])
+
+
+# In[443]:
+
+ie,ir,iss,im,ist,ic,ig,iap = [],[],[],[],[],[],[],[]
+
+
+# In[446]:
+
+for i,t in enumerate(tt):
+    ie.append(np.argmin(abs(emas_utc_full-t)))
+    ir.append(np.argmin(abs(rsp_utc-t)))
+    iss.append(np.argmin(abs(ssfr_utc-t)))
+    im.append(np.argmin(abs(star_utc-t)))
+    ist.append(np.argmin(abs(star_utc-t)))
+    ic.append(np.argmin(abs(cpl_layers['utc']-t)))
+    ig.append(np.argmin(abs(goes_utc-t)))
+    iap.append(np.argmin(abs(apr['utc']-t)))
+
+
+# In[447]:
+
+apr.keys()
+
+
+# In[448]:
+
+apr['dbz'].shape
+
+
+# In[449]:
+
+apr['altflt'].shape
+
+
+# In[450]:
+
+apr['utc'].shape
+
+
+# In[453]:
+
+plt.figure()
+for i,t in enumerate(tt):
+    ax = plt.subplot(1,4,i)
+    ax.plot(smooth(twoDS['effectiveD'][fl]/2.0,30),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+    ax.axvline(emas_ref[ie[i]],color='k',label='eMAS')
+    ax.axvline(rsp_ref[ir[i]],color='c',label='RSP')
+    ax.axvline(ssfr_ref[iss[i]],color='g',label='SSFR')
+    ax.axvline(modis_ref[im[i]],color='m',label='MODIS')
+    ax.axvline(star_ref[ist[i]],color='r',label='4STAR')
+    ax.axvline(goes_ref[ig[i]],color='b',label='GOES')
+    ax.plot(apr['altflt'][:,iap[i]],apr['dbz'][:,iap[i]],label='APR-2')
+    ax.set_title('UTC: {}'.format(t))
+    if i==0:
+        ax.set_ylabel('Altituce [m]')
+    ax.set_xlabel('r$_{eff}$ [$\\mu$m]')
+
+
+# In[ ]:
+
+plt.figure
+plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
+plt.plot(emas_ref,cpl_layers['top'][dc8_ind[0,ie1],0],'k+',label='eMAS')
+plt.plot(rsp_ref,cpl_layers['top'][rsp_good[0][irs],0],'c+',label='RSP')
+plt.plot(ssfr_ref,cpl_layers['top'][ssfr.good[0][iss],0],'g+',label='SSFR')
+plt.plot(modis_ref,cpl_layers['top'][dc8_ind_modis[0,im],0],'m+',label='MODIS')
+plt.plot(star_ref,dc8['G_ALT'][meas.good[ist]],'r+',label='4STAR')
+#plt.plot(smooth(apr['dbz'][i,it],10)/50.0,apr['altflt'][i,it],'k',label='APR-2 Reflectivity')
+plt.legend(frameon=False)
+plt.xlim([0,100])
+plt.ylim([4000,18000])
+plt.xlabel('Effective radius [$\\mu$m]')
+plt.ylabel('Altitude [m]')
+plt.title('Vertical profile of Effective radius')
 
 
 # ## eMAS V00 and V01 comparison
@@ -4526,17 +4615,23 @@ plt.title('Comparing Model Irradiance and measured irradiance')
 
 # ## Load the SSFR irradiance from the DC8 archival to ensure proper full spectral values of the idl out file
 
-# In[394]:
+# In[455]:
 
 ssfr_dc8_ict = load_ict(fp+'dc8/20130913/SEAC4RS-SSFR_DC8_20130913_R0.ict')
 
 
-# In[352]:
+# In[456]:
 
 iutc185tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-18.5))
 iutc192tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-19.2))
 iutc190tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-19.0))
 ssfr_dc8_ict_good = np.where((ssfr_dc8_ict['UTC']>19.0) & (ssfr_dc8_ict['UTC']<19.2) & (ssfr_dc8_ict['DN500']>0))
+
+
+# In[462]:
+
+print ssfr_dc8_ict['UP1600'][iutc192tt],
+ssfr_dc8_ict['DN1600'][iutc192tt], ssfr_dc8_ict['UP1600'][iutc192tt]/ssfr_dc8_ict['DN1600'][iutc192tt]
 
 
 # In[460]:
