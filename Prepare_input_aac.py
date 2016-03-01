@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -41,75 +39,87 @@
 # 
 #   - matlab input files: Input_to_DARF_mmm.mat
 
-# <codecell>
+# In[ ]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
-%matplotlib inline
+get_ipython().magic(u'matplotlib notebook')
 import numpy as np
 import scipy.io as sio
 from mpl_toolkits.basemap import Basemap
 
-# <codecell>
+
+# In[2]:
 
 import Run_libradtran as RL
 reload(RL)
 
-# <codecell>
+
+# In[3]:
 
 fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
 
-# <headingcell level=2>
 
-# Read Matlab input files
+# ## Read Matlab input files
 
-# <codecell>
+# In[5]:
 
 input_DJF = sio.loadmat(fp+'Input_to_DARF_DJF.mat',mat_dtype=True)['data_input_darf']
 
-# <codecell>
+
+# In[6]:
 
 input_DJF.dtype.names
 
-# <codecell>
+
+# In[7]:
 
 enumerate(input_DJF['MODIS_lat'][0,0])
 
-# <codecell>
+
+# In[8]:
 
 input_DJF['MODIS_lat'][0,0].shape
 
-# <codecell>
+
+# In[9]:
 
 input_DJF['MODIS_COD_mean'][0,0][input_DJF['MODIS_COD_mean'][0,0]==-9999] = np.nan
 
-# <codecell>
+
+# In[21]:
 
 ilat,ilon = 5,15
 
-# <codecell>
+
+# In[23]:
 
 wvl = np.append(wvl,100000.0)
 
-# <codecell>
+
+# In[24]:
 
 wvl
 
-# <codecell>
+
+# In[27]:
 
 ext = np.abs(input_DJF['MOC_ext_mean'][0,0][ilat,ilon,:])
 
-# <codecell>
+
+# In[22]:
 
 input_DJF['MOC_ext_mean'][0,0][ilat,ilon,:]
 
-# <codecell>
+
+# In[11]:
 
 wvl = input_DJF['MOC_wavelengths'][0,0][0,:]*1000.0
 
-# <codecell>
+
+# In[91]:
 
 ctr = plt.contourf(input_DJF['MODIS_lon'][0,0][:,0],input_DJF['MODIS_lat'][0,0][:,0],input_DJF['MODIS_COD_mean'][0,0])
 plt.xlabel('Longitude')
@@ -122,15 +132,18 @@ plt.xlim([-180,180])
 plt.ylim([-90,90])
 plt.savefig(fp+'plots/MODIS_mean_COD_flat.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[105]:
 
 MODIS_lon[20,72]
 
-# <codecell>
+
+# In[104]:
 
 input_DJF['MODIS_COD_mean'][0,0][:,72]
 
-# <codecell>
+
+# In[93]:
 
 m = Basemap(projection='moll',lon_0=0,resolution='c')
 m.drawcoastlines()
@@ -143,98 +156,115 @@ cbar = plt.colorbar(cs)
 cbar.set_label('MODIS mean COD')
 plt.savefig(fp+'plots/MODIS_mean_COD.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[106]:
 
 input_DJF['MODIS_COD_mean'][0,0][20,20]
 
-# <codecell>
+
+# In[107]:
 
 input_DJF['MODIS_effrad_mean'][0,0][20,20]
 
-# <codecell>
+
+# In[111]:
 
 input_DJF['MOC_wavelengths'][0,0]
 
-# <codecell>
+
+# In[113]:
 
 print MODIS_lon[20,20],MODIS_lat[20,20]
 
-# <codecell>
+
+# In[119]:
 
 input_DJF['MOC_asym_mean'][0,0][20,20]
 
-# <codecell>
+
+# In[26]:
 
 input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 
-# <codecell>
+
+# In[30]:
 
 input_mmm['MOC_ext_mean'][0,0].shape
 
-# <codecell>
+
+# In[34]:
 
 input_mmm['MODIS_effrad_mean'][0,0].shape
 
-# <codecell>
+
+# In[29]:
 
 input_mmm['MODIS_lat'][0,0].shape
 
-# <headingcell level=2>
 
-# Read sample MODIS albedo file
+# ## Read sample MODIS albedo file
 
-# <codecell>
+# In[5]:
 
 import load_modis as lm
 reload(lm)
 
-# <codecell>
+
+# In[6]:
 
 alb_geo,alb_geo_dict = lm.load_hdf_sd('C:\Users\sleblan2\Research\Calipso\meloe\MCD43GF_geo_shortwave_001_2007.hdf')
 
-# <codecell>
+
+# In[7]:
 
 alb_geo['MCD43GF_CMG'].shape
 
-# <codecell>
+
+# In[8]:
 
 alb_geo['MCD43GF_CMG'][1,0]
 
-# <codecell>
+
+# In[76]:
 
 alb_geo_dict['MCD43GF_CMG']['_FillValue']
 
-# <codecell>
+
+# In[73]:
 
 input_DJF['MODIS_COD_mean'][0,0].shape
 
-# <codecell>
+
+# In[12]:
 
 alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
 
-# <codecell>
+
+# In[19]:
 
 alb_geo_lat = np.linspace(90,-90,num=48)
 alb_geo_lon = np.linspace(-180,180,num=75)
 
-# <codecell>
+
+# In[21]:
 
 co = plt.contourf(alb_geo_lon,alb_geo_lat,alb_geo_sub)
 cbar = plt.colorbar(co)
 
-# <markdowncell>
 
 # Check netcdf
 
-# <codecell>
+# In[9]:
 
 fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/'
 
-# <codecell>
+
+# In[10]:
 
 mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
 
-# <codecell>
+
+# In[19]:
 
 mie_short = {'wvl':mie.variables['wavelen'].data,
                 'ref':mie.variables['reff'].data,
@@ -249,19 +279,23 @@ mie_short = {'wvl':mie.variables['wavelen'].data,
                 'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
                 'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
 
-# <codecell>
+
+# In[57]:
 
 mie.variables['theta'].data.shape
 
-# <codecell>
+
+# In[58]:
 
 mie_long.variables['theta'].data.shape
 
-# <codecell>
+
+# In[59]:
 
 mie_short['theta'].shape
 
-# <codecell>
+
+# In[60]:
 
 pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
         'ref':mie_short['ref'],
@@ -277,24 +311,23 @@ pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:])
         'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
         'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
 
-# <headingcell level=2>
 
-# Prepare inputs of aac for libradtran
-
-# <markdowncell>
+# ## Prepare inputs of aac for libradtran
 
 # Set up the default, not changing properties
 
-# <codecell>
+# In[36]:
 
 input_mmm = input_DJF
 mmm = 'DJF'
 
-# <codecell>
+
+# In[40]:
 
 pmom = RL.make_pmom_inputs()
 
-# <codecell>
+
+# In[59]:
 
 geo = {'zout':[0,3,100],'year':2007,'month':1,'day':15,'minute':0,'second':0}
 aero = {'z_arr':[3.0,4.0]}
@@ -302,41 +335,47 @@ cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True,'moms_dict
 source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
 albedo = {'create_albedo_file':False}
 
-# <codecell>
+
+# In[2]:
 
 fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
 fp_alb = fp
 fp_out = 'C:\Users\sleblan2\Research\Calipso\meloe\input/'
 
-# <codecell>
+
+# In[ ]:
 
 RL.build_aac_input(fp,fp_alb,fp_out)
 
-# <headingcell level=2>
 
-# Read the output of DARF
+# ## Read the output of DARF
 
-# <codecell>
+# In[4]:
 
 fp
 
-# <codecell>
+
+# In[5]:
 
 mam = sio.loadmat(fp+'DARF/MAM_DARF.mat')
 
-# <codecell>
+
+# In[8]:
 
 mam.keys()
 
-# <codecell>
+
+# In[9]:
 
 mam['SW_DARF'].shape
 
-# <codecell>
+
+# In[10]:
 
 mam['lon'].shape
 
-# <codecell>
+
+# In[11]:
 
 ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:])
 plt.xlabel('Longitude')
@@ -349,7 +388,8 @@ plt.xlim([-180,180])
 plt.ylim([-90,90])
 plt.savefig(fp+'plots/MAM_DARF_SW.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[12]:
 
 ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['LW_DARF'][2,:,:])
 plt.xlabel('Longitude')
@@ -362,7 +402,8 @@ plt.xlim([-180,180])
 plt.ylim([-90,90])
 plt.savefig(fp+'plots/MAM_DARF_LW.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[15]:
 
 ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['LW_DARF'][2,:,:]+mam['SW_DARF'][2,:,:])
 plt.xlabel('Longitude')
@@ -375,7 +416,8 @@ plt.xlim([-180,180])
 plt.ylim([-90,90])
 plt.savefig(fp+'plots/MAM_DARF_net.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[54]:
 
 def make_darf_plots(mam,mmm):
     fig,ax = plt.subplots(3,1,figsize=(6,13))
@@ -410,96 +452,113 @@ def make_darf_plots(mam,mmm):
 
     plt.savefig(fp+'plots/'+mmm+'_DARF.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[59]:
 
 mam = sio.loadmat(fp+'DARF/MAM_DARF.mat')
 make_darf_plots(mam,'MAM')
 
-# <codecell>
+
+# In[56]:
 
 djf = sio.loadmat(fp+'DARF/DJF_DARF.mat')
 make_darf_plots(djf,'DJF')
 
-# <codecell>
+
+# In[57]:
 
 jja = sio.loadmat(fp+'DARF/JJA_DARF.mat')
 make_darf_plots(jja,'JJA')
 
-# <codecell>
+
+# In[58]:
 
 son = sio.loadmat(fp+'DARF/SON_DARF.mat')
 make_darf_plots(son,'SON')
 
-# <codecell>
+
+# In[62]:
 
 for ilat,lat in enumerate(mam['lon']):
     print ilat,lat
 
-# <codecell>
+
+# In[61]:
 
 ctr = plt.contourf(mam['lon'][:,0],mam['lat'][:,0],mam['SW_DARF'][2,:,:])
 plt.xlim(25,75)
 plt.ylim(-15,-35)
 
-# <codecell>
+
+# In[77]:
 
 mam_sw = sio.loadmat(fp+'DARF/AAC_MAM.mat')
 
-# <codecell>
+
+# In[78]:
 
 mam_sw.keys()
 
-# <codecell>
+
+# In[79]:
 
 ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['SW_irr_dn_avg'][2,:,:],50)
 plt.colorbar(ctr)
 
-# <codecell>
+
+# In[80]:
 
 ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['SW_irr_up_avg'][2,:,:],50)
 plt.colorbar(ctr)
 
-# <codecell>
+
+# In[81]:
 
 ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['LW_irr_dn_avg'][2,:,:],50)
 plt.colorbar(ctr)
 
-# <codecell>
+
+# In[82]:
 
 ctr = plt.contourf(mam_sw['lon'][:,0],mam_sw['lat'][:,0],mam_sw['LW_irr_up_avg'][2,:,:],50)
 plt.colorbar(ctr)
 
-# <codecell>
+
+# In[72]:
 
 mam_sw_cl= sio.loadmat(fp+'DARF/AAC_MAM_clear.mat')
 
-# <codecell>
+
+# In[76]:
 
 ctr = plt.contourf(mam_sw_cl['lon'][:,0],mam_sw_cl['lat'][:,0],mam_sw_cl['LW_irr_dn_avg'][2,:,:],50)
 plt.colorbar(ctr)
 
-# <headingcell level=2>
 
-# Check the difference when assuming kato2 vs. fu liou calculations
+# ## Check the difference when assuming kato2 vs. fu liou calculations
 
-# <codecell>
+# In[83]:
 
 djf_fu = sio.loadmat(fp+'DARF/AAC_DJF.mat')
 djf_kato = sio.loadmat(fp+'DARF/AAC_DJF_kato.mat')
 
-# <codecell>
+
+# In[84]:
 
 djf_fu.keys()
 
-# <codecell>
+
+# In[85]:
 
 djf_kato.keys()
 
-# <codecell>
+
+# In[89]:
 
 djf_fu['SW_irr_up_avg'].shape
 
-# <codecell>
+
+# In[153]:
 
 fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
 ctr = ax1.contourf(djf_fu['lon'][:,0],djf_fu['lat'][:,0],djf_fu['SW_irr_up_avg'][2,:,:])
@@ -507,48 +566,58 @@ plt.colorbar(ctr,ax=ax1)
 ctr = ax2.contourf(djf_kato['lon'][:,0],djf_kato['lat'][:,0],djf_kato['SW_irr_up_avg'][2,:,:])
 plt.colorbar(ctr,ax=ax2)
 
-# <codecell>
+
+# In[96]:
 
 djf_dif = djf_fu['SW_irr_up_avg'][2,:,:]-djf_kato['SW_irr_up_avg'][2,:,:]
 
-# <codecell>
+
+# In[99]:
 
 ctr = plt.contourf(djf_fu['lon'][:,0],djf_fu['lat'][:,0],djf_dif)
 plt.colorbar(ctr)
 
-# <codecell>
+
+# In[104]:
 
 dddjf = djf_dif.flatten()
 
-# <codecell>
+
+# In[109]:
 
 from Sp_parameters import nanmasked
 
-# <codecell>
+
+# In[110]:
 
 dddjf,idjf = nanmasked(djf_dif.flatten())
 
-# <codecell>
+
+# In[126]:
 
 dddjf.shape
 
-# <codecell>
+
+# In[150]:
 
 plt.plot(djf_fu['SW_irr_up_avg'][2,:,:].flatten())
 
-# <codecell>
+
+# In[147]:
 
 plt.hist(dddjf,normed=True,bins=30)
 plt.xlabel('SW Irradiance TOA difference [W/m$^{2}$]')
 plt.title('Fu liou - Kato')
 plt.savefig(fp+'plots/diff_fuliou_kato.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[151]:
 
 djf_kato_clear = sio.loadmat(fp+'DARF/AAC_DJF_clear_kato.mat')
 djf_fu_clear = sio.loadmat(fp+'DARF/AAC_DJF_clear.mat')
 
-# <codecell>
+
+# In[154]:
 
 fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
 ctr = ax1.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],djf_fu_clear['SW_irr_up_avg'][2,:,:])
@@ -556,12 +625,14 @@ plt.colorbar(ctr,ax=ax1)
 ctr = ax2.contourf(djf_kato_clear['lon'][:,0],djf_kato_clear['lat'][:,0],djf_kato_clear['SW_irr_up_avg'][2,:,:])
 plt.colorbar(ctr,ax=ax2)
 
-# <codecell>
+
+# In[155]:
 
 darf_kato = djf_kato['SW_irr_up_avg'][2,:,:] - djf_kato_clear['SW_irr_up_avg'][2,:,:]
 darf_fu = djf_fu['SW_irr_up_avg'][2,:,:] - djf_fu_clear['SW_irr_up_avg'][2,:,:]
 
-# <codecell>
+
+# In[172]:
 
 fig,(ax1,ax2) = plt.subplots(1,2,figsize=(13,5))
 ctr = ax1.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],darf_fu,40)
@@ -574,23 +645,28 @@ cbr.set_label('DARF [W/m$^{2}$]')
 ax2.set_title('DJF DARF Kato')
 plt.savefig(fp+'plots/DARF_fu_vs_kato.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[157]:
 
 dif_darf = darf_fu-darf_kato
 
-# <codecell>
+
+# In[193]:
 
 clevels = np.linspace(-10,10,41)
 
-# <codecell>
+
+# In[195]:
 
 clevels[20]
 
-# <codecell>
+
+# In[198]:
 
 help(plt.contourf)
 
-# <codecell>
+
+# In[201]:
 
 
 ctr = plt.contourf(djf_fu_clear['lon'][:,0],djf_fu_clear['lat'][:,0],dif_darf,levels=clevels,cmap=plt.cm.bwr)
@@ -601,7 +677,8 @@ plt.ylabel('Latitude')
 plt.title('DARF difference Fu Liou - Kato')
 plt.savefig(fp+'plots/DARF_diff_lat_lon.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[183]:
 
 fig, (ax1,ax2) = plt.subplots(2,1,sharex=True)
 ax1.hist(nanmasked(dif_darf)[0],bins=60,normed=True)
@@ -617,15 +694,18 @@ ax2.set_ylim([0,0.08])
 ax2.text(-10,0.05,'Zoomed in')
 plt.savefig(fp+'plots/DARF_difference_fu_kato.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[162]:
 
 plt.hist(nanmasked(dif_darf/darf_kato)[0],bins=60,normed=True)
 
-# <codecell>
+
+# In[167]:
 
 rms_darf = np.sqrt(np.nanmean(darf_fu**2-darf_kato**2))
 
-# <codecell>
+
+# In[168]:
 
 rms_darf
 
