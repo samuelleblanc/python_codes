@@ -4077,23 +4077,24 @@ apr['altflt'].shape
 apr['utc'].shape
 
 
-# In[453]:
+# In[481]:
 
 plt.figure()
 for i,t in enumerate(tt):
     ax = plt.subplot(1,4,i)
     ax.plot(smooth(twoDS['effectiveD'][fl]/2.0,30),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
-    ax.axvline(emas_ref[ie[i]],color='k',label='eMAS')
-    ax.axvline(rsp_ref[ir[i]],color='c',label='RSP')
-    ax.axvline(ssfr_ref[iss[i]],color='g',label='SSFR')
-    ax.axvline(modis_ref[im[i]],color='m',label='MODIS')
-    ax.axvline(star_ref[ist[i]],color='r',label='4STAR')
-    ax.axvline(goes_ref[ig[i]],color='b',label='GOES')
-    ax.plot(apr['altflt'][:,iap[i]],apr['dbz'][:,iap[i]],label='APR-2')
+    ax.axvline(emas_ref[ie[i]],color='k',label='eMAS',lw=4)
+    ax.axvline(rsp_ref[ir[i]],color='c',label='RSP',lw=4)
+    ax.axvline(ssfr_ref[iss[i]],color='g',label='SSFR',lw=4)
+    ax.axvline(modis_ref[im[i]],color='m',label='MODIS',lw=4)
+    ax.axvline(star_ref[ist[i]],color='r',label='4STAR',lw=4)
+    ax.axvline(goes_ref[ig[i]],color='b',label='GOES',lw=4)
+    #ax.plot(smooth(apr['dbz'][:,iap[i]],20),apr['altflt'][:,iap[i]],label='APR-2')
     ax.set_title('UTC: {}'.format(t))
     if i==0:
         ax.set_ylabel('Altituce [m]')
     ax.set_xlabel('r$_{eff}$ [$\\mu$m]')
+#plt.legend(frameon=True,loc=6)
 
 
 # In[ ]:
