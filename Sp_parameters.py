@@ -182,7 +182,7 @@ def param(sp,wvlin,iws=None):
         par = np.zeros(npar)*np.nan
         return par
     norm2 = spc/spc[i1000]
-    dsp = smooth(deriv(norm2,wvl/1000),2,nan=False)
+    dsp = smooth(deriv(norm2,wvl/1000),2,nan=False,old=True)
     imaxwvl = np.argmax(spc)
     maxwvl = wvl[mask[imaxwvl]]
     # now calculate each parameter
@@ -369,6 +369,8 @@ class Sp:
             self.ref = s['ref']
             if 'sza' in s:
                 self.sza = s['sza']
+            self.help = 'phase:{pnum}, wavelength:{wnum}, altitude:{znum}, ref:{rnum}, tau:{tnum}'.format(
+                pnum=len([0,1]),wnum=len(self.wvl),znum=2,rnum=len(self.ref),tnum=len(self.tau))
         else:
             self.utc = s['utc'][self.iset]
             if 'good' in s.keys():
