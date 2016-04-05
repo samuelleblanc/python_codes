@@ -9,7 +9,7 @@
 # Purpose:  
 # 
 #     To compare the various cloud properties retrieved via different methods from NAAMES.
-#     Looking at the Nov. 17th, 2016 case
+#     Looking at the Nov. 17th, 2015 case
 #   
 # Input:
 # 
@@ -35,9 +35,6 @@
 #     - gc
 #     - pdb
 #     - datetime
-#     - plotting_utils (user defined plotting routines)
-#     - map_utils, dependent on geopy
-#     - hdf5storage
 #   
 # Needed Files:
 # 
@@ -71,6 +68,11 @@ import load_modis as lm
 from mpl_toolkits.basemap import Basemap,cm
 
 
+# In[64]:
+
+import write_utils as wu
+
+
 # In[2]:
 
 get_ipython().magic(u'matplotlib notebook')
@@ -96,19 +98,27 @@ star = hs.loadmat(fp+'retrieve/20151117_zen_cld_retrieved.mat')
 star.keys()
 
 
-# In[12]:
+# In[131]:
 
 plt.figure()
 plt.subplot(3,1,1)
 plt.plot(star['utc'],star['tau'],'r.')
+plt.plot(star['utc'],Sp.smooth(star['tau'],4,nan=False),'-xr')
 plt.ylabel('$\\tau$')
 plt.subplot(3,1,2)
 plt.plot(star['utc'],star['ref'],'g.')
+plt.plot(star['utc'],Sp.smooth(star['ref'],4,nan=False),'-xg')
 plt.ylabel('r$_{eff}$ [$\\mu$m]')
 plt.subplot(3,1,3)
 plt.plot(star['utc'],star['phase'],'x')
 plt.ylabel('phase')
 plt.xlabel('UTC [h]')
+
+
+# In[132]:
+
+star['tau'] = Sp.smooth(star['tau'],4,nan=False)
+star['ref'] = Sp.smooth(star['ref'],4,nan=False)
 
 
 # ## Load the MODIS file
@@ -219,7 +229,82 @@ m.scatter(xx,yy,c=star['phase'],cmap=plt.cm.rainbow,marker='o',vmin=0,vmax=1,
           alpha=0.5,edgecolors='k',linewidth=0.25)
 
 
-# In[ ]:
+# # Now prepare a subsection of retrieved values to be saved in ict
+
+# ## create the dicts for writing to ict
+
+# In[60]:
+
+star.keys()
 
 
+# In[151]:
+
+d_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
+                     'long_description':'Fractional hours starting a midnight, continuous'},
+          'COD':{'data':star['tau'],'unit':'None','format':'.1f',
+                 'long_description':'Cloud Optical Depth of the cloud above the Aircraft'},
+          'REF':{'data':star['ref'],'unit':'microns','format':'.1f',
+                 'long_description':'Cloud particle effective radius, pertains to liquid cloud drops and ice crystals'},
+          'PHASE':{'data':star['phase'],'unit':'None','format':'.0f',
+                   'long_description':'Thermodynamic phase of cloud above, 0: pure liquid cloud, 1: pure ice cloud, mixed phase not retrieved'},
+          'LAT':{'data':star['lat'],'unit':'Degrees','format':'.6f',
+                 'long_description':'Aircraft position latitude (North positive)'},
+          'LON':{'data':star['lon'],'unit':'Degrees','format':'.6f',
+                 'long_description':'Aircraft position longitude (East positive)'},
+          'ALT':{'data':star['alt'],'unit':'meter','format':'.1f',
+                 'long_description':'Aircraft altitude'},
+          'SZA':{'data':star['sza'],'unit':'Degrees','format':'.2f',
+                 'long_description':'Solar Zenith Angle, angle of the sun between it and zenith'}
+          }
+
+
+# In[156]:
+
+h_dict ={'PI':'Jens Redemann',
+         'Institution':'NASA Ames Research Center',
+         'Instrument':'4STAR',
+         'campaign':'NAAMES #1',
+         'special_comments':'Preliminary retrieved cloud properties data',
+         'PI_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+         'platform':'C130',
+         'location':"based out of St-John's, NL, Canada, actual location of C130 described by lat and lon below",
+         'instrument_info':'Retrieved products from the 4STAR zenith radiance measurements',
+         'data_info':'For references see LeBlanc et al.(2015) AMT, doi:10.5194/amt-8-1361-2015',
+         'time_interval':10.0,
+         'uncertainty':'Preliminary 7% in REF and 5% in COD',
+         'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+         'project_info':'NAAMES field mission',
+         'stipulations':'Prior OK from PI',
+         'rev_comments':"""RA: preliminary retrieved values, may be subject to multiple errors
+    including due to clouds influencing presumed surface albedo, non-homogeneous clouds, or mixed phase clouds"""
+        }
+
+
+# In[63]:
+
+order=['LAT','LON','ALT','SZA','COD','REF','PHASE']
+
+
+# ## Verify the input, plot and write the file. Subset only valid time.
+
+# In[152]:
+
+data_dict = wu.prep_data_for_ict(d_dict,Start_UTC=15.04,End_UTC=15.34,time_interval=10.0)
+
+
+# In[143]:
+
+data_dict.keys()
+
+
+# In[154]:
+
+wu.make_plots_ict(data_dict,filepath=fp+'plot/',data_id='4STAR-zen-cloud',loc_id='C130',date='20151117',rev='RA',
+                  plot_together=['COD','REF','PHASE'],plot_together2=['LAT','LON','SZA'])
+
+
+# In[157]:
+
+wu.write_ict(h_dict,data_dict,filepath=fp,data_id='4STAR-zen-cloud',loc_id='C130',date='20151117',rev='RA',order=order)
 
