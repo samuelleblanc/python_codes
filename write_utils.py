@@ -423,7 +423,12 @@ def nearest_neighbor(X,Y,Xnew,dist=1):
     i = find_closest(X,Xnew)
     Ynew = Y[i]
     i_bad = abs(X[i]-Xnew) > dist
-    Ynew[i_bad] = np.nan
+    try:
+        Ynew[i_bad] = np.nan
+    except ValueError:
+        YYnew = Ynew.astype('float64')
+        YYnew[i_bad] = np.nan
+        Ynew = YYnew
     return Ynew   
 
 
