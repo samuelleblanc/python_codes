@@ -585,26 +585,31 @@ for i,l in enumerate(mdata_dict['LAT']['data']):
 fm.close()
 
 
-# # Read the output files (after running on pleaides)
+# # Read the output files (after running on pleaides) and get CRE
 
-# In[276]:
+# ## Read the files
+
+# In[297]:
 
 nstar = len(data_dict['LAT']['data'])
 nmodis = len(mdata_dict['LAT']['data'])
-star_CRE = {'dn':np.zeros((nstar,2)),'up':np.zeros((nstar,2))}
-star_CRE_clear = {'dn':np.zeros((nstar,2)),'up':np.zeros((nstar,2))}
-modis_CRE = {'dn':np.zeros((nmodis,2)),'up':np.zeros((nmodis,2))}
-modis_CRE_clear = {'dn':np.zeros((nmodis,2)),'up':np.zeros((nmodis,2))}
+star_CRE = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+star_CRE_clear = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+modis_CRE = {'dn':np.zeros((nmodis,2))+np.nan,'up':np.zeros((nmodis,2))+np.nan}
+modis_CRE_clear = {'dn':np.zeros((nmodis,2))+np.nan,'up':np.zeros((nmodis,2))+np.nan}
+star_C = np.zeros((nstar,2))+np.nan
+modis_C = np.zeros((nmodis,2))+np.nan
 
 
-# In[277]:
+# In[299]:
 
+print 'MODIS'
 for i,l in enumerate(mdata_dict['LAT']['data']):
     if l<-100.: # for only valid values
         continue
     if not np.isfinite(mdata_dict['PHASE']['data'][i]) or not np.isfinite(mdata_dict['COD']['data'][i]):
         continue
-    print i
+    print '\r{}..'.format(i)
     f_in = 'NAAMES_v1_modis_{:03d}.dat'.format(i)
     s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
     f_in = 'NAAMES_v1_modis_{:03d}_clear.dat'.format(i)
@@ -614,17 +619,18 @@ for i,l in enumerate(mdata_dict['LAT']['data']):
     modis_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
     modis_CRE['up'][i,:] = s['diffuse_up']
     modis_CRE_clear['up'][i,:] = sc['diffuse_up']
-    
+    modis_C[i,:] = (modis_CRE['dn'][i,:]-modis_CRE['up'][i,:]) - (modis_CRE_clear['dn'][i,:]-modis_CRE_clear['up'][i,:])
 
 
-# In[ ]:
+# In[300]:
 
+print '4STAR'
 for i,l in enumerate(data_dict['LAT']['data']):
     if l<-100.: # for only valid values
         continue
     if not np.isfinite(data_dict['PHASE']['data'][i]) or not np.isfinite(data_dict['COD']['data'][i]):
         continue
-    print i
+    print '\r{}..'.format(i)
     f_in = 'NAAMES_v1_star_{:03d}.dat'.format(i)
     s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
     f_in = 'NAAMES_v1_star_{:03d}_clear.dat'.format(i)
@@ -634,19 +640,48 @@ for i,l in enumerate(data_dict['LAT']['data']):
     star_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
     star_CRE['up'][i,:] = s['diffuse_up']
     star_CRE_clear['up'][i,:] = sc['diffuse_up']
+    star_C[i,:] = (star_CRE['dn'][i,:]-star_CRE['up'][i,:]) - (star_CRE_clear['dn'][i,:]-star_CRE_clear['up'][i,:])
 
 
-# In[274]:
+# In[301]:
 
-s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
-
-
-# In[275]:
-
-s
+star_CRE
 
 
-# In[ ]:
+# ## Present CRE
+
+# In[302]:
+
+star_C
 
 
+# In[303]:
+
+modis_C
+
+
+# In[307]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-300,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
+ax1.set_title('Cloud Radiative Effect - Surface')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,star_C[:,0],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,modis_C[:,0],1,[-300,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_surface_CRE_modis_4STAR.png',transparent=True,dpi=600)
+
+
+# In[308]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-300,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
+ax1.set_title('Cloud Radiative Effect - TOA')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,star_C[:,1],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,modis_C[:,1],1,[-300,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_toa_CRE_modis_4STAR.png',transparent=True,dpi=600)
 
