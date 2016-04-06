@@ -229,6 +229,92 @@ m.scatter(xx,yy,c=star['phase'],cmap=plt.cm.rainbow,marker='o',vmin=0,vmax=1,
           alpha=0.5,edgecolors='k',linewidth=0.25)
 
 
+# ## Subset the MODIS values to match the flight path
+
+# In[158]:
+
+import map_utils as mu
+
+
+# In[159]:
+
+mod_ind = mu.map_ind(modis['lon'],modis['lat'],star['lon'],star['lat'])
+
+
+# In[160]:
+
+mod_ind.shape
+
+
+# In[168]:
+
+modis['lat'].shape
+
+
+# In[161]:
+
+star['lat'].shape
+
+
+# In[189]:
+
+star['tau'][star['tau']<1.0] = np.nan
+
+
+# In[187]:
+
+plt.figure()
+ax = plt.subplot(3,1,1)
+plt.plot(star['lat'],star['tau'],'rs',label='4STAR')
+plt.plot(modis['lat'][mod_ind[0,:],mod_ind[1,:]],modis['tau'][mod_ind[0,:],mod_ind[1,:]],'gx',label='MODIS')
+plt.legend(frameon=False,numpoints=1,loc=0)
+plt.ylabel('$\\tau$')
+plt.subplot(3,1,2,sharex=ax)
+plt.plot(star['lat'],star['ref'],'rs')
+plt.plot(modis['lat'][mod_ind[0,:],mod_ind[1,:]],modis['ref'][mod_ind[0,:],mod_ind[1,:]],'gx',label='MODIS')
+plt.ylabel('r$_{eff}$ [$\\mu$m]')
+ax3 = plt.subplot(3,1,3,sharex=ax)
+plt.plot(star['lat'],star['phase'],'rs')
+plt.plot(modis['lat'][mod_ind[0,:],mod_ind[1,:]],modis['phase'][mod_ind[0,:],mod_ind[1,:]]-1,'gx',label='MODIS')
+plt.ylim([-0.5,1.5])
+plt.yticks([0,1])
+ax3.set_yticklabels(['Liquid','Ice'])
+plt.ylabel('phase')
+plt.xlabel('Latitude [$^\circ$]')
+plt.savefig(fp+'plot/20151117_cld_retr_vs_MODIS.png',transparent=True,dpi=600)
+
+
+# ## Now compare MODIS vs. 4STAR with bean plots
+
+# In[183]:
+
+import plotting_utils as pu
+
+
+# In[193]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,1.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,modis['tau'][mod_ind[0,:],mod_ind[1,:]],0,[0,60],legend=True,onlyhist=False,loc=2,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star['tau'],1,[0,60],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_COD_bean_modis_4star.png',transparent=True,dpi=600)
+
+
+# In[194]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,1.5])
+ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,modis['ref'][mod_ind[0,:],mod_ind[1,:]],0,[0,60],legend=True,onlyhist=False,loc=2,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star['ref'],1,[0,60],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_ref_bean_modis_4star.png',transparent=True,dpi=600)
+
+
 # # Now prepare a subsection of retrieved values to be saved in ict
 
 # ## create the dicts for writing to ict
@@ -238,7 +324,7 @@ m.scatter(xx,yy,c=star['phase'],cmap=plt.cm.rainbow,marker='o',vmin=0,vmax=1,
 star.keys()
 
 
-# In[151]:
+# In[241]:
 
 d_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
                      'long_description':'Fractional hours starting a midnight, continuous'},
@@ -259,7 +345,7 @@ d_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
           }
 
 
-# In[156]:
+# In[242]:
 
 h_dict ={'PI':'Jens Redemann',
          'Institution':'NASA Ames Research Center',
@@ -281,14 +367,14 @@ h_dict ={'PI':'Jens Redemann',
         }
 
 
-# In[63]:
+# In[243]:
 
 order=['LAT','LON','ALT','SZA','COD','REF','PHASE']
 
 
 # ## Verify the input, plot and write the file. Subset only valid time.
 
-# In[152]:
+# In[244]:
 
 data_dict = wu.prep_data_for_ict(d_dict,Start_UTC=15.04,End_UTC=15.34,time_interval=10.0)
 
@@ -304,7 +390,263 @@ wu.make_plots_ict(data_dict,filepath=fp+'plot/',data_id='4STAR-zen-cloud',loc_id
                   plot_together=['COD','REF','PHASE'],plot_together2=['LAT','LON','SZA'])
 
 
-# In[157]:
+# In[245]:
 
 wu.write_ict(h_dict,data_dict,filepath=fp,data_id='4STAR-zen-cloud',loc_id='C130',date='20151117',rev='RA',order=order)
+
+
+# ## Now prepare the same values but from MODIS
+
+# In[246]:
+
+md_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
+                     'long_description':'Fractional hours starting a midnight, continuous'},
+          'COD':{'data':modis['tau'][mod_ind[0,:],mod_ind[1,:]],'unit':'None','format':'.1f',
+                 'long_description':'Cloud Optical Depth from MODIS'},
+          'REF':{'data':modis['ref'][mod_ind[0,:],mod_ind[1,:]],'unit':'microns','format':'.1f',
+                 'long_description':'Cloud particle effective radius, pertains to liquid cloud drops and ice crystals'},
+          'PHASE':{'data':modis['phase'][mod_ind[0,:],mod_ind[1,:]],'unit':'None','format':'.0f',
+                   'long_description':'Thermodynamic phase of cloud,'+\
+                   ' 0 -- cloud free, 1 -- water cloud, 2 -- ice cloud, 3 -- mixed phase cloud, 6 -- undetermined phase'},
+          'LAT':{'data':modis['lat'][mod_ind[0,:],mod_ind[1,:]],'unit':'Degrees','format':'.6f',
+                 'long_description':'MODIS linked to Aircraft position latitude (North positive)'},
+          'LON':{'data':modis['lon'][mod_ind[0,:],mod_ind[1,:]],'unit':'Degrees','format':'.6f',
+                 'long_description':'MODIS linked to Aircraft position longitude (East positive)'},
+          'SZA':{'data':star['sza'],'unit':'Degrees','format':'.2f',
+                 'long_description':'Solar Zenith Angle, angle of the sun between it and zenith'}
+          }
+
+
+# In[247]:
+
+mh_dict ={'PI':'Samuel LeBlanc',
+         'Institution':'NASA Ames Research Center',
+         'Instrument':'MODIS',
+         'campaign':'NAAMES #1',
+         'special_comments':'MODIS retrieved cloud values linked along C130 flight path',
+         'PI_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+         'platform':'C130',
+         'location':"based out of St-John's, NL, Canada, actual location of C130 described by lat and lon below",
+         'instrument_info':'Retrieved products from the MODIS, MYD06_L2.A2015321.1540.006.2015322185040.hdf',
+         'data_info':'For references see LeBlanc et al.(2015) AMT, doi:10.5194/amt-8-1361-2015',
+         'time_interval':10.0,
+         'uncertainty':'N\A',
+         'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+         'project_info':'NAAMES field mission',
+         'stipulations':'Prior OK from PI',
+         'rev_comments':"""RA: initial go at this, for radiative transfer calculations"""
+        }
+
+
+# In[248]:
+
+order=['LAT','LON','SZA','COD','REF','PHASE']
+
+
+# In[249]:
+
+mdata_dict = wu.prep_data_for_ict(md_dict,Start_UTC=15.04,End_UTC=15.34,time_interval=10.0)
+
+
+# In[250]:
+
+wu.write_ict(mh_dict,mdata_dict,filepath=fp,data_id='MODIS-cloud-to-C130',loc_id='C130',date='20151117',rev='RA',order=order)
+
+
+# # Prepare input files for radiative transfer
+
+# In[222]:
+
+import Run_libradtran as Rl
+
+
+# ## Prepare the defaults
+
+# In[226]:
+
+from datetime import datetime
+datetime(2015,11,17).timetuple().tm_yday
+
+
+# In[227]:
+
+geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,100.0]}
+aero = {} # none
+cloud = {'ztop':2.5,'zbot':2.0,'write_moments_file':False}
+source = {'wvl_range':[201.0,4000.0],'source':'solar','integrate_values':True,'run_fuliou':True,
+          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':10.0}
+
+
+# In[ ]:
+
+cloud['phase'] = 'wc'
+geo['sza'] = 40.0
+cloud['tau'] = 2.0
+cloud['ref'] = 5.0
+
+
+# In[232]:
+
+phase_star = {0:'wc',1:'ic'}
+
+
+# In[233]:
+
+phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
+
+
+# ## Make the runs for 4STAR
+
+# In[251]:
+
+data_dict['COD']['data']
+
+
+# In[252]:
+
+data_dict['PHASE']['data']
+
+
+# In[253]:
+
+data_dict['REF']['data']
+
+
+# In[269]:
+
+# open the list file
+f = open(fp+'rtm/NAAMES_20151117_CRE.sh','w')
+fpp_in = '/nobackup/sleblan2/rtm/input/NAAMES_CRE_20151117/'
+fpp_out = '/nobackup/sleblan2/rtm/output/NAAMES_CRE_20151117/'
+fp_uv = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
+fp_in = fp+'rtm/input/CRE/'
+
+
+# In[270]:
+
+for i,l in enumerate(data_dict['LAT']['data']):
+    if l<-100.: # for only valid values
+        continue
+    if not np.isfinite(data_dict['PHASE']['data'][i]) or not np.isfinite(data_dict['COD']['data'][i]):
+        continue
+    print i
+    
+    f_in = 'NAAMES_v1_star_{:03d}.dat'.format(i)
+    geo['lat'],geo['lon'],geo['sza'] = l,data_dict['LON']['data'][i],data_dict['SZA']['data'][i]
+    cloud['tau'],cloud['ref'] = data_dict['COD']['data'][i],data_dict['REF']['data'][i]
+    cloud['phase'] = phase_star[data_dict['PHASE']['data'][i]]
+    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+    
+    f_in = 'NAAMES_v1_star_{:03d}_clear.dat'.format(i)
+    cloud['tau'] = 0.0
+    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+f.close()
+
+
+# ## Make the runs for MODIS
+
+# In[271]:
+
+# open the list file
+fm = open(fp+'rtm/NAAMES_20151117_CRE_modis.sh','w')
+fpp_in = '/nobackup/sleblan2/rtm/input/NAAMES_CRE_20151117/'
+fpp_out = '/nobackup/sleblan2/rtm/output/NAAMES_CRE_20151117/'
+fp_uv = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
+fp_in = fp+'rtm/input/CRE/'
+
+
+# In[272]:
+
+for i,l in enumerate(mdata_dict['LAT']['data']):
+    if l<-100.: # for only valid values
+        continue
+    if not np.isfinite(mdata_dict['PHASE']['data'][i]) or not np.isfinite(mdata_dict['COD']['data'][i]):
+        continue
+    print i
+    
+    f_in = 'NAAMES_v1_modis_{:03d}.dat'.format(i)
+    geo['lat'],geo['lon'],geo['sza'] = l,mdata_dict['LON']['data'][i],mdata_dict['SZA']['data'][i]
+    cloud['tau'],cloud['ref'] = mdata_dict['COD']['data'][i],mdata_dict['REF']['data'][i]
+    cloud['phase'] = phase_modis[mdata_dict['PHASE']['data'][i]]
+    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    fm.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+    
+    f_in = 'NAAMES_v1_modis_{:03d}_clear.dat'.format(i)
+    cloud['tau'] = 0.0
+    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    fm.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+fm.close()
+
+
+# # Read the output files (after running on pleaides)
+
+# In[276]:
+
+nstar = len(data_dict['LAT']['data'])
+nmodis = len(mdata_dict['LAT']['data'])
+star_CRE = {'dn':np.zeros((nstar,2)),'up':np.zeros((nstar,2))}
+star_CRE_clear = {'dn':np.zeros((nstar,2)),'up':np.zeros((nstar,2))}
+modis_CRE = {'dn':np.zeros((nmodis,2)),'up':np.zeros((nmodis,2))}
+modis_CRE_clear = {'dn':np.zeros((nmodis,2)),'up':np.zeros((nmodis,2))}
+
+
+# In[277]:
+
+for i,l in enumerate(mdata_dict['LAT']['data']):
+    if l<-100.: # for only valid values
+        continue
+    if not np.isfinite(mdata_dict['PHASE']['data'][i]) or not np.isfinite(mdata_dict['COD']['data'][i]):
+        continue
+    print i
+    f_in = 'NAAMES_v1_modis_{:03d}.dat'.format(i)
+    s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
+    f_in = 'NAAMES_v1_modis_{:03d}_clear.dat'.format(i)
+    sc = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
+    
+    modis_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
+    modis_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
+    modis_CRE['up'][i,:] = s['diffuse_up']
+    modis_CRE_clear['up'][i,:] = sc['diffuse_up']
+    
+
+
+# In[ ]:
+
+for i,l in enumerate(data_dict['LAT']['data']):
+    if l<-100.: # for only valid values
+        continue
+    if not np.isfinite(data_dict['PHASE']['data'][i]) or not np.isfinite(data_dict['COD']['data'][i]):
+        continue
+    print i
+    f_in = 'NAAMES_v1_star_{:03d}.dat'.format(i)
+    s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
+    f_in = 'NAAMES_v1_star_{:03d}_clear.dat'.format(i)
+    sc = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
+    
+    star_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
+    star_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
+    star_CRE['up'][i,:] = s['diffuse_up']
+    star_CRE_clear['up'][i,:] = sc['diffuse_up']
+
+
+# In[274]:
+
+s = Rl.read_libradtran(fp+'rtm/output/CRE/'+f_in,zout=[0,100])
+
+
+# In[275]:
+
+s
+
+
+# In[ ]:
+
+
 
