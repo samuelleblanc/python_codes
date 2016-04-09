@@ -344,7 +344,11 @@ airmass = 1./np.cos(ltemp.sza*np.pi/180.0)
 # In[ ]:
 
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
-idx = Sp.find_closest(airmass,meas.airmass)
+if len(airmass) > 1:
+    idx = Sp.find_closest(airmass,meas.airmass)
+else: 
+    print '*** There is only one airmass in the lut: Using {} ***'.format(airmass)
+    idx = np.zeros_like(meas.airmass,dtype=np.int)
 
 
 # In[ ]:
@@ -356,7 +360,10 @@ idx = Sp.find_closest(airmass,meas.airmass)
 
 print 'Running through the airmasses'
 for i in np.unique(idx):
-    print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max()-idx.min())
+    try: 
+        print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max()-idx.min())
+    except:
+        import pdb; pdb.set_trace()
     meas.good = np.where(idx==i)[0]
     try:
         print lut[i].__dict__.keys()
