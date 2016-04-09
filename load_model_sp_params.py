@@ -55,7 +55,7 @@
 #   - sp_v1_20130219_4STAR.out : modeled spectra output for TCAP in idl save file
 #   - 20130219starzen_rad.mat : special zenith radiance 4star matlab file 
 
-# In[1]:
+# In[ ]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -63,7 +63,7 @@ matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-get_ipython().magic(u'matplotlib inline')
+get_ipython().magic(u'matplotlib notebook')
 import numpy as np, h5py
 #import plotly.plotly as py
 import scipy.io as sio
@@ -75,13 +75,13 @@ import Sp_parameters as Sp
 #mpld3.enable_notbeook()
 
 
-# In[2]:
+# In[ ]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[3]:
+# In[ ]:
 
 # set the basic directory path
 fp='C:\\Users\\sleblan2\\Research\\TCAP\\'

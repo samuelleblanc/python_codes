@@ -49,7 +49,7 @@
 
 # # Import initial modules and default paths
 
-# In[1]:
+# In[2]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -63,22 +63,22 @@ import hdf5storage as hs
 import load_modis as lm
 
 
-# In[16]:
+# In[3]:
 
 from mpl_toolkits.basemap import Basemap,cm
 
 
-# In[64]:
+# In[4]:
 
 import write_utils as wu
 
 
-# In[2]:
+# In[5]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[6]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/NAAMES/'
@@ -88,7 +88,7 @@ fp='C:/Users/sleblan2/Research/NAAMES/'
 
 # ## Load the retrieved cloud properties from 4STAR
 
-# In[4]:
+# In[7]:
 
 star = hs.loadmat(fp+'retrieve/20151117_zen_cld_retrieved.mat')
 
