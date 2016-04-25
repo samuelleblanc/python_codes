@@ -72,7 +72,7 @@
 
 # # Import initial modules and set default path
 
-# In[222]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -96,18 +96,18 @@ import cPickle as pickle
 #mpld3.enable_notbeook()
 
 
-# In[223]:
+# In[2]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[3]:
 
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[5]:
+# In[4]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -117,22 +117,47 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[171]:
+# In[5]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[172]:
+# In[6]:
 
 s.keys()
 
 
-# In[173]:
+# In[7]:
 
 s['sza']
 
+
+# ### Get the downwelling toa zenith irradiance for comparison
+
+# In[8]:
+
+s['sp_irrdn'].shape
+
+
+# In[9]:
+
+s['z']
+
+
+# In[13]:
+
+s['sp_irrdn'][0,400,1,0,0], s['sp_irrdn'][0,400,1,10,10]
+
+
+# In[18]:
+
+# sum to get the refenrence downweling irradiance value
+np.sum(s['sp_irrdn'][0,250:,1,0,0]*s['zenlambda'][250:]/1000.0)
+
+
+# ### explore lut and build it up
 
 # In[174]:
 
@@ -2327,7 +2352,7 @@ dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_goo
 
 # ## Load APR-2 HDF files for DC8 radar images
 
-# In[401]:
+# In[5]:
 
 fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
 fe = '_R23.h4'
@@ -2335,23 +2360,24 @@ files = ['180527','181019','182329','184933','190145','192149','194031']
 aprfiles = [fa+s+fe for s in files]
 
 
-# In[402]:
+# In[6]:
 
 aprfiles
 
 
-# In[403]:
+# In[8]:
 
+import load_modis
 reload(load_modis)
 
 
-# In[404]:
+# In[9]:
 
 from load_modis import load_apr
 apr = load_apr(aprfiles)
 
 
-# In[405]:
+# In[10]:
 
 levels = np.arange(0,7000,30)
 plt.figure()
@@ -2359,25 +2385,36 @@ csz = plt.contourf(apr['lonz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
 plt.colorbar(csz)
 
 
-# In[406]:
+# In[11]:
 
 apr['utcz'] = apr['lonz']*0.0
 for i in xrange(len(apr['utc'])):
     apr['utcz'][:,i] = apr['utc'][i]
 
 
-# In[131]:
+# In[12]:
 
 levels = np.arange(0,7000,30)
 
 
-# In[43]:
+# In[14]:
 
 plt.figure()
 csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.Greys)
 plt.colorbar(csz)
 plt.xlabel('UTC [h]')
 plt.ylabel('Altitude [m]')
+
+
+# In[16]:
+
+plt.figure()
+csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
+cb = plt.colorbar(csz)
+cb.set_label('dbZ')
+plt.xlabel('UTC [h]')
+plt.ylabel('Altitude [m]')
+plt.title('APR-2 reflectivity 2013-09-13')
 
 
 # In[132]:
