@@ -49,7 +49,7 @@
 
 # # Import initial modules and default paths
 
-# In[2]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -63,22 +63,22 @@ import hdf5storage as hs
 import load_modis as lm
 
 
-# In[3]:
+# In[2]:
 
 from mpl_toolkits.basemap import Basemap,cm
 
 
-# In[4]:
+# In[3]:
 
 import write_utils as wu
 
 
-# In[5]:
+# In[4]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[6]:
+# In[5]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/NAAMES/'
@@ -88,17 +88,17 @@ fp='C:/Users/sleblan2/Research/NAAMES/'
 
 # ## Load the retrieved cloud properties from 4STAR
 
-# In[7]:
+# In[6]:
 
 star = hs.loadmat(fp+'retrieve/20151117_zen_cld_retrieved.mat')
 
 
-# In[5]:
+# In[7]:
 
 star.keys()
 
 
-# In[131]:
+# In[7]:
 
 plt.figure()
 plt.subplot(3,1,1)
@@ -115,39 +115,44 @@ plt.ylabel('phase')
 plt.xlabel('UTC [h]')
 
 
-# In[132]:
+# In[8]:
 
 star['tau'] = Sp.smooth(star['tau'],4,nan=False)
 star['ref'] = Sp.smooth(star['ref'],4,nan=False)
 
 
+# In[20]:
+
+star['tau'][star['tau']<1.0]=np.nan
+
+
 # ## Load the MODIS file
 
-# In[13]:
+# In[9]:
 
 myd3 = fp+'c130/20151117_flt/MYD03.A2015321.1540.006.2015322160400.hdf'
 myd6 = fp+'c130/20151117_flt/MYD06_L2.A2015321.1540.006.2015322185040.hdf'
 
 
-# In[14]:
+# In[10]:
 
 modis,modis_dicts = lm.load_modis(myd3,myd6)
 
 
 # ## Load the insitu probe liquid vs ice water content
 
-# In[42]:
+# In[12]:
 
 help(lm.load_ict)
 
 
-# In[43]:
+# In[13]:
 
 wf = fp+'c130/20151117_flt/NAAMES-LARGE-WCM_C130_20151117_RA.ict'
 wcm,wcm_head = lm.load_ict(wf,return_header=True)
 
 
-# In[57]:
+# In[14]:
 
 plt.figure()
 plt.plot(wcm['Date_UTC']/3600,Sp.smooth(wcm['TWC_gm_3'],30),label='TWC')
@@ -160,7 +165,7 @@ plt.legend(frameon=False,loc=2)
 
 # # Start plotting MODIS and the retrieved values
 
-# In[31]:
+# In[15]:
 
 #set up a easy plotting function
 def naames_map(ax=plt.gca()):
@@ -176,36 +181,39 @@ def naames_map(ax=plt.gca()):
     return m
 
 
-# In[33]:
+# In[21]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = naames_map(ax)
 x,y = m(modis['lon'],modis['lat'])
 clevels = np.linspace(0,80,41)
 
+plt.title('MODIS COD with C130 flight path 2015-11-17')
 cs1 = m.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
 cbar = m.colorbar(cs1)
 cbar.set_label('$\\tau$')
 
 xx,yy = m(star['lon'],star['lat'])
 m.scatter(xx,yy,c=star['tau'],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
-          alpha=0.5,edgecolors='k',linewidth=0.25)
+          alpha=0.5,edgecolors='k',linewidth=0.65)
+plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_COD.png',dpi=600,transparent=True)
 
 
-# In[34]:
+# In[22]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = naames_map(ax)
 x,y = m(modis['lon'],modis['lat'])
 clevels = np.linspace(0,60,31)
-
+plt.title('MODIS Ref with C130 flight path 2015-11-17')
 cs1 = m.contourf(x,y,modis['ref'],clevels,cmap=plt.cm.gist_earth,extend='max')
 cbar = m.colorbar(cs1)
 cbar.set_label('r$_{eff}$ [$\\mu$m]')
 
 xx,yy = m(star['lon'],star['lat'])
 m.scatter(xx,yy,c=star['ref'],cmap=plt.cm.gist_earth,marker='o',vmin=clevels[0],vmax=clevels[-1],
-          alpha=0.5,edgecolors='k',linewidth=0.25)
+          alpha=0.5,edgecolors='k',linewidth=0.65)
+plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_ref.png',dpi=600,transparent=True)
 
 
 # In[36]:
@@ -213,45 +221,47 @@ m.scatter(xx,yy,c=star['ref'],cmap=plt.cm.gist_earth,marker='o',vmin=clevels[0],
 modis_dicts['phase']
 
 
-# In[40]:
+# In[23]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = naames_map(ax)
 x,y = m(modis['lon'],modis['lat'])
 clevels = np.linspace(0,6,7)
-
+plt.title('MODIS thermodynamic phase with C130 flight path 2015-11-17')
 cs1 = m.contourf(x,y,modis['phase'],clevels,cmap=plt.cm.gist_earth,extend='max')
 cbar = m.colorbar(cs1)
 cbar.set_label('phase')
 
 xx,yy = m(star['lon'],star['lat'])
 m.scatter(xx,yy,c=star['phase'],cmap=plt.cm.rainbow,marker='o',vmin=0,vmax=1,
-          alpha=0.5,edgecolors='k',linewidth=0.25)
+          alpha=0.5,edgecolors='k',linewidth=0.65)
+
+plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_phase.png',dpi=600,transparent=True)
 
 
 # ## Subset the MODIS values to match the flight path
 
-# In[158]:
+# In[11]:
 
 import map_utils as mu
 
 
-# In[159]:
+# In[12]:
 
 mod_ind = mu.map_ind(modis['lon'],modis['lat'],star['lon'],star['lat'])
 
 
-# In[160]:
+# In[13]:
 
 mod_ind.shape
 
 
-# In[168]:
+# In[14]:
 
 modis['lat'].shape
 
 
-# In[161]:
+# In[15]:
 
 star['lat'].shape
 
@@ -261,7 +271,7 @@ star['lat'].shape
 star['tau'][star['tau']<1.0] = np.nan
 
 
-# In[187]:
+# In[16]:
 
 plt.figure()
 ax = plt.subplot(3,1,1)
@@ -286,12 +296,12 @@ plt.savefig(fp+'plot/20151117_cld_retr_vs_MODIS.png',transparent=True,dpi=600)
 
 # ## Now compare MODIS vs. 4STAR with bean plots
 
-# In[183]:
+# In[17]:
 
 import plotting_utils as pu
 
 
-# In[193]:
+# In[21]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,1.5])
@@ -303,7 +313,7 @@ pu.plot_vert_hist(fig,ax1,star['tau'],1,[0,60],legend=True,color='r',bins=50)
 plt.savefig(fp+'plot/20151117_COD_bean_modis_4star.png',transparent=True,dpi=600)
 
 
-# In[194]:
+# In[19]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,1.5])
@@ -324,7 +334,7 @@ plt.savefig(fp+'plot/20151117_ref_bean_modis_4star.png',transparent=True,dpi=600
 star.keys()
 
 
-# In[241]:
+# In[22]:
 
 d_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
                      'long_description':'Fractional hours starting a midnight, continuous'},
@@ -345,7 +355,7 @@ d_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
           }
 
 
-# In[242]:
+# In[23]:
 
 h_dict ={'PI':'Jens Redemann',
          'Institution':'NASA Ames Research Center',
@@ -367,19 +377,19 @@ h_dict ={'PI':'Jens Redemann',
         }
 
 
-# In[243]:
+# In[24]:
 
 order=['LAT','LON','ALT','SZA','COD','REF','PHASE']
 
 
 # ## Verify the input, plot and write the file. Subset only valid time.
 
-# In[244]:
+# In[25]:
 
 data_dict = wu.prep_data_for_ict(d_dict,Start_UTC=15.04,End_UTC=15.34,time_interval=10.0)
 
 
-# In[143]:
+# In[26]:
 
 data_dict.keys()
 
@@ -397,7 +407,7 @@ wu.write_ict(h_dict,data_dict,filepath=fp,data_id='4STAR-zen-cloud',loc_id='C130
 
 # ## Now prepare the same values but from MODIS
 
-# In[246]:
+# In[27]:
 
 md_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
                      'long_description':'Fractional hours starting a midnight, continuous'},
@@ -417,7 +427,7 @@ md_dict =  {'utc':{'data':star['utc'],'unit':'hours from midnight UTC',
           }
 
 
-# In[247]:
+# In[28]:
 
 mh_dict ={'PI':'Samuel LeBlanc',
          'Institution':'NASA Ames Research Center',
@@ -438,12 +448,12 @@ mh_dict ={'PI':'Samuel LeBlanc',
         }
 
 
-# In[248]:
+# In[29]:
 
 order=['LAT','LON','SZA','COD','REF','PHASE']
 
 
-# In[249]:
+# In[30]:
 
 mdata_dict = wu.prep_data_for_ict(md_dict,Start_UTC=15.04,End_UTC=15.34,time_interval=10.0)
 
@@ -455,7 +465,7 @@ wu.write_ict(mh_dict,mdata_dict,filepath=fp,data_id='MODIS-cloud-to-C130',loc_id
 
 # # Prepare input files for radiative transfer
 
-# In[222]:
+# In[33]:
 
 import Run_libradtran as Rl
 
@@ -589,7 +599,7 @@ fm.close()
 
 # ## Read the files
 
-# In[297]:
+# In[31]:
 
 nstar = len(data_dict['LAT']['data'])
 nmodis = len(mdata_dict['LAT']['data'])
@@ -601,7 +611,7 @@ star_C = np.zeros((nstar,2))+np.nan
 modis_C = np.zeros((nmodis,2))+np.nan
 
 
-# In[299]:
+# In[34]:
 
 print 'MODIS'
 for i,l in enumerate(mdata_dict['LAT']['data']):
@@ -622,7 +632,7 @@ for i,l in enumerate(mdata_dict['LAT']['data']):
     modis_C[i,:] = (modis_CRE['dn'][i,:]-modis_CRE['up'][i,:]) - (modis_CRE_clear['dn'][i,:]-modis_CRE_clear['up'][i,:])
 
 
-# In[300]:
+# In[35]:
 
 print '4STAR'
 for i,l in enumerate(data_dict['LAT']['data']):
@@ -660,7 +670,7 @@ star_C
 modis_C
 
 
-# In[307]:
+# In[41]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-300,0],xlim=[-0.5,1.5])
@@ -668,12 +678,12 @@ ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
 ax1.set_title('Cloud Radiative Effect - Surface')
 ax1.set_xticks([0,1])
 ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
-pu.plot_vert_hist(fig,ax1,star_C[:,0],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=50)
-pu.plot_vert_hist(fig,ax1,modis_C[:,0],1,[-300,0],legend=True,color='r',bins=50)
+pu.plot_vert_hist(fig,ax1,modis_C[:,0],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=30)
+pu.plot_vert_hist(fig,ax1,star_C[:,0],1,[-300,0],legend=True,color='r',bins=30)
 plt.savefig(fp+'plot/20151117_surface_CRE_modis_4STAR.png',transparent=True,dpi=600)
 
 
-# In[308]:
+# In[40]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-300,0],xlim=[-0.5,1.5])
@@ -681,7 +691,64 @@ ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
 ax1.set_title('Cloud Radiative Effect - TOA')
 ax1.set_xticks([0,1])
 ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
-pu.plot_vert_hist(fig,ax1,star_C[:,1],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=50)
-pu.plot_vert_hist(fig,ax1,modis_C[:,1],1,[-300,0],legend=True,color='r',bins=50)
+pu.plot_vert_hist(fig,ax1,modis_C[:,1],0,[-300,0],legend=True,onlyhist=False,loc=2,color='g',bins=30)
+pu.plot_vert_hist(fig,ax1,star_C[:,1],1,[-300,0],legend=True,color='r',bins=30)
 plt.savefig(fp+'plot/20151117_toa_CRE_modis_4STAR.png',transparent=True,dpi=600)
+
+
+# ## Calculate the relative CRE and plot it
+
+# In[42]:
+
+modis_rC = np.zeros_like(modis_C)
+star_rC = np.zeros_like(star_C)
+
+
+# In[43]:
+
+modis_rC[:,0] = modis_C[:,0]/modis_CRE['dn'][:,1]*100.0
+star_rC[:,0] = star_C[:,0]/star_CRE['dn'][:,1]*100.0
+modis_rC[:,1] = modis_C[:,1]/modis_CRE['dn'][:,1]*100.0
+star_rC[:,1] = star_C[:,1]/star_CRE['dn'][:,1]*100.0
+
+
+# In[47]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
+ax1.set_title('relative Cloud Radiative Effect - Surface')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,modis_rC[:,0],0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star_rC[:,0],1,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_surface_rCRE_modis_4STAR.png',transparent=True,dpi=600)
+
+
+# In[48]:
+
+np.nanmean(modis_rC[:,0]),np.nanmean(star_rC[:,0])
+
+
+# In[51]:
+
+np.nanstd(modis_rC[:,0]), np.nanstd(star_rC[:,0])
+
+
+# In[45]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [%]')
+ax1.set_title('relative Cloud Radiative Effect - TOA')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,modis_rC[:,1],0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star_rC[:,1],1,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plot/20151117_TOA_rCRE_modis_4STAR.png',transparent=True,dpi=600)
+
+
+# In[ ]:
+
+
 
