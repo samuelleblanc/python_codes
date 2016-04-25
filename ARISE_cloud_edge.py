@@ -1,6 +1,7 @@
 
 # coding: utf-8
 
+# # Intro
 # Name:  
 # 
 #     ARISE_cloud_edge
@@ -78,6 +79,8 @@ IPython.InteractiveShell.cache_size = 0
 fp='C:/Users/sleblan2/Research/ARISE/'
 
 
+# # Load varous data
+
 # ## Get the AMSR data for 2014-09-19
 
 # In[2]:
@@ -134,18 +137,18 @@ plt_amsr_zoom()
 
 # ## Load C130 nav data
 
-# In[5]:
+# In[2]:
 
 fnav = fp+'c130/20140919_ARISE_Flight_13/arise-C130-Hskping_c130_20140919_RA_Preliminary.ict'
 nav,nav_header = lm.load_ict(fnav,return_header=True)
 
 
-# In[6]:
+# In[3]:
 
 nav_header
 
 
-# In[7]:
+# In[4]:
 
 nav['Longitude'][nav['Longitude']==0.0] = np.NaN
 nav['Latitude'][nav['Latitude']<0.0] = np.NaN
@@ -171,7 +174,7 @@ m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor
 plt.savefig(fp+'plots/20140919_map_ice_conc.png',dpi=600,transparent=True)
 
 
-# In[8]:
+# In[5]:
 
 flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitude']<0.0))[0]
 
@@ -311,6 +314,8 @@ plt.xlim([19.5,23])
 plt.savefig(fp+'plots/20140919_utc_dndlogd_zoom.png',dpi=600,transparent=True)
 
 
+# # Start more detailed analysis
+
 # ## Convert the drop size distribution to $r_{eff}$
 
 # Trying to replicate the $r_{eff}$ equation:
@@ -407,17 +412,19 @@ plt.legend(frameon=False)
 plt.savefig(fp+'plots/20140919_lon_ref_calc.png',dpi=600,transparent=True)
 
 
+# # Load other retrieved and radiative properties
+
 # ## Load the MODIS cloud properties
 
 # Get the data from MODIS for the proper day of year
 
-# In[18]:
+# In[6]:
 
 from datetime import datetime
 datetime(2014,9,19).timetuple().tm_yday
 
 
-# In[19]:
+# In[7]:
 
 fmodis_aqua = fp+'MODIS/MYD06_L2.A2014262.1955.006.2014282222048.hdf'
 fmodis_aqua_geo = fp+'MODIS/MYD03.A2014262.1955.006.2014272205731.hdf'
@@ -426,12 +433,12 @@ fmodis_terra_geo = fp+'MODIS/MOD03.A2014262.2115.006.2014272205802.hdf'
 fviirs = fp+'' #not yet
 
 
-# In[20]:
+# In[8]:
 
 aqua,aqua_dicts = lm.load_modis(fmodis_aqua_geo,fmodis_aqua)
 
 
-# In[21]:
+# In[9]:
 
 terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
 
@@ -441,7 +448,7 @@ terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
 terra_dicts['tau']
 
 
-# In[22]:
+# In[10]:
 
 flt_aqua = np.where(nav['Start_UTC']<19.9)
 
@@ -633,20 +640,20 @@ plt.xlabel('Longitude')
 
 # First get the indices in ice concentration linked to the flight path
 
-# In[2]:
+# In[11]:
 
 import map_utils as mu
 
 
 # Create a lat lon slice to use for correlating the sea ice concentration
 
-# In[27]:
+# In[52]:
 
 points_lat = [73.2268,71.817716]
 points_lon = [-135.3189167,-128.407833]
 
 
-# In[28]:
+# In[53]:
 
 from scipy import interpolate
 flat = interpolate.interp1d([0,100],points_lat)
@@ -763,36 +770,36 @@ plt.savefig(fp+'plots/20140919_proile_zoom_alt_cloud_ice.png',dpi=600,transparen
 
 # ## Load the 4STAR data
 
-# In[10]:
+# In[13]:
 
 fstar = fp+'starzen/20140919starzen.mat'
 star = sio.loadmat(fstar)
 star.keys()
 
 
-# In[11]:
+# In[14]:
 
 star['iset']
 
 
-# In[12]:
+# In[15]:
 
 star['utc'] = lm.toutc(lm.mat2py_time(star['t']))
 star['utcr'] = lm.toutc(lm.mat2py_time(star['t_rad']))
 
 
-# In[13]:
+# In[16]:
 
 flt_star_ice = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Lon'][star['iset']]<-133) & (star['Alt'][star['iset']]<900.0))[0]
 flt_star_wat = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Lon'][star['iset']]>-133) & (star['Alt'][star['iset']]<900.0))[0]
 
 
-# In[14]:
+# In[17]:
 
 star['utc'].shape
 
 
-# In[15]:
+# In[18]:
 
 flt_star_ice
 
@@ -820,19 +827,19 @@ plt.legend(frameon=False)
 
 # ### Define 4STAR zenith data as an SP object and prepare for calculations
 
-# In[16]:
+# In[19]:
 
 import Sp_parameters as Sp
 reload(Sp)
 
 
-# In[17]:
+# In[20]:
 
 star['good'] = np.where((star['utcr']>19.0) & (star['utcr']<23.0) & (star['Alt'][star['iset'][:,0],0]<900.0))[0]
 len(star['good'])
 
 
-# In[18]:
+# In[21]:
 
 stars = Sp.Sp(star)
 stars.params()
@@ -840,7 +847,7 @@ stars.params()
 
 # ### Now load the different luts
 
-# In[19]:
+# In[22]:
 
 sice = sio.idl.readsav(fp+'model/sp_v2_20140919_ice_4STAR.out')
 swat = sio.idl.readsav(fp+'model/sp_v2_20140919_wat_4STAR.out')
@@ -848,24 +855,24 @@ print sice.keys()
 print swat.keys()
 
 
-# In[20]:
+# In[23]:
 
 lutice = Sp.Sp(sice)
 
 
-# In[21]:
+# In[24]:
 
 lutwat = Sp.Sp(swat)
 
 
-# In[22]:
+# In[25]:
 
 lutice.params()
 lutice.param_hires()
 lutice.sp_hires()
 
 
-# In[23]:
+# In[26]:
 
 lutwat.params()
 lutwat.param_hires()
@@ -874,7 +881,7 @@ lutwat.sp_hires()
 
 # ## Plot the 4STAR zenith radiance measurement and model
 
-# In[24]:
+# In[27]:
 
 from Sp_parameters import nanmasked, closestindex, norm2max
 
@@ -1107,18 +1114,18 @@ plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 
 # ### Now load and run the retrieval on 4STAR data subset
 
-# In[45]:
+# In[29]:
 
 import run_kisq_retrieval as rk
 reload(rk)
 
 
-# In[46]:
+# In[30]:
 
 (stars.icetau,stars.iceref,stars.icephase,stars.iceki) = rk.run_retrieval(stars,lutice,force_liq=True)
 
 
-# In[47]:
+# In[31]:
 
 (stars.wattau,stars.watref,stars.watphase,stars.watki) = rk.run_retrieval(stars,lutwat,force_liq=True)
 
@@ -1127,13 +1134,13 @@ reload(rk)
 
 # Assure that the retrieved properties make sense first, remove bad data
 
-# In[48]:
+# In[32]:
 
 stars.icetau[stars.icetau>=80] = np.nan
 stars.wattau[stars.wattau>=80] = np.nan
 
 
-# In[49]:
+# In[33]:
 
 stars.iceref[stars.iceref>=60] = np.nan
 stars.watref[stars.watref>=60] = np.nan
@@ -1147,13 +1154,13 @@ stars.watref[stars.watref==17] = np.nan
 
 # Now smooth over data to reduce variability
 
-# In[50]:
+# In[34]:
 
 stars.icetau = Sp.smooth(stars.icetau[:],5,nan=False)
 stars.wattau = Sp.smooth(stars.wattau[:],5,nan=False)
 
 
-# In[51]:
+# In[35]:
 
 stars.iceref = Sp.smooth(stars.iceref[:],5,nan=False)
 stars.watref = Sp.smooth(stars.watref[:],5,nan=False)
@@ -1196,15 +1203,44 @@ plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
 
 
+# ## Now save the retrieved cloud values
+
+# In[38]:
+
+import cPickle as pickle
+
+
+# In[41]:
+
+import hdf5storage as hs
+
+
+# In[39]:
+
+mdict = {'stars':stars,'aqua':aqua,'terra':terra}
+
+
+# In[42]:
+
+fp_out = fp+'retr_sav.mat'
+hs.savemat(fp_out,mdict)
+
+
+# In[46]:
+
+fpp_out = fp+'retr_sav.p'
+pickle.dump(mdict,open(fpp_out,"wb"))
+
+
 # ### Compile into statistics over water and over ice
 
-# In[27]:
+# In[47]:
 
 fltice = np.where(stars.lon<-132.0)[0]
 fltwat = np.where(stars.lon>-131.0)[0]
 
 
-# In[53]:
+# In[48]:
 
 (stars.wattaumask,stars.iwattau) = Sp.nanmasked(stars.wattau[fltwat])
 (stars.icetaumask,stars.iicetau) = Sp.nanmasked(stars.icetau[fltice])
@@ -1227,7 +1263,7 @@ def data2figpoints(x,dx):
     return left,bottom,width,height
 
 
-# In[55]:
+# In[101]:
 
 def plot_vert_hist(fig,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2):
     "function to plot a 'bean' like vertical histogram"
@@ -1438,27 +1474,27 @@ fig = sm.graphics.beanplot([stars.wattaumask,stars.icetaumask],
 
 # ## Now Match MODIS points to flight path
 
-# In[108]:
+# In[49]:
 
 aqua.keys()
 
 
-# In[109]:
+# In[50]:
 
 aqua['lon'].shape
 
 
-# In[110]:
+# In[55]:
 
-ind_aqua = np.zeros((2,len(path_lat)), dtype=numpy.int)
+ind_aqua = np.zeros((2,len(path_lat)), dtype=np.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
     ind_aqua[:,i] = np.unravel_index(np.nanargmin(np.square(aqua['lat']-x)+np.square(aqua['lon']-y)),aqua['lat'].shape)
 
 
-# In[111]:
+# In[56]:
 
-ind_terra = np.zeros((2,len(path_lat)), dtype=numpy.int)
+ind_terra = np.zeros((2,len(path_lat)), dtype=np.int)
 for i,x in enumerate(path_lat):
     y = path_lon[i]
     ind_terra[:,i] = np.unravel_index(np.nanargmin(np.square(terra['lat']-x)+np.square(terra['lon']-y)),terra['lat'].shape)
@@ -1486,7 +1522,7 @@ plt.xlabel('Longitude')
 plt.title('MODIS Cloud effective radius along flight path')
 
 
-# In[114]:
+# In[57]:
 
 pathice = np.where(path_lon<-132.0)[0]
 pathwat = np.where(path_lon>-131.0)[0]
@@ -1532,6 +1568,244 @@ ax1.set_title('Distribution of Effective Radius over different surfaces')
 plt.savefig(fp+'plots/20140919_comp_modis_ref_forceliq.png',dpi=600,transparent=True)
 
 
+# ## Compile the values of downwelling and upwelling irradiance linked to the cloud properties
+
+# ### Do the over water first
+
+# In[68]:
+
+waq_dn = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+wte_dn = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_dn = np.zeros_like(stars.watref[fltwat])
+waq_up = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+wte_up = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_up = np.zeros_like(stars.watref[fltwat])
+
+
+# In[70]:
+
+waq_dncl = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+wte_dncl = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_dncl = np.zeros_like(stars.watref[fltwat])
+waq_upcl = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+wte_upcl = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_upcl = np.zeros_like(stars.watref[fltwat])
+
+
+# In[97]:
+
+waq_cre = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+waq_rcre = np.zeros_like(aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]])
+wte_cre = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_cre = np.zeros_like(stars.watref[fltwat])
+wte_rcre = np.zeros_like(terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]])
+wst_rcre = np.zeros_like(stars.watref[fltwat])
+
+
+# In[66]:
+
+#do over water
+print swat['sp_irrdn'].shape
+print 'sp (wp, wvl, z, re, ta)'
+
+
+# In[90]:
+
+def get_rad_close(s,wvl,p,z,t,r):
+    it = np.argmin(abs(swat['tau']-t))
+    ir = np.argmin(abs(swat['ref']-r))
+    return np.sum(s[p,250:,z,it,ir]*wvl[250:]/1000.0)
+
+
+# In[91]:
+
+ref_dn = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,1,0,0)
+
+
+# In[106]:
+
+for i,t in enumerate(aqua['tau'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]]):
+    r = aqua['ref'][ind_aqua[0,pathwat],ind_aqua[1,pathwat]][i]
+    waq_dn[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,t,r)
+    waq_up[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,t,r)
+    waq_dncl[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,0,0)
+    waq_upcl[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,0,0)
+    waq_cre[i] = (waq_dn[i]-waq_up[i])-(waq_dncl[i]-waq_upcl[i])
+    waq_rcre[i] = waq_cre[i]/ref_dn*100.0
+
+
+# In[107]:
+
+for i,t in enumerate(terra['tau'][ind_terra[0,pathwat],ind_terra[1,pathwat]]):
+    r = terra['ref'][ind_terra[0,pathwat],ind_terra[1,pathwat]][i]
+    wte_dn[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,t,r)
+    wte_up[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,t,r)
+    wte_dncl[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,0,0)
+    wte_upcl[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,0,0)
+    wte_cre[i] = (wte_dn[i]-wte_up[i])-(wte_dncl[i]-wte_upcl[i])
+    wte_rcre[i] = wte_cre[i]/ref_dn*100.0
+
+
+# In[108]:
+
+for i,t in enumerate(stars.wattau[fltwat]):
+    r = stars.watref[fltwat][i]
+    wst_dn[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,t,r)
+    wst_up[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,t,r)
+    wst_dncl[i] = get_rad_close(swat['sp_irrdn'],swat['zenlambda'],0,0,0,0)
+    wst_upcl[i] = get_rad_close(swat['sp_irrup'],swat['zenlambda'],0,0,0,0)
+    wst_cre[i] = (wst_dn[i]-wst_up[i])-(wst_dncl[i]-wst_upcl[i])
+    wst_rcre[i] = wst_cre[i]/ref_dn*100.0
+
+
+# In[102]:
+
+import plotting_utils as pu
+
+
+# In[111]:
+
+fig = plt.figure(figsize=(7,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,2.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
+ax1.set_title('relative Cloud Radiative Effect - Surface')
+ax1.set_xticks([0,1,2])
+ax1.set_xticklabels(['MODIS Aqua\n(reflected)','MODIS Terra\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,waq_rcre,0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,wte_rcre,1,[-100,0],legend=True,color='c',bins=50)
+pu.plot_vert_hist(fig,ax1,wst_rcre,2,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plots/rcre_water.png',dpi=600,transparent=True)
+
+
+# In[112]:
+
+np.nanmean(waq_rcre), np.nanmean(wte_rcre),np.nanmean(wst_rcre)
+
+
+# In[113]:
+
+np.nanstd(waq_rcre), np.nanstd(wte_rcre),np.nanstd(wst_rcre)
+
+
+# ### Do over ice now
+
+# In[117]:
+
+iaq_dn = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+ite_dn = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_dn = np.zeros_like(stars.watref[fltice])
+iaq_up = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+ite_up = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_up = np.zeros_like(stars.watref[fltice])
+
+
+# In[118]:
+
+iaq_dncl = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+ite_dncl = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_dncl = np.zeros_like(stars.watref[fltice])
+iaq_upcl = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+ite_upcl = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_upcl = np.zeros_like(stars.watref[fltice])
+
+
+# In[119]:
+
+iaq_cre = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+iaq_rcre = np.zeros_like(aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]])
+ite_cre = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_cre = np.zeros_like(stars.watref[fltice])
+ite_rcre = np.zeros_like(terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]])
+ist_rcre = np.zeros_like(stars.watref[fltice])
+
+
+# In[120]:
+
+#do over water
+print sice['sp_irrdn'].shape
+print 'sp (wp, wvl, z, re, ta)'
+
+
+# In[121]:
+
+def get_rad_close(s,wvl,p,z,t,r):
+    it = np.argmin(abs(sice['tau']-t))
+    ir = np.argmin(abs(sice['ref']-r))
+    return np.sum(s[p,250:,z,it,ir]*wvl[250:]/1000.0)
+
+
+# In[138]:
+
+ref_dn = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,1,0,0)
+
+
+# In[139]:
+
+for i,t in enumerate(aqua['tau'][ind_aqua[0,pathice],ind_aqua[1,pathice]]):
+    r = aqua['ref'][ind_aqua[0,pathice],ind_aqua[1,pathice]][i]
+    iaq_dn[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,t,r)
+    iaq_up[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,t,r)
+    iaq_dncl[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,0,0)
+    iaq_upcl[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,0,0)
+    iaq_cre[i] = (iaq_dn[i]-iaq_up[i])-(iaq_dncl[i]-iaq_upcl[i])
+    iaq_rcre[i] = iaq_cre[i]/ref_dn*100.0
+
+
+# In[140]:
+
+for i,t in enumerate(terra['tau'][ind_terra[0,pathice],ind_terra[1,pathice]]):
+    r = terra['ref'][ind_terra[0,pathice],ind_terra[1,pathice]][i]
+    ite_dn[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,t,r)
+    ite_up[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,t,r)
+    ite_dncl[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,0,0)
+    ite_upcl[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,0,0)
+    ite_cre[i] = (ite_dn[i]-ite_up[i])-(ite_dncl[i]-ite_upcl[i])
+    ite_rcre[i] = ite_cre[i]/ref_dn*100.0
+
+
+# In[141]:
+
+for i,t in enumerate(stars.icetau[fltice]):
+    r = stars.iceref[fltice][i]
+    ist_dn[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,t,r)
+    ist_up[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,t,r)
+    ist_dncl[i] = get_rad_close(sice['sp_irrdn'],sice['zenlambda'],0,0,0,0)
+    ist_upcl[i] = get_rad_close(sice['sp_irrup'],sice['zenlambda'],0,0,0,0)
+    ist_cre[i] = (ist_dn[i]-ist_up[i])-(ist_dncl[i]-ist_upcl[i])
+    ist_rcre[i] = ist_cre[i]/ref_dn*100.0
+
+
+# In[142]:
+
+import plotting_utils as pu
+
+
+# In[143]:
+
+fig = plt.figure(figsize=(7,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,2.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
+ax1.set_title('relative Cloud Radiative Effect over ice - Surface')
+ax1.set_xticks([0,1,2])
+ax1.set_xticklabels(['MODIS Aqua\n(reflected)','MODIS Terra\n(reflected)','4STAR\n(transmitted)'])
+pu.plot_vert_hist(fig,ax1,iaq_rcre,0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,ite_rcre,1,[-100,0],legend=True,color='c',bins=50)
+pu.plot_vert_hist(fig,ax1,ist_rcre,2,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'plots/rcre_ice.png',dpi=600,transparent=True)
+
+
+# In[130]:
+
+np.nanmean(iaq_rcre), np.nanmean(ite_rcre),np.nanmean(ist_rcre)
+
+
+# In[131]:
+
+np.nanstd(iaq_rcre), np.nanstd(ite_rcre),np.nanstd(ist_rcre)
+
+
+# # Run the advanced miscrophysics analysis
+
 # ## Compare to $r_{eff}$ derived from Cloud probes
 
 # In[130]:
@@ -1565,7 +1839,7 @@ ax1.set_title('Distribution of Effective Radius over different surfaces')
 plt.savefig(fp+'plots/20140919_comp_probes_ref_forceliq.png',dpi=600,transparent=True)
 
 
-# ## Testing different programs for metadata saving for pngs and python files
+# # Testing different programs for metadata saving for pngs and python files
 
 # In[ ]:
 
