@@ -50,7 +50,7 @@
 
 # In[182]:
 
-def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
+def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly_below=False):
     """
     Purpose:
 
@@ -78,6 +78,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        append_directly_below: (default False) if true then opens a already existing file and only writes out the last line as an append
     
     Dependencies:
 
@@ -94,6 +95,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1): Samuel LeBlanc, DC8 flying above Korea, 2016-05-02
     """
     import numpy as np
     if (zbot >= ztop):
@@ -112,16 +114,24 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False):
     lwc = lwp/(ztop-zbot)*0.001
     if verbose:
         print('..Cloud water content is: %f' % lwc)
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to file: %s' % output_file)
-    output.write('# z [km]    IWC/LWC [g/m^3]    Reff [um] \n')
-    output.write('%4.4f\t%4.5f\t%3.2f\n' % (ztop,0,0))
-    output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+    if not append_directly_below:
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to file: %s' % output_file)
+        output.write('# z [km]    IWC/LWC [g/m^3]    Reff [um] \n')
+        output.write('%4.4f\t%4.5f\t%3.2f\n' % (ztop,0,0))
+        output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+    else:
+        try:
+            output = file(output_file,'a')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
     output.close() 
     if verbose:
         print('..File finished write_cloud_file, closed')
@@ -297,7 +307,7 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
 # In[45]:
 
-def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbose=False):
+def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbose=False,append_directly_below=False):
     """
     Purpose:
 
@@ -323,6 +333,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        append_directly_below: (default False) if true appends a new line to an existing file with cloud properties directly 
+                               below the last line of the already existing file
     
     Dependencies:
 
@@ -340,6 +352,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1): Samuel LeBlanc, DC8 flying above Korea, 2016-05-02
+                        - added the append_directly_below keyword
     """
     import numpy as np
     from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa_moms
@@ -355,18 +369,30 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
     lwc = lwp/(ztop-zbot)*0.001
     ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(ref,lwc,moms_dict=moms_dict,verbose=False)
     
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to file: %s' % output_file)
+    if not append_directly_below:
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to file: %s' % output_file)
 
-    output.write('# z [km] \t file_path\n')
-    output.write('%4.4f\t%s\n' % (ztop,'NULL'))
-    file_cloud = output_file+'_zbot'
-    output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+        output.write('# z [km] \t file_path\n')
+        output.write('%4.4f\t%s\n' % (ztop,'NULL'))
+        file_cloud = output_file+'_zbot'
+        output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+    else:
+        try:
+            output = file(output_file,'a')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to file: %s' % output_file)
+
+        file_cloud = output_file+'_zbelow'
+        output.write('%4.4f\t%s\n' % (zbot,file_cloud))
     
     write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose)
     
@@ -627,6 +653,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to cloud dict
             file_name: file name and paths of moments file for cloud defined. 
                        By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
+            cloud_below: (default False) if set, creates a liquid cloud with constant properties (tau=10,ref=10 microns), of thickness 1 km,
+                         directly below the zbot value. Used for in cloud calculations
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
@@ -718,6 +746,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added slit_file to source options
                 - added atm_file to source options
                 - added zenith radiance keyword
+        Modified: Samuel LeBlanc, on the DC8 flying above Korea, 2016-05-02
+                - added the cloud_below keyword to the cloud options.
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
@@ -752,7 +782,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     albedo = merge_dicts({'create_albedo_file':False,'sea_surface_albedo':False,'wind_speed':10,
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
-    cloud = merge_dicts({'write_moments_file':False},cloud)
+    cloud = merge_dicts({'write_moments_file':False,'cloud_below':False},cloud)
     
     if source.get('source')=='solar':
         source['source'] = 'solar '+source['dat_path']+'solar_flux/kurudz_1.0nm.dat per_nm'
@@ -881,9 +911,18 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             if not cloud.get('link_to_mom_file'):
                 write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
                                          verbose=verbose,moms_dict=cloud.get('moms_dict'))
+            if cloud['cloud_below']:
+                if not cloud.get('link_to_mom_file'):
+                    write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),append_directly_below=True)
+                
         else:
             if not cloud.get('link_to_mom_file'):
                 write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
+            if cloud['cloud_below']:
+                if not cloud.get('link_to_mom_file'):
+                    write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                     verbose=verbose,append_directly_below=True)
     output.close()
     if make_base:
         base.close()
