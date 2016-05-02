@@ -49,7 +49,7 @@
 
 # # Import initial modules and default paths
 
-# In[1]:
+# In[10]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -63,25 +63,35 @@ import hdf5storage as hs
 import load_modis as lm
 
 
-# In[2]:
+# In[11]:
 
 from mpl_toolkits.basemap import Basemap,cm
 
 
-# In[3]:
+# In[12]:
 
 import write_utils as wu
 
 
-# In[4]:
+# In[13]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[5]:
+# In[14]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/NAAMES/'
+
+
+# In[15]:
+
+from osgeo import gdal
+
+
+# In[16]:
+
+import numpy as np
 
 
 # # Load the various data
@@ -128,13 +138,13 @@ star['tau'][star['tau']<1.0]=np.nan
 
 # ## Load the MODIS file
 
-# In[9]:
+# In[17]:
 
 myd3 = fp+'c130/20151117_flt/MYD03.A2015321.1540.006.2015322160400.hdf'
 myd6 = fp+'c130/20151117_flt/MYD06_L2.A2015321.1540.006.2015322185040.hdf'
 
 
-# In[10]:
+# In[20]:
 
 modis,modis_dicts = lm.load_modis(myd3,myd6)
 
