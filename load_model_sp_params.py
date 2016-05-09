@@ -34,7 +34,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
-#     - load_modis.py : for loading modis files
+#     - load_utils.py : for loading modis files
 #     - matplotlib
 #     - mpltools
 #     - numpy
@@ -709,7 +709,7 @@ print os.path.isfile(myd06_file)
 
 # In[47]:
 
-import load_modis as lm
+import load_utils as lm
 reload(lm)
 if 'modis' in locals():
     del modis, modis_dicts

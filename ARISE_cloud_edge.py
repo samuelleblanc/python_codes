@@ -31,7 +31,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
-#     - load_modis.py : for loading modis and other files
+#     - load_utils.py : for loading modis and other files
 #     - matplotlib
 #     - mpltools
 #     - numpy
@@ -73,7 +73,7 @@ import scipy.io as sio
 import scipy
 import math, os, IPython
 import Sp_parameters as Sp
-import load_modis as lm
+import load_utils as lm
 IPython.InteractiveShell.cache_size = 0
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/ARISE/'

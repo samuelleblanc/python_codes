@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import Sp_parameters as Sp
-from load_modis import mat2py_time, toutc, load_ict
+from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 

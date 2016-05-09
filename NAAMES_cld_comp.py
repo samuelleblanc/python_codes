@@ -26,7 +26,7 @@
 # Dependencies:
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
-#     - load_modis.py : for loading modis files
+#     - load_utils.py : for loading modis files
 #     - matplotlib
 #     - numpy
 #     - scipy : for saving and reading
@@ -60,7 +60,7 @@ import numpy as np
 import scipy.io as sio
 import Sp_parameters as Sp
 import hdf5storage as hs
-import load_modis as lm
+import load_utils as lm
 
 
 # In[11]:
@@ -82,16 +82,6 @@ get_ipython().magic(u'matplotlib notebook')
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/NAAMES/'
-
-
-# In[15]:
-
-from osgeo import gdal
-
-
-# In[16]:
-
-import numpy as np
 
 
 # # Load the various data

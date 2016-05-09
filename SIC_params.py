@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -26,7 +24,11 @@
 #   
 # Dependencies:
 # 
-#     - 
+#     - matplotlib
+#     - scipy
+#     - load_utils
+#     - math
+#     - Sp_parameters
 #   
 # Needed Files:
 # 
@@ -38,47 +40,54 @@
 #      Written: by Samuel LeBlanc, Santa Cruz, CA, 2015-08-12
 #             
 
-# <codecell>
+# In[2]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np, h5py
 import scipy.io as sio
 import scipy
 import math, os, IPython
 import Sp_parameters as Sp
-import load_modis as lm
+import load_utils as lm
 IPython.InteractiveShell.cache_size = 0
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SSFR3/'
 
-# <codecell>
+
+# In[3]:
 
 fppss = fp+'retrieved/cst/retr_day_pss_v4.out'
 fpsub = fp+'retrieved/cst/retr_day_sub_v4.out'
 
-# <codecell>
+
+# In[4]:
 
 pss = sio.idl.readsav(fppss)
 sub = sio.idl.readsav(fpsub)
 
-# <codecell>
+
+# In[6]:
 
 pss.keys()
 
-# <codecell>
+
+# In[7]:
 
 sub.keys()
 
-# <codecell>
+
+# In[9]:
 
 pss['hrt'].shape
 
-# <codecell>
+
+# In[ ]:
+
 
 

@@ -35,7 +35,7 @@
 #     - math
 #     - pdb
 #     - datetime
-#     - load_modis
+#     - load_utils
 #   
 # Needed Files:
 # 
@@ -1072,7 +1072,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     
         numpy
         scipy
-        load_modis
+        load_utils
         Run_libradtran 
         os
         
@@ -1109,7 +1109,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     import numpy as np
     import scipy.io as sio
     import Run_libradtran as RL
-    import load_modis as lm
+    import load_utils as lm
     import os
     if fp_pmom:
         pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')

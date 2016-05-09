@@ -18,7 +18,7 @@ fp='C:/Users/sleblan2/Research/flight_planning/p3_flights/'
 
 # In[2]:
 
-import load_modis as lm
+import load_utils as lm
 reload(lm)
 
 

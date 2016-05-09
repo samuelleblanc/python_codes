@@ -382,6 +382,8 @@ def load_hdf(datfile,values=None,verbose=True):
         Written (v1.0): Samuel LeBlanc, 2014-12-10, NASA Ames
         Modified (v1.1): Samuel LeBlanc, 2015-04-10, NASA Ames
                         - added verbose keyword
+        Modified (v1.2): Samuel LeBlanc, 2016-05-07, Osan AFB, Korea
+                        - added error handling for missing fill value
     """
     import numpy as np
     from osgeo import gdal
@@ -422,6 +424,9 @@ def load_hdf(datfile,values=None,verbose=True):
             makenan = True
         except KeyError:
             makenan = False
+        except ValueError:
+            makenan = False
+            print '*** FillValue not used to replace NANs, will have to do manually ***'
         try:
             scale = float(hdf_dicts[i]['scale_factor'])
             offset = float(hdf_dicts[i]['add_offset'])
@@ -899,6 +904,92 @@ def load_netcdf(datfile,values=None,verbose=True):
     if verbose:
         print cdf_dict.keys()
     return cdf_data,cdf_dict
+
+
+# In[ ]:
+
+def load_aeronet(f,verbose=True):
+    """
+    Name:
+
+        load_aeronet
+    
+    Purpose:
+
+        To load the LEV1.0 Aeronet AOD files
+    
+    Calling Sequence:
+
+        aeronet = load_aeronet(f) 
+    
+    Input: 
+  
+        f: path and name of lev10 file
+    
+    Output:
+
+        aeronet: numpy recarray of values
+    
+    Keywords: 
+
+       verbose: (default True) if True, then prints out info as data is read
+    
+    Dependencies:
+
+        numpy
+        os
+        load_modis: this file
+    
+    Required files:
+   
+        LEV10 file
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2016-05-09, Osan AB, Korea
+        
+    """
+    import numpy as np
+    from datetime import datetime
+    import os
+    if not(os.path.isfile(datfile)):
+        error('Data file {} not found!'.format(f))
+    if f.split('.')[-1].find('lev10')<0 | f.split('.')[-1].find('LEV10')<0:
+        error('Data file {} is not a level 1.0 file - it is not yet available to read'.foramt(f))
+    def makeday(txt):
+        return datetime.strptime(txt,'%d:%m:%Y').timetuple().tm_yday
+    def maketime(txt):
+        return lm.toutc(datetime.strptime(txt,'%H:%M:%S'))
+    conv = {'Dateddmmyy':makeday,'Timehhmmss':maketime}
+    if verbose:
+        print 'Opening file: {}'.format(f)
+    ra = np.genfromtxt(f,skip_header=4,names=True,delimiter=',',converters=conv)
+    da = lm.recarray_to_dict(ra)
+    ff = open(f,'r')
+    lines = ff.readlines()
+    da['header'] = lines[0:4]
+    for n in da['header'][2].split(','):
+        u = n.split('=')
+    try:
+        da[u[0]]=float(u[1])
+    except:
+        da[u[0]] = u[1].strip()
+    return da    
+
+
+# In[ ]:
+
+def recarray_to_dict(ra):
+    'simple function to convert numpy recarray to a dict with numpy arrays. Useful for modifying the output from genfromtxt'
+    import numpy as np
+    da = {}
+    for n in ra.dtype.names:
+        da[n]=ra[n]
+    return da
 
 
 # Testing of the script:

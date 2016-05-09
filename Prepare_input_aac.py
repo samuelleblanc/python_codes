@@ -33,6 +33,7 @@
 #     - mplt_toolkits for basemap, map plotting
 #     - pdb
 #     - datetime
+#     - load_utils
 # 
 #   
 # Needed Files:
@@ -206,7 +207,7 @@ input_mmm['MODIS_lat'][0,0].shape
 
 # In[5]:
 
-import load_modis as lm
+import load_utils as lm
 reload(lm)
 
 

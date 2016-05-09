@@ -47,7 +47,7 @@
 #     - Tkinter (for file open dialogs)
 #     - Sp_parameter
 #     - mpltools for color cycle
-#     - load_modis for mat2py_time and toutc
+#     - load_utils for mat2py_time and toutc
 #   
 # Needed Files:
 # 
@@ -145,7 +145,7 @@ import matplotlib.pyplot as plt
 import Run_libradtran as RL
 import hdf5storage as hs
 import numpy as np
-from load_modis import mat2py_time, toutc
+from load_utils import mat2py_time, toutc
 import Sp_parameters as Sp
 from mpltools import color
 import scipy.io as sio

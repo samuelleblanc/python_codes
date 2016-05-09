@@ -27,7 +27,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
-#     - load_modis.py : for loading modis files, and various other loading
+#     - load_utils.py : for loading modis files, and various other loading
 #     - matplotlib
 #     - numpy
 #     - scipy : for saving and reading
@@ -51,7 +51,7 @@
 
 # # Initial Imports and default folders
 
-# In[3]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -65,7 +65,7 @@ import math
 import os
 import Sp_parameters as Sp
 import hdf5storage as hs
-from load_modis import mat2py_time, toutc, load_ict
+from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 import cPickle as pickle
 get_ipython().magic(u'matplotlib notebook')

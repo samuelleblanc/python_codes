@@ -37,7 +37,7 @@
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
 #     - run_kisq_retrieval.py : for the retrieval functions
-#     - load_modis.py : for loading modis files
+#     - load_utils.py : for loading modis files
 #     - matplotlib
 #     - mpltools
 #     - numpy
@@ -88,7 +88,7 @@ import math
 import os
 import Sp_parameters as Sp
 import hdf5storage as hs
-from load_modis import mat2py_time, toutc, load_ict
+from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 import cPickle as pickle
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
@@ -362,8 +362,8 @@ plt.show()
 
 # In[440]:
 
-import load_modis
-reload(load_modis)
+import load_utils
+reload(load_utils)
 
 
 # In[441]:
@@ -843,10 +843,10 @@ meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 # In[305]:
 
-import load_modis as lm
+import load_utils as lm
 if 'lm' in locals():
     reload(lm)
-from load_modis import load_ict
+from load_utils import load_ict
 
 
 # ## Load the ER2 nav files
@@ -1877,9 +1877,9 @@ plt.title('SSFR from ER2 efective radius')
 # In[420]:
 
 cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
-import load_modis as lm
+import load_utils as lm
 reload(lm)
-from load_modis import load_cpl_layers
+from load_utils import load_cpl_layers
 cpl_layers = load_cpl_layers(cpl_layer_file)
 
 
@@ -1986,7 +1986,7 @@ print os.path.isfile(myd06_file)
 
 # In[112]:
 
-import load_modis as lm
+import load_utils as lm
 reload(lm)
 if 'modis' in locals():
     del modis, modis_dicts
@@ -2132,7 +2132,7 @@ plt.show()
 
 if 'lm' in locals():
     reload(lm)
-from load_modis import load_emas, load_hdf
+from load_utils import load_emas, load_hdf
 
 
 # In[22]:
@@ -2367,13 +2367,13 @@ aprfiles
 
 # In[8]:
 
-import load_modis
-reload(load_modis)
+import load_utils
+reload(load_utils)
 
 
 # In[9]:
 
-from load_modis import load_apr
+from load_utils import load_apr
 apr = load_apr(aprfiles)
 
 
@@ -4877,7 +4877,7 @@ s_dict = {''}
 
 # In[41]:
 
-import load_modis as lm
+import load_utils as lm
 
 
 # In[42]:

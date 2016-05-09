@@ -26,7 +26,7 @@
 # Dependencies:
 # 
 #     - Sp_parameters.py : for Sp class definition, and for defining the functions used to build parameters
-#     - load_modis.py : for loading modis files
+#     - load_utils.py : for loading modis files
 #     - matplotlib
 #     - numpy
 #     - scipy : for saving and reading
@@ -61,7 +61,7 @@ import numpy as np
 import scipy.io as sio
 import Sp_parameters as Sp
 import hdf5storage as hs
-import load_modis as lm
+import load_utils as lm
 import os
 
 
@@ -254,7 +254,7 @@ print os.path.isfile(myd06_file)
 
 # In[13]:
 
-import load_modis as lm
+import load_utils as lm
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 

@@ -62,9 +62,9 @@ import os
 import Sp_parameters as Sp
 
 
-# In[35]:
+# In[1]:
 
-from load_modis import mat2py_time, toutc
+from load_utils import mat2py_time, toutc
 
 
 # In[3]:

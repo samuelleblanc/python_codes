@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -34,7 +32,7 @@
 #     - mpltools
 #     - numpy
 #     - scipy : for saving and reading
-#     - load_modis: for mat2py_time and toutc functions
+#     - load_utils: for mat2py_time and toutc functions
 #     - Sp_parameters: for find_closest function
 #     - mpl_toolkits
 #   
@@ -43,24 +41,25 @@
 #   - file.rc : for consistent creation of look of matplotlib figures
 #   - General star.mat: or other 4STAR star file containing raw spectra
 
-# <codecell>
+# In[ ]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np, h5py
 #import plotly.plotly as py
 import scipy.io as sio
 import math
 import os
-from load_modis import mat2py_time, toutc
+from load_utils import mat2py_time, toutc
 from Sp_parameters import find_closest
 
-# <codecell>
+
+# In[2]:
 
 # set the basic directory path
 fp = 'C:\\Users\\sleblan2\\Research\\ARISE\\c130\\'
@@ -68,20 +67,21 @@ datestr = '20141002'
 filesep = '\\'
 print filesep
 
-# <codecell>
+
+# In[3]:
 
 file_name = fp+'20141002_ARISE_Flight_16\\20141002flt16starsun.mat' #'20141002_ARISE_Flight_16\\20141002flt16star.mat'
 
-# <headingcell level=2>
 
-# Load the 4STAR data and select time points
+# ## Load the 4STAR data and select time points
 
-# <codecell>
+# In[4]:
 
 star = sio.loadmat(file_name)
 star.keys()
 
-# <codecell>
+
+# In[5]:
 
 if 't' in star.keys():
     star['utc'] = toutc(mat2py_time(star['t']))
@@ -89,7 +89,8 @@ else:
     star['utc'] = toutc(mat2py_time(star['vis_sun']['t'][0][0]))
 #star['vis_sun']['t'][0][0]
 
-# <codecell>
+
+# In[6]:
 
 star['good'] = np.where((star['utc']>25.0) & 
                         (star['utc']<27.6) & 
@@ -99,7 +100,8 @@ star['good'] = np.where((star['utc']>25.0) &
 print len(star['good'])
 print star['good'][0]
 
-# <codecell>
+
+# In[7]:
 
 if 't' in star.keys():
     rate = star['rateaero'][star['good'],:]
@@ -110,11 +112,10 @@ else:
     raw_vis = star['vis_sun']['raw'][0][0][star['good'],:]
     print raw_vis.shape
 
-# <headingcell level=2>
 
-# Plot time traces at select wavelengths
+# ## Plot time traces at select wavelengths
 
-# <codecell>
+# In[8]:
 
 print star['tau_aero'].shape
 print star['w'].shape
@@ -122,7 +123,8 @@ iw = find_closest(star['w'][0],np.array([380,400,430,500,515,635,875,1000,1140,1
 print star['w'][0].shape
 print iw
 
-# <codecell>
+
+# In[9]:
 
 plt.figure()
 color.cycle_cmap(len(iw)+1,cmap=plt.cm.gist_ncar)
@@ -134,7 +136,8 @@ plt.ylim([0,0.05])
 plt.legend(bbox_to_anchor=[1,0.1],loc=3)
 plt.savefig(fp+datestr+'_AOD_time.png',dpi=600)
 
-# <codecell>
+
+# In[108]:
 
 plt.figure()
 plt.plot(star['w'].T,star['tau_aero'][star['good'][100],:])
@@ -145,7 +148,8 @@ plt.ylabel('AOD')
 plt.title('AOD at single time point')
 plt.savefig(fp+datestr+'_AOD_spectrum.png',dpi=600)
 
-# <codecell>
+
+# In[154]:
 
 fi,ax = plt.subplots(figsize=(8,13))
 aodlevels = np.linspace(0,0.1,26)
@@ -168,7 +172,8 @@ ax2.set_yticklabels(ax2Ys)
 plt.draw()
 plt.savefig(fp+datestr+'_AOD_time_spectrum.png',dpi=600)
 
-# <codecell>
+
+# In[152]:
 
 plt.figure(figsize=(8,13))
 aodlevels = np.linspace(0.015,0.035,26)
@@ -181,15 +186,15 @@ plt.ylabel('UTC [h]')
 plt.title('AOD for Langley flight near 430 nm (2014-10-02)')
 plt.savefig(fp+datestr+'_AOD_time_spectrum_zoom.png',dpi=600)
 
-# <headingcell level=2>
 
-# Prepare for testing PCA analysis of raw spectra
+# ## Prepare for testing PCA analysis of raw spectra
 
-# <codecell>
+# In[10]:
 
 from sklearn.decomposition import PCA
 
-# <codecell>
+
+# In[11]:
 
 if 'rate' in locals():
     print rate.shape
@@ -200,43 +205,48 @@ else:
     raw_fl = where(np.isfinite(raw_vis[:,0]))
     wvl = np.genfromtxt('C:\\Users\\sleblan2\\Research\\4STAR\\vis_4STAR_wvl.dat')
 
-# <codecell>
+
+# In[12]:
 
 wvl.shape
 
-# <markdowncell>
 
 # Get the log of the rate
 
-# <codecell>
+# In[13]:
 
 ratel = np.log(rate)
 rate_m = ratel/m_aero
 
-# <codecell>
+
+# In[14]:
 
 print rate_m.shape
 print m_aero.shape
 print ratel.shape
 
-# <codecell>
+
+# In[15]:
 
 print ratel.shape
 print isfinite(ratel[:,400]).all()
 
-# <codecell>
+
+# In[16]:
 
 wflrate = [isfinite(ratel).any(0)][0]
 print where(~wflrate)
 wflrate = range(210,1020)+range(1050,1530)
 
-# <codecell>
+
+# In[17]:
 
 flrate = [isfinite(ratel[:,wflrate]).all(1)][0]
 print flrate.shape
 print where(~flrate)
 
-# <codecell>
+
+# In[18]:
 
 ratel1 = ratel[flrate,:]
 print ratel1.shape
@@ -245,18 +255,21 @@ print ratel2.shape
 if len(wvl) != len(wflrate):
     wvl = star['w'][0][wflrate]
 
-# <codecell>
+
+# In[19]:
 
 print isfinite(ratel2).all()
 
-# <codecell>
+
+# In[20]:
 
 raw1 = raw[flrate,:]
 raw2 = raw1[:,wflrate]
 rate_m1 = rate_m[flrate,:]
 rate_m2 = rate_m1[:,wflrate]
 
-# <codecell>
+
+# In[21]:
 
 if 'rate' in locals():
     ratel1 = ratel[flrate,:]
@@ -274,21 +287,24 @@ else:
     pca.fit(raw_vis)
     evals = pca.explained_variance_ratio_
 
-# <codecell>
+
+# In[22]:
 
 plt.plot(evals_r,label='each pca')
 plt.plot(evals_r.cumsum(),'r',label='cumulative info')
 plt.title('Variability of rate counts explained by number of pca')
 plt.legend(frameon=False)
 
-# <codecell>
+
+# In[23]:
 
 plt.plot(evals, label='each pca')
 plt.plot(evals.cumsum(),'r', label='cumulative info')
 plt.title('Vaiability of raw counts in pca')
 plt.legend(frameon=False)
 
-# <codecell>
+
+# In[24]:
 
 print evals.cumsum()
 print evals
@@ -297,7 +313,8 @@ print coms.shape
 coms_r = pca_r.components_
 coms_m = pca_m.components_
 
-# <codecell>
+
+# In[27]:
 
 fig2,ax2 = plt.subplots(5,2,figsize=(15,11))
 ax2 = ax2.ravel()
@@ -315,12 +332,14 @@ plt.suptitle('Raw counts (rate)')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_langley_pca_raw.png',dpi=600)
 
-# <codecell>
+
+# In[26]:
 
 for i,j in list(enumerate(wvl)): 
     print i,j
 
-# <codecell>
+
+# In[32]:
 
 fig3,ax3 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
@@ -348,7 +367,8 @@ plt.suptitle('Log of raw rate zoomed')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_langley_pca_log_zoom.png',dpi=600)
 
-# <codecell>
+
+# In[33]:
 
 fig4,ax4 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
@@ -363,7 +383,8 @@ plt.suptitle('Log of raw rate')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_langley_pca_log.png',dpi=600)
 
-# <codecell>
+
+# In[34]:
 
 fig5,ax5 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
@@ -391,11 +412,13 @@ plt.suptitle('Log of raw rate')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_langley_pca_log_vis_430nm.png',dpi=600)
 
-# <codecell>
+
+# In[32]:
 
 print coms[0,:]
 
-# <codecell>
+
+# In[35]:
 
 fig6,ax6 = plt.subplots(5,2,figsize=(15,11))
 plt.tight_layout()
@@ -423,23 +446,24 @@ plt.suptitle('Log of raw rate divided by airmass')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_langley_pca_log_airmass.png',dpi=600)
 
-# <headingcell level=2>
 
-# Use PCA to decompose and recompose the spectra
+# ## Use PCA to decompose and recompose the spectra
 
-# <codecell>
+# In[36]:
 
 pca_r_low = PCA(n_components=0.999)
 pca_r_low.fit(raw2)
 evals_r_low = pca_r_low.explained_variance_ratio_
 print pca_r_low.n_components
 
-# <codecell>
+
+# In[37]:
 
 traw2 = pca_r_low.transform(raw2)
 newraw2 = pca_r_low.inverse_transform(traw2)
 
-# <codecell>
+
+# In[38]:
 
 print raw2.shape
 scores_r = pca_r.transform(raw2)
@@ -448,11 +472,10 @@ new_raw2 = pca_r.inverse_transform(scores_r)
 print coms_r.shape
 print new_raw2.shape
 
-# <markdowncell>
 
 # Run PCA on rate_aero
 
-# <codecell>
+# In[39]:
 
 rate1 = rate[flrate,:]
 rate2 = rate1[:,wflrate[1:]]
@@ -461,14 +484,16 @@ print np.isfinite(rate2).all()
 print rate2.shape
 print np.isfinite(rate2[0,:]).all()
 
-# <codecell>
+
+# In[40]:
 
 pp = np.mean(rate2,0)
 print pp.shape
 print where(~np.isfinite(pp))
 print pp
 
-# <codecell>
+
+# In[41]:
 
 fll = range(0,1842)+range(1844,2836)+range(2861,5159)+range(5161,6753)+range(6792,len(rate2[:,500]))
 r2_vis = rate2[fll,0:809]
@@ -476,7 +501,8 @@ r2_nir = rate2[fll,809:]
 wvl_vis = wvl[0:809]
 wvl_nir = wvl[810:]
 
-# <codecell>
+
+# In[42]:
 
 pca_vis = PCA(n_components=0.999)
 pca_vis.fit(r2_vis)
@@ -487,41 +513,48 @@ pca_nir.fit(r2_nir)
 tr2_nir = pca_nir.transform(r2_nir)
 n2_nir = pca_nir.inverse_transform(tr2_nir)
 
-# <codecell>
+
+# In[43]:
 
 print pca_vis.n_components
 print pca_nir.n_components
 
-# <codecell>
+
+# In[44]:
 
 pca_rate = PCA(n_components=5)
 pca_rate.fit(rate2)
 print pca_rate.n_components
 
-# <codecell>
+
+# In[45]:
 
 print wvl[800:850]
 print wvl[809]
 
-# <codecell>
+
+# In[46]:
 
 trate2 = pca_rate.transform(rate2)
 newrate2 = pca_rate.inverse_transform(trate2)
 
-# <codecell>
+
+# In[47]:
 
 print rate2.shape
 print trate2.shape
 print newrate2.shape
 
-# <codecell>
+
+# In[58]:
 
 plt.plot(rate2[:,500], label='original singal')
 plt.plot(newrate2[:,500],'r', label='reconstructed signal from pca')
 plt.title('Time trace over time of Rate at %s $\mu$m' % wvl[500])
 plt.legend(frameon=False,loc='lower left')
 
-# <codecell>
+
+# In[63]:
 
 plt.plot(r2_vis[:,500], label='original signal')
 plt.plot(n2_vis[:,500],'r', label='reconstructed signal from pca')
@@ -530,7 +563,8 @@ plt.ylabel('Raw rate')
 plt.title('Time trace over time of Rate at %s $\mu$m' % wvl_vis[500])
 plt.legend(frameon=False,loc='lower left')
 
-# <codecell>
+
+# In[64]:
 
 plt.plot(r2_nir[:,300], label='original signal')
 plt.plot(n2_nir[:,300],'r', label='reconstructed signal from pca')
@@ -539,14 +573,16 @@ plt.legend(frameon=False,loc='lower left')
 plt.xlabel('Count number')
 plt.ylabel('Raw rate')
 
-# <codecell>
+
+# In[93]:
 
 print wvl_vis.shape
 print r2_vis[500,:].shape
 print wvl_nir.shape
 print r2_nir[500,:].shape
 
-# <codecell>
+
+# In[78]:
 
 figw,axw = plt.subplots(1,2,figsize=(15,5))
 plt.tight_layout()
@@ -566,7 +602,8 @@ plt.suptitle('Single spectrum')
 plt.tight_layout()
 plt.savefig(fp+datestr+'_single_spectrum_reconstructed.png',dpi=600)
 
-# <codecell>
+
+# In[168]:
 
 figw,axw = plt.subplots(1,2,figsize=(15,5))
 plt.tight_layout()
@@ -582,7 +619,8 @@ plt.suptitle('Single spectrum difference between original and reconstructed from
 plt.tight_layout()
 plt.savefig(fp+datestr+'_single_spectrum_reconstructed_difference.png',dpi=600)
 
-# <codecell>
+
+# In[51]:
 
 ff, axs = plt.subplots(5,figsize=(15,9))
 for a in range(5):
@@ -592,18 +630,21 @@ for a in range(5):
 #plt.plot(coms_r2[0]*trate2[500,0])
 print trate2[500,0]
 
-# <codecell>
+
+# In[101]:
 
 print m_aero.shape
 print n2_vis[:,300].shape
 
-# <codecell>
+
+# In[75]:
 
 maero = m_aero[flrate]
 mm = maero[fll]
 print mm.shape
 
-# <codecell>
+
+# In[83]:
 
 figl,axl = plt.subplots(1,2,figsize=(15,5))
 plt.tight_layout()
@@ -625,6 +666,8 @@ axl[1].legend(frameon=False)
 
 plt.savefig(fp+datestr+'_langley_smooth.png',dpi=600)
 
-# <codecell>
+
+# In[ ]:
+
 
 

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[4]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -13,17 +13,17 @@ import scipy.io as sio
 from mpl_toolkits.basemap import Basemap
 
 
-# In[1]:
+# In[2]:
 
 import os
 
 
-# In[8]:
+# In[3]:
 
 os.path.exists
 
 
-# In[7]:
+# In[4]:
 
 os.path.exists('C:\\Users\\sleblan2\\Research\\python_codes\\')
 
@@ -169,17 +169,17 @@ plt.show()
 import hdf5storage as hs
 
 
-# In[2]:
+# In[6]:
 
 fp = 'C:\Users\sleblan2\Research\\4STAR_codes\data_folder\OMIdata\\'
 
 
-# In[3]:
+# In[7]:
 
 ff = fp+'OMI-Aura_L2G-OMDOAO3G_2015m1104_v003-2015m1105t054135.he5'
 
 
-# In[4]:
+# In[8]:
 
 fp
 
@@ -214,12 +214,12 @@ hs.read(path=fp,filename='OMI-Aura_L2G-OMDOAO3G_2015m1104_v003-2015m1105t054135.
 hs.h5py.is_hdf5(fp+'OMI-Aura_L2G-OMDOAO3G_2015m1112_v003-2015m1113t063226.he5')
 
 
-# In[6]:
+# In[9]:
 
 import tables
 
 
-# In[36]:
+# In[10]:
 
 ff
 
@@ -239,23 +239,23 @@ swathname = 'ColumnAmountO3'
 cd 'C:\\Users\\sleblan2\\Research\\4STAR_codes\\data_folder\\OMIdata\\'
 
 
-# In[29]:
+# In[11]:
 
 hdf5ref = tables.openFile(u'C:\\Users\\sleblan2\\Research\\4STAR_codes\\data_folder\\OMIdata\\OMI-Aura_L2G-OMDOAO3G_2015m1118_v003-2015m1119t060112.he5','r')
 
 
-# In[30]:
+# In[14]:
 
 fieldname = "ColumnAmountO3"
 
 
-# In[31]:
+# In[12]:
 
 fp='C:\\Users\\sleblan2\\Research\\4STAR_codes\\data_folder\\OMIdata\\'
 omiO3G = fp+'OMI-Aura_L2G-OMDOAO3G_2015m1118_v003-2015m1119t060112.he5'
 
 
-# In[32]:
+# In[15]:
 
 hdf5ref = tables.openFile(omiO3G, mode="r", rootUEP=fieldname)
 
