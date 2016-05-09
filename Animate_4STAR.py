@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <markdowncell>
+# coding: utf-8
 
 # Name:  
 # 
@@ -34,7 +32,7 @@
 #     - mpltools
 #     - numpy
 #     - scipy : for saving and reading
-#     - load_modis: for mat2py_time and toutc functions
+#     - load_utils: for mat2py_time and toutc functions
 #     - Sp_parameters: for find_closest function
 #     - mpl_toolkits
 #   
@@ -43,48 +41,51 @@
 #   - file.rc : for consistent creation of look of matplotlib figures
 #   - 20130823starsunfinal.mat: or other 4STAR starsun file containing aod spectra
 
-# <codecell>
+# In[1]:
 
-%config InlineBackend.rc = {}
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np, h5py
 #import plotly.plotly as py
 import scipy.io as sio
 import math
 import os
-from load_modis import mat2py_time, toutc
+from load_utils import mat2py_time, toutc
 from Sp_parameters import find_closest
 
-# <codecell>
+
+# In[2]:
 
 # set the basic directory path
 fp = 'C:\\Users\\sleblan2\\Research\\4STAR\\SEAC4RS\\'
 datestr = '20130823'
 filesep = '\\'
 
-# <codecell>
+
+# In[3]:
 
 print filesep
 
-# <headingcell level=2>
 
-# Load the 4STAR data and select time points
+# ## Load the 4STAR data and select time points
 
-# <codecell>
+# In[4]:
 
 star = sio.loadmat(fp+datestr+filesep+datestr+'starsunfinal.mat')
 star.keys()
 
-# <codecell>
+
+# In[5]:
 
 star['utc'] = toutc(mat2py_time(star['t']))
 
-# <codecell>
+
+# In[6]:
 
 star['good'] = np.where((star['utc']>20.0667) & 
                         (star['utc']<20.4667) & 
@@ -93,11 +94,10 @@ star['good'] = np.where((star['utc']>20.0667) &
                         (np.isfinite(star['tau_aero'][:,319])))[0]
 len(star['good'])
 
-# <headingcell level=2>
 
-# Plot time traces at select wavelengths
+# ## Plot time traces at select wavelengths
 
-# <codecell>
+# In[7]:
 
 print star['tau_aero'].shape
 print star['w'].shape
@@ -105,7 +105,8 @@ iw = find_closest(star['w'][0],np.array([380,400,430,500,515,635,875,1000,1140,1
 print star['w'][0].shape
 print iw
 
-# <codecell>
+
+# In[8]:
 
 plt.figure()
 color.cycle_cmap(len(iw)+1,cmap=plt.cm.gist_ncar)
@@ -116,11 +117,10 @@ plt.ylabel('AOD')
 plt.legend(bbox_to_anchor=[1,0.1],loc=3)
 plt.savefig(fp+datestr+filesep+'AOD_time.png',dpi=600)
 
-# <headingcell level=2>
 
-# Start animation of full spectral aod
+# ## Start animation of full spectral aod
 
-# <codecell>
+# In[16]:
 
 from IPython.display import HTML
 
@@ -128,7 +128,8 @@ def display_animation(anim):
     plt.close(anim._fig)
     return HTML(anim_to_html(anim))
 
-# <codecell>
+
+# In[32]:
 
 from tempfile import NamedTemporaryFile
 
@@ -142,7 +143,8 @@ def anim_to_html(anim):
     
     return VIDEO_TAG.format(anim._encoded_video)
 
-# <codecell>
+
+# In[17]:
 
 from matplotlib import animation
 
@@ -171,12 +173,14 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
 # call our new function to display the animation
 #display_animation(anim)
 
-# <codecell>
+
+# In[18]:
 
 print star['tau_aero'][star['good'][0]]
 print star['w'][0]
 
-# <codecell>
+
+# In[40]:
 
 def animate(i):
     plt.cla()
@@ -195,7 +199,8 @@ anim = animation.FuncAnimation(fig, animate, frames=len(star['good']))
 anim.save(fp+datestr+filesep+'AOD_sp_anim.gif', writer=animation.ImageMagickWriter(), fps=4);
 #anim.save(fp+datestr+filesep+'AOD_sp_anim.mp4', writer=animation.FFMpegWriter(), fps=10,extra_args=['-vcodec', 'libx264']);
 
-# <codecell>
+
+# In[37]:
 
 import base64
 with open(fp+datestr+filesep+'AOD_sp_anim.m4v', "rb") as image_file:
@@ -206,15 +211,18 @@ VIDEO_TAG = """<video controls>
 </video>"""
 HTML(VIDEO_TAG.format(encoded_string))
 
-# <codecell>
+
+# In[116]:
 
 u = video.encode('base64')
 
-# <codecell>
+
+# In[118]:
 
 HTML(data='<video controls><source src="data:video/x-m4v;base64,'+u+'" type="video/mp4"></video>')
 
-# <codecell>
+
+# In[33]:
 
 def video(fname, mimetype):
     """Load the video in the file `fname`, with given mimetype, and display as HTML5 video.
@@ -224,28 +232,31 @@ def video(fname, mimetype):
     video_tag = '<video controls alt="test" src="data:video/{0};base64,{1}">'.format(mimetype, video_encoded.decode('ascii'))
     return HTML(data=video_tag)
 
-# <codecell>
+
+# In[26]:
 
 u = open(fp+datestr+filesep+'AOD_sp_anim.m4',"rb").read()
 
-# <codecell>
+
+# In[31]:
 
 print len(u)
 
-# <codecell>
+
+# In[38]:
 
 video(fp+datestr+filesep+'AOD_sp_anim.m4v','x-m4v')
 
-# <codecell>
+
+# In[105]:
 
 from JSAnimation.IPython_display import display_animation
 display_animation(anim)
 
-# <headingcell level=2>
 
-# Prepare of saving specific variables to netcdf
+# ## Prepare of saving specific variables to netcdf
 
-# <codecell>
+# In[9]:
 
 wvl = star['w'][0]
 aod = star['tau_aero'][star['good']]
@@ -255,26 +266,28 @@ lon = star['Lon'][star['good']]
 alt = star['Alt'][star['good']]
 sza = star['sza'][star['good']]
 
-# <codecell>
+
+# In[10]:
 
 print wvl.shape
 print wvl
 
-# <codecell>
+
+# In[11]:
 
 print aod.shape
 print aod
 
-# <codecell>
+
+# In[12]:
 
 print utc.shape
 print utc
 
-# <headingcell level=2>
 
-# Save to netcdf
+# ## Save to netcdf
 
-# <codecell>
+# In[14]:
 
 from scipy.io import netcdf
 f = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','w')
@@ -301,62 +314,73 @@ sza_nc[:] = sza[:,0]
 sza_nc.units = 'Degrees'
 f.close()
 
-# <codecell>
+
+# In[15]:
 
 fo = netcdf.netcdf_file(fp+datestr+filesep+'20130823_4STAR_AOD.ncf','r')
 
-# <codecell>
+
+# In[16]:
 
 g = fo.variables['AOD']
 
-# <codecell>
+
+# In[17]:
 
 print g.units
 
-# <codecell>
+
+# In[18]:
 
 fp+datestr+filesep+'20130823_4STAR_AOD.ncf'
 
-# <headingcell level=2>
 
-# Prepare for testing PCA analysis of aod spectra
+# ## Prepare for testing PCA analysis of aod spectra
 
-# <codecell>
+# In[19]:
 
 from sklearn.decomposition import PCA
 
-# <codecell>
+
+# In[22]:
 
 aod.shape
 
-# <codecell>
+
+# In[23]:
 
 aod_fl = where(np.isfinite(aod[:,0]))
 
-# <codecell>
+
+# In[65]:
 
 np.isfinite(aod[155:200,4:]).all()
 
-# <codecell>
+
+# In[82]:
 
 pca = PCA(n_components=10)
 pca.fit(aod[0:152,4:])
 evals = pca.explained_variance_ratio_
 
-# <codecell>
+
+# In[83]:
 
 plt.plot(evals)
 plt.plot(evals.cumsum(),'r')
 
-# <codecell>
+
+# In[84]:
 
 coms = pca.components_
 
-# <codecell>
+
+# In[85]:
 
 print coms.shape
 
-# <codecell>
+
+# In[86]:
 
 fig3,ax3 = plt.subplots(5,2,sharex=True,figsize=(15,15))
 ax3 = ax3.ravel()
@@ -367,6 +391,8 @@ for i in range(10):
     if i >7:
         ax3[i].set_xlabel('Wavelength [$\mu$m]')
 
-# <codecell>
+
+# In[ ]:
+
 
 
