@@ -44,7 +44,7 @@
 
 # # Import the required modules and set up base
 
-# In[24]:
+# In[164]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -57,9 +57,10 @@ import Sp_parameters as Sp
 import tables
 import load_utils as lm
 import hdf5storage as hs
+import os
 
 
-# In[40]:
+# In[165]:
 
 from mpl_toolkits.basemap import Basemap,cm
 get_ipython().magic(u'matplotlib notebook')
@@ -111,6 +112,36 @@ gg,gg_head = lm.load_hdf(f_goci,values=(('lon',0),('lat',1),('aod550',2),('fmf55
 # In[57]:
 
 gg_head
+
+
+# ## Get the AERONET data to overlay on plot
+
+# In[163]:
+
+fp
+
+
+# In[191]:
+
+reload(lm)
+
+
+# In[183]:
+
+fa = fp+'aeronet/AOT/LEV10/ALL_POINTS/'
+fa_l = os.listdir(fa)
+
+
+# In[192]:
+
+aero = []
+for f in fa_l:
+    aero.append(lm.load_aeronet(fa+f))
+
+
+# In[194]:
+
+aero[0].keys()
 
 
 # # Start making different plots/maps
@@ -226,6 +257,8 @@ m.scatter(xx,yy,c=s['tau_aero'][:,469],cmap=plt.cm.rainbow,marker='o',vmin=cleve
           alpha=0.5,edgecolors='None')
 plt.savefig(fp+'plot/20160505_GOCI_4STAR_map_AOD.png',dpi=600,transparent=True)
 
+
+# #
 
 # In[69]:
 
