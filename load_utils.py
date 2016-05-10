@@ -955,11 +955,12 @@ def load_aeronet(f,verbose=True):
     """
     import numpy as np
     from datetime import datetime
+    import load_utils as lm
     import os
-    if not(os.path.isfile(datfile)):
-        error('Data file {} not found!'.format(f))
+    if not(os.path.isfile(f)):
+        raise IOError('Data file {} not found!'.format(f))
     if f.split('.')[-1].find('lev10')<0 | f.split('.')[-1].find('LEV10')<0:
-        error('Data file {} is not a level 1.0 file - it is not yet available to read'.foramt(f))
+        raise IOError('Data file {} is not a level 1.0 file - it is not yet available to read'.foramt(f))
     def makeday(txt):
         return datetime.strptime(txt,'%d:%m:%Y').timetuple().tm_yday
     def maketime(txt):
@@ -990,6 +991,11 @@ def recarray_to_dict(ra):
     for n in ra.dtype.names:
         da[n]=ra[n]
     return da
+
+
+# In[ ]:
+
+
 
 
 # Testing of the script:
