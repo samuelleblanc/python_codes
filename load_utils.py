@@ -975,11 +975,174 @@ def load_aeronet(f,verbose=True):
     da['header'] = lines[0:4]
     for n in da['header'][2].split(','):
         u = n.split('=')
-    try:
-        da[u[0]]=float(u[1])
-    except:
-        da[u[0]] = u[1].strip()
+        try:
+            da[u[0]]=float(u[1])
+        except:
+            da[u[0]] = u[1].strip()
     return da    
+
+
+# In[ ]:
+
+def load_multi_aeronet(dir_path,verbose=True):
+    """
+    Name:
+
+        load_multi_aeronet
+    
+    Purpose:
+
+        To load multiple files of the LEV1.0 Aeronet AOD files
+    
+    Calling Sequence:
+
+        aeronet = load_multi_aeronet(dir_path) 
+    
+    Input: 
+  
+        dir_path: path of directory where multiple lev10 file reside
+    
+    Output:
+
+        aeronet: numpy recarray of combined values from multiple files
+    
+    Keywords: 
+
+       verbose: (default True) if True, then prints out info as data is read
+    
+    Dependencies:
+
+        numpy
+        os
+        load_utils: this file
+    
+    Required files:
+   
+        LEV10 file
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2016-05-12, Osan AB, Korea
+        
+    """
+    import os
+    import numpy as np
+    import load_utils as lm
+    f = os.listdir(dir_path)
+    aero = []
+    for fl in f:
+        aero.append(lm.load_aeronet(dir_path+fl,verbose=verbose))
+    
+    n_max = 0
+    for n in range(len(aero)):
+        if len(aero[n]['AOT_500'])>n_max: 
+            n_max = len(aero[n]['AOT_500'])
+            
+    anet = {}
+    nstations = len(aero)
+    for name in aero[0].keys():
+        if not isinstance(aero[0][name],np.ndarray):
+            anet[name] = []
+            for n in range(nstations):
+                anet[name].append(aero[n][name])
+        else:
+            anet[name] = np.zeros((nstations,n_max))+np.nan
+            for n in range(nstations):
+                anet[name][n,0:len(aero[n][name])] = aero[n][name]
+    return anet
+
+
+# In[ ]:
+
+def aeronet_subset(aero,doy=None,utc=None,julian=None,window=24.0):
+    """
+    Name:
+
+        aeronet_subset
+    
+    Purpose:
+
+        Subsets the aero dict created from load_multi_aeronet for returning 
+        only a index value linking only one point per aeronet station.
+    
+    Calling Sequence:
+
+        ii = aeronet_subset(aero,doy=doy,utc=utc,julian=julian,window=24.0) 
+    
+    Input: 
+  
+        aero: aeronet dict of compiled aeronet files from many locations
+        doy: (default None) put in the day of year value for the time to be selected
+        utc: (default None) the utc in fractional hours, for the returned aeronet values
+        julian: (default None) the fractional day of year for the returned values
+        window: (default 24) the hours of the window, if no value is found within 
+                this window, then returned index links to a nan value
+        
+        if there is no doy, utc julian, or window value, 
+        will return the latest value in the dict
+    
+    Output:
+
+        ii: the index values linking to the searched aero times. 
+            it returns a tuple of indexes to be used directly into the aero dict.
+    
+    Keywords: 
+
+       see above.
+    
+    Dependencies:
+
+        numpy
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2016-05-12, Osan AB, Korea
+        
+    """
+    import numpy as np
+    
+    latest = False
+    if julian:
+        in_julian = julian
+    elif doy:
+        if utc:
+            in_julian = doy+utc/24.0
+        else:
+            in_julian = doy+0.0
+    else:
+        latest = True
+               
+    if latest:
+        ilatest = []
+        for i,n in enumerate(aero['Location']):
+            ilatest.append(np.nanargmax(aero['Julian_Day'][i,:]))
+    else:
+        ilatest = []
+        for i,n in enumerate(aero['Location']):
+            ia = np.nanargmin(abs(aero['Julian_Day'][i,:]-in_julian))
+            if np.nanmin(abs(aero['Julian_Day'][i,:]-in_julian))*24.0 < window:
+                ilatest.append(ia)
+            else:
+                ia = len(aero['Julian_Day'][i,:])-1
+                ilatest.append(ia)
+    iil = []
+    for i,n in enumerate(ilatest):
+        iil.append(i)
+    ii = (iil,ilatest)
+    
+    return ii
 
 
 # In[ ]:
