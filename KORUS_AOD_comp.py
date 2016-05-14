@@ -31,6 +31,7 @@
 #     - scipy : for saving and reading
 #     - pytables
 #     - os
+#     - datetime
 #   
 # Needed Files:
 # 
@@ -44,7 +45,7 @@
 
 # # Import the required modules and set up base
 
-# In[164]:
+# In[104]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -54,13 +55,18 @@ import matplotlib.colors as colors
 import numpy as np
 import scipy.io as sio
 import Sp_parameters as Sp
-import tables
 import load_utils as lm
-import hdf5storage as hs
 import os
+from datetime import datetime
 
 
-# In[165]:
+# In[105]:
+
+import hdf5storage as hs
+import tables
+
+
+# In[106]:
 
 from mpl_toolkits.basemap import Basemap,cm
 get_ipython().magic(u'matplotlib notebook')
@@ -71,12 +77,12 @@ fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
 
 # ## Load the 4STAR starsun
 
-# In[33]:
+# In[107]:
 
 f_star = fp+'data\\20160504starsun.mat'
 
 
-# In[34]:
+# In[108]:
 
 s = sio.loadmat(f_star)
 
@@ -86,67 +92,118 @@ s = sio.loadmat(f_star)
 s.keys()
 
 
-# In[45]:
+# In[109]:
 
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 
-# In[31]:
+# In[110]:
 
 s['tau_aero'].shape
 
 
 # ## Load the GOCI aerosol products
 
-# In[3]:
+# In[151]:
 
-f_goci = fp+'sat/GOCI/GOCI_YAER_AOP_20160505041644.hdf'
-
-
-# In[15]:
-
-gg,gg_head = lm.load_hdf(f_goci,values=(('lon',0),('lat',1),('aod550',2),('fmf550',3),('ssa440',4),('type',5),('ang',6),('QA',7),
-                                ('obs_time',8),('cf',9),('turbidI',10),('Land_sea_mask',11)))
+fp_goci = fp+'sat/GOCI//20160505/'
 
 
-# In[57]:
+# In[152]:
 
-gg_head
+fpl = os.listdir(fp_goci)
+
+
+# In[166]:
+
+gg = []
+gg_head = []
+for f in fpl:
+    f_goci = fp_goci+f
+    gt,gth = lm.load_hdf(f_goci,values=(('lon',0),('lat',1),('aod550',2),('fmf550',3),('ssa440',4),('type',5),('ang',6),('QA',7),
+                                ('obs_time',8),('cf',9),('turbidI',10),('Land_sea_mask',11)),verbose=False)
+    gt['year'] = int(f.split('_')[-1].split('.')[0][0:4])
+    gt['month'] = int(f.split('_')[-1].split('.')[0][4:6])
+    gt['day'] = int(f.split('_')[-1].split('.')[0][6:8])
+    gt['hour'] = int(f.split('_')[-1].split('.')[0][8:10])
+    gt['minute'] = int(f.split('_')[-1].split('.')[0][10:12])
+    gt['seconds'] = int(f.split('_')[-1].split('.')[0][12:14])
+    gt['julian'] = float(datetime(gt['year'],gt['month'],gt['day'],gt['hour'],gt['minute'],
+                                  gt['seconds']).timetuple().tm_yday)+gt['hour']/24.0+gt['minute']/60.0/24.0+gt['seconds']/3600.0/24.0
+    gg.append(gt)
+    gg_head.append(gth)
+
+
+# In[167]:
+
+len(gg)
+
+
+# In[168]:
+
+fpl
+
+
+# In[175]:
+
+gg[4]['julian']
 
 
 # ## Get the AERONET data to overlay on plot
 
-# In[163]:
+# In[177]:
 
 fp
 
 
-# In[191]:
+# In[176]:
 
 reload(lm)
 
 
-# In[183]:
+# In[178]:
 
 fa = fp+'aeronet/AOT/LEV10/ALL_POINTS/'
-fa_l = os.listdir(fa)
 
 
-# In[192]:
+# In[179]:
 
-aero = []
-for f in fa_l:
-    aero.append(lm.load_aeronet(fa+f))
+aero = lm.load_multi_aeronet(fa)
 
 
-# In[194]:
+# In[180]:
 
-aero[0].keys()
+ilatest = lm.aeronet_subset(aero)
+
+
+# In[181]:
+
+plt.figure()
+plt.scatter(anet['long'],anet['lat'],c=anet['AOT_500'][il],
+            cmap=plt.cm.rainbow,marker='s',vmin=0.0,vmax=1.5,edgecolors='None',s=30)
+
+
+# ## Subset the aeronet and 4STAR values to GOCI values
+
+# In[ ]:
+
+utcs = []
+iaero = []
+istar = []
+for i in range(len(gg)):
+    utcs.append((gg[i]['julian']-np.floor(gg[i]['julian']))*24.0)
+    iaero.append(lm.aeronet_subset(aero,julian=gg[i]['julian'],window=1.0))
+    istar.append(((s['utc']-24.0)<utcs[i])&(s['Alt']<1000.0))
+
+
+# In[196]:
+
+utcs
 
 
 # # Start making different plots/maps
 
-# In[17]:
+# In[197]:
 
 #set up a easy plotting function
 def make_map(ax=plt.gca()):
@@ -258,22 +315,39 @@ m.scatter(xx,yy,c=s['tau_aero'][:,469],cmap=plt.cm.rainbow,marker='o',vmin=cleve
 plt.savefig(fp+'plot/20160505_GOCI_4STAR_map_AOD.png',dpi=600,transparent=True)
 
 
-# #
+# ## Overlay Aeronet AOD
 
 # In[69]:
 
 fp
 
 
-# In[ ]:
+# In[124]:
+
+fig,ax = plt.subplots(1,1,figsize=(11,8))
+m = make_map(ax)
+x,y = m(gg['lon'],gg['lat'])
+clevels = np.linspace(0,4,41)
+
+plt.title('GOCI AOD 2016-05-05 04:16:44')
+cs1 = m.contourf(x,y,gg['aod550'],clevels,cmap=plt.cm.rainbow,extend='max')
+cbar = m.colorbar(cs1)
+cbar.set_label('AOD 550 nm')
+m.scatter(x,y,c=gg['aod550'],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],edgecolors='None')
 
 
+xx,yy = m(s['Lon'],s['Lat'])
+m.scatter(xx,yy,c=s['tau_aero'][:,469],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
+          alpha=0.5,edgecolors='None')
+
+xa,ya = m(anet['long'],anet['lat'])
+m.scatter(xa,ya,c=anet['AOT_500'][il],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],
+          alpha=1.0,edgecolors='m',s=40,linewidth=2)
+
+#plt.savefig(fp+'plot/20160505_GOCI_4STAR_map_AOD.png',dpi=600,transparent=True)
 
 
-# In[70]:
-
-fa = fp+'aeronet/AOT/LEV10/ALL_POINTS/160401_160731_SONET_Shanghai.lev10'
-
+# ## Make a GOCI figure with overlays for every time
 
 # In[ ]:
 
