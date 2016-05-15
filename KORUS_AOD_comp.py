@@ -73,13 +73,18 @@ get_ipython().magic(u'matplotlib notebook')
 fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
+# In[222]:
+
+daystr = '20160504'
+
+
 # # Load the various data
 
 # ## Load the 4STAR starsun
 
 # In[107]:
 
-f_star = fp+'data\\20160504starsun.mat'
+f_star = fp+'data\\{}starsun.mat'.format(daystr)
 
 
 # In[108]:
@@ -102,6 +107,54 @@ s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 s['tau_aero'].shape
 
 
+# ### Load the starflag for this day
+
+# In[224]:
+
+f_info = 'C:\Users\sleblan2\Research\\4STAR_codes\data_folder\\'
+
+
+# In[227]:
+
+finf = f_info+'starinfo_{}.m'.format(daystr)
+
+
+# In[248]:
+
+with open(finf, 'r') as inF:
+    for line in inF:
+        if 'flagfilename' in line:
+            f_flag = line[line.find("'")+1:line.rfind("'")]
+            break
+
+
+# In[249]:
+
+f_flag
+
+
+# In[251]:
+
+sflag = sio.loadmat(f_info+f_flag)
+
+
+# In[270]:
+
+flag = sflag['manual_flags']['screen'][0][0][:,0]
+
+
+# In[271]:
+
+flag.shape
+
+
+# ### Apply the flags to 4star data
+
+# In[272]:
+
+s['tau_aero'][flag==1,:]=np.nan
+
+
 # ## Load the GOCI aerosol products
 
 # In[151]:
@@ -114,7 +167,7 @@ fp_goci = fp+'sat/GOCI//20160505/'
 fpl = os.listdir(fp_goci)
 
 
-# In[166]:
+# In[281]:
 
 gg = []
 gg_head = []
@@ -130,6 +183,9 @@ for f in fpl:
     gt['seconds'] = int(f.split('_')[-1].split('.')[0][12:14])
     gt['julian'] = float(datetime(gt['year'],gt['month'],gt['day'],gt['hour'],gt['minute'],
                                   gt['seconds']).timetuple().tm_yday)+gt['hour']/24.0+gt['minute']/60.0/24.0+gt['seconds']/3600.0/24.0
+    
+    gt['aod550_QA'] = gt['aod550']
+    gt['aod550_QA'][gt['QA']==3] = np.nan
     gg.append(gt)
     gg_head.append(gth)
 
@@ -185,7 +241,7 @@ plt.scatter(anet['long'],anet['lat'],c=anet['AOT_500'][il],
 
 # ## Subset the aeronet and 4STAR values to GOCI values
 
-# In[ ]:
+# In[198]:
 
 utcs = []
 iaero = []
@@ -196,7 +252,7 @@ for i in range(len(gg)):
     istar.append(((s['utc']-24.0)<utcs[i])&(s['Alt']<1000.0))
 
 
-# In[196]:
+# In[199]:
 
 utcs
 
@@ -348,6 +404,43 @@ m.scatter(xa,ya,c=anet['AOT_500'][il],cmap=plt.cm.rainbow,marker='s',vmin=clevel
 
 
 # ## Make a GOCI figure with overlays for every time
+
+# In[286]:
+
+for i,u in enumerate(utcs):
+    fig,ax = plt.subplots(1,1,figsize=(11,8))
+    m = make_map(ax)
+    x,y = m(gg[0]['lon'],gg[0]['lat'])
+    clevels = np.linspace(0,2.5,26)
+
+    plt.title('4STAR GOCI AERONET AOD -- {} at {:5.2f}H UTC'.format(daystr,u))
+    cs1 = m.contourf(x,y,gg[i]['aod550_QA'],clevels,cmap=plt.cm.rainbow,extend='max')
+    cbar = m.colorbar(cs1)
+    cbar.set_label('AOD 550 nm')
+    m.scatter(x,y,c=gg[i]['aod550_QA'],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],edgecolors='None')
+    
+    xa,ya = m(aero['long'],anet['lat'])
+    m.scatter(xa,ya,c=aero['AOT_500'][iaero[i]],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],
+              alpha=1.0,edgecolors='m',s=np.zeros_like(xa)+120,linewidth=3)
+    
+    xx,yy = m(s['Lon'][istar[i][0]],s['Lat'][istar[i][0]])
+    m.scatter(xx,yy,c=s['tau_aero'][istar[i][0],469],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
+              alpha=0.5,edgecolors='k',linewidth=0.1,s=s['tau_aero'][istar[i][0],469]*20+40)
+    m.scatter(xx[-1],yy[-1],c='w',edgecolor='k',linewidth=4,marker='o',alpha=1.0,s=100)
+
+    plt.savefig(fp+'plot/{}_GOCI_4STAR_map_AOD_{:5.2f}h.png'.format(daystr,u),dpi=600,transparent=True)
+
+
+# In[205]:
+
+istar[0][0]
+
+
+# In[221]:
+
+plt.figure()
+plt.plot()
+
 
 # In[ ]:
 
