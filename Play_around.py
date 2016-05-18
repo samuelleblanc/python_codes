@@ -189,17 +189,17 @@ fp
 help(hs.read)
 
 
-# In[46]:
+# In[8]:
 
 import os
 
 
-# In[48]:
+# In[9]:
 
 os.path.exists(ff)
 
 
-# In[5]:
+# In[10]:
 
 ff
 
@@ -219,7 +219,7 @@ hs.h5py.is_hdf5(fp+'OMI-Aura_L2G-OMDOAO3G_2015m1112_v003-2015m1113t063226.he5')
 import tables
 
 
-# In[10]:
+# In[5]:
 
 ff
 
@@ -249,7 +249,7 @@ hdf5ref = tables.openFile(u'C:\\Users\\sleblan2\\Research\\4STAR_codes\\data_fol
 fieldname = "ColumnAmountO3"
 
 
-# In[12]:
+# In[4]:
 
 fp='C:\\Users\\sleblan2\\Research\\4STAR_codes\\data_folder\\OMIdata\\'
 omiO3G = fp+'OMI-Aura_L2G-OMDOAO3G_2015m1118_v003-2015m1119t060112.he5'
@@ -316,7 +316,7 @@ datetime.now().timetuple().tm_yday
 fg.close()
 
 
-# In[77]:
+# In[3]:
 
 import tables
 
