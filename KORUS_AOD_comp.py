@@ -45,7 +45,7 @@
 
 # # Import the required modules and set up base
 
-# In[44]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -60,35 +60,35 @@ import os
 from datetime import datetime
 
 
-# In[45]:
+# In[2]:
 
 import hdf5storage as hs
 import tables
 
 
-# In[46]:
+# In[3]:
 
 from mpl_toolkits.basemap import Basemap,cm
 get_ipython().magic(u'matplotlib notebook')
 fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
-# In[178]:
+# In[43]:
 
-daystr = '20160503'
-daystr_goci = '20160504'
+daystr = '20160511'
+daystr_goci = '20160512'
 
 
 # # Load the various data
 
 # ## Load the 4STAR starsun
 
-# In[179]:
+# In[44]:
 
 f_star = fp+'data\\{}starsun.mat'.format(daystr)
 
 
-# In[180]:
+# In[45]:
 
 try:
     s = sio.loadmat(f_star+'_small.mat')
@@ -98,34 +98,34 @@ except NotImplementedError:
     s = hs.loadmat(f_star+'_small.mat')
 
 
-# In[181]:
+# In[46]:
 
 s.keys()
 
 
-# In[182]:
+# In[47]:
 
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 
-# In[183]:
+# In[48]:
 
 s['tau_aero'].shape
 
 
 # ### Load the starflag for this day
 
-# In[184]:
+# In[49]:
 
 f_info = 'C:\Users\sleblan2\Research\\4STAR_codes\data_folder\\'
 
 
-# In[185]:
+# In[50]:
 
 finf = f_info+'starinfo_{}.m'.format(daystr)
 
 
-# In[186]:
+# In[51]:
 
 with open(finf, 'r') as inF:
     for line in inF:
@@ -134,46 +134,51 @@ with open(finf, 'r') as inF:
             break
 
 
-# In[187]:
+# In[52]:
 
 f_flag
 
 
-# In[188]:
+# In[53]:
 
 sflag = sio.loadmat(f_info+f_flag)
 
 
-# In[189]:
+# In[54]:
 
 flag = sflag['manual_flags']['screen'][0][0][:,0]
 
 
-# In[190]:
+# In[55]:
 
 flag.shape
 
 
 # ### Apply the flags to 4star data
 
-# In[191]:
+# In[56]:
 
 s['tau_aero'][flag==1,:]=np.nan
 
 
 # ## Load the GOCI aerosol products
 
-# In[192]:
+# In[57]:
 
 fp_goci = fp+'sat/GOCI//{}/'.format(daystr_goci)
 
 
-# In[193]:
+# In[58]:
 
 fpl = os.listdir(fp_goci)
 
 
-# In[194]:
+# In[59]:
+
+fpl
+
+
+# In[60]:
 
 gg = []
 gg_head = []
@@ -192,85 +197,86 @@ for f in fpl:
     
     gt['aod550_QA'] = gt['aod550']
     gt['aod550_QA'][gt['QA']==3] = np.nan
+    gt['aod550_QA'][gt['aod550_QA']<0.0] = np.nan
     gg.append(gt)
     gg_head.append(gth)
 
 
-# In[195]:
+# In[61]:
 
 gt['aod550'].shape
 
 
-# In[196]:
+# In[62]:
 
 gt['QA'].shape
 
 
-# In[153]:
+# In[63]:
 
 gt.keys()
 
 
-# In[222]:
+# In[253]:
 
 gth.keys()
 
 
-# In[224]:
+# In[254]:
 
 gth['aod550']
 
 
-# In[197]:
+# In[64]:
 
 len(gg)
 
 
-# In[198]:
+# In[65]:
 
 fpl
 
 
-# In[138]:
+# In[66]:
 
 gg[4]['julian']
 
 
 # ## Get the AERONET data to overlay on plot
 
-# In[139]:
+# In[67]:
 
 fp
 
 
-# In[140]:
+# In[28]:
 
 reload(lm)
 
 
-# In[141]:
+# In[29]:
 
 fa = fp+'aeronet/AOT/LEV10/ALL_POINTS/'
 
 
-# In[142]:
+# In[30]:
 
 aero = lm.load_multi_aeronet(fa)
 
 
-# In[143]:
+# In[31]:
 
 ilatest = lm.aeronet_subset(aero)
 
 
-# In[144]:
+# In[32]:
 
 plt.figure()
 plt.scatter(aero['long'],aero['lat'],c=aero['AOT_500'][ilatest],
             cmap=plt.cm.rainbow,marker='s',vmin=0.0,vmax=1.5,edgecolors='None',s=30)
 
 
-# In[145]:
+# In[33]:
 
 plt.figure()
 m = Basemap(projection='stere',lon_0=128,lat_0=36.0,
@@ -291,7 +297,7 @@ cbar.set_label('AOD 500 nm')
 
 # ## Subset the aeronet and 4STAR values to GOCI values
 
-# In[199]:
+# In[68]:
 
 utcs = []
 iaero = []
@@ -308,12 +314,12 @@ for i in range(len(gg)):
         istar_steps.append(((s['utc']-24.0)<utcs[i])&(s['Alt'][:,0]<dz))
 
 
-# In[200]:
+# In[69]:
 
 utcs
 
 
-# In[201]:
+# In[70]:
 
 for i,u in enumerate(utcs):
     print istar[i].sum()
@@ -321,7 +327,7 @@ for i,u in enumerate(utcs):
 
 # # Start making different plots/maps
 
-# In[202]:
+# In[71]:
 
 #set up a easy plotting function
 def make_map(ax=plt.gca()):
@@ -357,7 +363,7 @@ cbar.set_label('AOD 550 nm')
 plt.savefig(fp+'plot/{}_GOCI_map_AOD.png'.format(daystr_goci),dpi=600,transparent=True)
 
 
-# In[228]:
+# In[263]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
@@ -491,24 +497,103 @@ import scipy.ndimage as snim
 istar[i][0]
 
 
-# In[235]:
+# In[343]:
+
+plt.figure()
+plt.plot(s['utc'][istar[i]],s['tau_aero'][istar[i],469],'x')
+
+
+# In[361]:
+
+u = utcs[-1]
+i = 7
+fig,ax = plt.subplots(1,1,figsize=(11,8))
+m = make_map(ax)
+x,y = m(gg[0]['lon'],gg[0]['lat'])
+clevels = np.linspace(0.0,0.6,31)
+
+plt.title('AOD from 4STAR AERONET -- {}'.format(daystr_goci,u))
+#cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+#cs2 = m.contour(x,y,gg[i]['cf'],levels=np.linspace(0.0,1.0,11),cmap=plt.cm.gist_gray)
+#cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+#cbar = m.colorbar(cs1,pad='10%')
+#cbar.set_label('AOD 550 nm')
+#cbar2 = m.colorbar(cs2,pad='7%',location='bottom')
+#cbar2.set_label('Cloud Fraction ')
+#m.scatter(x,y,c=gg[i]['aod550'],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],edgecolors='None')
+
+xa,ya = m(aero['long'],aero['lat'])
+m.scatter(xa,ya,c=aero['AOT_500'][iaero[i]],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],
+          alpha=1.0,edgecolors='m',s=np.zeros_like(xa)+120,linewidth=3)
+
+
+xs,ys = m(s['Lon'],s['Lat'])
+m.plot(xs,ys,'.b',linewidth=0.1,markersize=0.1)
+xx,yy = m(s['Lon'][istar[i]],s['Lat'][istar[i]])
+cc = m.scatter(xx,yy,c=s['tau_aero'][istar[i],469],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
+          alpha=0.8,edgecolors='k',linewidth=0.0,s=s['tau_aero'][istar[i],469]*30+40)
+m.scatter(xx[-1],yy[-1],c='w',edgecolor='k',linewidth=4,marker='o',alpha=1.0,s=100)
+cbar = m.colorbar(cc,pad='10%')
+cbar.set_label('AOD 550 nm')
+
+plt.savefig(fp+'plot/{}_4STAR_aeronet_map_AOD.png'.format(daystr),dpi=600,transparent=True)
+
+
+# In[363]:
+
+u = utcs[-1]
+i = 7
+fig,ax = plt.subplots(1,1,figsize=(11,8))
+m = make_map(ax)
+x,y = m(gg[0]['lon'],gg[0]['lat'])
+clevels = np.linspace(0.0,0.6,31)
+
+plt.title('AOD from 4STAR AERONET -- {}'.format(daystr_goci,u))
+#cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+#cs2 = m.contour(x,y,gg[i]['cf'],levels=np.linspace(0.0,1.0,11),cmap=plt.cm.gist_gray)
+#cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+#cbar = m.colorbar(cs1,pad='10%')
+#cbar.set_label('AOD 550 nm')
+#cbar2 = m.colorbar(cs2,pad='7%',location='bottom')
+#cbar2.set_label('Cloud Fraction ')
+#m.scatter(x,y,c=gg[i]['aod550'],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],edgecolors='None')
+
+cs2 = m.contourf(x,y,gg[i]['cf'],levels=np.linspace(0.0,1.0,11),cmap=plt.cm.gist_gray)
+cbar2 = m.colorbar(cs2,pad='7%',location='bottom')
+cbar2.set_label('Cloud Fraction ')
+xa,ya = m(aero['long'],aero['lat'])
+m.scatter(xa,ya,c=aero['AOT_500'][iaero[i]],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],
+          alpha=1.0,edgecolors='m',s=np.zeros_like(xa)+120,linewidth=3)
+
+
+xs,ys = m(s['Lon'],s['Lat'])
+m.plot(xs,ys,'.b',linewidth=0.1,markersize=0.1)
+xx,yy = m(s['Lon'][istar[i]],s['Lat'][istar[i]])
+cc = m.scatter(xx,yy,c=s['tau_aero'][istar[i],469],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
+          alpha=0.8,edgecolors='k',linewidth=0.0,s=s['tau_aero'][istar[i],469]*30+40)
+m.scatter(xx[-1],yy[-1],c='w',edgecolor='k',linewidth=4,marker='o',alpha=1.0,s=100)
+cbar = m.colorbar(cc,pad='10%')
+cbar.set_label('AOD 550 nm')
+
+plt.savefig(fp+'plot/{}_4STAR_aeronet_map_AOD_cf.png'.format(daystr),dpi=600,transparent=True)
+
+
+# In[365]:
 
 for i,u in enumerate(utcs):
     fig,ax = plt.subplots(1,1,figsize=(11,8))
     m = make_map(ax)
     x,y = m(gg[0]['lon'],gg[0]['lat'])
-    clevels = np.linspace(-0.01,0.5,35)
+    clevels = np.linspace(0.0,0.6,31)
 
     plt.title('AOD from 4STAR GOCI AERONET -- {} at {:5.2f}H UTC'.format(daystr_goci,u))
-    cs2 = m.contourf(x,y,gg[i]['cf'],levels=np.linspace(0.0,1.0,11),cmap=plt.cm.gist_gray)
-    ga = snim.zoom(gg[i]['aod550'],5)
-    xz = snim.zoom(x,5)
-    yz = snim.zoom(y,5)
-    cs1 = ax.pcolorfast(x,y,gg[i]['aod550'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+    #cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
+    #cs2 = m.contour(x,y,gg[i]['cf'],levels=np.linspace(0.0,1.0,11),cmap=plt.cm.gist_gray)
+    cs1 = ax.pcolorfast(x,y,gg[i]['aod550_QA'][:-1,:-1],cmap=plt.cm.rainbow,vmin=clevels[0],vmax=clevels[-1])
     cbar = m.colorbar(cs1,pad='10%')
     cbar.set_label('AOD 550 nm')
-    cbar2 = m.colorbar(cs2,pad='7%',location='bottom')
-    cbar2.set_label('Cloud Fraction ')
+    #cbar2 = m.colorbar(cs2,pad='7%',location='bottom')
+    #cbar2.set_label('Cloud Fraction ')
     #m.scatter(x,y,c=gg[i]['aod550'],cmap=plt.cm.rainbow,marker='s',vmin=clevels[0],vmax=clevels[-1],edgecolors='None')
     
     xa,ya = m(aero['long'],aero['lat'])
@@ -517,13 +602,13 @@ for i,u in enumerate(utcs):
     
     xx,yy = m(s['Lon'][istar[i]],s['Lat'][istar[i]])
     m.scatter(xx,yy,c=s['tau_aero'][istar[i],469],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vmax=clevels[-1],
-              alpha=0.5,edgecolors='k',linewidth=0.1,s=s['tau_aero'][istar[i][0],469]*20+40)
+              alpha=0.5,edgecolors='k',linewidth=0.0,s=s['tau_aero'][istar[i],469]*30+50)
     m.scatter(xx[-1],yy[-1],c='w',edgecolor='k',linewidth=4,marker='o',alpha=1.0,s=100)
     #break
     plt.savefig(fp+'plot/{}_GOCI_4STAR_map_AOD_{:4.2f}h.png'.format(daystr,u),dpi=600,transparent=True)
 
 
-# In[236]:
+# In[351]:
 
 ga.shape
 
@@ -540,17 +625,17 @@ y.shape
 
 # # Get the GOCI values along the flight path
 
-# In[239]:
+# In[72]:
 
 import map_utils as mu
 
 
-# In[240]:
+# In[73]:
 
 goci_ind = mu.map_ind(gg[0]['lon'],gg[0]['lat'],s['Lon'],s['Lat'])
 
 
-# In[241]:
+# In[74]:
 
 print goci_ind.shape
 print s['Lon'].shape
@@ -559,10 +644,16 @@ print gg[0]['lon'].shape
 
 # ## Plot the GOCI vs. 4STAR AOD values
 
-# In[242]:
+# In[76]:
+
+s_aero = s['tau_aero'][istar[-1],463]
+s_utc = s['utc'][istar[-1]]
+
+
+# In[77]:
 
 plt.figure()
-plt.plot(s['utc'][istar[-1]],s['tau_aero'][istar[-1],463],'xr',label='4STAR')
+plt.plot(s_utc[s_aero<0.45],s_aero[s_aero<0.45],'xr',label='4STAR')
 goci_aod = []
 for i,u in enumerate(utcs):
     plt.plot(s['utc'][istar_steps[i]],gg[i]['aod550_QA'][goci_ind[0,istar_steps[i]],goci_ind[1,istar_steps[i]]],'s',
@@ -578,17 +669,17 @@ plt.legend(frameon=True,numpoints=1,bbox_to_anchor=(1.5,0.9))
 plt.savefig(fp+'plot/{}_GOCI_4STAR_utc_AOD.png'.format(daystr),dpi=600,transparent=True)
 
 
-# In[243]:
+# In[357]:
 
 gaod = np.concatenate(goci_aod).flatten()
 
 
-# In[244]:
+# In[358]:
 
 bins = np.linspace(0,0.5,31)
 
 
-# In[245]:
+# In[359]:
 
 plt.figure()
 plt.hist(s['tau_aero'][istar[-1],463],bins=bins,histtype='stepfilled',normed=True,alpha=0.5,color='r',label='4STAR',edgecolor='None')
