@@ -217,6 +217,65 @@ def param(sp,wvlin,iws=None):
     return par
 
 
+# In[ ]:
+
+def binned_statistic(x, values, func, nbins, range):
+    '''The usage is approximately the same as the scipy one''' 
+    from scipy.sparse import csr_matrix
+    N = len(values)
+    r0, r1 = range
+
+    digitized = (float(nbins) / (r1-r0) * (x-r0)).astype(int)
+    S = csr_matrix((values, [digitized, np.arange(N)]), shape=(nbins, N))
+
+    return [func(group) for group in np.split(S.data, S.indptr[1:-1])]
+
+
+# In[ ]:
+
+def ext_prof(alt,aod,binsize=100,use_deriv=True,verbose=False):
+    """
+    Purpose:
+        Program to calculate the extinction profile from a profile of aod
+    Inputs:
+        - alt: altitude variable
+        - aod: aod at a single channel
+        - binsize: (default to 100 m) size of bins to use to aggregate data, in meters
+        - use_deriv: (default to True) if True uses the deriv method instead of the simple diff to calculate extinction
+        - verbose: (default False) if True outputs debugging info
+    Outputs:
+        - ext: extinction profile at bins
+        - bins: values of the bins' edges
+    Dependencies:
+        - Numpy
+        - Scipy
+        - binned_statistics (custom function)
+        - Sp_parameters (for the deriv function)
+    Needed Files:
+        - None
+    Modification history:
+        Written: Samuel LeBlanc, NASA Ames, 2016-06-13
+    """
+    import numpy as np
+    from Sp_parameters import deriv, binned_statistic
+    def avg(x):
+        return np.nanmean(x)
+    
+    n = len(str(binsize))
+    rg = [round(alt.min()-0.5*10**n,1-n),round(alt.max()+0.5*10**n,1-n)]
+    if verbose: print 'range: {}'.format(rg)
+    bins = np.arange(rg[0],rg[1]+1,binsize)
+    nbins = len(bins)
+    if verbose: print 'nbins: {}'.format(nbins)
+    aod_binned = binned_statistic(alt,aod,avg,nbins,rg)
+    if use_deriv:
+        ext = deriv(aod_binned,bins)
+    else:
+        ext = np.diff(aod_binned)/np.diff(bins)
+        bins = bins[0:-1]
+    return ext,bins
+
+
 # For fancy ouputting of progress bars
 
 # In[3]:
