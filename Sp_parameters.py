@@ -273,7 +273,7 @@ def ext_prof(alt,aod,binsize=100,use_deriv=True,verbose=False):
     else:
         ext = np.diff(aod_binned)/np.diff(bins)
         bins = bins[0:-1]
-    return ext,bins
+    return ext*(-1.0),bins
 
 
 # For fancy ouputting of progress bars
