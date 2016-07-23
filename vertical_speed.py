@@ -3,33 +3,33 @@
 
 # Program to check out previous flights from the P3 to calculate various speeds..
 
-# In[1]:
+# In[ ]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib nbagg')
+get_ipython().magic(u'matplotlib notebook')
 import numpy as np
 import Pysolar.solar as sol
 import datetime
 fp='C:/Users/sleblan2/Research/flight_planning/p3_flights/'
 
 
-# In[2]:
+# In[ ]:
 
 import load_utils as lm
 reload(lm)
 
 
-# In[3]:
+# In[ ]:
 
 from Sp_parameters import smooth
 
 
 # ## P3 during ARCTAS
 
-# In[37]:
+# In[ ]:
 
 arctas,header = lm.load_ict(fp+'pds_p3b_20080419_r2.ict',return_header=True)
 header

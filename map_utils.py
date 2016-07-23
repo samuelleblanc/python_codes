@@ -59,7 +59,7 @@ def bearing(pos1,pos2):
     sin_lon_d = np.sin(pos1[...,1]-pos2[...,1])
     cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
     cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
-    return (np.arctan2(sin_lon_d*cos_lat2,cos_lat1*sin_lat2-sin_lat1*cos_lat2*cos_lon_d)*180.0/np.pi+360.0) % 360.0
+    return 360.0-((np.arctan2(sin_lon_d*cos_lat2,cos_lat1*sin_lat2-sin_lat1*cos_lat2*cos_lon_d)*180.0/np.pi+360.0) % 360.0)
 
 
 # In[2]:
@@ -325,13 +325,17 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
 
 # In[1]:
 
-def get_sza_azi(lat,lon,datetime):
+def get_sza_azi(lat,lon,datetime,alt=None):
     """
-    Program wrapper for pysolar to get the solar zenith angle and the solar azimuth angle
+    Program wrapper for pyephem.Sun to get the solar zenith angle and the solar azimuth angle
     can use inputs of list or numpy arrays
     require input of lat,lon,datetime 
+    optional input of altitutde (in meters)
     """
-    import Pysolar.solar as sol
+    import ephem
+    from numpy import pi
+    sun = ephem.Sun()
+    obs = ephem.Observer()
     try:
         n = len(lat)
     except TypeError:
@@ -342,8 +346,12 @@ def get_sza_azi(lat,lon,datetime):
     sza = []
     azi = []
     for i in range(n):
-        sza.append(90.0-sol.GetAltitude(lat[i],lon[i],datetime[i]))
-        azi.append(sol.GetAzimuth(lat[i],lon[i],datetime[i]))
+        obs.lat,obs.lon,obs.date = lat[i]/180.0*pi,lon[i]/180.0*pi,datetime[i]
+        if alt:
+            obs.elevation = alt
+        sun.compute(obs)
+        sza.append(90.0-sun.alt*180/pi)
+        azi.append(sun.az*180/pi)
     return sza,azi
 
 

@@ -96,6 +96,11 @@ import cPickle as pickle
 #mpld3.enable_notbeook()
 
 
+# In[ ]:
+
+
+
+
 # In[2]:
 
 get_ipython().magic(u'matplotlib notebook')
