@@ -66,7 +66,7 @@ def read_Cair(filein):
 
         c1 = np.genfromtxt(filein,skip_header=0,dtype='object',names=True,delimiter=',',                           converters={'DateTime':parser.parse,'DateTimeUTC':parse_utc})
     print 'toutc'
-    co['utc'] = toutc(c1['DateTimeUTC'])
+    #co['utc'] = toutc(c1['DateTimeUTC'])
     co['DateTime'] = c1['DateTime']
     co['DateTimeUTC'] = c1['DateTimeUTC']
     
@@ -75,8 +75,8 @@ def read_Cair(filein):
     co['Lt'] = []
     for n in names:
         if n.startswith('Lt'):
-            wvl.append(float(n.split('_')[0].strip('Lt')))
-            Lt.append(co[n])
+            co['wvl'].append(float(n.split('_')[0].strip('Lt')))
+            co['Lt'].append(co[n])
     co['Lt'] = np.array(co['Lt'])
     
     return co   

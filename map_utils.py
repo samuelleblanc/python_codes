@@ -325,12 +325,13 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
 
 # In[1]:
 
-def get_sza_azi(lat,lon,datetime,alt=None):
+def get_sza_azi(lat,lon,datetime,alt=None,return_sunearthfactor=False):
     """
     Program wrapper for pyephem.Sun to get the solar zenith angle and the solar azimuth angle
     can use inputs of list or numpy arrays
     require input of lat,lon,datetime 
     optional input of altitutde (in meters)
+    optional output of sun earth distance factor if return_sunearthfactor is set to True
     """
     import ephem
     from numpy import pi
@@ -345,6 +346,7 @@ def get_sza_azi(lat,lon,datetime,alt=None):
         n = len(lat)
     sza = []
     azi = []
+    sunf = []
     for i in range(n):
         obs.lat,obs.lon,obs.date = lat[i]/180.0*pi,lon[i]/180.0*pi,datetime[i]
         if alt:
@@ -352,7 +354,11 @@ def get_sza_azi(lat,lon,datetime,alt=None):
         sun.compute(obs)
         sza.append(90.0-sun.alt*180/pi)
         azi.append(sun.az*180/pi)
-    return sza,azi
+        sunf.append(1.0/(sun.earth_distance**2)
+    if return_sunearthfactor:
+        return sza,azi,sunf
+    else:
+        return sza,azi
 
 
 # In[1]:

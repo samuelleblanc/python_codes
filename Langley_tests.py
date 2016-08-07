@@ -260,24 +260,24 @@ c1 = np.genfromtxt(f,skip_header=0,dtype='object',names=True,delimiter=',',     
 co['utc']
 
 
-# In[10]:
+# In[13]:
 
 import Cair_utils as cu
 
 
-# In[11]:
+# In[16]:
 
 reload(cu)
 
 
-# In[12]:
+# In[17]:
 
 vals = cu.read_Cair(fp+'20160702_MLO5\\CAST_001_160702_090020_URU.csv')
 
 
 # ## Calculate the solar position and airmass
 
-# In[247]:
+# In[18]:
 
 co['sza'] = []
 co['azi'] = []
@@ -301,7 +301,7 @@ co.keys()
 
 # ## Plot a few figures
 
-# In[248]:
+# In[19]:
 
 plt.figure()
 plt.plot(co['utc'],co['Lt510_\xb5Wsr_cm\xb2_nm'])

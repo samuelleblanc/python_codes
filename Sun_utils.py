@@ -133,10 +133,13 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
     from Pysolar import GetDeclination
     import numpy as np
     if not atm_id:
-        if not date:
-            print 'No time set: using US Standard atmosphere for Rayleigh calculations'
-            atm_id = 6
-        else:
+        try: 
+            if not date:
+                print 'No time set: using US Standard atmosphere for Rayleigh calculations'
+                atm_id = 6
+            else:
+                latlims =[0,30,50,90]
+        except:
             latlims =[0,30,50,90]
     elif not atm_id in [1,2,3,4,5,6]:
         print """***  atm_id not valid. Please select from below:
@@ -146,17 +149,23 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
             4=Subarc Summer
             5=Subarc Winter
             6=1962 U.S. Stand Atm
+            
         """
-    declination = GetDeclination(date.timetuple().tm_yday)
+    try:
+        doy = date.timetuple().tm_yday
+        declination = np.array(GetDeclination(doy))
+    except AttributeError:
+        declination = np.array([GetDeclination(d.timetuple().tm_yday) for d in date])
+    
     if abs(latitude) < latlims[1]: 
         atm_id = 1 #tropical
     elif abs(latitude) < latlims[2]: 
-        if latitude*declination>0:
+        if latitude*declination[0]>0:
             atm_id = 2 # midlatitude summer
         else:
             atm_id = 3 # midlatitude winter
     elif abs(latitude) < latlims[3]:
-        if latitude*declination>0:
+        if latitude*declination[0]>0:
             atm_id = 4 # subarctic summer
         else:
             atm_id = 5 # subarctic winter
@@ -211,7 +220,7 @@ def get_season(date,north=True):
 
 # In[ ]:
 
-def calc_sza_airmass(datetime_utc,lat,lon,alt):
+def calc_sza_airmass(datetime_utc,lat,lon,alt,c={}):
     """
     Purpose:  
         Take in an array of datetime in UTC timoezone aware format
@@ -245,12 +254,12 @@ def calc_sza_airmass(datetime_utc,lat,lon,alt):
     """
     import map_utils as mu
     import Sun_utils as su
-    c = {}
     c['lat'] = lat
     c['lon'] = lon
     c['alt'] = alt
     c['sza'] = []
     c['azi'] = []
+    c['sunearthf'] = []
     c['m_aero'] = []
     c['m_ray'] = []
     c['m_o3'] = []
@@ -260,14 +269,20 @@ def calc_sza_airmass(datetime_utc,lat,lon,alt):
         lat_list = False
     for i,d in enumerate(datetime_utc):
         if lat_list:
-            s,a = mu.get_sza_azi(lat[i],lon[i],d,alt=alt[i])
+            s,a,sf = mu.get_sza_azi(lat[i],lon[i],d,alt=alt[i],return_sunearthfactor=True)
         else:
-            s,a = mu.get_sza_azi(lat,lon,d,alt=alt)
+            s,a,sf = mu.get_sza_azi(lat,lon,d,alt=alt,return_sunearthfactor=True)
         c['sza'].append(s[0])
         c['azi'].append(a[0]) 
+        c['sunearthf'].append(sf[0])
         m_r,m_a,_,m_o,_ = su.airmass(s[0],alt)
         c['m_aero'].append(m_a)
         c['m_ray'].append(m_r)
         c['m_o3'].append(m_o)
     return c
+
+
+# In[ ]:
+
+
 
