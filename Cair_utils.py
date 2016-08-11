@@ -208,3 +208,20 @@ def calc_rayleigh_filter(c,band_wvl,press=None):
                                                                   declination=c['declination'],date=d)
     return tau_rayleigh,tau_rayleigh_err
 
+
+# In[7]:
+
+def calc_gas_tau(band_wvl,gas_wvl,gas_tau):
+    'Function that convolves the gas tau at fine wavelength spacing to a band representative value'
+    import numpy as np
+    import scipy.interpolate as interp
+    gas_tau_out = np.zeros_like(band_wvl)
+    for i,v in enumerate(band_wvl):
+        gas_tau_out[i] = np.interp(v,gas_wvl,gas_tau,right=0.0,left=0.0)
+    return gas_tau_out   
+
+
+# In[ ]:
+
+
+
