@@ -76,7 +76,7 @@ fp = 'C:\\Users\\sleblan2\\Research\\4STAR\\MLO_2016\\'
 f = fp+'20160702_MLO5\\CAST_001_160702_090020_URC.csv'
 
 
-# In[176]:
+# In[56]:
 
 c = cu.read_Cair(fp+'20160702_MLO5\\CAST_001_160702_090020_URC.csv')
 
@@ -95,7 +95,7 @@ c['DateTimeUTC'][0]
 
 # ## Prepare the filter functions
 
-# In[9]:
+# In[57]:
 
 def Gamma2sigma(Gamma):
     '''Function to convert FWHM (Gamma) to standard deviation (sigma)'''
@@ -103,7 +103,7 @@ def Gamma2sigma(Gamma):
     return Gamma * np.sqrt(2) / ( np.sqrt(2 * np.log(2)) * 2 )
 
 
-# In[10]:
+# In[58]:
 
 def gaussian(x_center,fwhm):
     'Function that generates a gaussian distribution and a new x array to fit it onto'
@@ -114,12 +114,12 @@ def gaussian(x_center,fwhm):
     return ndg, x
 
 
-# In[11]:
+# In[59]:
 
 fwhm = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,15,30]
 
 
-# In[177]:
+# In[60]:
 
 band_f = []
 band_wvl = []
@@ -129,7 +129,7 @@ for i,l in enumerate(c['wvl']):
     band_wvl.append(wl)
 
 
-# In[178]:
+# In[61]:
 
 c['band_f'] = band_f
 c['band_wvl'] = band_wvl
@@ -156,35 +156,35 @@ plt.savefig(fp+'C-air_synthetic_bandwidth.png',dpi=600,transparent=True)
 
 # ### Get the ozone cross sections
 
-# In[238]:
+# In[62]:
 
 f_oz = fp+'..\\O3_273K_V3_0.dat'
 
 
-# In[239]:
+# In[63]:
 
 oz = np.genfromtxt(f_oz,skip_header=41)
 
 
-# In[240]:
+# In[64]:
 
 oz.shape
 
 
-# In[241]:
+# In[65]:
 
 gas = {}
 gas['o3_coef'] = oz[:,1]
 gas['o3_wvl'] = oz[:,0]
 
 
-# In[242]:
+# In[66]:
 
 gas['o3_du'] = 261.0
 gas['o3_tau'] = gas['o3_coef']*2.54070E19*gas['o3_du']/1000.0 
 
 
-# In[257]:
+# In[67]:
 
 plt.figure()
 plt.semilogy(gas['o3_wvl'],gas['o3_tau'])
@@ -194,33 +194,33 @@ plt.ylabel('O3 $\\tau$')
 
 # ### calculate the ozone tau for the band wavelengths
 
-# In[243]:
+# In[68]:
 
 gas['o3_tau_band'] = cu.calc_gas_tau(c['band_wvl'],gas['o3_wvl'],gas['o3_tau'])
 
 
-# In[244]:
+# In[69]:
 
 gas['o3_tau_band'].shape
 
 
 # ### Special case, remove the dependence of Ozone at the lowest wavelength band
 
-# In[259]:
+# In[70]:
 
 gas['o3_tau_band'][0,:] = 0.0
 
 
 # # Run analysis and calculate the airmass and rayleigh
 
-# In[179]:
+# In[71]:
 
 lat, lon, alt = 19.5365,-155.57615,3428.0
 
 
 # ## Calculate the airmass and sza
 
-# In[180]:
+# In[72]:
 
 c = su.calc_sza_airmass(c['DateTimeUTC'],lat,lon,alt,c=c)
 
@@ -237,7 +237,7 @@ c['Lt'].shape
 
 # ## get the rayleigh tau at center bands
 
-# In[260]:
+# In[73]:
 
 c['tau_rayleigh'],c['tau_rayleigh_err'] = cu.calc_rayleigh(c,press=680.0)
 
@@ -249,7 +249,7 @@ c['wvl']
 
 # ### Verify the calculated tau_rayleigh
 
-# In[21]:
+# In[22]:
 
 import matplotlib.dates as mdates
 fmt = mdates.DateFormatter('%H:%M')
@@ -304,7 +304,7 @@ plt.ylabel('Transmission due to Rayleigh')
 
 # ## Get the Rayleigh tau at wavelengths of filter bands
 
-# In[261]:
+# In[74]:
 
 c['tau_rayleigh_fl'],c['tau_rayleigh_fl_err'] = cu.calc_rayleigh_filter(c,band_wvl,press=680.0)
 
@@ -312,25 +312,25 @@ c['tau_rayleigh_fl'],c['tau_rayleigh_fl_err'] = cu.calc_rayleigh_filter(c,band_w
 # ## Calculate the 'rateaero' or Lt_aero
 # Which is the Lt values divided by the impact of rayleigh, and trace gases
 
-# In[262]:
+# In[75]:
 
 c['Lt_aero'] = c['Lt']/np.array(c['sunearthf'])/np.exp(-np.array(c['m_ray'])*c['tau_rayleigh'])
 
 
-# In[29]:
+# In[25]:
 
 c['Lt_aero'].shape
 
 
 # ### Calculate the filter modified Lt_aero
 
-# In[263]:
+# In[76]:
 
 c['Lt_aero_fl'] = np.zeros_like(c['Lt_aero'])
 c['tr_rayleigh'] = np.zeros_like(c['Lt_aero'])
 
 
-# In[264]:
+# In[77]:
 
 for i,l in enumerate(c['wvl']):
     tr = 1.0/np.exp(-np.array(c['m_ray'])[:,np.newaxis]*c['tau_rayleigh_fl'][i,:,:])
@@ -362,7 +362,7 @@ plt.ylabel('Transmission due to filter modified Rayleigh')
 # ### Calculate the filter modified and refined wit Ozone Lt_aero
 # 
 
-# In[265]:
+# In[78]:
 
 c['tr_o3'] = np.zeros_like(c['Lt_aero'])
 
@@ -372,12 +372,12 @@ c['tr_o3'] = np.zeros_like(c['Lt_aero'])
 c['m_o3']
 
 
-# In[266]:
+# In[29]:
 
 gas['o3_tau_band'].shape
 
 
-# In[267]:
+# In[79]:
 
 for i,l in enumerate(c['wvl']):
     tr = 1.0/np.exp(-np.array(c['m_o3'])[:,np.newaxis]*gas['o3_tau_band'][i,:])
@@ -404,19 +404,19 @@ plt.ylabel('Transmission due to Ozone absorption')
 
 # ## find the portions of the day for the langley
 
-# In[34]:
+# In[80]:
 
 from datetime import datetime
 import dateutil
 from dateutil.tz import tzutc
 
 
-# In[186]:
+# In[81]:
 
 fl = np.where((c['DateTimeUTC']>datetime(2016,7,2,16,tzinfo=dateutil.tz.tzutc())) & (c['DateTimeUTC']<datetime(2016,7,2,21,tzinfo=dateutil.tz.tzutc())))[0]
 
 
-# In[187]:
+# In[82]:
 
 fl_mu = (np.array(c['m_aero'])[fl]<12.0)&(np.array(c['m_aero'])[fl]>1.5)
 
@@ -487,7 +487,7 @@ plt.suptitle('C-air Refined Langley (Rayleigh subtracted) for {:%Y-%m-%d}'.forma
 plt.savefig(fp+'{:%Y%m%d}_Langley_refined.png'.format(c['DateTimeUTC'][0]),dpi=600,transparent=True)
 
 
-# In[269]:
+# In[83]:
 
 fig,ax = plt.subplots(5,4,sharex=True,figsize=(12,9))
 ax = ax.ravel()
@@ -689,15 +689,15 @@ plt.savefig(fp+'{:%Y%m%d}_Lt_Lt0_one.png'.format(c['DateTimeUTC'][0]),dpi=600,tr
 
 # ## Plot the AOD spectra
 
-# In[274]:
+# In[37]:
 
 from matplotlib.ticker import FormatStrFormatter
 
 
-# In[275]:
+# In[113]:
 
 plt.figure()
-plt.loglog(c['wvl'],c['langley_aod'],'o')
+plt.loglog(c['wvl'],c['langley_aod'],'o',label='C-AIR')
 plt.errorbar(c['wvl'], c['langley_aod'],marker='o',linestyle='None',yerr=c['langley_aod_err'],color='b')
 plt.ylim(10**-4,10**-1)
 plt.xlim(300,2200)
@@ -706,7 +706,38 @@ plt.xlabel('Wavelength [nm]')
 plt.grid(which='both')
 plt.gca().xaxis.set_minor_formatter(FormatStrFormatter("%.0f"))
 plt.gca().xaxis.set_major_formatter(FormatStrFormatter("%.0f"))
+plt.title('C-AIR Aerosol optical depth from Langley on {:%Y-%m-%d}'.format(c['DateTimeUTC'][0]))
 plt.savefig(fp+'{:%Y%m%d}_Langley_AOD.png'.format(c['DateTimeUTC'][0]),dpi=600,transparent=True)
+
+
+# ### Plot the AATS data on top of C-AIR
+
+# In[114]:
+
+xa,ya = pu.plotmatfig(fp+'..\\figs\\AATS20160702amstdev_mult3LangleyAOD.fig')
+
+
+# In[117]:
+
+aats_wvl,aats_tau = xa[0],ya[0]
+
+
+# In[125]:
+
+plt.figure()
+plt.loglog(c['wvl'],c['langley_aod'],'o',label='C-AIR')
+plt.errorbar(c['wvl'], c['langley_aod'],marker='o',linestyle='None',yerr=c['langley_aod_err'],color='b')
+plt.loglog(aats_wvl*1000.0,aats_tau,'or',label='AATS')
+plt.legend(loc=3,frameon=False,numpoints=1)
+plt.ylim(10**-4,10**-1)
+plt.xlim(300,2200)
+plt.ylabel('Aerosol Optical Depth')
+plt.xlabel('Wavelength [nm]')
+plt.grid(which='both')
+plt.gca().xaxis.set_minor_formatter(FormatStrFormatter("%.0f"))
+plt.gca().xaxis.set_major_formatter(FormatStrFormatter("%.0f"))
+plt.title('Aerosol optical depth from Langley on {:%Y-%m-%d}'.format(c['DateTimeUTC'][0]))
+plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_AOD.png'.format(c['DateTimeUTC'][0]),dpi=600,transparent=True)
 
 
 # ## Make a plot with AATS data and C-AIR
@@ -716,25 +747,25 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_AOD.png'.format(c['DateTimeUTC'][0]),dpi=600,t
 pu.plotmatfig(fp+'AATS20160702amstdev_mult3LangleyperV0calc.fig')
 
 
-# In[276]:
+# In[39]:
 
 x,y = pu.plotmatfig(fp+'AATS20160702amstdev_mult3LangleyperlogV0calc.fig')
 
 
 # ### Extract the AATS data from the plot
 
-# In[277]:
+# In[40]:
 
 len(x)
 
 
-# In[278]:
+# In[41]:
 
 aats = {}
 aats['wvl'] = [353.3,380.0,451.2,499.4,520.4,605.8,675.1,779.1,864.5,1019.1,1241.3,1558.5,2139.1]
 
 
-# In[279]:
+# In[42]:
 
 aats['V'] = np.zeros((len(x)/2,len(y[0])))*np.nan
 aats['V_good'] = np.zeros((len(x)/2,len(y[0])))*np.nan
@@ -742,7 +773,7 @@ aats['m'] = np.zeros((len(x)/2,len(y[0])))*np.nan
 aats['m_good'] = np.zeros((len(x)/2,len(y[0])))*np.nan
 
 
-# In[280]:
+# In[43]:
 
 for i in range(0,len(x),2):
     aats['m'][i/2,:] = x[i]
@@ -814,7 +845,7 @@ plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_subtract.png'.format(c['DateTimeUTC'
             dpi=600,transparent=True)
 
 
-# In[290]:
+# In[84]:
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(121)
@@ -873,4 +904,111 @@ ax.set_title('AATS-14')
 
 plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_subtract_zoom_adjusted.png'.format(c['DateTimeUTC'][0]),
             dpi=600,transparent=True)
+
+
+# In[52]:
+
+i_cair = [2,4,5,6,11,14,15,16,17]
+i_aats = [1,2,3,4,6,7,8,9,10]
+
+
+# In[91]:
+
+c_cair_aats = plt.cm.jet(len(i_cair))
+
+
+# In[103]:
+
+c_cair_aats = plt.cm.jet(np.arange(len(i_cair))/float(len(i_cair)))
+
+
+# In[51]:
+
+import cmaps
+cmaps.cmaps()
+
+
+# In[93]:
+
+c_cair_aats
+
+
+# In[110]:
+
+fig = plt.figure(figsize=(12,8))
+ax = fig.add_subplot(121)
+color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.Pastel1,ax=fig.axes[0])
+col = []
+j = 0
+for i,l in enumerate(c['wvl']):
+    if i in i_cair:
+        co = c_cair_aats[j]
+        j+=1
+        alpha = 1.0
+    else:
+        co = None
+        alpha = 0.5
+    plt.plot(np.array(c['m_aero'])[fl],np.log(c['Lt_aero_fl'][i,fl])-c['Lt_0'][i],'.',color='grey',alpha=alpha)
+    r = np.corrcoef(np.array(c['m_aero'])[fl][fl_mu],np.log(c['Lt_aero_fl'][i,fl[fl_mu]])-c['Lt_0'][i])
+    pp = plt.plot(np.array(c['m_aero'])[fl][fl_mu],np.log(c['Lt_aero_fl'][i,fl[fl_mu]])-c['Lt_0'][i],'.',
+             label='{:4.0f} nm'.format(l),color=co,alpha=alpha)
+    p,perr = pu.plot_lin(np.array(c['m_aero'])[fl][fl_mu],np.log(c['Lt_aero_fl'][i,fl[fl_mu]])-c['Lt_0'][i],
+                         color='k',ci=0.99,labels=False,alpha=alpha)
+    col.append(pp[0].get_color())
+j = 0
+for i in i_cair:
+    plt.plot(np.array(c['m_aero'])[fl][fl_mu],np.log(c['Lt_aero_fl'][i,fl[fl_mu]])-c['Lt_0'][i],'.',c=c_cair_aats[j])
+    pu.plot_lin(np.array(c['m_aero'])[fl][fl_mu],np.log(c['Lt_aero_fl'][i,fl[fl_mu]])-c['Lt_0'][i],color='k',ci=0.99,labels=False)
+    j += 1
+plt.grid()
+l = plt.legend(frameon=True,loc='bottom left',ncol=4,markerscale=0,handlelength=0,handletextpad=0,columnspacing=0.5)
+for i,text in enumerate(l.get_texts()):
+    text.set_color(col[i])
+plt.xlim(0,14)
+plt.ylim(-0.3,0)
+plt.xlabel('Airmass')
+plt.ylabel('log(Lt) - log(Lt$_0$)')
+ax.set_title('C-AIR')
+plt.suptitle('Refined Langley from Mauna Loa on {:%Y-%m-%d}'.format(c['DateTimeUTC'][0]))
+
+ax = fig.add_subplot(122)
+color.cycle_cmap(len(aats['wvl'])+1,cmap=plt.cm.Pastel1,ax=ax)
+col = []
+j = 0
+for i,l in enumerate(aats['wvl']):
+    if i in i_aats:
+        co = c_cair_aats[j]
+        j += 1
+        alpha = 1.0
+    else:
+        co = None
+        alpha = 0.5
+    plt.plot(aats['m'][i,:],aats['V'][i,:],'.',color='grey',alpha=alpha)
+    r = np.corrcoef(aats['m_good'][i,:],aats['V_good'][i,:])
+    pp = plt.plot(aats['m_good'][i,:],aats['V_good'][i,:],'.',
+             label='{:4.0f} nm'.format(l),color=co,alpha=alpha)
+    p,perr = pu.plot_lin(aats['m_good'][i,:],aats['V_good'][i,:],
+                         color='k',ci=0.99,labels=False,alpha=alpha)
+    col.append(pp[0].get_color())
+j = 0
+for i in i_aats:
+    plt.plot(aats['m_good'][i,:],aats['V_good'][i,:],'.',c=c_cair_aats[j])
+    pu.plot_lin(aats['m_good'][i,:],aats['V_good'][i,:],color='k',ci=0.99,labels=False)
+    j += 1
+plt.grid()
+l = plt.legend(frameon=True,loc='bottom left',ncol=3,markerscale=0,handlelength=0,handletextpad=0,columnspacing=0.5)
+for i,text in enumerate(l.get_texts()):
+    text.set_color(col[i])
+plt.xlim(0,14)
+plt.ylim(-0.15,0)
+plt.xlabel('Airmass')
+plt.ylabel('log(V) - log(V$_0$)')
+ax.set_title('AATS-14')
+plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_highlight.png'.format(c['DateTimeUTC'][0]),
+            dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
 
