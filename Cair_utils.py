@@ -41,6 +41,7 @@ def read_Cair(filein):
     from load_utils import toutc, recarray_to_dict
     import numpy as np
     from dateutil import parser
+    from dateutil.tz import tzutc
     from datetime import datetime
     import time
     import pytz
@@ -124,36 +125,86 @@ def calc_rayleigh(c,press=None):
 
     Input:
         read_Cair dict output
+        pressure
         
     Output:
-        new sza, and airmass calcuations inside the dict
+        pressure value saved within the dict
+        tau_rayleigh and tau_rayleigh_err: in same shape and format as the 'Lt' variable within the c dict
 
     Keywords:
-        lat: latitude of measurement in degrees positive for north
-        lon: longitude of measurements in degrees positive for East
-        alt: altitude of measurement in meters
+        pressure
 
     Dependencies:
         - Sun_utils
-        - map_utils
+        - numpy
 
     Needed Files:
       - None
 
     Modification History:
 
-        Written: Samuel LeBlanc, Mauna Loa Observatory, Hawaii, 2016-07-07
+        Written: Samuel LeBlanc, Santa Cruz, CA, 2016-08-08
         Modified: 
     """
     import Sun_utils as su
+    import numpy as np
     if not press:
         raise InputError('No pressure indicated please put one in')
-    c['tau_ray'] = su.Sun_utils(c['wvl'],press,)
-    
-    print 'not yet'
+    else:
+        c['pressure'] = press
+    tau_rayleigh,tau_rayleigh_err = np.zeros_like(c['Lt']),np.zeros_like(c['Lt'])
+    for i,d in enumerate(c['DateTimeUTC']):
+        tau_rayleigh[:,i],tau_rayleigh_err[:,i] = su.tau_rayleigh(np.array(c['wvl'])/1000.0,
+                                                                  c['pressure'],latitude=c['lat'],
+                                                                  declination=c['declination'],date=d)
+    return tau_rayleigh,tau_rayleigh_err
 
 
-# In[ ]:
+# In[2]:
 
+def calc_rayleigh_filter(c,band_wvl,press=None):
+    """
+    Purpose:  
+        Wrapper to analyze the C-air read data and calculate the rayleigh scattering
+        For use with the bandwitdh fitler functions
 
+    Input:
+        c: read_Cair dict output
+        press: pressure in hPa
+        band_wvl: array of filter wavelenghts in nm
+        
+    Output:
+        pressure value saved within the dict
+        tau_rayleigh and tau_rayleigh_err: returns tau calculated from rayleigh scattering and its error, 
+                     in the shape format (wvl,time,band_wvl)
+
+    Keywords:
+        pressure
+
+    Dependencies:
+        - Sun_utils
+        - numpy
+
+    Needed Files:
+      - None
+
+    Modification History:
+
+        Written: Samuel LeBlanc, Santa Cruz, CA, 2016-08-09
+        Modified: 
+    """
+    import Sun_utils as su
+    import numpy as np
+    if not press:
+        raise InputError('No pressure indicated please put one in')
+    else:
+        c['pressure'] = press
+    tau_rayleigh = np.zeros((len(c['wvl']),len(c['DateTimeUTC']),len(band_wvl[0])))
+    tau_rayleigh_err = np.zeros((len(c['wvl']),len(c['DateTimeUTC']),len(band_wvl[0])))
+    for i,d in enumerate(c['DateTimeUTC']):
+        for j,l in enumerate(c['wvl']):
+            tau_rayleigh[j,i,:],tau_rayleigh_err[j,i,:] = su.tau_rayleigh(np.array(band_wvl[j])/1000.0,
+                                                                  c['pressure'],latitude=c['lat'],
+                                                                  declination=c['declination'],date=d)
+    return tau_rayleigh,tau_rayleigh_err
 

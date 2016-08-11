@@ -229,6 +229,9 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
                    'statsmodels' use the statsmodels method, Weighted least squares, with weighing of 1/y_err, x_err ignored
        ax: variable containing the axis to which to plot onto.
        any other input for matplotlib plot function can be passed via args or kwargs
+    Output:
+        p coefficients (intercept, slope)
+        perr values (error in intercept, error in slope)
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -280,6 +283,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
     if shaded_ci:
         y_up,y_down = confidence_envelope(xx, p, perr, ci=ci)
         ax.fill_between(xx,y_down,y_up,color=color,alpha=0.1)
+    return p,perr
 
 
 # In[ ]:
@@ -320,4 +324,125 @@ def confidence_envelope(xn,p,p_err,ci=95,size=1000):
         y_up[j] = stats.scoreatpercentile(ys[:,j],ci)
         y_down[j] = stats.scoreatpercentile(ys[:,j],100-ci)
     return y_up, y_down
+
+
+# In[ ]:
+
+def plotmatfig(filename,fignr=None):
+    """
+    Plot a figure from a matlab .fig file
+    
+    Taken from the http://stackoverflow.com/questions/8172931/data-from-a-matlab-fig-file-using-python
+    user response: johnml1135
+    
+    """
+    
+    from scipy.io import loadmat
+    import numpy as np
+    import matplotlib.pyplot as plt
+    d = loadmat(filename,squeeze_me=True, struct_as_record=False)
+    matfig = d['hgS_070000']
+    childs = matfig.children
+    ax1 = [c for c in childs if c.type == 'axes']
+    multi,lasta = False,-999
+    if(len(ax1) > 0):
+        for i,a in enumerate(ax1):
+            if type(a.children) is np.ndarray:
+                if ax1==lasta:
+                    multi = True
+                    ax2 = [ax1,a]
+                elif multi:
+                    ax2.append(a)
+                else:
+                    ax1 = a
+                    ax2 = [ax1]
+                lasta = a
+    legs = [c for c in childs if c.type == 'scribe.legend']
+    if(len(legs) > 0):
+        legs = legs[0]
+    else:
+        legs=0
+    pos = matfig.properties.Position
+    size = np.array([pos[2]-pos[0],pos[3]-pos[1]])/96
+    XX,YY = [],[]
+    for ax1 in ax2:
+        plt.figure(fignr,figsize=size)
+        plt.clf()
+        #plt.hold(True)
+        counter = 0    
+        for line in ax1.children:
+            if line.type == 'graph2d.lineseries':
+                if hasattr(line.properties,'Marker'):
+                    mark = "%s" % line.properties.Marker
+                    if(mark != "none"):
+                        mark = mark[0]
+                else:
+                    mark = '.'
+                if hasattr(line.properties,'LineStyle'):
+                    linestyle = "%s" % line.properties.LineStyle
+                else:
+                    linestyle = '-'
+                if hasattr(line.properties,'Color'):
+                    r,g,b =  line.properties.Color
+                else:
+                    r = 0
+                    g = 0
+                    b = 1
+                if hasattr(line.properties,'MarkerSize'):
+                    marker_size = line.properties.MarkerSize
+                else:
+                    marker_size = -1                
+                x = line.properties.XData
+                y = line.properties.YData
+                XX.append(x)
+                YY.append(y)
+                if(mark == "none"):
+                    plt.plot(x,y,linestyle=linestyle,color=[r,g,b])
+                elif(marker_size==-1):
+                    plt.plot(x,y,marker=mark,linestyle=linestyle,color=[r,g,b])
+                else:
+                    plt.plot(x,y,marker=mark,linestyle=linestyle,color=[r,g,b],ms=marker_size)
+            elif line.type == 'text':
+                if counter == 1:
+                    try:
+                        plt.xlabel("$%s$" % line.properties.String,fontsize =16)
+                    except:
+                        pass
+                elif counter == 2:
+                    try:
+                        plt.ylabel("$%s$" % line.properties.String,fontsize = 16)
+                    except:
+                        pass
+                elif counter == 4:
+                    try:
+                        plt.title("$%s$" % line.properties.String,fontsize = 16)
+                    except:
+                        pass
+                counter += 1   
+        plt.grid(ax1.properties.__dict__.get('XGrid'))
+
+        if(hasattr(ax1.properties,'XTick')):
+            if(hasattr(ax1.properties,'XTickLabelRotation')):
+                plt.xticks(ax1.properties.XTick,ax1.properties.XTickLabel,rotation=ax1.properties.XTickLabelRotation)
+            elif(hasattr(ax1.properties,'XTickLabel')):
+                plt.xticks(ax1.properties.XTick,ax1.properties.XTickLabel)
+        if(hasattr(ax1.properties,'YTick')):
+            if(hasattr(ax1.properties,'YTickLabelRotation')):
+                plt.yticks(ax1.properties.YTick,ax1.properties.YTickLabel,rotation=ax1.properties.YTickLabelRotation)
+            elif(hasattr(ax1.properties,'YTickLabel')):
+                plt.yticks(ax1.properties.YTick,ax1.properties.YTickLabel)
+        if(hasattr(ax1.properties,'XLim')):
+            plt.xlim(ax1.properties.XLim)
+        if(hasattr(ax1.properties,'YLim')):
+            plt.ylim(ax1.properties.YLim)
+        if legs:        
+            leg_entries = tuple(['$' + l + '$' for l in legs.properties.String])
+            py_locs = ['upper center','lower center','right','left','upper right','upper left','lower right','lower left','best','best']
+            MAT_locs=['North','South','East','West','NorthEast', 'NorthWest', 'SouthEast', 'SouthWest','Best','none']
+            Mat2py = dict(zip(MAT_locs,py_locs))
+            location = legs.properties.Location
+            plt.legend(leg_entries,loc=Mat2py[location])
+        #plt.hold(False)
+        plt.show()
+    return XX,YY
 

@@ -94,7 +94,7 @@ def airmass(sza,alt,h=21.0):
 
 # In[55]:
 
-def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
+def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,declination=None,atm_id=None):
     """
     Purpose:
         Calculate the rayleigh optical depth by using the time, pressure, latitude
@@ -103,9 +103,10 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
     Input:
         wavelength: wavelength to be calculated, in microns
         pressure: atmospheric pressure at location in hPa
-        date: datetime object of the measurement
+        date: (optional if declination is not set) datetime object of the measurement
         latitude: (optional, if atm_id is set, does not read this value, defaults to 45 N)
                   location of the measurement used for determining location
+        declination: (optional) if set ignores the date keyword, if atm_id is set this is ignored
         atm_id: (default none) used to identify the default atmospheric profile
                 1=Tropical
                 2=Midlat Summer
@@ -119,7 +120,7 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
         tau_err: error in rayleigh optical depth
         
     Dependencies:
-        - Pysolar (v0.6)
+        - Pyephem
         - numpy
         
     Needed Files:
@@ -128,19 +129,48 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
     Modification History:
         Written: Samuel LeBlanc, Mauna Loa Observatory, Hawaii, 2016-07-04, Happy Fourth of July!
                 Ported from rayleighez.m and rayleigh.m malab files written by Yohei Shinozuka and Beat Schmid
+        Modified: Samuel LeBlanc, Santa Cruz, CA, 2016-08-08
+                Removed the dependency of Pysolar, and replaced with Pyephem. added the declination keyword
     
     """
-    from Pysolar import GetDeclination
+    import ephem
     import numpy as np
     if not atm_id:
         try: 
-            if not date:
+            if not date and not declination:
                 print 'No time set: using US Standard atmosphere for Rayleigh calculations'
                 atm_id = 6
             else:
                 latlims =[0,30,50,90]
         except:
             latlims =[0,30,50,90]
+        
+        try:
+            sun = ephem.Sun()
+            sun.compute(date)
+            declination = sun.dec*180.0/np.pi
+        except AttributeError, ValueError:
+            declination = []
+            sun = ephem.Sun()
+            for d in date:
+                sun.compute(d)
+                declination.append(sun.dec)
+            declination = np.array(declination)
+
+        if abs(latitude) < latlims[1]: 
+            atm_id = 1 #tropical
+        elif abs(latitude) < latlims[2]: 
+            if latitude*declination[0]>0:
+                atm_id = 2 # midlatitude summer
+            else:
+                atm_id = 3 # midlatitude winter
+        elif abs(latitude) < latlims[3]:
+            if latitude*declination[0]>0:
+                atm_id = 4 # subarctic summer
+            else:
+                atm_id = 5 # subarctic winter
+        else: 
+            atm_id = 6 # US standard
     elif not atm_id in [1,2,3,4,5,6]:
         print """***  atm_id not valid. Please select from below:
             1=Tropical
@@ -151,26 +181,6 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,atm_id=None):
             6=1962 U.S. Stand Atm
             
         """
-    try:
-        doy = date.timetuple().tm_yday
-        declination = np.array(GetDeclination(doy))
-    except AttributeError:
-        declination = np.array([GetDeclination(d.timetuple().tm_yday) for d in date])
-    
-    if abs(latitude) < latlims[1]: 
-        atm_id = 1 #tropical
-    elif abs(latitude) < latlims[2]: 
-        if latitude*declination[0]>0:
-            atm_id = 2 # midlatitude summer
-        else:
-            atm_id = 3 # midlatitude winter
-    elif abs(latitude) < latlims[3]:
-        if latitude*declination[0]>0:
-            atm_id = 4 # subarctic summer
-        else:
-            atm_id = 5 # subarctic winter
-    else: 
-        atm_id = 6 # US standard
             
     # following is ported from rayleigh.m code written by Beat S. 1995?
     #Bucholz(95) Table 5 constants
@@ -260,6 +270,7 @@ def calc_sza_airmass(datetime_utc,lat,lon,alt,c={}):
     c['sza'] = []
     c['azi'] = []
     c['sunearthf'] = []
+    c['declination'] = []
     c['m_aero'] = []
     c['m_ray'] = []
     c['m_o3'] = []
@@ -269,12 +280,13 @@ def calc_sza_airmass(datetime_utc,lat,lon,alt,c={}):
         lat_list = False
     for i,d in enumerate(datetime_utc):
         if lat_list:
-            s,a,sf = mu.get_sza_azi(lat[i],lon[i],d,alt=alt[i],return_sunearthfactor=True)
+            s,a,sf,dec = mu.get_sza_azi(lat[i],lon[i],d,alt=alt[i],return_sunf_and_dec=True)
         else:
-            s,a,sf = mu.get_sza_azi(lat,lon,d,alt=alt,return_sunearthfactor=True)
+            s,a,sf,dec = mu.get_sza_azi(lat,lon,d,alt=alt,return_sunf_and_dec=True)
         c['sza'].append(s[0])
         c['azi'].append(a[0]) 
         c['sunearthf'].append(sf[0])
+        c['declination'].append(dec[0])
         m_r,m_a,_,m_o,_ = su.airmass(s[0],alt)
         c['m_aero'].append(m_a)
         c['m_ray'].append(m_r)
