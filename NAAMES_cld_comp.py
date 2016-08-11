@@ -49,7 +49,7 @@
 
 # # Import initial modules and default paths
 
-# In[10]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -63,22 +63,22 @@ import hdf5storage as hs
 import load_utils as lm
 
 
-# In[11]:
+# In[2]:
 
 from mpl_toolkits.basemap import Basemap,cm
 
 
-# In[12]:
+# In[3]:
 
 import write_utils as wu
 
 
-# In[13]:
+# In[4]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[14]:
+# In[5]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/NAAMES/'
@@ -98,7 +98,7 @@ star = hs.loadmat(fp+'retrieve/20151117_zen_cld_retrieved.mat')
 star.keys()
 
 
-# In[7]:
+# In[11]:
 
 plt.figure()
 plt.subplot(3,1,1)
@@ -115,44 +115,44 @@ plt.ylabel('phase')
 plt.xlabel('UTC [h]')
 
 
-# In[8]:
+# In[9]:
 
 star['tau'] = Sp.smooth(star['tau'],4,nan=False)
 star['ref'] = Sp.smooth(star['ref'],4,nan=False)
 
 
-# In[20]:
+# In[10]:
 
 star['tau'][star['tau']<1.0]=np.nan
 
 
 # ## Load the MODIS file
 
-# In[17]:
+# In[12]:
 
 myd3 = fp+'c130/20151117_flt/MYD03.A2015321.1540.006.2015322160400.hdf'
 myd6 = fp+'c130/20151117_flt/MYD06_L2.A2015321.1540.006.2015322185040.hdf'
 
 
-# In[20]:
+# In[13]:
 
 modis,modis_dicts = lm.load_modis(myd3,myd6)
 
 
 # ## Load the insitu probe liquid vs ice water content
 
-# In[12]:
+# In[14]:
 
 help(lm.load_ict)
 
 
-# In[13]:
+# In[15]:
 
 wf = fp+'c130/20151117_flt/NAAMES-LARGE-WCM_C130_20151117_RA.ict'
 wcm,wcm_head = lm.load_ict(wf,return_header=True)
 
 
-# In[14]:
+# In[16]:
 
 plt.figure()
 plt.plot(wcm['Date_UTC']/3600,Sp.smooth(wcm['TWC_gm_3'],30),label='TWC')
@@ -165,7 +165,7 @@ plt.legend(frameon=False,loc=2)
 
 # # Start plotting MODIS and the retrieved values
 
-# In[15]:
+# In[17]:
 
 #set up a easy plotting function
 def naames_map(ax=plt.gca()):
@@ -181,7 +181,7 @@ def naames_map(ax=plt.gca()):
     return m
 
 
-# In[21]:
+# In[18]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = naames_map(ax)
@@ -199,7 +199,7 @@ m.scatter(xx,yy,c=star['tau'],cmap=plt.cm.rainbow,marker='o',vmin=clevels[0],vma
 plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_COD.png',dpi=600,transparent=True)
 
 
-# In[22]:
+# In[19]:
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = naames_map(ax)
@@ -241,32 +241,32 @@ plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_phase.png',dpi=600,transparent=Tru
 
 # ## Subset the MODIS values to match the flight path
 
-# In[11]:
+# In[20]:
 
 import map_utils as mu
 
 
-# In[12]:
+# In[21]:
 
 mod_ind = mu.map_ind(modis['lon'],modis['lat'],star['lon'],star['lat'])
 
 
-# In[13]:
+# In[22]:
 
 mod_ind.shape
 
 
-# In[14]:
+# In[23]:
 
 modis['lat'].shape
 
 
-# In[15]:
+# In[24]:
 
 star['lat'].shape
 
 
-# In[189]:
+# In[25]:
 
 star['tau'][star['tau']<1.0] = np.nan
 
@@ -294,14 +294,37 @@ plt.xlabel('Latitude [$^\circ$]')
 plt.savefig(fp+'plot/20151117_cld_retr_vs_MODIS.png',transparent=True,dpi=600)
 
 
+# In[31]:
+
+plt.figure()
+ax = plt.subplot(3,1,1)
+plt.plot(star['utc'],star['tau'],'rs',label='4STAR')
+plt.plot(star['utc'],modis['tau'][mod_ind[0,:],mod_ind[1,:]],'gx',label='MODIS')
+plt.legend(frameon=False,numpoints=1,loc=0)
+plt.ylabel('$\\tau$')
+plt.subplot(3,1,2,sharex=ax)
+plt.plot(star['utc'],star['ref'],'rs')
+plt.plot(star['utc'],modis['ref'][mod_ind[0,:],mod_ind[1,:]],'gx',label='MODIS')
+plt.ylabel('r$_{eff}$ [$\\mu$m]')
+ax3 = plt.subplot(3,1,3,sharex=ax)
+plt.plot(star['utc'],star['phase'],'rs')
+plt.plot(star['utc'],modis['phase'][mod_ind[0,:],mod_ind[1,:]]-1,'gx',label='MODIS')
+plt.ylim([-0.5,1.5])
+plt.yticks([0,1])
+ax3.set_yticklabels(['Liquid','Ice'])
+plt.ylabel('phase')
+plt.xlabel('UTC [H]')
+plt.savefig(fp+'plot/20151117_cld_retr_vs_MODIS_time.png',transparent=True,dpi=600)
+
+
 # ## Now compare MODIS vs. 4STAR with bean plots
 
-# In[17]:
+# In[26]:
 
 import plotting_utils as pu
 
 
-# In[21]:
+# In[27]:
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,1.5])
@@ -311,6 +334,16 @@ ax1.set_xticklabels(['MODIS\n(reflected)','4STAR\n(transmitted)'])
 pu.plot_vert_hist(fig,ax1,modis['tau'][mod_ind[0,:],mod_ind[1,:]],0,[0,60],legend=True,onlyhist=False,loc=2,color='g',bins=50)
 pu.plot_vert_hist(fig,ax1,star['tau'],1,[0,60],legend=True,color='r',bins=50)
 plt.savefig(fp+'plot/20151117_COD_bean_modis_4star.png',transparent=True,dpi=600)
+
+
+# In[33]:
+
+len(np.unique(modis['tau'][mod_ind[0,:],mod_ind[1,:]])),len(star['tau'])
+
+
+# In[ ]:
+
+
 
 
 # In[19]:
