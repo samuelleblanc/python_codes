@@ -1006,10 +1006,14 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
     if source=='solar':
         mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
         mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
+        try:
+            rho = np.swapaxes(mie.variables['rho'].data,0,1)
+        except ValueError:
+            rho = mie.variables['rho'].data
         mie_short = {'wvl':mie.variables['wavelen'].data,
                      'ref':mie.variables['reff'].data,
                      'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
-                     'rho':np.swapaxes(mie.variables['rho'].data,0,1),
+                     'rho':rho,
                      'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
                      'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
                      'ext':np.swapaxes(mie.variables['ext'].data,0,1),
