@@ -139,7 +139,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
 
 # In[204]:
 
-def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False):
+def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False,expand_hg=False):
     """
     Purpose:
 
@@ -168,6 +168,7 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        expand_hg: (default False) if true expands the Henyey Greenstein legendre moments from the assymetry parameter
     
     Dependencies:
 
@@ -236,7 +237,7 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
 
 # In[184]:
 
-def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False):
+def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False,expand_hg=False):
     """
     Purpose:
 
@@ -265,6 +266,7 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        expand_hg: (default False) if true, then epands the Henyey-Greenstein phase function, not just printing the asymmetry p
     
     Dependencies:
 
@@ -299,7 +301,13 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
         print('..printing to explicit aerosol wavelength defined file: %s' % output_file)
     output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
     for iw,wvl in enumerate(wvl_arr):
-        output.write('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
+        if expand_hg:
+            asys = [asy[iw]**n for n in range(100)]
+            st = '%f\t%f\t%1.6f\t' % (wvl,ext[iw],ssa[iw])
+            stt = st+'\t'.join(map(str,asys))+'\n'
+            output.write(stt)
+        else:
+            output.write('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
     output.close()
     if verbose:
         print('..File finished write_aerosol_file_explicit_wvl, closed')
@@ -639,7 +647,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             wvl_arr: array of wavelengths in nm
             link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to aero dict
             file_name: file name and paths of explicit file for aerosol defined. 
-                       By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
+                       By default it is created in this program if it is not set, 
+                       if link_to_mom_file is set, this must be defined
+            disort_phase: (default False) if true then writes then phase function instead of the moments.
+            expand_hg: (default False) if true expands the henyey greenstein phase function into legendre moments.
         cloud: dictionary with cloud properties
             tau: value of cloud optical thickness
             ref: value of effective radius in microns
@@ -649,17 +660,18 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             write_moments_file: (default False) if True, writes out moments into an ascii file instead 
                                 of reading directly from the netcdf file. 
                                 Requires the moments to be put in the cloud dict and the nmom.
-            moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. To be used when building the moments file
-            link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to cloud dict
+            moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. 
+                       To be used when building the moments file
+            link_to_mom_file: if True then no moments file is written out, but referenced via file_name saved to cloud dict
             file_name: file name and paths of moments file for cloud defined. 
-                       By default it is created in this program if it is not set, if link_to_mom_file is set, this must be defined
-            cloud_below: (default False) if set, creates a liquid cloud with constant properties (tau=10,ref=10 microns), of thickness 1 km,
-                         directly below the zbot value. Used for in cloud calculations
+                       By default it is created in this program if not set, if link_to_mom_file is set, this must be defined
+            cloud_below: (default False) if set, creates a liquid cloud with constant properties (tau=10,ref=10 microns), 
+                         of thickness 1 km, directly below the zbot value. Used for in cloud calculations
         source: dictionary with source properties
             wvl_range: range of wavelengths to model (default [202,500])
             source: can either be thermal or solar
             dat_path: data path to be used. Defaults to pleaides values (/u/sleblan2/libradtran/libRadtran-2.0-beta/data/)
-            integrate_values: if set to True (default), then the resulting output parameters are integrated over the wavelength range
+            integrate_values: if True (default), then the resulting output parameters are integrated over wavelength range
                               if set to False, returns per_nm irradiance values
             wvl_filename: filename and path of wavelength file (second column has wavelengh in nm to be used)
             run_fuliou: if set to True, then runs fu liou instead of sbdart (default is False)
@@ -669,9 +681,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             zenith: (defaults to False) if True, prepares the input file for returning zenith radiances
                     adds a zenith viewing angle (umu=-1), azimuth viewing angle (phi=130) and solar azimuth angle (phi0=130)
         albedo: dictionary with albedo properties
-            create_albedo_file: if true then albedo file is created with the properties defined by alb_wvl and alb (defaults to False)
+            create_albedo_file: (default False) if true then albedo file is created with properties defined by alb_wvl and alb 
             albedo_file: path of albedo file to use if already created 
-            albedo: value of albedo. Only used if create_albedo_file is false and albedo_file is empty (defaults to 0.29 - Earth's average)
+            albedo: value of albedo. Only used if create_albedo_file is false and albedo_file is empty 
+                    (defaults to 0.29 - Earth's average)
             alb: wavelength dependent value of albedo for use when create_albedo_file is set to True
             alb_wvl: wavelength grid of albedo for use when create_albedo_file is set to True
             sea_surface_albedo: (default False) If True, sets the sea surface to be parameterized by cox and munk, 
@@ -724,7 +737,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         >>> cloud['tau'] = 2.0
         >>> cloud['ref'] = 5.0
         
-        >>> RL.write_input_aac('/u/sleblan2/NAAMES/runs/NAAMES_v1.dat',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+        >>> RL.write_input_aac('/u/sleblan2/NAAMES/runs/NAAMES_v1.dat',geo=geo,aero=aero,cloud=cloud,
+                               source=source,albedo=albedo,
                                verbose=False,make_base=False,set_quiet=True)
         
     Modification History:
@@ -748,9 +762,12 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added zenith radiance keyword
         Modified: Samuel LeBlanc, on the DC8 flying above Korea, 2016-05-02
                 - added the cloud_below keyword to the cloud options.
+        Modified: Samuel LeBlanc, NASA Ames, CA, 2016-09-22
+                - added expansion of henyey greenstein legendre moments for aerosol explict files
     """
     import numpy as np
-    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,write_cloud_file_moments
+    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,
+    from Run_libradtran import write_cloud_file_moments
     
     try:
         output = file(output_file,'w')
@@ -880,16 +897,22 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         
     if 'ext' in aero:
         if verbose: print '..write out the aerosol parameters'
+        if aero.get('disort_phase'):
+            dd = 'phase'
+        else:
+            dd = 'moments'
+        aero['expand_hg'] = aero.get('expand_hg',False)
         if make_base:
             base.write('aerosol_default\n')
-            base.write('disort_intcor moments\n') #set to use moments for explicit aerosol file
+            base.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
         elif not include_base:    
             output.write('aerosol_default\n')
-            output.write('disort_intcor moments\n') #set to use moments for explicit aerosol file
+            output.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
         if not aero.get('link_to_mom_file'):
             if not aero.get('file_name'):
                 aero['file_name'] = output_file+'_aero'
-            write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],aero['asy'],aero['wvl_arr'],verbose=verbose)
+            write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],
+                                        aero['asy'],aero['wvl_arr'],verbose=verbose,expand_hg=aero['expand_hg'])
         output.write('aerosol_file explicit \t%s\n' % aero['file_name'])
     
     if 'tau' in cloud:
