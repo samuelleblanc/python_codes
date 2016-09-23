@@ -62,10 +62,12 @@ if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
     fp_rtm = 'C:\\Users\\sleblan2\\Research\\ORACLES\\rtm\\'
     fp_uvspec = 'C:\\Users\\sleblan2\\Research\\libradtran\\libRadtran-2.0-beta\\bin\\uvspec'
+    fp_rtmdat = 'C:\\Users\\sleblan2\\Research\\libradtran\\libRadtran-2.0-beta\\data\\'
 elif os.sys.platform == 'linux2':
     fp = '/u/sleblan2/ORACLES/'
     fp_rtm = '/nobackup/sleblan2/rtm/'
     fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
+    fp_rtmdat = '/u/sleblan2/4STAR/rtm_dat/'
 else:
     raise Exception
 
@@ -105,6 +107,11 @@ print(ref.shape)
 print(tau.shape)
 
 
+# In[ ]:
+
+pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
+
+
 # In[70]:
 
 geo = {'lat':-22.979,
@@ -120,7 +127,8 @@ aero = {'z_arr':[2.0,5.0],
         'expand_hg':True}
 cloud = {'ztop':1.0,
          'zbot':0.5,
-         'write_moments_file':False}
+         'write_moments_file':True,
+         'moms_dict':pmom}
 source = {'wvl_range':[350,1750],
           'source':'solar',
           'integrate_values':False,
