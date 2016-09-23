@@ -766,7 +766,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added expansion of henyey greenstein legendre moments for aerosol explict files
     """
     import numpy as np
-    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts,
+    from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts
     from Run_libradtran import write_cloud_file_moments
     
     try:
