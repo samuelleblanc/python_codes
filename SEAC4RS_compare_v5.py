@@ -74,7 +74,7 @@
 
 # # Import initial modules and set default path
 
-# In[1]:
+# In[3]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -103,7 +103,7 @@ import cPickle as pickle
 
 
 
-# In[2]:
+# In[4]:
 
 get_ipython().magic(u'matplotlib notebook')
 
@@ -114,7 +114,7 @@ import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
-# In[4]:
+# In[5]:
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -124,7 +124,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # ## Get the lookup table for the 4STAR data
 
-# In[5]:
+# In[6]:
 
 # load the idl save file containing the modeled radiances
 vv = 'v2'
@@ -2597,19 +2597,19 @@ plt.legend(frameon=False)
 
 # ## Load the cloud probe data
 
-# In[407]:
+# In[15]:
 
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
-# In[408]:
+# In[16]:
 
 print probes[:,1]
 print probes[:,2]
 
 
-# In[353]:
+# In[17]:
 
 print probes.shape
 print probes[:,7]
@@ -2966,22 +2966,22 @@ hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
 # ### Optionally load the retrieval output for easier and faster plotting
 
-# In[6]:
+# In[7]:
 
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
-# In[7]:
+# In[8]:
 
 m_dict.keys()
 
 
-# In[8]:
+# In[9]:
 
 m_dict['rsp']
 
 
-# In[9]:
+# In[10]:
 
 if not 'emas_tau_full' in vars():
     print 'not defined, loading from file'
@@ -3405,12 +3405,12 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # ## Plot histogram of retrieved properties (tau and ref) in new 'bean' plots
 
-# In[347]:
+# In[1]:
 
 from plotting_utils import plot_vert_hist
 
 
-# In[172]:
+# In[2]:
 
 import plotting_utils
 reload(plotting_utils)
@@ -3444,7 +3444,7 @@ ax1.yaxis.label.set_fontsize(20)
 plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 
-# In[300]:
+# In[11]:
 
 [np.nanmean(smooth(modis_tau,6)),
               np.nanmean(smooth(emas_tau_full,60)),
@@ -3454,12 +3454,12 @@ plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
               np.nanmean(smooth(star_tau,40))]
 
 
-# In[301]:
+# In[12]:
 
 modis_tau.shape,emas_tau_full.shape
 
 
-# In[170]:
+# In[13]:
 
 fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,5.5])
@@ -3484,7 +3484,7 @@ plot_vert_hist(fig,ax1,smooth(star_tau,40),5,[0,60],legend=True,color='r',bins=5
 for cap in caps:
     cap.set_markeredgewidth(3)
 ax1.legend(frameon=False,numpoints=1)
-plt.savefig(fp+'plots/vert_hist_tau_v5_light.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/vert_hist_tau_v5_light2.png',dpi=600,transparent=True)
 
 
 # In[360]:
@@ -3516,7 +3516,7 @@ ax1.yaxis.label.set_fontsize(20)
 plt.savefig(fp+'plots/vert_hist_ref_v5.png',dpi=600,transparent=True)
 
 
-# In[169]:
+# In[18]:
 
 fig = plt.figure(figsize=(8,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,6.5])
@@ -3542,7 +3542,65 @@ plot_vert_hist(fig,ax1,probes[:,7],6,[0,60],legend=True,color='y',bins=50,alpha=
 for cap in caps:
     cap.set_markeredgewidth(3)
 #ax1.legend(frameon=False,numpoints=1)
-plt.savefig(fp+'plots/vert_hist_ref_v5_light.png',dpi=600,transparent=True)
+plt.savefig(fp+'plots/vert_hist_ref_v5_light2.png',dpi=600,transparent=True)
+
+
+# ### Plot a combined bean plot for tau and ref
+
+# In[29]:
+
+fig = plt.figure(figsize=(8,3.5))
+tmi,tma = 0,50
+ax1 = fig.add_axes([0.1,0.57,0.75,0.4],ylim=[tmi,tma],xlim=[-0.5,5.5])
+ax1.set_ylabel('$\\tau$')
+ax1.set_xticks([0,1,2,3,4,5])
+#ax1.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','GOES\n(reflected)','4STAR\n(transmitted)'])
+ax1.set_xticklabels([' ',' ',' ',' ',' ',' '])
+ax1.yaxis.grid()
+plot_vert_hist(fig,ax1,smooth(modis_tau,6),0,[tmi,tma],legend=True,onlyhist=False,loc=2,color='m',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(emas_tau_full,60),1,[tmi,tma],legend=True,color='k',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2),2,[tmi,tma],legend=True,color='g',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(rsp_tau,70),3,[tmi,tma],legend=True,color='c',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(goes_tau,2),4,[tmi,tma],legend=True,color='b',bins=50,alpha=0.2)
+plot_vert_hist(fig,ax1,smooth(star_tau,40),5,[tmi,tma],legend=True,color='r',bins=50,alpha=0.2)
+(_,caps,_) = ax1.errorbar([0,1,2,3,4,5],
+             [np.nanmean(smooth(modis_tau,6)),
+              np.nanmean(smooth(emas_tau_full,60)),
+              np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2)),
+              np.nanmean(smooth(rsp_tau,70)),
+              np.nanmean(smooth(goes_tau,2)),
+              np.nanmean(smooth(star_tau,40))],yerr=[2,0,7.8,2,7.8,2],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+ax1.legend(frameon=False,numpoints=1)
+#plt.savefig(fp+'plots/vert_hist_tau_v5_light2.png',dpi=600,transparent=True)
+
+rmi,rma = 15,55
+ax2 = fig.add_axes([0.1,0.15,0.88,0.4],ylim=[rmi,rma],xlim=[-0.5,6.5])
+ax2.set_ylabel('r$_{eff}$ [$\\mu$m]')
+ax2.set_xticks([0,1,2,3,4,5,6])
+ax2.set_xticklabels(['MODIS\n(reflected)','eMAS\n(reflected)','SSFR\n(reflected)','RSP\n(reflected)','GOES\n(reflected)','4STAR\n(transmitted)','Cloud probes\n(In Situ)'])
+ax2.yaxis.grid()
+plot_vert_hist(fig,ax2,smooth(modis_ref,6),0,[rmi,rma],legend=True,onlyhist=False,loc=2,color='m',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,smooth(emas_ref_full,60),1,[rmi,rma],legend=True,color='k',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,smooth(ssfr_ref,2),2,[rmi,rma],legend=True,color='g',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,smooth(rsp_ref,70),3,[rmi,rma],legend=True,color='c',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,smooth(goes_ref,2),4,[rmi,rma],legend=True,color='b',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,smooth(star_ref+17,40),5,[rmi,rma],legend=True,color='r',bins=60,alpha=0.2)
+plot_vert_hist(fig,ax2,probes[:,7],6,[rmi,rma],legend=True,color='y',bins=50,alpha=0.2)
+(_,caps,_) = ax2.errorbar([0,1,2,3,4,5],
+             [np.nanmean(smooth(modis_ref,6)),
+              np.nanmean(smooth(emas_ref_full,60)),
+              np.nanmean(smooth(ssfr_ref,2)),
+              np.nanmean(smooth(rsp_ref,70)),
+              np.nanmean(smooth(goes_ref,2)),
+              np.nanmean(smooth(star_ref+17,40))],yerr=[1.7,0,4.7,1.7,4.7,1.8],
+             color='r',linestyle='.',linewidth=3,label='Variability within FOV',capsize=7)
+for cap in caps:
+    cap.set_markeredgewidth(3)
+#ax1.legend(frameon=False,numpoints=1)
+plt.savefig(fp+'plots/vert_hist_ref_tau_v5_light.png',dpi=600,transparent=True)
 
 
 # ## Scatter plots of the different effective radius
