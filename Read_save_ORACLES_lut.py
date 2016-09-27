@@ -86,7 +86,7 @@ fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   phase=['wc','ic'],
-                  fmt='lut_sza{sza:02.0f}_ref{tau:02.1f}_tau{ref:03.1f}_{phase}_w{iwvl:1d}.dat',
+                  fmt='lut_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',
                   split_wvl=True)
 
 
