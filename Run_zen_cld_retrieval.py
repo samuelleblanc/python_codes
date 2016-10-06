@@ -185,7 +185,10 @@ else:
 # In[75]:
 
 fp,fname = os.path.split(fp_starzen)
-datestr = fname[0:8]
+if fname[0:5]=='4STAR':
+    datestr = fname[6:14]
+else:
+    datestr = fname[0:8]
 
 
 # In[76]:
