@@ -428,8 +428,9 @@ class Sp:
             self.ref = s['ref']
             if 'sza' in s:
                 self.sza = s['sza']
+            self.zout = len(s.get('zout',[0.2,1.0]))
             self.help = 'phase:{pnum}, wavelength:{wnum}, altitude:{znum}, ref:{rnum}, tau:{tnum}'.format(
-                pnum=len([0,1]),wnum=len(self.wvl),znum=2,rnum=len(self.ref),tnum=len(self.tau))
+                pnum=len([0,1]),wnum=len(self.wvl),znum=len(self.zout),rnum=len(self.ref),tnum=len(self.tau))
         else:
             self.utc = s['utc'][self.iset]
             if 'good' in s.keys():
@@ -1144,11 +1145,85 @@ def plot_hist_cld_retrieval(meas):
     plt.xlabel('R$_{ef}$ [$\\mu$m]')
     
     plt.subplot(1,3,3)
-    n,bins,p = plt.hist(meas.phase_m,bins=[-1.0,0.0,1.0],histtype='stepfilled', normed=True,alpha=0.7,color='k')
+    n,bins,p = plt.hist(meas.phase_m,bins=[-1.0,0.0001,1.0],histtype='stepfilled', normed=True,alpha=0.7,color='k')
     plt.ylim([0,1.1])
     plt.xlim([-1.1,1.1])
     plt.xticks([-0.5,0.5],['Liquid','Ice'],rotation='vertical')
     plt.tight_layout()
     
     return fig
+
+
+# In[ ]:
+
+def plot_lut_vs_tau(lut):
+    """
+    Purpose:
+        Create a plot of the lut for ice and liquid vs the optical depth of the cloud
+    Input:
+        lut : Sp_parameters.Sp object for the lut with params already run and tau and ref values save in array
+    Output: 
+        fig3: matplotlib fig value
+        ax3: array of axes objects
+    Keywords:
+        None
+    Dependencies:
+        - matplotlib
+        - Sp_parameters (this file)
+        - mpltools
+    Modification History:
+        Writtten: Samuel LeBlanc, 2016-10-05,Santa Cruz, CA
+    """
+    import matplotlib.pyplot as plt
+    import matplotlib.lines as mlines
+    import Sp_parameters as Sp
+    from mpltools import color
+    if not hasattr(lut,'tau'):
+        print 'The lut object does not have the tau variable, please check the it again. Returning...'
+        return None
+    
+    fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
+    ax3 = ax3.ravel()
+
+    for i in range(lut.npar-1):
+        color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.hot_r,ax=ax3[i])
+        for j in xrange(len(lut.ref[lut.ref<30])):
+            ax3[i].plot(lut.tau,lut.par[0,j,:,i])
+        color.cycle_cmap(len(lut.ref[lut.ref>3]),cmap=plt.cm.cool,ax=ax3[i])
+        for j in xrange(len(lut.ref[lut.ref>3])):
+            ax3[i].plot(lut.tau,lut.par[1,j,:,i])
+        ax3[i].set_title('Parameter '+str(i+1))
+        ax3[i].grid()
+        ax3[i].set_xlim([0,100])
+        ax3[i].set_ylabel('$\\eta_{%i}$' % (i+1))
+        if i > 10: 
+            ax3[i].set_xlabel('$\\tau$')
+
+    for tk in ax3[11].get_xticklabels():
+        tk.set_visible(True)
+    ax3[-1].axis('off')
+
+    fig3.tight_layout()
+    #plt.suptitle('Liquid')
+    plt.subplots_adjust(top=0.90,right=0.90)
+
+    cbar_ax = fig3.add_axes([0.92,0.53,0.02,0.42])
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.hot_r,norm=plt.Normalize(vmin=0,vmax=1))
+    scalarmap.set_array(lut.ref[lut.ref<30])
+    cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
+    cba.ax.set_ylabel('liquid $r_{eff}$ [$\\mu$m]')
+    cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
+    
+    cbar_ax = fig3.add_axes([0.92,0.05,0.02,0.42])
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.cool,norm=plt.Normalize(vmin=0,vmax=1))
+    scalarmap.set_array(lut.ref[lut.ref>3])
+    cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
+    cba.ax.set_ylabel('ice $r_{eff}$ [$\\mu$m]')
+    cba.ax.set_yticklabels(np.linspace(lut.ref[lut.ref>3][0],lut.ref[-1],6));
+
+    #liq = mlines.Line2D([], [], color='k', linestyle='-', label='liquid')
+    #ice = mlines.Line2D([], [], color='k', linestyle='--', label='ice')
+    #plt.legend(handles=[liq,ice],loc='upper left', bbox_to_anchor=(0.85, 0), bbox_transform=fig3.transFigure)
+    
+    return fig3,ax3
 
