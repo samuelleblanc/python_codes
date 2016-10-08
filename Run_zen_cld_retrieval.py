@@ -22,6 +22,10 @@
 #         fp_zencld_plots: (optional) the full path of the directory to save the plots from the retrieval
 #                         if omitted uss the same directory as starzen.matà
 #         fp_lut_mat: (optional) put in a special look up table file path 
+#         forceliq: (optional) if set, then retrieval will only use the liquid cloud
+#         plotlut: (optional) if set, then it will create a plot of the lut
+#         makemovie: (optional) if set, then it will create a movie of the measured radiances, normalized,
+#                               and time series of measured radiances, including retrievals 
 # 
 # Input:
 # 
@@ -101,6 +105,10 @@
 # History:
 # 
 #     Written: Samuel LeBlanc, NASA Ames, 2015-10-26
+#     Modified: Samuel LeBlanc, NASA Ames, 2016-10-06
+#             - added force liquid keyword to call and plot_lut for plotting the lut.
+#             - added making a movie with the results
+#             - added filtering of data prior to ensure good retrievals
 
 # In[ ]:
 
@@ -121,13 +129,23 @@ long_description = """    Run the zenith cloud property retrieval on the supplie
 
 parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('fp_starzen',nargs='?',help='the full path (with .mat extension) of the starzen file to read')
-parser.add_argument('fp_zencld',nargs='?',help='''(optional) the full path of the output file (with .mat extension) of the saved retrieval file
+parser.add_argument('fp_zencld',nargs='?',
+                    help='''(optional) the full path of the output file (with .mat extension) of the saved retrieval file
                    if omitted, uses the same directory as starzen.mat, but saves file as *_zencld.mat''')
-parser.add_argument('-o','--fp_zencld_plot',nargs='?',help="""(optional) the full path of the directory to save the plots from the retrieval
+parser.add_argument('-o','--fp_zencld_plot',nargs='?',
+                    help="""(optional) the full path of the directory to save the plots from the retrieval
                         if omitted uss the same directory as starzen.mat""")
 parser.add_argument('-lut','--fp_lut_mat',nargs='?',help='Put in special look up table file path')
 parser.add_argument('-f',nargs='?',help='not used')
-parser.add_argument('-n','--noplot',nargs='?',help='if set, will not output plots')
+parser.add_argument('-n','--noplot',help='if set, will not output plots',action='store_true')
+parser.add_argument('-liq','--forceliq',help='if set, will force to only use liquid lut',action='store_true')
+parser.add_argument('-plotlut','--plotlut',help='if set, will plot the look up table',action='store_true')
+parser.add_argument('-movie','--makemovie',help='if set, will create a movie of the measurements and retrievals',
+                    action='store_true')
+parser.add_argument('-noflt','--nofilter',help='if set, will not filter out bad measurements',
+                    action='store_true')
+parser.add_argument('-db','--debug',help='if set, turn on debug comments and set_trace() at a few locations',
+                    action='store_true')
 
 
 # In[70]:
@@ -155,6 +173,11 @@ try:
     isbasemap = True
 except:
     isbasemap = False
+try:
+    import warnings
+    warnings.simplefilter(action = "ignore", category = FutureWarning)
+except:
+    pass
 
 
 # ## Parse command line and get appropriate paths
@@ -176,7 +199,8 @@ else:
         from Tkinter import Tk
         from tkFileDialog import asksaveasfilename
         Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
-        filename = asksaveasfilename(defaultextension='*.mat',filetypes=[('mat file','*.mat'),('All files','*.*')]) # show an "Open" dialog box and return the path to the selected file
+        filename = asksaveasfilename(defaultextension='*.mat',filetypes=[('mat file','*.mat'),('All files','*.*')]) 
+        # show an "Open" dialog box and return the path to the selected file
         fp_starzen = os.path.abspath(filename)
     else:
         fp_starzen = in_.get('fp_starzen')
@@ -223,6 +247,23 @@ else:
     noplot = False
 
 
+# In[ ]:
+
+if in_.get('forceliq'):
+    forceliq = True
+    print 'Force liquid cloud'
+else:
+    forceliq = False
+
+
+# In[ ]:
+
+plot_lut = in_.get('plotlut',False)
+make_movie = in_.get('makemovie',False)
+no_filter = in_.get('nofilter',False)
+debug = in_.get('debug',False)
+
+
 # # Load starzen files and the look up table
 
 # In[79]:
@@ -241,7 +282,7 @@ print 'loading file {}'.format(fp_starzen)
 try:
     mea = hs.loadmat(fp_starzen)
 except Exception as ei:
-    print 'Exception occured: {}'.format(ei)
+    if debug: print 'Exception occured: {}'.format(ei)
     mea = sio.loadmat(fp_starzen)
 
 
@@ -306,11 +347,26 @@ if not os.path.isfile(fp_lut_mat):
 try:
     luts = hs.loadmat(fp_lut_mat)
 except Exception as ei:
-    print 'Exception occured when loading lut : {}'.format(ei)
+    if debug: print 'Exception occured when loading lut : {} *** Trying second method'.format(ei)
     luts = sio.loadmat(fp_lut_mat)
 
 
 # ### run through the lut for each sza/airmass and create the lut params in hires
+
+# In[ ]:
+
+airmass = 1./np.cos(luts['sza']*np.pi/180.0)
+
+
+# In[ ]:
+
+meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
+if len(airmass) > 1:
+    idx = Sp.find_closest(airmass,meas.airmass)
+else: 
+    print '*** There is only one airmass in the lut: Using {} ***'.format(airmass)
+    idx = np.zeros_like(meas.airmass,dtype=np.int)
+
 
 # In[ ]:
 
@@ -332,14 +388,10 @@ for s in xrange(len(luts['sza'])):
     sptemp['wvl'] = [luts['wvl']]
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp,verbose=False)
-    ltemp.params()
-    ltemp.param_hires()
+    if s in idx:
+        ltemp.params()
+        ltemp.param_hires()
     lut.append(ltemp)
-
-
-# In[ ]:
-
-airmass = 1./np.cos(ltemp.sza*np.pi/180.0)
 
 
 # ## Define the good points and start doing the retrieval
@@ -366,15 +418,25 @@ for i in np.unique(idx):
     try: 
         print 'airmass: {airmass}, {i}/{i_tot}'.format(airmass=airmass[i],i=i,i_tot=idx.max()-idx.min())
     except:
-        import pdb; pdb.set_trace()
+        if debug:
+            import pdb; pdb.set_trace()
+        else: 
+            print 'Exception occurred at airmass: {} *** skipping'.format(airmass[i])
     meas.good = np.where(idx==i)[0]
-    try:
-        print lut[i].__dict__.keys()
-    except Exception as ei:
-        print 'exception: {}'.format(ei)
-        import pdb; pdb.set_trace()
+    if not no_filter:
+        i500 = np.argmin(abs(meas.wvl-500))
+        i980,i995 = np.argmin(abs(meas.wvl-980)),np.argmin(abs(meas.wvl-995))
+        ss = np.nanstd(meas.norm[meas.good,i980:i995],axis=1)/np.nanmean(meas.norm[meas.good,i980:i995],axis=1)
+        flt = (meas.norm[meas.good,i500]>0.4) & (ss<0.05)
+        meas.good = meas.good[flt]
+    if debug:
+        try:
+            print lut[i].__dict__.keys()
+        except Exception as ei:
+            print 'exception: {}'.format(ei)
+            import pdb; pdb.set_trace()
     print 'meas.good lengh: {},meas.utc length: {}'.format(meas.good.shape,meas.utc.shape)
-    tau,ref,phase,ki = rk.run_retrieval(meas,lut[i])
+    tau,ref,phase,ki = rk.run_retrieval(meas,lut[i],force_liq=forceliq)
     meas.taut[meas.good] = tau
     meas.ref[meas.good] = ref
     meas.phase[meas.good] = phase
@@ -425,4 +487,51 @@ if not noplot:
     print 'making the map'
     figm = Sp.plot_map_cld_retrieval(meas)
     figm.savefig(fp_zencld_plot+'{datestr}_map_retr_zencld.png'.format(datestr=datestr),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+if not noplot:
+    if plot_lut:
+        print 'making the lut plots'
+        for i,ll in enumerate(lut):
+            if len(lut[i].par)>4:
+                continue
+            if not i in np.unique(idx):
+                continue
+            try: 
+                figl,axl = Sp.plot_lut_vs_tau(lut[i],forceliq=forceliq)
+                figl.savefig(fp_zencld_plot+'{datestr}_lut_only_sza_{sza:02.1f}.png'.format(datestr=datestr,sza=ll['sza'][i]),
+                             dpi=600,transparent=True)
+            except:
+                print '*** Problem with plotting of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
+                if debug:
+                    import pdb; pdb.set_trace()
+            try:
+                ik = (idx==np.int32(i))
+                npar = len(meas.par[0,:])-1
+                if ik.any():
+                    for ai,ax in enumerate(axl[0:npar]):
+                        try:
+                            ax.scatter(meas.tau[ik[:,0]],meas.par[ik[:,0],ai],marker='x',zorder=200,color='k')
+                        except:
+                            print '** problem inside multiple'
+                            if debug:
+                                import pdb; pdb.set_trace()
+                            
+                    figl.savefig(fp_zencld_plot+'{datestr}_lut_with_data_sza_{sza:02.1f}.png'.format(
+                            datestr=datestr,sza=ll['sza'][i]),
+                                 dpi=600,transparent=True)
+            except:
+                print '*** Problem with plotting values on top of lut of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
+                if debug:
+                    import pdb; pdb.set_trace()
+
+
+# In[ ]:
+
+if not noplot:
+    if make_movie:
+        print 'Making the movie of measurement and retrievals'
+        Sp.plot_sp_movie(meas,fp_zencld_plot,gif=False)
 
