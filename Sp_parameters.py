@@ -386,6 +386,11 @@ class lut:
 
 # Create a new class for spectra that returns easy plotting, normalization, parameters, etc.
 
+# In[ ]:
+
+
+
+
 # In[1]:
 
 class Sp:
@@ -401,6 +406,8 @@ class Sp:
                     - added __getitem__ method for calling like a dict
                     - added method for obtaining the valid ref ranges for ice or liquid, making Sp more general.
                     - added verbose keyword during init
+    Modified (v1.4): Samuel LeBlanc, Santa Cruz, CA, 2016-10-07
+                    - added a method for assuring the utc input, and getting a new datestr object for the measurement
     """    
     import numpy as np
     def __init__(self,s,irrad=False,verbose=True):
@@ -430,9 +437,9 @@ class Sp:
                 self.sza = s['sza']
             self.zout = len(s.get('zout',[0.2,1.0]))
             self.help = 'phase:{pnum}, wavelength:{wnum}, altitude:{znum}, ref:{rnum}, tau:{tnum}'.format(
-                pnum=len([0,1]),wnum=len(self.wvl),znum=len(self.zout),rnum=len(self.ref),tnum=len(self.tau))
+                pnum=len([0,1]),wnum=len(self.wvl),znum=np.size(self.zout),rnum=len(self.ref),tnum=len(self.tau))
         else:
-            self.utc = s['utc'][self.iset]
+            self.utc,self.datestr = self.get_utc_datestr(s)
             if 'good' in s.keys():
                 if isinstance(s['good'],tuple):
                     self.good = s['good'][0]
@@ -466,6 +473,39 @@ class Sp:
     def __getitem__(self,i):
         'Method to call only the variables in the SP class like a dict'
         return self.__dict__.get(i)
+    
+    def get_utc_datestr(self,s):
+        'Method to return the utc and datestr'
+        from load_utils import mat2py_time, toutc
+        
+        if self.verbose: print 'Calculating the utc times'
+        if 'utc' in s:
+            if 'iset' in self.__dict__.keys():
+                utc = s['utc'][self['iset']]
+            else:
+                if self.verbose:
+                    print 'No iset subset set, check multiple rad measurements'
+                utc = s['utc']
+            if 't' in s:
+                tt = mat2py_time(s['t'])
+                datestr = tt[0].strftime('%Y%m%d')
+            else:
+                if self.verbose:
+                    print 'Not possible to get datestr, returning empty'
+                datestr = ''
+        else:
+            if 't' in s:
+                tt = mat2py_time(s['t'])
+                if 'iset' in self.__dict__.keys():
+                    utc = toutc(tt)[self.iset]
+                else:
+                    if self.verbose:
+                        print 'No iset subset set, check multiple rad measurements'
+                    utc = toutc(tt)
+                datestr = tt[0].strftime('%Y%m%d')
+            else:
+                raise IOError('No defined time array (key t or utc) in input object')
+        return utc, datestr
     
     def params(self):
         " Runs through each spectrum in the sp array to calculate the parameters"
@@ -1156,7 +1196,7 @@ def plot_hist_cld_retrieval(meas):
 
 # In[ ]:
 
-def plot_lut_vs_tau(lut):
+def plot_lut_vs_tau(lut,forceliq=False):
     """
     Purpose:
         Create a plot of the lut for ice and liquid vs the optical depth of the cloud
@@ -1166,7 +1206,7 @@ def plot_lut_vs_tau(lut):
         fig3: matplotlib fig value
         ax3: array of axes objects
     Keywords:
-        None
+        forceliq: (default False) if True, then will not plot the ice portion of the lut.
     Dependencies:
         - matplotlib
         - Sp_parameters (this file)
@@ -1184,14 +1224,24 @@ def plot_lut_vs_tau(lut):
     
     fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
     ax3 = ax3.ravel()
+    npar = len(lut.par[0,0,0,:])-1
 
-    for i in range(lut.npar-1):
+    for i in xrange(npar):
         color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.hot_r,ax=ax3[i])
         for j in xrange(len(lut.ref[lut.ref<30])):
-            ax3[i].plot(lut.tau,lut.par[0,j,:,i])
-        color.cycle_cmap(len(lut.ref[lut.ref>3]),cmap=plt.cm.cool,ax=ax3[i])
-        for j in xrange(len(lut.ref[lut.ref>3])):
-            ax3[i].plot(lut.tau,lut.par[1,j,:,i])
+            try:
+                ax3[i].plot(lut.tau,lut.par[0,j,:,i])
+            except:
+                pass
+                #import pdb; pdb.set_trace()
+        if not forceliq:
+            color.cycle_cmap(len(lut.ref[lut.ref>3]),cmap=plt.cm.cool,ax=ax3[i])
+            for j in xrange(len(lut.ref[lut.ref>3])):
+                try:
+                    ax3[i].plot(lut.tau,lut.par[1,j,:,i])
+                except:
+                    pass
+                    #import pdb; pdb.set_trace()
         ax3[i].set_title('Parameter '+str(i+1))
         ax3[i].grid()
         ax3[i].set_xlim([0,100])
@@ -1214,16 +1264,147 @@ def plot_lut_vs_tau(lut):
     cba.ax.set_ylabel('liquid $r_{eff}$ [$\\mu$m]')
     cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
     
-    cbar_ax = fig3.add_axes([0.92,0.05,0.02,0.42])
-    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.cool,norm=plt.Normalize(vmin=0,vmax=1))
-    scalarmap.set_array(lut.ref[lut.ref>3])
-    cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
-    cba.ax.set_ylabel('ice $r_{eff}$ [$\\mu$m]')
-    cba.ax.set_yticklabels(np.linspace(lut.ref[lut.ref>3][0],lut.ref[-1],6));
+    if not forceliq:
+        cbar_ax = fig3.add_axes([0.92,0.05,0.02,0.42])
+        scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.cool,norm=plt.Normalize(vmin=0,vmax=1))
+        scalarmap.set_array(lut.ref[lut.ref>3])
+        cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
+        cba.ax.set_ylabel('ice $r_{eff}$ [$\\mu$m]')
+        cba.ax.set_yticklabels(np.linspace(lut.ref[lut.ref>3][0],lut.ref[-1],6));
 
     #liq = mlines.Line2D([], [], color='k', linestyle='-', label='liquid')
     #ice = mlines.Line2D([], [], color='k', linestyle='--', label='ice')
     #plt.legend(handles=[liq,ice],loc='upper left', bbox_to_anchor=(0.85, 0), bbox_transform=fig3.transFigure)
     
     return fig3,ax3
+
+
+# In[ ]:
+
+def plot_sp_movie(meas,fp,fps=10,gif=True):
+    """
+    Purpose:
+        Create a movie of the measured spectra, with normalized values
+    Input:
+        meas : Sp_parameters.Sp object for the measurements
+        fp: file path of the movie to be saved. file name will be created, this is jsut the folder path.
+    Output: 
+        none
+    Keywords:
+        fps: (default 10), frames per second
+        gif: (default True), if true, save to gif, if false, save to video
+    Dependencies:
+        - matplotlib
+        - Sp_parameters (this file)
+        - moviepy
+    Modification History:
+        Written: Samuel LeBlanc, 2016-10-07,Santa Cruz, CA
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from moviepy.video.io.bindings import mplfig_to_npimage
+    import moviepy.editor as mp
+    
+    if 'tau' in meas.__dict__.keys():
+        plot_retrieval = True
+    else:
+        plot_retrieval = False
+    
+    fig = plt.figure(facecolor='white')
+    if plot_retrieval:
+        ax1 = plt.subplot(321)
+        ax2 = plt.subplot(322)
+        ax3 = plt.subplot(312)
+        ax4 = plt.subplot(413)
+        ax = [ax1,ax2,ax3,ax4]
+        fig.set_size_inches(8.15, 8.15)
+    else:
+        ax1 = plt.subplot(221)
+        ax2 = plt.subplot(222)
+        ax3 = plt.subplot(212)
+        ax = [ax1,ax2,ax3]
+        fig.set_size_inches(8.15, 6.15)
+    
+    duration = len(meas.utc)/fps # set duration defined to be at a rate of 10Hz
+    
+    line_sp, = ax1.plot(meas.wvl,meas.sp[0,:],'b')
+    ax1.set_ylim(0,1400)
+    ax1.set_xlim(350,1700)
+    ax1.set_ylabel('Radiance [mW/(m$^2$ nm sr)]')
+    ax1.set_xlabel('Wavelength [nm]')
+                      
+    line_norm, = ax2.plot(meas.wvl,meas.norm[0,:],'g')
+    ax2.set_ylim(0,1)
+    ax2.set_xlim(350,1700)
+    ax2.set_xlabel('Wavelength [nm]')
+    
+    i500,i865 = np.argmin(abs(meas.wvl-500)),np.argmin(abs(meas.wvl-865))
+    i1240,i1560 = np.argmin(abs(meas.wvl-1240)),np.argmin(abs(meas.wvl-1560))
+    ax3.plot(meas.utc,meas.sp[:,i500],'.',color='grey')
+    ax3.plot(meas.utc,meas.sp[:,i865],'.',color='grey')
+    ax3.plot(meas.utc,meas.sp[:,i1240],'.',color='grey')
+    ax3.plot(meas.utc,meas.sp[:,i1560],'.',color='grey')
+    ax3.set_xlabel('UTC [h]')
+    ax3.set_ylabel('Radiance [mW/(m$^2$ nm sr)]')
+
+    
+    lin_500, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i500],meas.sp[0,i500]],'x-',color='b',label='500 nm')
+    lin_865, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i865],meas.sp[0,i865]],'x-',color='g',label='865 nm')
+    lin_1240, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i1240],meas.sp[0,i1240]],'x-',color='r',label='1240 nm')
+    lin_1560, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i1560],meas.sp[0,i1560]],'x-',color='c',label='1560 nm')
+    ax3.set_ylim(0,1400)
+    plt.legend(frameon=False)
+    
+    if plot_retrieval:
+        ax4.plot(meas.utc,meas.tau,'.',color='grey')
+        ax4.plot(meas.utc,meas.ref,'.',color='grey')
+        ax4.set_xlabel('UTC [h]')
+        ax4.set_ylabel('Cloud retrieval ($\\tau$, r$_{{eff}}$)')
+        ax4.set_ylim(0,65)
+        
+        line_tau_liq, = ax3.plot([0,0],[-1,-1],'x',color='r',label='$\\tau$ (liquid)')
+        line_tau_ice, = ax3.plot([0,0],[-1,-1],'x',color='b',label='$\\tau$ (ice)')
+        line_ref, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.ref[0],meas.ref[0]],'x-',color='g',label='r$_{{eff}}$')
+        plt.legend(frameon=False)
+            
+    if not 'datestr' in meas.__dict__.keys():
+        datestr=''
+    else:
+        datestr = meas.datestr
+    fig.suptitle('Zenith Radiance {datestr} UTC: {utc:2.3f} h, {i}/{i_tot}'.format(datestr=datestr,utc=meas.utc[0],i=0,i_tot=len(meas.utc)))
+    
+    def make_frame_mpl(t):
+        i = int(t*fps)
+        line_sp.set_ydata(meas.sp[int(i),:])
+        line_norm.set_ydata(meas.norm[int(i),:])
+        lin_500.set_data(meas.utc[0:i],meas.sp[0:int(i),i500])
+        lin_865.set_data(meas.utc[0:i],meas.sp[0:int(i),i865])
+        lin_1240.set_data(meas.utc[0:i],meas.sp[0:int(i),i1240])
+        lin_1560.set_data(meas.utc[0:i],meas.sp[0:int(i),i1560])
+        if plot_retrieval:
+            i_liq = meas.phase[0:i]==0
+            i_ice = meas.phase[0:i]==1
+            if i_liq.any():
+                line_tau_liq.set_data(meas.utc[0:i][i_liq],meas.tau[0:i][i_liq])
+            if i_ice.any():
+                line_tau_ice.set_data(meas.utc[0:i][i_ice],meas.tau[0:i][i_ice])
+            line_ref.set_data(meas.utc[0:i],meas.ref[0:i])
+        fig.suptitle('Zenith Radiance {datestr} UTC: {utc:2.3f} h, {i}/{i_tot}'.format(datestr=datestr,
+                                                                      utc=meas.utc[int(i)],i=int(i),i_tot=len(meas.utc)))
+        return mplfig_to_npimage(fig) # RGB image of the figure
+    
+    animation =mpy.VideoClip(make_frame_mpl, duration=duration)
+    
+    if plot_retrieval:
+        rtm = '_retrieval'
+    else:
+        rmt = ''
+    fpp = fp+'SP_animation{rtm}_{datestr}'.format(rtm=rtm,datestr=datestr)
+    if gif:
+        print 'Movie file writing to {}.gif'.format(fpp)
+        animation.write_gif(fpp+'.gif', fps=fps)
+    else:
+        print 'Movie file writing to {}.mp4'.format(fpp)
+        animation.write_videofile(fpp+'.mp4', fps=fps)    
+    return
 
