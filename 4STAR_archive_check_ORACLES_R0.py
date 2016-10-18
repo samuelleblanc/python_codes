@@ -38,22 +38,22 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 # # load the files
 
-# In[218]:
+# In[5]:
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908','20160910','20160912','20160914','20160918']
 
 
-# In[5]:
-
-days = ['20160924']
-
-
 # In[6]:
+
+days = ['20160827']
+
+
+# In[7]:
 
 vv = 'R0'
 
 
-# In[7]:
+# In[8]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -73,7 +73,7 @@ for d in days:
 
 # ## Check the files for integrity and header info
 
-# In[8]:
+# In[9]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -84,7 +84,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 #            print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[9]:
+# In[10]:
 
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
 for i,d in enumerate(days):
