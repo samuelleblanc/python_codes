@@ -491,47 +491,45 @@ if not noplot:
 
 # In[ ]:
 
-if not noplot:
-    if plot_lut:
-        print 'making the lut plots'
-        for i,ll in enumerate(lut):
-            if len(lut[i].par)>4:
-                continue
-            if not i in np.unique(idx):
-                continue
-            try: 
-                figl,axl = Sp.plot_lut_vs_tau(lut[i],forceliq=forceliq)
-                figl.savefig(fp_zencld_plot+'{datestr}_lut_only_sza_{sza:02.1f}.png'.format(datestr=datestr,sza=ll['sza'][i]),
+if plot_lut:
+    print 'making the lut plots'
+    for i,ll in enumerate(lut):
+        if len(lut[i].par)>4:
+            continue
+        if not i in np.unique(idx):
+            continue
+        try: 
+            figl,axl = Sp.plot_lut_vs_tau(lut[i],forceliq=forceliq)
+            figl.savefig(fp_zencld_plot+'{datestr}_lut_only_sza_{sza:02.1f}.png'.format(datestr=datestr,sza=ll['sza'][i]),
+                         dpi=600,transparent=True)
+        except:
+            print '*** Problem with plotting of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
+            if debug:
+                import pdb; pdb.set_trace()
+        try:
+            ik = (idx==np.int32(i))
+            npar = len(meas.par[0,:])-1
+            if ik.any():
+                for ai,ax in enumerate(axl[0:npar]):
+                    try:
+                        ax.scatter(meas.tau[ik[:,0]],meas.par[ik[:,0],ai],marker='x',zorder=200,color='k')
+                    except:
+                        print '** problem inside multiple'
+                        if debug:
+                            import pdb; pdb.set_trace()
+
+                figl.savefig(fp_zencld_plot+'{datestr}_lut_with_data_sza_{sza:02.1f}.png'.format(
+                        datestr=datestr,sza=ll['sza'][i]),
                              dpi=600,transparent=True)
-            except:
-                print '*** Problem with plotting of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
-                if debug:
-                    import pdb; pdb.set_trace()
-            try:
-                ik = (idx==np.int32(i))
-                npar = len(meas.par[0,:])-1
-                if ik.any():
-                    for ai,ax in enumerate(axl[0:npar]):
-                        try:
-                            ax.scatter(meas.tau[ik[:,0]],meas.par[ik[:,0],ai],marker='x',zorder=200,color='k')
-                        except:
-                            print '** problem inside multiple'
-                            if debug:
-                                import pdb; pdb.set_trace()
-                            
-                    figl.savefig(fp_zencld_plot+'{datestr}_lut_with_data_sza_{sza:02.1f}.png'.format(
-                            datestr=datestr,sza=ll['sza'][i]),
-                                 dpi=600,transparent=True)
-            except:
-                print '*** Problem with plotting values on top of lut of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
-                if debug:
-                    import pdb; pdb.set_trace()
+        except:
+            print '*** Problem with plotting values on top of lut of sza:{sza:02.1f}'.format(sza=ll['sza'][i])
+            if debug:
+                import pdb; pdb.set_trace()
 
 
 # In[ ]:
 
-if not noplot:
-    if make_movie:
-        print 'Making the movie of measurement and retrievals'
-        Sp.plot_sp_movie(meas,fp_zencld_plot,gif=False)
+if make_movie:
+    print 'Making the movie of measurement and retrievals'
+    Sp.plot_sp_movie(meas,fp_zencld_plot,gif=False)
 
