@@ -42,7 +42,7 @@
 # 
 #   - SSFR calibspcs .out file
 
-# In[1]:
+# In[ ]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -50,7 +50,11 @@ matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
-get_ipython().magic(u'matplotlib inline')
+
+
+# In[ ]:
+
+get_ipython().magic(u'matplotlib notebook')
 import numpy as np, h5py
 import scipy.io as sio
 import scipy
@@ -63,7 +67,7 @@ fp='C:/Users/sleblan2/Research/ARISE/'
 
 # ## Load SSFR file
 
-# In[2]:
+# In[ ]:
 
 daystr = '20140919'
 
