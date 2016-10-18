@@ -1303,7 +1303,7 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
     import matplotlib.pyplot as plt
     import numpy as np
     from moviepy.video.io.bindings import mplfig_to_npimage
-    import moviepy.editor as mp
+    import moviepy.editor as mpy
     
     if 'tau' in meas.__dict__.keys():
         plot_retrieval = True
@@ -1312,25 +1312,25 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
     
     fig = plt.figure(facecolor='white')
     if plot_retrieval:
+        fig.set_size_inches(8.15, 8.15)
         ax1 = plt.subplot(321)
         ax2 = plt.subplot(322)
         ax3 = plt.subplot(312)
-        ax4 = plt.subplot(413)
+        ax4 = plt.subplot(313)
         ax = [ax1,ax2,ax3,ax4]
-        fig.set_size_inches(8.15, 8.15)
     else:
+        fig.set_size_inches(8.15, 6.15)
         ax1 = plt.subplot(221)
         ax2 = plt.subplot(222)
         ax3 = plt.subplot(212)
         ax = [ax1,ax2,ax3]
-        fig.set_size_inches(8.15, 6.15)
     
     duration = len(meas.utc)/fps # set duration defined to be at a rate of 10Hz
     
     line_sp, = ax1.plot(meas.wvl,meas.sp[0,:],'b')
     ax1.set_ylim(0,1400)
     ax1.set_xlim(350,1700)
-    ax1.set_ylabel('Radiance [mW/(m$^2$ nm sr)]')
+    ax1.set_ylabel('Radiance [mW/(m$^2$nm sr)]')
     ax1.set_xlabel('Wavelength [nm]')
                       
     line_norm, = ax2.plot(meas.wvl,meas.norm[0,:],'g')
@@ -1344,8 +1344,8 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
     ax3.plot(meas.utc,meas.sp[:,i865],'.',color='grey')
     ax3.plot(meas.utc,meas.sp[:,i1240],'.',color='grey')
     ax3.plot(meas.utc,meas.sp[:,i1560],'.',color='grey')
-    ax3.set_xlabel('UTC [h]')
-    ax3.set_ylabel('Radiance [mW/(m$^2$ nm sr)]')
+    if not plot_retrieval: ax3.set_xlabel('UTC [h]')
+    ax3.set_ylabel('Radiance [mW/(m$^2$nm sr)]')
 
     
     lin_500, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i500],meas.sp[0,i500]],'x-',color='b',label='500 nm')
@@ -1353,7 +1353,7 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
     lin_1240, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i1240],meas.sp[0,i1240]],'x-',color='r',label='1240 nm')
     lin_1560, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.sp[0,i1560],meas.sp[0,i1560]],'x-',color='c',label='1560 nm')
     ax3.set_ylim(0,1400)
-    plt.legend(frameon=False)
+    ax3.legend(frameon=False)
     
     if plot_retrieval:
         ax4.plot(meas.utc,meas.tau,'.',color='grey')
@@ -1362,10 +1362,10 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
         ax4.set_ylabel('Cloud retrieval ($\\tau$, r$_{{eff}}$)')
         ax4.set_ylim(0,65)
         
-        line_tau_liq, = ax3.plot([0,0],[-1,-1],'x',color='r',label='$\\tau$ (liquid)')
-        line_tau_ice, = ax3.plot([0,0],[-1,-1],'x',color='b',label='$\\tau$ (ice)')
-        line_ref, = ax3.plot([meas.utc[0],meas.utc[0]],[meas.ref[0],meas.ref[0]],'x-',color='g',label='r$_{{eff}}$')
-        plt.legend(frameon=False)
+        line_tau_liq, = ax4.plot([meas.utc[0],meas.utc[0]],[-1,-1],'x',color='r',label='$\\tau$ (liquid)')
+        line_tau_ice, = ax4.plot([meas.utc[0],meas.utc[0]],[-1,-1],'x',color='b',label='$\\tau$ (ice)')
+        line_ref, = ax4.plot([meas.utc[0],meas.utc[0]],[meas.ref[0],meas.ref[0]],'x',color='g',label='r$_{{eff}}$ [$\\mu$m]')
+        ax4.legend(frameon=False)
             
     if not 'datestr' in meas.__dict__.keys():
         datestr=''
