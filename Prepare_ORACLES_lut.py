@@ -67,7 +67,7 @@ elif os.sys.platform == 'linux2':
     fp = '/u/sleblan2/ORACLES/'
     fp_rtm = '/nobackup/sleblan2/rtm/'
     fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
-    fp_rtmdat = '/u/sleblan2/4STAR/rtm_dat/'
+    fp_rtmdat = '/nobackup/sleblan2/AAC_DARF/rtm/' #'/u/sleblan2/4STAR/rtm_dat/'
 else:
     raise Exception
 
@@ -76,7 +76,7 @@ else:
 
 # In[84]:
 
-vv = 'v1'
+vv = 'v2'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
 
@@ -119,7 +119,7 @@ geo = {'lat':-22.979,
        'doy':245,
        'zout':[0.2,1.5,100.0]}
 aero = {'z_arr':[2.0,5.0],
-        'ext':np.array([[0.3,0.2,0.05,0.02],[0.0,0.0,0.0,0.0]]),
+        'ext':np.array([[0.6,0.4,0.10,0.04],[0.0,0.0,0.0,0.0]]),
         'ssa':np.array([[0.8,0.85,0.9,0.95],[0.9,0.9,0.9,0.9]]),
         'asy':np.array([[0.8,0.8,0.8,0.8],[0.8,0.8,0.8,0.8]]),
         'wvl_arr':[400.0,500.0,650.0,940.0],
@@ -182,7 +182,7 @@ for s in sza:
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
-            if r>=5.0:
+            if False: #r>=5.0:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
