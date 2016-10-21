@@ -446,3 +446,97 @@ def plotmatfig(filename,fignr=None):
         plt.show()
     return XX,YY
 
+
+# In[ ]:
+
+def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
+    """
+    Purpose:
+        function to make a powerpoint presentation with all figures within a single folder, following a glob pattern
+    
+    Input:
+        filepath: full path to where to find the images or other files
+        filename: filename of the pptx file to be created
+        title: the title of the presentation
+        glob_pattern: (defaults to '*') the pattern to be used to discern which file to include
+        wide: (default to False) if set to True, then outputs a pptx in the widescreen format (16:9)
+              otherwise, the standard 4:3 format
+    
+    Output:
+        pptx file under the path filepath/filename.pptx
+    
+    Dependencies:
+        - pptx
+        - glob
+        - scipy
+        - datetime
+    
+    Required files:
+        None
+    
+    Modification History:
+        Written: Samuel LeBlanc, NASA Ames, CA, 2016-10-20
+                ported from pptximage.py at https://gist.github.com/glass5er/748cda36befe17fd1cb0, user glass5er
+    """
+    import pptx
+    import pptx.util
+    import glob
+    import scipy.misc
+    from datetime import date
+
+    OUTPUT_TAG = title
+
+    prs = pptx.Presentation()
+
+    # default slide width
+    prs.slide_width = 9144000
+    
+    if wide:
+        # slide height @ 16:9
+        prs.slide_height = 5143500
+    else:
+        # slide height @ 4:3
+        prs.slide_height = 6858000
+    
+    # title slide
+    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    # blank slide
+    #slide = prs.slides.add_slide(prs.slide_layouts[6])
+
+    # set title
+    title = slide.shapes.title
+    title.text = OUTPUT_TAG
+    subtitle = slide.placeholders[1]
+    subtitle.text = "Generated on {:%Y-%m-%d}".format(date.today())
+
+    pic_left  = int(prs.slide_width * 0.05)
+    pic_top   = int(prs.slide_height * 0.1)
+    pic_width = int(prs.slide_width * 0.9)
+
+    for g in glob.glob(filepath+glob_pattern):
+        pic_left  = int(prs.slide_width * 0.05)
+        pic_width = int(prs.slide_width * 0.9)
+        print g
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+
+        tb = slide.shapes.add_textbox(0, 0, prs.slide_width, pic_top / 2)
+        p = tb.textframe.add_paragraph()
+        p.text = g.split('\\')[-1]
+        p.font.size = pptx.util.Pt(14)
+
+        try:
+            img = scipy.misc.imread(g)
+            pic_height = int(pic_width * img.shape[0] / img.shape[1])
+            if pic_height>prs.slide_height:
+                h,w = pic_height,pic_width
+                pic_height = int(prs.slide_height * 0.9)
+                pic_width = int(pic_height * w/h)
+                pic_left = int((prs.slide_width-pic_width)/2 + prs.slide_width * 0.05)
+                #import pdb; pdb.set_trace()
+        except:
+            print 'Error on picture: {} using default size values'.format(g) 
+        #pic   = slide.shapes.add_picture(g, pic_left, pic_top)
+        pic   = slide.shapes.add_picture(g, pic_left, pic_top, pic_width, pic_height)
+    print 'Saving to: {}{}.pptx'.format(filepath,filename)
+    prs.save(filepath+'%s.pptx' % filename)
+
