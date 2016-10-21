@@ -26,6 +26,7 @@
 #         plotlut: (optional) if set, then it will create a plot of the lut
 #         makemovie: (optional) if set, then it will create a movie of the measured radiances, normalized,
 #                               and time series of measured radiances, including retrievals 
+#         makeslides: (optional) if set, will create a powerpoint slide of the different figures created
 # 
 # Input:
 # 
@@ -109,6 +110,8 @@
 #             - added force liquid keyword to call and plot_lut for plotting the lut.
 #             - added making a movie with the results
 #             - added filtering of data prior to ensure good retrievals
+#     Modified: Samuel LeBlanc, NASA Ames, 2016-10-20
+#             
 
 # In[ ]:
 
@@ -141,6 +144,8 @@ parser.add_argument('-n','--noplot',help='if set, will not output plots',action=
 parser.add_argument('-liq','--forceliq',help='if set, will force to only use liquid lut',action='store_true')
 parser.add_argument('-plotlut','--plotlut',help='if set, will plot the look up table',action='store_true')
 parser.add_argument('-movie','--makemovie',help='if set, will create a movie of the measurements and retrievals',
+                    action='store_true')
+parser.add_argument('-slides','--makeslides',help='if set, will create a powerpoint of figures created',
                     action='store_true')
 parser.add_argument('-noflt','--nofilter',help='if set, will not filter out bad measurements',
                     action='store_true')
@@ -262,6 +267,7 @@ plot_lut = in_.get('plotlut',False)
 make_movie = in_.get('makemovie',False)
 no_filter = in_.get('nofilter',False)
 debug = in_.get('debug',False)
+make_slides = in_.get('makeslides',False)
 
 
 # # Load starzen files and the look up table
@@ -413,6 +419,11 @@ else:
 
 # In[ ]:
 
+(meas.taut,meas.ref,meas.phase,meas.ki) = (meas.taut*np.nan,meas.ref*np.nan,meas.phase*np.nan,meas.ki*np.nan)
+
+
+# In[ ]:
+
 print 'Running through the airmasses'
 for i in np.unique(idx):
     try: 
@@ -425,9 +436,14 @@ for i in np.unique(idx):
     meas.good = np.where(idx==i)[0]
     if not no_filter:
         i500 = np.argmin(abs(meas.wvl-500))
-        i980,i995 = np.argmin(abs(meas.wvl-980)),np.argmin(abs(meas.wvl-995))
-        ss = np.nanstd(meas.norm[meas.good,i980:i995],axis=1)/np.nanmean(meas.norm[meas.good,i980:i995],axis=1)
-        flt = (meas.norm[meas.good,i500]>0.4) & (ss<0.05)
+        #i980,i995 = np.argmin(abs(meas.wvl-980)),np.argmin(abs(meas.wvl-995))
+        #i999,i992 = np.argmin(abs(meas.wvl-999)),np.argmin(abs(meas.wvl-992))
+        i981,i982 = 1039,1040
+        #ss = np.nanstd(meas.norm[meas.good,i980:i995],axis=1)/np.nanmean(meas.norm[meas.good,i980:i995],axis=1)
+        sss = abs(meas.norm[meas.good,i981]-meas.norm[meas.good,i982])
+        #flt = (meas.norm[meas.good,i500]>0.4) & (ss<0.05)
+        flt = sss<0.1 #(meas.norm[meas.good,i500]>0.4) & (sss<0.1)
+        #import pdb; pdb.set_trace()
         meas.good = meas.good[flt]
     if debug:
         try:
@@ -437,10 +453,10 @@ for i in np.unique(idx):
             import pdb; pdb.set_trace()
     print 'meas.good lengh: {},meas.utc length: {}'.format(meas.good.shape,meas.utc.shape)
     tau,ref,phase,ki = rk.run_retrieval(meas,lut[i],force_liq=forceliq)
-    meas.taut[meas.good] = tau
-    meas.ref[meas.good] = ref
-    meas.phase[meas.good] = phase
-    meas.ki[meas.good] = ki
+    meas.taut[meas.good] = tau[meas.good]
+    meas.ref[meas.good] = ref[meas.good]
+    meas.phase[meas.good] = phase[meas.good]
+    meas.ki[meas.good] = ki[meas.good]
 
 
 # In[ ]:
@@ -532,4 +548,13 @@ if plot_lut:
 if make_movie:
     print 'Making the movie of measurement and retrievals'
     Sp.plot_sp_movie(meas,fp_zencld_plot,gif=False)
+
+
+# In[ ]:
+
+if make_slides:
+    print 'Making the powerpoint slides of the figures'
+    from plotting_utils import make_pptx
+    make_pptx(fp_zencld_plot,'Cloud retrievals {}'.format(datestr),title='4STAR Zenith Cloud retrievals for {}'.format(datestr)
+              glob_pattern='*{}_????[!only]*?.png'.format(datestr))
 
