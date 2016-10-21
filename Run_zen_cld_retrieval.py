@@ -555,6 +555,6 @@ if make_movie:
 if make_slides:
     print 'Making the powerpoint slides of the figures'
     from plotting_utils import make_pptx
-    make_pptx(fp_zencld_plot,'Cloud retrievals {}'.format(datestr),title='4STAR Zenith Cloud retrievals for {}'.format(datestr)
+    make_pptx(fp_zencld_plot,'Cloud retrievals {}'.format(datestr),title='4STAR Zenith Cloud retrievals for {}'.format(datestr),
               glob_pattern='*{}_????[!only]*?.png'.format(datestr))
 
