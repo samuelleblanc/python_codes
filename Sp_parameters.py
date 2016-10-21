@@ -895,7 +895,7 @@ class Sp:
 
 # In[1]:
 
-def plt_zenrad(meas):
+def plt_zenrad(meas,good_only=False):
     """
     Purpose:
         Plot each zzenith radiance spectra on the same scale. 
@@ -904,19 +904,27 @@ def plt_zenrad(meas):
     Output: 
         matplotlib fig value
     Keywords:
-        None
+        good_only: (default False) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+        Modified: Samuel LeBlanc, 2016-10-19, NASA Ames, CA
+                added good_only keyword
     """
     import matplotlib.pyplot as plt
     from mpltools import color
     fig = plt.figure()
     color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
     for i in range(len(meas.utc)):
-        plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
+        if good_only:
+            if i in meas.good:
+                plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
+            else:
+                plt.plot(meas.wvl,meas.sp[i,:]/1000.0,c='grey',alpha=0.1)
+        else:
+            plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
     plt.title('All radiance spectra')
@@ -929,7 +937,7 @@ def plt_zenrad(meas):
 
 # In[2]:
 
-def plt_norm_zenrad(meas):
+def plt_norm_zenrad(meas,good_only=False):
     """
     Purpose:
         Plot each normalized zenith radiance spectra on the same scale. 
@@ -938,19 +946,27 @@ def plt_norm_zenrad(meas):
     Output: 
         matplotlib fig value
     Keywords:
-        None
+        good_only: (default False) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+        Modified: Samuel LeBlanc, 2016-10-19, NASA Ames, CA
+                added good_only keyword
     """
     import matplotlib.pyplot as plt
     from mpltools import color
     fig = plt.figure()
     color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
     for i in range(len(meas.utc)):
-        plt.plot(meas.wvl,meas.norm[i,:])
+        if good_only:
+            if i in meas.good:
+                plt.plot(meas.wvl,meas.norm[i,:])
+            else:
+                plt.plot(meas.wvl,meas.norm[i,:],c='grey',alpha=0.1)
+        else:
+            plt.plot(meas.wvl,meas.norm[i,:])
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Normalized Radiance')
     plt.ylim([0,1])
@@ -1316,7 +1332,7 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
         ax1 = plt.subplot(321)
         ax2 = plt.subplot(322)
         ax3 = plt.subplot(312)
-        ax4 = plt.subplot(313)
+        ax4 = plt.subplot(313,sharex=ax3)
         ax = [ax1,ax2,ax3,ax4]
     else:
         fig.set_size_inches(8.15, 6.15)
@@ -1372,6 +1388,7 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
     else:
         datestr = meas.datestr
     fig.suptitle('Zenith Radiance {datestr} UTC: {utc:2.3f} h, {i}/{i_tot}'.format(datestr=datestr,utc=meas.utc[0],i=0,i_tot=len(meas.utc)))
+    plt.tight_layout()
     
     def make_frame_mpl(t):
         i = int(t*fps)
