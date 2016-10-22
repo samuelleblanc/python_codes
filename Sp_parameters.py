@@ -38,10 +38,13 @@ def find_closest(A, target):
 def smooth(x, window,nan=True,old=False,fill='mean'):
     """
     Moving average of 'x' with window size 'window'.
-    If the nan keyword is set to True (default), the array is returned with the nans removed and substituted by an interpolated value
-    If the old value is set to False (default), the new type of smoothing is used where the signal is reflected for addressing the edge problems
+    If the nan keyword is set to True (default), 
+      the array is returned with the nans removed and substituted by an interpolated value
+    If the old value is set to False (default), 
+      the new type of smoothing is used where the signal is reflected for addressing the edge problems
       Based on SignalSmooth in scipy cookbook: http://scipy-cookbook.readthedocs.org/items/SignalSmooth.html  
-    If the fill keyword is set to 'mean' (default), the filled values are going to be the mean. Other options include 'median' and 'zero'
+    If the fill keyword is set to 'mean' (default), 
+      the filled values are going to be the mean. Other options include 'median' and 'zero'
     """
     if nan:
         from Sp_parameters import nanmasked
@@ -81,7 +84,8 @@ def smooth(x, window,nan=True,old=False,fill='mean'):
 
 def deriv(y,x):
     """
-    Numerical derivative based on IDL's deriv function: returns the derivative of a three-point (quadratic) Lagrangian interpolation:
+    Numerical derivative based on IDL's deriv function: 
+    returns the derivative of a three-point (quadratic) Lagrangian interpolation:
     For evenly space: Y'[0] = (–3*Y[0] + 4*Y[1] – Y[2]) / 2
                       Y'[i] = (Y[i+1] – Y[i–1]) / 2 ; i = 1...N–2
                       Y'[N–1] = (3*Y[N–1] – 4*Y[N–2] + Y[N–3]) / 2
@@ -394,12 +398,20 @@ class lut:
 # In[1]:
 
 class Sp:
-    """ 
-    Sp: spectrum class object that has all the tools for easy spectra analysis.
-    Includes tools for building look up tables
+    """
+    Purpose:
+      Sp: spectrum class object that has all the tools for easy spectra analysis.
+      Includes tools for building look up tables
     
+    keywords:
+      - irrad: (default False) if True, then calculates the irradiance values as well
+      - verbose (default True) if True, then returns many comments while processing
+    
+    
+    Modification History:
     Modified (v1.1): Samuel LeBlanc, NASA Ames, 2015-05-14
-                    - added in _init_ for checking if using radiance subset instead of all radiances (rad vs. rads), in matlab loaded values
+                    - added in _init_ for checking if using radiance subset instead of all radiances 
+                      (rad vs. rads), in matlab loaded values
     Modified (v1.2): Samuel LeBlanc, NASA Ames, 2015-10-01
                     - added subset of wavelengths for normalization
     Modified (v1.3): Samuel LeBlanc, NASA Ames, 2015-11-02
@@ -408,9 +420,12 @@ class Sp:
                     - added verbose keyword during init
     Modified (v1.4): Samuel LeBlanc, Santa Cruz, CA, 2016-10-07
                     - added a method for assuring the utc input, and getting a new datestr object for the measurement
+    Modified (v1.5): Samuel LeBlanc, Santa Cruz, CA, 2016-10-21
+                    - added liquid only keyword for when using the param on lut, to copy the liq lut values to ice
+
     """    
     import numpy as np
-    def __init__(self,s,irrad=False,verbose=True):
+    def __init__(self,s,irrad=False,verbose=True,liq_only=False):
         import numpy as np
         self.verbose = verbose
         if 'nm' in s:
@@ -507,8 +522,14 @@ class Sp:
                 raise IOError('No defined time array (key t or utc) in input object')
         return utc, datestr
     
-    def params(self):
-        " Runs through each spectrum in the sp array to calculate the parameters"
+    def params(self,liq_only=False):
+        """
+        Purpose:
+            Runs through each spectrum in the sp array to calculate the parameters
+        
+        Keyword:
+            - liq_only: (default False) if True, copies the keywords from liquid to ice values
+        """
         useezmap = False
         from Sp_parameters import param
         import warnings
@@ -530,6 +551,10 @@ class Sp:
                 applypar = lambda w,r,t:param(sp[w,:,0,r,t],wvl)
                 partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
             par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
+            if liq_only:
+                import warnings
+                warnings.warn('Copyig the parameters calculated for liquid LUT to the ice LUT, ice parameters will be lost')
+                par[1,:,:,:] = par[0,:,:,:]
             self.npar = par.shape[3]
         elif sp.ndim == 2:
             applypartime = lambda tt:param(sp[tt,:],wvl)
@@ -555,7 +580,8 @@ class Sp:
         ref = self.ref
         par = self.par
         if self.sp.ndim == 5:
-            tau_hires = np.concatenate((np.arange(self.tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,self.tau[-1]+1.0,1.0)))
+            tau_hires = np.concatenate((np.arange(self.tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),
+                                        np.arange(4.0,self.tau[-1]+1.0,1.0)))
             ref_hires = np.arange(self.ref[0],self.ref[-1]+1.0)
             if self.verbose: print tau_hires.shape
             if self.verbose: print ref_hires.shape
@@ -681,7 +707,9 @@ class Sp:
         Normalize the parameters, if no keyword set, returns the normalized parameter values in self.parn
         if the keywords are not set, returns the normalized parameter values in self.parn and returns
         the pcoef dictionary containing the coefficients and additive values used for normalizing each parameter.
-        Applies the normalization to std if set to true, and requires the pceof to be set and creates stdparn, overrides vartitle
+        Applies the normalization to std if set to true, 
+        and requires the pceof to be set and creates stdparn, overrides vartitle
+        
         Saves to vartitle if vartitle is set.
         
         """

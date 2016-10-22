@@ -395,7 +395,7 @@ for s in xrange(len(luts['sza'])):
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp,verbose=False)
     if s in idx:
-        ltemp.params()
+        ltemp.params(liq_only=forceliq)
         ltemp.param_hires()
     lut.append(ltemp)
 
