@@ -43,17 +43,17 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 days = ['20160830','20160831','20160902','20160904','20160906','20160908','20160910','20160912','20160914','20160918']
 
 
+# In[21]:
+
+days = ['20160824']#,'20160825']
+
+
 # In[6]:
-
-days = ['20160827']
-
-
-# In[7]:
 
 vv = 'R0'
 
 
-# In[8]:
+# In[26]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -73,7 +73,7 @@ for d in days:
 
 # ## Check the files for integrity and header info
 
-# In[9]:
+# In[8]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -84,7 +84,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 #            print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[10]:
+# In[9]:
 
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
 for i,d in enumerate(days):
@@ -99,24 +99,24 @@ for i,d in enumerate(days):
 outaod_head_RA[0]
 
 
-# In[9]:
+# In[11]:
 
 outgas_head_RA[0]
 
 
 # ## Check the variables in header
 
-# In[11]:
+# In[12]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[12]:
+# In[13]:
 
 nm
 
 
-# In[13]:
+# In[14]:
 
 wl = nm[6:-1]
 
@@ -129,7 +129,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[14]:
+# In[15]:
 
 for a in wl:
     print a
@@ -137,7 +137,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[15]:
+# In[27]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -172,7 +172,7 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[16]:
+# In[17]:
 
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
@@ -189,12 +189,12 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[17]:
+# In[18]:
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[18]:
+# In[19]:
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -208,7 +208,7 @@ for i,d in enumerate(days):
     angarr.append(ang)
 
 
-# In[19]:
+# In[20]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
