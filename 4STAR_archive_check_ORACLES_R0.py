@@ -43,17 +43,17 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 days = ['20160830','20160831','20160902','20160904','20160906','20160908','20160910','20160912','20160914','20160918']
 
 
+# In[32]:
+
+days = ['20160925']#,'20160927','20160929','20160930']#,'20160825']
+
+
 # In[21]:
-
-days = ['20160824']#,'20160825']
-
-
-# In[6]:
 
 vv = 'R0'
 
 
-# In[26]:
+# In[33]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -73,7 +73,7 @@ for d in days:
 
 # ## Check the files for integrity and header info
 
-# In[8]:
+# In[23]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -137,7 +137,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[27]:
+# In[34]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -172,7 +172,7 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[17]:
+# In[16]:
 
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
@@ -189,12 +189,12 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[18]:
+# In[17]:
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[19]:
+# In[35]:
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -208,7 +208,7 @@ for i,d in enumerate(days):
     angarr.append(ang)
 
 
-# In[20]:
+# In[36]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
