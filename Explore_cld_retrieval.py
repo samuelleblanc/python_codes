@@ -290,7 +290,7 @@ for i,daystr in enumerate(dds):
     ax1.set_title(daystr)
 
 
-# In[ ]:
+# In[137]:
 
 for i,daystr in enumerate(dds):
     rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
@@ -309,34 +309,43 @@ rt.keys()
 import write_utils as wu
 
 
-# In[ ]:
+# In[143]:
 
-i=9
-d_dict = {'Start_UTC':{'data':rts[i]['uct'][rts[i]['fl']]*3600.0,'unit':'seconds from midnight UTC','long_description':'time keeping'},
-      'COD':{'data':rts[i]['tau_fl'],'unit':'None','long_description':'Cloud optical Depth of overlying cloud'},
-      'REF':{'data':rts[i]['ref_fl'],'unit':'micrometer','long_description':'Cloud drop effective radius for liquid clouds'},
-      'LAT':{'data':rts[i]['lat'][rts[i]['fl']],'unit':'Degrees','long_description':'Latitude of measurement, negative for Southern hemisphere'},
-      'LON':{'data':rts[i]['lon'][rts[i]['fl']],'unit':'Degrees','long_description':'Longitude of measurement, East is positive, from -180 to 180'}
-      }
-print d_dict
-hdict = {'PI':'Samuel LeBlanc',
+hdict = {'PI':'Jens Redemann',
      'Institution':'NASA Ames Research Center',
-     'Instrument':'4STAR (Spectrometer for Sky-Scanning, Sun Tracking Atmospheric Research)',
-     'campaign':'ORACLES-2016',
+     'Instrument':'Spectrometers for Sky-Scanning, Sun-Tracking Atmospheric Research (4STAR)',
+     'campaign':'ORACLES 2016',
      'special_comments':'Retrieved cloud properties',
-     'PI_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+     'PI_contact':'Jens.Redemann-1@nasa.gov',
      'platform':'NASA P3',
      'location':'based out of Walvis Bay, Namibia, actual location of measurement included in file',
      'instrument_info':'Derived product from 4STAR zenith measurements',
-     'data_info':'',
+     'data_info':'Using the retrieval method described by LeBlanc, Pileskie, Schmidt, and Coddington (2015), AMT',
      'uncertainty':'Undefined',
      'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
-     'project_info':'ORACLES project deployed during August-September, 2016',
-     'stipulations':'None',
-     'rev_comments':"""  R0: Preliminary archival of cloud properties retreived from 4STAR sky radiance measurements. Final radiance calibration not yet applied."""
+     'project_info':'ORACLES deployment; August-September 2016; Walvis Bay, Namibia',
+     'stipulations':'Use of these data requires PRIOR OK from the PI; this is preliminary data',
+     'rev_comments':"""  R0: Preliminary archival of cloud properties retrieived from 4STAR sky radiance measurements. 
+Final radiance calibration not yet applied. Filtered out in-cloud data, bad measurements, and high clouds. 
+Data is subject to uncertainties linked to detector stability, transfer efficiency of light through fiber optic cable, and deposition on the instrument window."""
     }
-print hdict
-order = ['X1','X2','X3']
-write_ict(hdict,d_dict,filepath='C:/Users/sleblan2/Research/NAAMES/',
-          data_id='4STAR_test',loc_id='C130',date='20160402',rev='RA',order=order)    
+order = ['LAT','LON','COD','REF']
+
+
+# In[144]:
+
+for i,daystr in enumerate(dds):
+    d_dict = {'Start_UTC':{'data':rts[i]['utc'][rts[i]['fl']]*3600.0,'unit':'seconds from midnight UTC','long_description':'time keeping'},
+          'COD':{'data':rts[i]['tau_fl'],'unit':'None','long_description':'Cloud Optical Depth of overlying cloud'},
+          'REF':{'data':rts[i]['ref_fl'],'unit':'micrometer','long_description':'Cloud drop effective radius for liquid clouds'},
+          'LAT':{'data':rts[i]['lat'][rts[i]['fl']],'unit':'Degrees','long_description':'Latitude of measurement, negative for Southern hemisphere'},
+          'LON':{'data':rts[i]['lon'][rts[i]['fl']],'unit':'Degrees','long_description':'Longitude of measurement, East is positive, from -180 to 180'}
+          }
+    wu.write_ict(hdict,d_dict,filepath=fp+'..//zen_ict/',
+              data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R0',order=order)    
+
+
+# In[ ]:
+
+
 
