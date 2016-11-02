@@ -290,14 +290,18 @@ for i,daystr in enumerate(dds):
     ax1.set_title(daystr)
 
 
-# In[137]:
+# In[174]:
 
 for i,daystr in enumerate(dds):
     rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
     rts[i]['ref_fl'] = smooth(rts[i]['ref'][rts[i]['fl']],6)
+    rts[i]['lat_fl'] = rts[i]['lat'][rts[i]['fl']]
+    rts[i]['lon_fl'] = rts[i]['lon'][rts[i]['fl']]
+    rts[i]['alt_fl'] = rts[i]['alt'][rts[i]['fl']]
+    rts[i]['utc_fl'] = rts[i]['utc'][rts[i]['fl']]
 
 
-# In[134]:
+# In[175]:
 
 rt.keys()
 
@@ -343,6 +347,155 @@ for i,daystr in enumerate(dds):
           }
     wu.write_ict(hdict,d_dict,filepath=fp+'..//zen_ict/',
               data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R0',order=order)    
+
+
+# # Plot out what is in the files
+
+# In[ ]:
+
+
+
+
+# ## Combine the data into a single array
+
+# In[176]:
+
+ar = {}
+for n in rts[0].keys():
+    ar[n] = np.array([])
+
+
+# In[177]:
+
+ar['days'] = np.array([])
+
+
+# In[178]:
+
+for i,d in enumerate(dds):
+    ar['days'] = np.append(ar['days'],np.zeros_like(rts[i]['utc'])+i)
+    for n in rts[0].keys():
+        ar[n] = np.append(ar[n],rts[i][n])
+
+
+# ## plot the data on a map
+
+# In[145]:
+
+from map_interactive import build_basemap
+
+
+# In[157]:
+
+rts[i]['tau_fl']
+
+
+# In[159]:
+
+for i,daystr in enumerate(dds):
+    print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
+
+
+# In[189]:
+
+fig = plt.figure()
+ax = plt.subplot(111)
+m = build_basemap(lower_left=[-2,-25],upper_right=[15,-8],ax=ax)
+for i,daystr in enumerate(dds):
+    x,y = m(rts[i]['lon'][rts[i]['fl']][:,0],rts[i]['lat'][rts[i]['fl']][:,0])
+    sca = ax.scatter(x,y,c=rts[i]['tau_fl'],
+              s=10,alpha=0.7,vmin=0.0,vmax=60.0,edgecolor='None')
+cb = plt.colorbar(sca)
+cb.set_label('COD')
+plt.savefig(fp+'..//zen_ict/COD_map.png',transparent=True,dpi=600)
+
+
+# In[191]:
+
+fig = plt.figure()
+ax = plt.subplot(111)
+m = build_basemap(lower_left=[-2,-25],upper_right=[15,-8],ax=ax)
+for i,daystr in enumerate(dds):
+    x,y = m(rts[i]['lon'][rts[i]['fl']][:,0],rts[i]['lat'][rts[i]['fl']][:,0])
+    sca = ax.scatter(x,y,c=rts[i]['ref_fl'],
+              s=10,alpha=0.7,vmin=0.0,vmax=30.0,edgecolor='None')
+cb = plt.colorbar(sca)
+cb.set_label('r$_{{eff}}$ [$\\mu$m]')
+plt.savefig(fp+'..//zen_ict/REF_map.png',transparent=True,dpi=600)
+
+
+# ## Plot out some statistics of all retrievals
+
+# In[188]:
+
+plt.figure()
+plt.plot(ar['lat_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
+plt.hist2d(ar['lat_fl'],ar['tau_fl'],bins=40,normed=True)
+plt.xlabel('Latitude [$^\\circ$]')
+plt.ylabel('COD')
+cb = plt.colorbar()
+cb.set_label('Normalized counts')
+plt.title('4STAR Cloud optical depth for all ORACLES flights')
+plt.savefig(fp+'..//zen_ict/COD_hist_lat.png',transparent=True,dpi=600)
+
+
+# In[192]:
+
+plt.figure()
+plt.plot(ar['lon_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
+plt.hist2d(ar['lon_fl'],ar['tau_fl'],bins=40,normed=True)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('COD')
+cb = plt.colorbar()
+cb.set_label('Normalized counts')
+plt.title('4STAR Cloud optical depth for all ORACLES flights')
+plt.savefig(fp+'..//zen_ict/COD_hist_lon.png',transparent=True,dpi=600)
+
+
+# In[199]:
+
+plt.figure()
+plt.plot(ar['lon_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
+plt.hist2d(ar['lon_fl'],ar['ref_fl'],bins=40,normed=True)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('r$_{{eff}}$ [$\\mu$m]')
+plt.ylim(2,10)
+cb = plt.colorbar()
+cb.set_label('Normalized counts')
+plt.title('4STAR Effective Radius for all ORACLES flights')
+plt.savefig(fp+'..//zen_ict/ref_hist_lon.png',transparent=True,dpi=600)
+
+
+# In[198]:
+
+plt.figure()
+plt.plot(ar['lat_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
+plt.hist2d(ar['lat_fl'],ar['ref_fl'],bins=40,normed=True)
+plt.ylim(2,10)
+plt.xlabel('Latitude [$^\\circ$]')
+plt.ylabel('r$_{{eff}}$ [$\\mu$m]')
+cb = plt.colorbar()
+cb.set_label('Normalized counts')
+plt.title('4STAR Effective Radius for all ORACLES flights')
+plt.savefig(fp+'..//zen_ict/ref_hist_lat.png',transparent=True,dpi=600)
+
+
+# In[205]:
+
+fig = plt.figure()
+plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True)
+plt.ylabel('Normed counts')
+plt.xlabel('COD')
+plt.savefig(fp+'..//zen_ict/cod_hist.png',transparent=True,dpi=600)
+
+
+# In[207]:
+
+fig = plt.figure()
+plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True)
+plt.ylabel('Normed counts')
+plt.xlabel('r$_{{eff}}$ [$\\mu$m]')
+plt.savefig(fp+'..//zen_ict/ref_hist.png',transparent=True,dpi=600)
 
 
 # In[ ]:
