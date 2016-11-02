@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[1]:
+# In[4]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -21,26 +21,27 @@ from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[2]:
+# In[5]:
 
 from linfit import linfit
 
 
-# In[3]:
+# In[6]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[7]:
 
 fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 
 # # load the files
 
-# In[5]:
+# In[8]:
 
-days = ['20160830','20160831','20160902','20160904','20160906','20160908','20160910','20160912','20160914','20160918']
+days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
 # In[32]:
@@ -48,12 +49,12 @@ days = ['20160830','20160831','20160902','20160904','20160906','20160908','20160
 days = ['20160925']#,'20160927','20160929','20160930']#,'20160825']
 
 
-# In[21]:
+# In[9]:
 
 vv = 'R0'
 
 
-# In[33]:
+# In[10]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -73,7 +74,7 @@ for d in days:
 
 # ## Check the files for integrity and header info
 
-# In[23]:
+# In[11]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -121,7 +122,7 @@ nm
 wl = nm[6:-1]
 
 
-# In[225]:
+# In[15]:
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -129,7 +130,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[15]:
+# In[16]:
 
 for a in wl:
     print a
@@ -236,7 +237,73 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vv}_{}_lat_alt_angstrom.png'.format(d,vv=vv),dpi=600,transparent=True)
 
 
-# ## make plots of the gases
+# # Combine all the data in a single array
+
+# In[29]:
+
+ar = {}
+for n in nm:
+    ar[n] = np.array([])
+
+
+# In[30]:
+
+ar['days'] = np.array([])
+
+
+# In[38]:
+
+for i,d in enumerate(days):
+    ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
+    for n in nm:
+        ar[n] = np.append(ar[n],outaod_RA[i][n])
+
+
+# In[40]:
+
+ar['GPS_Alt'].shape
+
+
+# ## filter for low altitudes
+
+# In[42]:
+
+ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
+
+
+# In[48]:
+
+ar['fl_QA'] = ar['qual_flag']==0
+
+
+# In[49]:
+
+ar['fl'] = ar['fl_QA']&ar['fl_alt']
+
+
+# ## Plot a histogram of all the AOD
+
+# In[64]:
+
+plt.figure()
+plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g')
+plt.xlabel('AOD at 501 nm')
+plt.ylabel('Counts')
+plt.title('Above clouds AOD distribution [600-1800 m, cloud filtered]')
+plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[67]:
+
+plt.figure()
+plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='grey',cumulative=True)
+plt.xlabel('AOD at 501 nm')
+plt.ylabel('Cumulative occurence')
+plt.title('Above clouds AOD distribution [600-1800 m, cloud filtered]')
+plt.savefig(fp+'aod_ict/{vv}_AOD_histogram_cum.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# # make plots of the gases
 
 # In[ ]:
 
