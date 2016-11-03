@@ -271,6 +271,16 @@ ar['GPS_Alt'].shape
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
+# In[68]:
+
+ar['fl_alt_6'] = ar['GPS_Alt']<=600
+
+
+# In[69]:
+
+ar['fl_alt_18'] = ar['GPS_Alt']>=1800
+
+
 # In[48]:
 
 ar['fl_QA'] = ar['qual_flag']==0
@@ -281,15 +291,30 @@ ar['fl_QA'] = ar['qual_flag']==0
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
+# In[70]:
+
+ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
+
+
+# In[71]:
+
+ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
+
+
 # ## Plot a histogram of all the AOD
 
-# In[64]:
+# In[78]:
 
 plt.figure()
-plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g')
+plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
+plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
+#plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='above 1800 m')
+#plt.yscale('log')
 plt.xlabel('AOD at 501 nm')
 plt.ylabel('Counts')
-plt.title('Above clouds AOD distribution [600-1800 m, cloud filtered]')
+plt.grid()
+plt.title('Above clouds AOD distribution cloud filtered')
+plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
 
 
