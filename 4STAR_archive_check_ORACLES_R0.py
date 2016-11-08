@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[4]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -21,17 +21,17 @@ from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[5]:
+# In[2]:
 
 from linfit import linfit
 
 
-# In[6]:
+# In[3]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[7]:
+# In[4]:
 
 fp ='C:/Users/sleblan2/Research/ORACLES/'
 
@@ -44,17 +44,17 @@ days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[32]:
+# In[5]:
 
-days = ['20160925']#,'20160927','20160929','20160930']#,'20160825']
+days = ['20160920']#,'20160927','20160929','20160930']#,'20160825']
 
 
-# In[9]:
+# In[6]:
 
 vv = 'R0'
 
 
-# In[10]:
+# In[7]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -74,7 +74,7 @@ for d in days:
 
 # ## Check the files for integrity and header info
 
-# In[11]:
+# In[8]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -130,7 +130,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[16]:
+# In[15]:
 
 for a in wl:
     print a
@@ -138,7 +138,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[34]:
+# In[16]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -169,6 +169,35 @@ for i,d in enumerate(days):
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
     plt.savefig(fp+'aod_ict/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[17]:
+
+ax[0].set_ylim(0,15)
+
+
+# In[18]:
+
+fig.show()
+
+
+# In[20]:
+
+nm
+
+
+# In[30]:
+
+plt.figure()
+plt.plot(outaod_RA[0]['Start_UTC'],outaod_RA[0]['qual_flag'],'b.',label='Quality flag')
+plt.plot(outaod_RA[0]['Start_UTC'],outaod_RA[0]['AOD0380'],'r+',label='AOD')
+plt.ylim(0,12)
+plt.xlim(11.8,12.3)
+plt.ylabel('AOD 380 nm')
+plt.xlabel('UTC [H]')
+plt.legend()
+plt.grid()
+plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,transparent=True)
 
 
 # ## Make plots of angstrom exponent
