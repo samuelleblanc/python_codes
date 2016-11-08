@@ -312,28 +312,22 @@ aero_save
 
 # ## Save the dict
 
-# In[92]:
+# In[126]:
 
-import json
-
-
-# In[89]:
-
-import pickle
+from load_utils import load_from_json, save_to_json
 
 
-# In[91]:
+# In[122]:
 
-with open(fp+'aero_file.txt', 'wb') as handle:
-  pickle.dump(aero_save, handle)
-
-
-# In[95]:
-
-json.dump(aero_save, open(fp+"aero_save.txt",'w'))
+save_to_json(fp+'aero_save.txt',aero_save)
 
 
-# In[ ]:
+# In[123]:
+
+a = ()
 
 
+# In[127]:
+
+a = load_from_json(fp+'aero_save.txt')
 
