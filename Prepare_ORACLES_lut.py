@@ -56,6 +56,11 @@ import Run_libradtran as RL
 reload(RL)
 
 
+# In[ ]:
+
+from load_utils import load_from_json
+
+
 # In[68]:
 
 if os.sys.platform == 'win32':
@@ -76,7 +81,7 @@ else:
 
 # In[84]:
 
-vv = 'v2'
+vv = 'v3'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
 
@@ -90,10 +95,10 @@ print(sza)
 
 # In[108]:
 
-tau = np.array([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,2.5,3.0,4.0,5.0,
+tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
        6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,25.0,30.0,35.0,40.0,50.0,
        60.0,80.0,100.0])
-ref = np.append(np.append(np.arange(2,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,2.5)))
+ref = np.append(np.append(np.arange(1,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,2.5)))
 
 
 # In[109]:
@@ -112,19 +117,24 @@ print(tau.shape)
 pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
 
 
+# In[ ]:
+
+aero = load_from_json(fp+'aero_save.txt')
+
+
 # In[70]:
 
 geo = {'lat':-22.979,
        'lon':14.645,
        'doy':245,
        'zout':[0.2,1.5,100.0]}
-aero = {'z_arr':[2.0,5.0],
-        'ext':np.array([[0.6,0.4,0.10,0.04],[0.0,0.0,0.0,0.0]]),
-        'ssa':np.array([[0.8,0.85,0.9,0.95],[0.9,0.9,0.9,0.9]]),
-        'asy':np.array([[0.8,0.8,0.8,0.8],[0.8,0.8,0.8,0.8]]),
-        'wvl_arr':[400.0,500.0,650.0,940.0],
-        'disort_phase':False,
-        'expand_hg':True}
+#aero = {'z_arr':[2.0,5.0],
+#        'ext':np.array([[0.6,0.4,0.10,0.04],[0.0,0.0,0.0,0.0]]),
+#        'ssa':np.array([[0.8,0.85,0.9,0.95],[0.9,0.9,0.9,0.9]]),
+#        'asy':np.array([[0.8,0.8,0.8,0.8],[0.8,0.8,0.8,0.8]]),
+#        'wvl_arr':[400.0,500.0,650.0,940.0],
+#        'disort_phase':False,
+#        'expand_hg':True}
 cloud = {'ztop':1.0,
          'zbot':0.5,
          'write_moments_file':True,
