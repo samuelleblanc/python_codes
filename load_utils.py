@@ -1165,7 +1165,7 @@ def save_to_json(f,d):
     'Function to save dictionary with numpy elements (d) to a text file (f) define by the JSON typing'
     from json_tricks.np import dumps
     with open(f,'w') as handle:
-        handle.write(dumps(d))
+        handle.write(dumps(d,indent=2))
 
 
 # In[ ]:
