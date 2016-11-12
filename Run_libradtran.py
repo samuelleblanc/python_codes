@@ -1617,20 +1617,28 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
 
 # In[4]:
 
-def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},tau=[None],ref=[None],sza=[None]):
+def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},
+                          tau=[None],ref=[None],sza=[None],
+                          fmt='lut_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',use_json=True):
     'Program to write an ascii file to print out the version and set up info'
-    from Run_libradtran import writeDict
-    f = open(filename,'w')
-    f.write('UVSpec input file version: {} \n'.format(vv))
-    f.write('sza = {} \n'.format(sza))
-    f.write('tau = {} \n'.format(tau))
-    f.write('ref = {} \n'.format(ref))
-    f.close()
-    writeDict(geo,'geo',filename)
-    writeDict(aero,'aero',filename)
-    writeDict(cloud,'cloud',filename)
-    writeDict(source,'source',filename)
-    writeDict(albedo,'albedo',filename)    
+    if use_json:
+        from load_utils import save_to_json
+        lut = {'LUT_input_version':vv,'sza':sza,'tau':tau,'ref':ref,'format':fmt}
+        d = {'lut_details':lut,'geo':geo,'aero':aero,'cloud':cloud,'source':source,'albedo':albedo}
+        save_to_json(filename,d)
+    else:
+        from Run_libradtran import writeDict
+        f = open(filename,'w')
+        f.write('UVSpec input file version: {} \n'.format(vv))
+        f.write('sza = {} \n'.format(sza))
+        f.write('tau = {} \n'.format(tau))
+        f.write('ref = {} \n'.format(ref))
+        f.close()
+        writeDict(geo,'geo',filename)
+        writeDict(aero,'aero',filename)
+        writeDict(cloud,'cloud',filename)
+        writeDict(source,'source',filename)
+        writeDict(albedo,'albedo',filename)    
 
 
 # In[3]:
