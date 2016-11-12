@@ -81,7 +81,7 @@ else:
 
 # In[84]:
 
-vv = 'v3'
+vv = 'v4'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
 
@@ -148,7 +148,7 @@ source = {'wvl_range':[350,1750],
           'zenith':True}
 albedo = {'create_albedo_file':False,
           'sea_surface_albedo':True,
-          'wind_speed':10.0}
+          'wind_speed':5.0}
 
 
 # In[60]:
