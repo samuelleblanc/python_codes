@@ -597,7 +597,7 @@ plt.title('4STAR Effective Radius for all ORACLES flights')
 plt.savefig(fp+'..//zen_ict/ref_hist_lat.png',transparent=True,dpi=600)
 
 
-# In[79]:
+# In[86]:
 
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
@@ -608,7 +608,17 @@ plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/cod_hist.png',transparent=True,dpi=600)
 
 
-# In[80]:
+# In[88]:
+
+np.nanmean(ar['tau_fl'])
+
+
+# In[89]:
+
+np.nanmean(ar['ref_fl'])
+
+
+# In[87]:
 
 fig = plt.figure()
 plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
@@ -617,4 +627,9 @@ plt.ylabel('Normed counts')
 plt.xlabel('r$_{{eff}}$ [$\\mu$m]')
 plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/ref_hist.png',transparent=True,dpi=600)
+
+
+# In[ ]:
+
+
 
