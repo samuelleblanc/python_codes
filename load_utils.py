@@ -333,7 +333,7 @@ def load_emas(datfile):
 
 # In[ ]:
 
-def load_hdf(datfile,values=None,verbose=True):
+def load_hdf(datfile,values=None,verbose=True,all_values=False):
     """
     Name:
 
@@ -347,7 +347,7 @@ def load_hdf(datfile,values=None,verbose=True):
     
     Calling Sequence:
 
-        hdf_dat,hdf_dict = load_hdf(datfile,Values=None,verbose=True) 
+        hdf_dat,hdf_dict = load_hdf(datfile,Values=None,verbose=True,all_values=False) 
     
     Input: 
   
@@ -364,6 +364,7 @@ def load_hdf(datfile,values=None,verbose=True):
                 needs to be a tuple of 2 element tuples (first element name of variable, second number of record)
                 example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
         verbose: if true (default), then everything is printed. if false, nothing is printed
+        all_values: if True, then outputs all the values with their original names, (defaults to False), overrides values keyword
     
     Dependencies:
 
@@ -387,6 +388,8 @@ def load_hdf(datfile,values=None,verbose=True):
                         - added verbose keyword
         Modified (v1.2): Samuel LeBlanc, 2016-05-07, Osan AFB, Korea
                         - added error handling for missing fill value
+        Modified (v1.3): Samuel LeBlanc, 2016-11-15, NASA Ames
+                        - added all_values keyword
     """
     import numpy as np
     from osgeo import gdal
@@ -404,6 +407,11 @@ def load_hdf(datfile,values=None,verbose=True):
                     print str(i)+': '+datsub[i][1]
             else:
                 print str(i)+': '+datsub[i][1]
+    if all_values:
+        values = []
+        for i in range(len(datsub)):
+            values.append((datsub[i][1].split(' ')[1],i))
+        values = tuple(values)
     if not values:
         if verbose:
             print 'Done going through file... Please supply pairs of name and index for reading file'
@@ -611,7 +619,9 @@ def load_apr(datfiles):
             print ' ... Skipping'
             continue
         
-        apr_value = (('lat',16),('lon',17),('alt',15),('time',13),('dbz',0),('lat3d',30),('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
+        apr_value = (('lat',16),('lon',17),('alt',15),('time',13),('dbz',0),('lat3d',30),
+                     ('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),
+                     ('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
         apr,aprdicts = load_hdf(f,values=apr_value,verbose=False)
         # transform the 3d latitudes, longitudes, and altitudes to usable values
         apr['latz'] = apr['lat3d']/apr['lat3d_s']+apr['lat3d_o']
