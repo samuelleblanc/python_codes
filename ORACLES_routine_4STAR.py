@@ -91,7 +91,7 @@ s.keys()
 fp
 
 
-# In[9]:
+# In[7]:
 
 m = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE.nc')
 
@@ -101,7 +101,7 @@ m = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW
 m.variables
 
 
-# In[48]:
+# In[8]:
 
 m2 = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE_all.nc')
 
@@ -118,29 +118,29 @@ m2.variables['AOD_YRMEAN'].data
 
 # # Subset for routine flight
 
-# In[11]:
+# In[9]:
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[14]:
+# In[10]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[15]:
+# In[11]:
 
 s['days'][0]
 
 
-# In[191]:
+# In[12]:
 
 ff = []
 for d in d_irtn:
     ff.append(s['days']==d)
 
 
-# In[192]:
+# In[13]:
 
 for i,f in enumerate(ff):
     if i==0:
@@ -149,7 +149,7 @@ for i,f in enumerate(ff):
         fl = fl | f
 
 
-# In[31]:
+# In[14]:
 
 s['fl_rtn'] = fl & s['fl']
 
@@ -177,7 +177,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_all_MODIS.png',transparent=True,dpi=600)
 
 # ## heat map of points
 
-# In[152]:
+# In[17]:
 
 plt.figure()
 cc = plt.hist2d(s['Longitude'][s['fl_rtn']],s['AOD0501'][s['fl_rtn']],bins=25,cmap=plt.cm.hot_r)
@@ -198,7 +198,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_hist_MODIS.png',transparent=True,dpi=600)
 
 # ## Use bins from heat map to make box whisker plot
 
-# In[109]:
+# In[18]:
 
 bins = []
 pos = []
@@ -208,7 +208,7 @@ for i,c in enumerate(cc[1][0:-2]):
     pos.append((c+cc[1][i+1])/2.0)
 
 
-# In[134]:
+# In[16]:
 
 def color_box(bp, color):
 
@@ -271,14 +271,14 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box_simpler_MODIS.png',transparent=True,d
 
 # ## Make another binning product, with less bins
 
-# In[159]:
+# In[20]:
 
 plt.figure()
 cc2 = plt.hist2d(s['Longitude'][s['fl_rtn']],s['AOD0501'][s['fl_rtn']],bins=15,cmap=plt.cm.hot_r)
 cb = plt.colorbar()
 
 
-# In[160]:
+# In[21]:
 
 bins2 = []
 pos2 = []
@@ -314,23 +314,23 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box2_simpler_MODIS.png',transparent=True,
 
 # ## Now try with same bins as MODIS
 
-# In[165]:
+# In[22]:
 
 pos3 = m.variables['LONGITUDE'].data[0,:]
 
 
-# In[166]:
+# In[23]:
 
 pos3
 
 
-# In[185]:
+# In[24]:
 
 lims3 = pos3-0.5
 lims3= np.append(lims3,pos3[-1]+0.5)
 
 
-# In[186]:
+# In[25]:
 
 bins3 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -338,17 +338,17 @@ for i,c in enumerate(lims3[0:-1]):
     bins3.append(s['AOD0501'][s['fl_rtn']][lon_fl])
 
 
-# In[187]:
+# In[26]:
 
 len(lims3)
 
 
-# In[188]:
+# In[27]:
 
 len(bins3)
 
 
-# In[189]:
+# In[28]:
 
 len(pos3)
 
@@ -375,27 +375,27 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_MODIS.png',transparent=True,dpi=600)
 
 
-# In[204]:
+# In[29]:
 
 s['fl_alt12'] = (s['GPS_Alt']>=600)&(s['GPS_Alt']<1200)
 
 
-# In[205]:
+# In[30]:
 
 s['fl_alt12']
 
 
-# In[206]:
+# In[31]:
 
 s['fl_rtn_12'] = s['fl_alt12'] & s['fl_QA'] & fl
 
 
-# In[207]:
+# In[32]:
 
 s['fl_rtn_12']
 
 
-# In[208]:
+# In[33]:
 
 bins3_12 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -434,12 +434,12 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_2alt_MODIS.png',transparent=
 
 # ## make a plot day by day
 
-# In[210]:
+# In[34]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[211]:
+# In[35]:
 
 flr2 = s['fl_rtn_12']&(s['days']==2.0)
 flr4 = s['fl_rtn_12']&(s['days']==4.0)
@@ -449,7 +449,7 @@ flr8 = s['fl_rtn_12']&(s['days']==8.0)
 flr13 = s['fl_rtn_12']&(s['days']==13.0)
 
 
-# In[212]:
+# In[36]:
 
 fr2 = s['fl_rtn']&(s['days']==2.0)
 fr4 = s['fl_rtn']&(s['days']==4.0)
@@ -459,18 +459,18 @@ fr8 = s['fl_rtn']&(s['days']==8.0)
 fr13 = s['fl_rtn']&(s['days']==13.0)
 
 
-# In[213]:
+# In[37]:
 
 fr = [fr2,fr4,fr6,fr7,fr8,fr13]
 flr = [flr2,flr4,flr6,flr7,flr8,flr13]
 
 
-# In[217]:
+# In[38]:
 
 cls = ['green','blue','yellow','cyan','magenta','orange']
 
 
-# In[214]:
+# In[39]:
 
 d_rtn
 
@@ -517,7 +517,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_days_MODIS.png',transparent=True,dpi
 
 # ## Make an average from daily averages
 
-# In[287]:
+# In[41]:
 
 plt.figure(figsize=(11,6))
 plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AODFM_CLIMOMEAN'].data[0,:],
@@ -540,11 +540,16 @@ for j,f in enumerate(fr):
     bo = plt.boxplot(binsf,0,'.',showmeans=True,positions=pos3)
     color_box(bo,cls[j])
     [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
     means.append([a.get_ydata()[0] for a in bo['means']])
     plt.plot(pos3,[a.get_ydata()[0] for a in bo['means']],
              's-',zorder=100,color=cls[j],label='{}/{} 4STAR [0.6-1.8km]'.format(d_rtn[j][4:6],d_rtn[j][6:8]),
              lw=2.5,alpha=0.2)    
     
+plt.text(0.5, 0.5, 'Preliminary',
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=plt.gca().transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.3)
 plt.plot(pos3,np.nanmean(np.array(means),axis=0),'s-k',label='4STAR mean [0.6-1.8km]')
 plt.legend(numpoints=1,frameon=True,bbox_to_anchor=(1.4,1.0))
 ti = plt.gca().set_xticks([0,2,4,6,8,10,12,14])
@@ -555,7 +560,7 @@ plt.gca().set_position([box.x0, box.y0, box.width * 0.8, box.height])
 plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_days_avg_MODIS.png',transparent=True,dpi=600)
 
 
-# In[288]:
+# In[40]:
 
 plt.figure(figsize=(11,6))
 plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AODFM_CLIMOMEAN'].data[0,:],
@@ -578,12 +583,17 @@ for j,f in enumerate(flr):
     bo = plt.boxplot(binsf,0,'.',showmeans=True,positions=pos3)
     color_box(bo,cls[j])
     [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
     means.append([a.get_ydata()[0] for a in bo['means']])
     plt.plot(pos3,[a.get_ydata()[0] for a in bo['means']],
              's-',zorder=100,color=cls[j],label='{}/{} 4STAR [0.6-1.2km]'.format(d_rtn[j][4:6],d_rtn[j][6:8]),
              lw=2.5,alpha=0.2)    
     
 plt.plot(pos3,np.nanmean(np.array(means),axis=0),'s-k',label='4STAR mean [0.6-1.2km]')
+plt.text(0.5, 0.5, 'Preliminary',
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=plt.gca().transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.3)
 plt.legend(numpoints=1,frameon=True,bbox_to_anchor=(1.4,1.0))
 ti = plt.gca().set_xticks([0,2,4,6,8,10,12,14])
 tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
