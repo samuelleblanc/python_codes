@@ -605,6 +605,9 @@ def load_apr(datfiles):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-04-10, NASA Ames
+        Modified (v1.1): Samuel LeBlanc, 2016-11-15, NASA Ames
+                         - added Ka band (35 Ghz) reading from the file
+                         - and zenith dbz 
     """
     import os
     import numpy as np
@@ -621,26 +624,37 @@ def load_apr(datfiles):
         
         apr_value = (('lat',16),('lon',17),('alt',15),('time',13),('dbz',0),('lat3d',30),
                      ('lon3d',31),('alt3d',32),('lat3d_o',24),('lon3d_o',25),('alt3d_o',26),
-                     ('lat3d_s',27),('lon3d_s',28),('alt3d_s',29))
+                     ('lat3d_s',27),('lon3d_s',28),('alt3d_s',29),('dbz_35',3),('zen_dbz',4),
+                     ('alt3dz',41),('alt3dz_o',35),('alt3dz_s',38))
         apr,aprdicts = load_hdf(f,values=apr_value,verbose=False)
         # transform the 3d latitudes, longitudes, and altitudes to usable values
         apr['latz'] = apr['lat3d']/apr['lat3d_s']+apr['lat3d_o']
         apr['lonz'] = apr['lon3d']/apr['lon3d_s']+apr['lon3d_o']
         apr['altz'] = apr['alt3d']/apr['alt3d_s']+apr['alt3d_o']
+        apr['altzen'] = apr['alt3dz']/apr['alt3dz_s']+apr['alt3dz_o']
         apr['altflt'] = np.copy(apr['altz'])
+        apr['altfltz'] = np.copy(apr['altzen'])
         try:
             for z in range(apr['altz'].shape[0]):
                 apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+            for z in range(apr['altzen'].shape[0]):
+                apr['altfltz'][z,:,:] = apr['altzen'][z,:,:]+apr['alt'][z,:]
         except IndexError:
             try:
                 print 'swaping axes'
                 apr['altflt'] = np.swapaxes(apr['altflt'],0,1)
                 apr['altz'] = np.swapaxes(apr['altz'],0,1)
+                apr['altfltz'] = np.swapaxes(apr['altfltz'],0,1)
+                apr['altzen'] = np.swapaxes(apr['altzen'],0,1)
                 apr['latz'] = np.swapaxes(apr['latz'],0,1)
                 apr['lonz'] = np.swapaxes(apr['lonz'],0,1)
                 apr['dbz'] = np.swapaxes(apr['dbz'],0,1)
+                apr['dbz_35'] = np.swapaxes(apr['dbz_35'],0,1)
+                apr['zen_dbz'] = np.swapaxes(apr['zen_dbz'],0,1)
                 for z in range(apr['altz'].shape[0]):
                     apr['altflt'][z,:,:] = apr['altz'][z,:,:]+apr['alt'][z,:]
+                for z in range(apr['altzen'].shape[0]):
+                    apr['altfltz'][z,:,:] = apr['altzen'][z,:,:]+apr['alt'][z,:]
             except:
                 print 'Problem file:',f
                 print '... Skipping'
@@ -650,10 +664,14 @@ def load_apr(datfiles):
             print ' ... Skipping'
             continue
         izen = apr['altz'][:,0,0].argmax() #get the index of zenith
+        izenz = apr['altzen'][:,0,0].argmax() #get the index of zenith
         if first:
             aprout = dict()
             aprout['dbz'] = apr['dbz'][izen,:,:]
+            aprout['dbz_35'] = apr['dbz_35'][izen,:,:]
+            aprout['zen_dbz'] = apr['zen_dbz'][izenz,:,:]
             aprout['altflt'] = apr['altz'][izen,:,:]+apr['alt'][izen,:]
+            aprout['altfltz'] = apr['altzen'][izenz,:,:]+apr['alt'][izen,:]
             aprout['latz'] = apr['latz'][izen,:,:]
             aprout['lonz'] = apr['lonz'][izen,:,:]
             v = datetime.datetime.utcfromtimestamp(apr['time'][izen,0])
@@ -661,7 +679,10 @@ def load_apr(datfiles):
             first = False
         else:
             aprout['dbz'] = np.concatenate((aprout['dbz'].T,apr['dbz'][izen,:,:].T)).T
+            aprout['dbz_35'] = np.concatenate((aprout['dbz_35'].T,apr['dbz'][izen,:,:].T)).T
+            aprout['zen_dbz'] = np.concatenate((aprout['zen_dbz'].T,apr['zen_dbz'][izenz,:,:].T)).T
             aprout['altflt'] = np.concatenate((aprout['altflt'].T,(apr['altz'][izen,:,:]+apr['alt'][izen,:]).T)).T
+            aprout['altfltz'] = np.concatenate((aprout['altfltz'].T,(apr['altzen'][izenz,:,:]+apr['alt'][izen,:]).T)).T
             aprout['latz'] = np.concatenate((aprout['latz'].T,apr['latz'][izen,:,:].T)).T
             aprout['lonz'] = np.concatenate((aprout['lonz'].T,apr['lonz'][izen,:,:].T)).T
             v = datetime.datetime.utcfromtimestamp(apr['time'][izen,0])
