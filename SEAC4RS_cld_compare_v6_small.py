@@ -94,7 +94,7 @@ get_ipython().magic(u'matplotlib notebook')
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 
-# In[8]:
+# In[4]:
 
 vv = 'v6'
 
@@ -103,17 +103,17 @@ vv = 'v6'
 
 # ## get the retrieval results
 
-# In[4]:
+# In[5]:
 
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
-# In[5]:
+# In[6]:
 
 m_dict.keys()
 
 
-# In[6]:
+# In[7]:
 
 if not 'emas_tau_full' in vars():
     print 'not defined, loading from file'
@@ -128,35 +128,35 @@ if not 'emas_tau_full' in vars():
 
 # ## Now get the variability
 
-# In[12]:
+# In[8]:
 
 if not 'stats' in vars():
     stats = pickle.load(open(fp+'20130913_stats_output.p',"rb"))
 
 
-# In[13]:
+# In[9]:
 
 stats.keys()
 
 
-# In[14]:
+# In[10]:
 
 er2_utc = stats['er2_utc']
 
 
-# In[15]:
+# In[11]:
 
 stats['modis_tau'].keys()
 
 
 # ## Calculate some values based on the stats
 
-# In[16]:
+# In[12]:
 
 from scipy import interpolate
 
 
-# In[17]:
+# In[13]:
 
 # Do the tau
 modis_tau_stdfx = interpolate.interp1d(er2_utc,stats['modis_tau']['std'],bounds_error=False)
@@ -183,7 +183,7 @@ star_tau_std = star_tau_stdfx(star_utc)
 star_tau_std[np.isnan(star_tau_std)] = np.mean(stats['star_tau']['std'])
 
 
-# In[19]:
+# In[14]:
 
 # Do the ref
 modis_ref_stdfx = interpolate.interp1d(er2_utc,stats['modis_ref']['std'],bounds_error=False)
@@ -212,7 +212,7 @@ star_ref_std[np.isnan(star_ref_std)] = np.mean(stats['star_ref']['std'])
 
 # ## Load the CPL layers data
 
-# In[30]:
+# In[15]:
 
 cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
 import load_utils as lm
@@ -228,7 +228,7 @@ cpl_layers.dtype.names
 
 # ## Load the APR data
 
-# In[37]:
+# In[16]:
 
 fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
 fe = '_R23.h4'
@@ -236,25 +236,81 @@ files = ['180527','181019','182329','184933','190145','192149','194031']
 aprfiles = [fa+s+fe for s in files]
 
 
-# In[261]:
+# In[17]:
 
 import load_utils as lu
 
 
-# In[38]:
+# In[19]:
 
-from load_utils import load_apr
-apr = load_apr(aprfiles)
+apr = lu.load_apr(aprfiles)
+
+
+# ### Plot out the APR reflectivity
+
+# In[22]:
+
+plt.figure()
+plt.pcolor(apr['utc'],apr['altflt'],apr['dbz'])
+plt.plot(dc8['TIME_UTC'],dc8['G_ALT'],'k+')
+
+
+# In[23]:
+
+plt.figure()
+plt.pcolor(apr['utc'],apr['altflt'],apr['dbz_35'])
+plt.plot(dc8['TIME_UTC'],dc8['G_ALT'],'k+')
+
+
+# In[24]:
+
+plt.figure()
+plt.pcolor(apr['utc'],apr['altfltz'],apr['zen_dbz'])
+plt.plot(dc8['TIME_UTC'],dc8['G_ALT'],'k+')
+
+
+# ### Filter out the bad data from the reflectivity, and make -999 nans
+
+# In[82]:
+
+apr['dbz'] = apr['dbz'].astype(float)
+
+
+# In[83]:
+
+apr['dbz'][apr['dbz']<-100.0] = np.nan
+
+
+# In[73]:
+
+apr['altflt'].shape
+
+
+# In[76]:
+
+dc8['G_ALT'].shape
+
+
+# In[77]:
+
+apr['utc'].shape
+
+
+# In[90]:
+
+for i,t in enumerate(apr['utc']):
+    alt = dc8['G_ALT'][np.argmin(abs(dc8['TIME_UTC']-t))]
+    apr['dbz'][(apr['altflt'][:,i]<(alt+500))&(apr['altflt'][:,i]>(alt-500)),i] = np.nan
 
 
 # ## Load the 2DS data for effective radius
 
-# In[42]:
+# In[25]:
 
 twoDS = load_ict(fp+'dc8/20130913/seac4rs-2DS_DC8_20130913_R0.ict')
 
 
-# In[129]:
+# In[26]:
 
 # filter the data and only show a part
 twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
@@ -263,57 +319,57 @@ fl = np.where((twoDS['Start_UTC'] > 18.025) & (twoDS['Start_UTC'] < 19.45) & (tw
 
 # ## Load the HVPS data for effective radius (second in situ method)
 
-# In[43]:
+# In[27]:
 
 hvps = load_ict(fp+'dc8/20130913/SEAC4RS-HVPS_DC8_20130913_R0.ict')
 
 
 # ## Load the FCDP data
 
-# In[71]:
+# In[28]:
 
 fcdp_in,fcdp_header = load_ict(fp+'dc8/20130913/Seac4rs-FCDP_DC8_20130913_R0.ict',return_header=True)
 
 
-# In[72]:
+# In[29]:
 
 fcdp_header
 
 
 # ### Now from the FCDP distributions, calculate the effectve radius
 
-# In[73]:
+# In[30]:
 
 fcdp = {key: fcdp_in[key] for key in fcdp_in.dtype.names}
 
 
-# In[74]:
+# In[31]:
 
 fcdp['dr_m'] = np.array([0.0,1.0,3.2,9.4,12.0,15.6,17.7,19.8,22.4,25.8,28.8,30.9,32.7,34.4,36.4,38.7,41.3,42.9,44.7,47.1,50.0])
 fcdp['dr_p'] = np.array([1.0,3.2,9.4,12.0,15.6,17.7,19.8,22.4,25.8,28.8,30.9,32.7,34.4,36.4,38.7,41.3,42.9,44.7,47.1,50.0,100.0])
 
 
-# In[75]:
+# In[32]:
 
 fcdp['dr'] = fcdp['dr_p']-fcdp['dr_m']
 
 
-# In[78]:
+# In[33]:
 
 fcdp['mean_r'] = (fcdp['dr_p']+fcdp['dr_m'])/2.0
 
 
-# In[94]:
+# In[34]:
 
 fcdp['effD'] = np.zeros_like(fcdp['Start_UTC'])
 
 
-# In[82]:
+# In[35]:
 
 fcdp['bin_names'] = np.sort([k for k in fcdp.keys() if 'nbin' in k])
 
 
-# In[85]:
+# In[36]:
 
 fcdp['n_r'] = []
 for n in fcdp['bin_names']:
@@ -321,12 +377,12 @@ for n in fcdp['bin_names']:
 fcdp['n_r'] = np.array(fcdp['n_r'])
 
 
-# In[86]:
+# In[37]:
 
 fcdp['n_r'].shape
 
 
-# In[202]:
+# In[38]:
 
 for i in xrange(len(fcdp['Start_UTC'])):
     top = fcdp['mean_r']**3.0*fcdp['n_r'][:,i]*fcdp['dr']
@@ -339,14 +395,14 @@ for i in xrange(len(fcdp['Start_UTC'])):
 
 # ## Load the DC8 nav data
 
-# In[47]:
+# In[21]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
 
 # # Now make a plot of the time series for easier referencing
 
-# In[25]:
+# In[39]:
 
 plt.figure(figsize=(9,7))
 ax1 = plt.subplot(211)
@@ -395,17 +451,17 @@ plt.savefig(fp+'plots/20130911_retrieved_horz_var_{vv}.png'.format(vv=vv),dpi=60
 
 # ## Plot the vertical profile for 4 different times
 
-# In[212]:
+# In[40]:
 
 tt = np.array([18.5948,18.7082,18.8377,18.9911])
 
 
-# In[39]:
+# In[41]:
 
 ie,ir,iss,im,ist,ic,ig,iap = [],[],[],[],[],[],[],[]
 
 
-# In[40]:
+# In[42]:
 
 for i,t in enumerate(tt):
     ie.append(np.argmin(abs(emas_utc_full-t)))
@@ -418,12 +474,12 @@ for i,t in enumerate(tt):
     iap.append(np.argmin(abs(apr['utc']-t)))
 
 
-# In[181]:
+# In[43]:
 
 iie,iir,iiss,iim,iist,iic,iig,iiap = [],[],[],[],[],[],[],[]
 
 
-# In[186]:
+# In[44]:
 
 # get the ranges in values
 for i,t in enumerate(tt):
@@ -461,7 +517,7 @@ for i,t in enumerate(tt):
 
 # ### Update the plot with HVPS and FCDP
 
-# In[108]:
+# In[45]:
 
 plt.figure()
 for i,t in enumerate(tt):
@@ -484,17 +540,17 @@ for i,t in enumerate(tt):
 
 # ### Now bin the in situ cloud probes reff values
 
-# In[152]:
+# In[46]:
 
 alt_bin_lims = np.linspace(6000,12000,16)
 
 
-# In[153]:
+# In[47]:
 
 alt_pos = (alt_bin_lims[0:-1]+alt_bin_lims[1:])/2.0
 
 
-# In[154]:
+# In[48]:
 
 fcdp_bins = []
 twods_bins = []
@@ -506,7 +562,7 @@ for i,c in enumerate(alt_bin_lims[0:-1]):
     hvps_bins.append(hvps['effectiveD'][fl][alt_fl]/2.0)
 
 
-# In[155]:
+# In[49]:
 
 def color_box(bp, color):
 
@@ -519,7 +575,7 @@ def color_box(bp, color):
     return
 
 
-# In[156]:
+# In[50]:
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -546,7 +602,7 @@ ax.set_ylabel('Altitude [km]')
 ax.set_xlabel('Effective Radius [$\\mu$m]')
 
 
-# In[241]:
+# In[51]:
 
 def plot_vert_cloud_probes(ax):
     bo = ax.boxplot(fcdp_bins,0,'.',0,showmeans=True,positions=alt_pos,widths=3.0)
@@ -570,12 +626,12 @@ def plot_vert_cloud_probes(ax):
 
 # ### Now plot at each time point, use averages for remote sensing
 
-# In[195]:
+# In[52]:
 
 iie[0]
 
 
-# In[213]:
+# In[53]:
 
 emas_r,rsp_r,ssfr_r = np.zeros_like(tt),np.zeros_like(tt),np.zeros_like(tt)
 modis_r,star_r,goes_r = np.zeros_like(tt),np.zeros_like(tt),np.zeros_like(tt)
@@ -588,13 +644,13 @@ for i,t in enumerate(tt):
     goes_r[i] = np.nanmean(goes_ref[iig[i][1]:iig[i][0]])
 
 
-# In[222]:
+# In[54]:
 
 for i,t in enumerate(tt):
     print i,t
 
 
-# In[259]:
+# In[55]:
 
 plt.figure(figsize=(12,4))
 ax = plt.subplot(1,5,1)
@@ -647,12 +703,12 @@ plt.tight_layout()
 # IWC = 7.49*Z**0.78
 
 
-# In[264]:
+# In[56]:
 
 apr.keys()
 
 
-# In[260]:
+# In[57]:
 
 plt.figure(figsize=(12,4))
 ax = plt.subplot(1,5,1)
@@ -662,9 +718,9 @@ for i,t in enumerate(tt):
     ax = plt.subplot(1,5,i+1,sharey=ax)
     plot_vert_cloud_probes(ax)
     
-    plt.plot(cpl_layers['',cpl_layers['dbz'][ic[i]])
-    
-    
+    ax1 = ax.twiny()
+    ax1.plot(7.49*np.nanmean(apr['dbz'][:,iiap[i][1]:iiap[i][0]],axis=1)**0.78,
+             np.nanmean(apr['altflt'][:,iiap[i][1]:iiap[i][0]],axis=1),'.')
     
     ax.set_title('UTC: {:2.2f}'.format(t))
     if i==0:
@@ -684,7 +740,237 @@ plt.legend(frameon=True,bbox_to_anchor=[2.0,1],numpoints=1)
 plt.tight_layout()
 
 
+# In[58]:
+
+apr['altflt'].shape
+
+
+# In[61]:
+
+plt.figure()
+for i,t in enumerate(tt):
+    plt.plot(7.49*apr['dbz'][:,iap[i]]**0.78,
+             apr['altflt'][:,iap[i]],'-+')
+
+
+# In[65]:
+
+plt.figure()
+for i,t in enumerate(tt):
+    ax = plt.subplot(4,1,i+1)
+    ax.pcolor(apr['utc'][iiap[i][1]:iiap[i][0]],apr['altflt'][:,iiap[i][1]:iiap[i][0]],apr['dbz'][:,iiap[i][1]:iiap[i][0]])
+
+
+# In[91]:
+
+plt.figure()
+for i,t in enumerate(tt):
+    ax = plt.subplot(1,4,i+1)
+    #print range(iiap[i][1],iiap[i][0])
+    for j in range(iiap[i][1],iiap[i][0]):
+        ax.plot(apr['dbz'][:,j],apr['altflt'][:,j],'.')
+        
+    #ax.pcolor(apr['utc'][iiap[i][1]:iiap[i][0]],apr['altflt'][:,iiap[i][1]:iiap[i][0]],apr['dbz'][:,iiap[i][1]:iiap[i][0]])
+
+
+# In[63]:
+
+apr['dbz'].shape
+
+
+# In[168]:
+
+altp_bin_lims = np.linspace(0,16000,32)
+altp_pos = (altp_bin_lims[0:-1]+altp_bin_lims[1:])/2.0
+pbins = []
+apr_bins = []
+ibins = []
+apr_iwc_bins = []
+for j,c in enumerate(altp_bin_lims[0:-1]):
+    for i,t in enumerate(tt):
+        alt_fl = (apr['altflt'][:,iiap[i][1]]>=c)&(apr['altflt'][:,iiap[i][1]]<altp_bin_lims[j+1])
+        dbz = apr['dbz'][alt_fl,iiap[i][1]:iiap[i][0]].flatten()
+        dbz = dbz[np.isfinite(dbz)]
+        pbins.append(dbz)
+        iwc = 7.49*dbz**0.78
+        iwc = iwc[np.isfinite(iwc)]
+        ibins.append(iwc)
+    apr_bins.append(pbins)
+    apr_iwc_bins.append(ibins)
+    pbins = []
+    ibins = []
+
+
+# In[169]:
+
+altp_pos.shape
+apr_bins = np.array(apr_bins)
+apr_iwc_bins = np.array(apr_iwc_bins)
+
+
+# In[171]:
+
+plt.figure()
+for i,t in enumerate(tt):
+    ax = plt.subplot(1,4,i+1)
+    bo = ax.boxplot(apr_iwc_bins[:,i],0,'.',0,showmeans=True,positions=altp_pos,widths=3.0)
+    color_box(bo,'orange')
+    [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+    plt.plot([a.get_xdata()[0] for a in bo['means']],altp_pos,'s-',zorder=100,color='orange',label='APR-2',lw=2.0,alpha=0.6)
+    plt.setp(ax.get_yticklabels(), visible=False)
+    #ti = ax.set_yticks([6000,8000,10000,12000,14000,16000])
+    #tl = ax.set_yticklabels([6,8,10,12,14,16])
+    #print range(iiap[i][1],iiap[i][0])
+    #for j in range(iiap[i][1],iiap[i][0]):
+    #    ax.plot(apr['dbz'][:,j],apr['altflt'][:,j],'.')
+
+
+# In[173]:
+
+plt.figure(figsize=(12,4))
+ax = plt.subplot(1,5,1)
+#ti = ax.set_yticks([6000,7000,8000,9000,10000,11000,12000])
+#tl = ax.set_yticklabels([6,7,8,9,10,11,12])
+for i,t in enumerate(tt):
+    ax = plt.subplot(1,5,i+1,sharey=ax)
+    plot_vert_cloud_probes(ax)
+    
+    ax1 = ax.twiny()
+    bo = ax1.boxplot(apr_iwc_bins[:,i],0,'.',0,showmeans=True,positions=altp_pos,widths=3.0)
+    color_box(bo,'orange')
+    [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+    ax1.plot([a.get_xdata()[0] for a in bo['means']],altp_pos,'s-',zorder=1,color='orange',label='APR-2',lw=2.0,alpha=0.6)
+    ax.plot([],[],'s-',zorder=1,color='orange',label='APR-2',lw=2.0,alpha=0.6)
+    
+    ax.axvline(emas_r[i],ymin=0.9,ymax=1,color='k',label='eMAS',lw=4)
+    ax.axvline(rsp_r[i],ymin=0.9,ymax=1,color='c',label='RSP',lw=4)    
+    ax.axvline(ssfr_r[i],ymin=0.9,ymax=1,color='g',label='SSFR',lw=4)
+    ax.axvline(modis_r[i],ymin=0.9,ymax=1,color='m',label='MODIS',lw=4)
+    ax.axvline(star_r[i],ymin=0.0,ymax=0.1,color='r',label='4STAR',lw=4)
+    ax.axvline(goes_r[i],ymin=0.9,ymax=1,color='b',label='GOES',lw=4)
+    
+    ax.axvspan(rsp_r[i]-rsp_ref_std[ir[i]]*2.0,rsp_r[i]+rsp_ref_std[ir[i]]*2.0,ymin=0.93,ymax=1.0,color='k',alpha=0.2)
+    ax.axvspan(ssfr_r[i]-ssfr_ref_std[iss[i]]*2.0,ssfr_r[i]+ssfr_ref_std[iss[i]]*2.0,ymin=0.93,ymax=1.0,color='c',alpha=0.2)
+    ax.axvspan(modis_r[i]-modis_ref_std[im[i]]*2.0,modis_r[i]+modis_ref_std[im[i]]*2.0,ymin=0.93,ymax=1.0,color='g',alpha=0.2)
+    ax.axvspan(star_r[i]-star_ref_std[ist[i]]*2.0,star_r[i]+star_ref_std[ist[i]]*2.0,ymin=0.0,ymax=0.07,color='m',alpha=0.2)
+    ax.axvspan(goes_r[i]-goes_ref_std[ig[i]]*2.0,goes_r[i]+goes_ref_std[ig[i]]*2.0,ymin=0.93,ymax=1.0,color='b',alpha=0.2)
+    
+    ax.axhline(cpl_layers['top'][ic[i]][0],color='y',label='Cloud top [CPL]',lw=4)
+    
+    #ax.plot(smooth(apr['dbz'][:,iap[i]],20),apr['altflt'][:,iap[i]],label='APR-2')
+    ax.set_title('UTC: {:2.2f}'.format(t))
+    if i==0:
+        ax.set_ylabel('Altituce [km]')
+        #ax.set_ylim(6000,12000)
+        ti = ax.set_yticks([6000,7000,8000,9000,10000,11000,12000])
+        tl = ax.set_yticklabels([6,7,8,9,10,11,12])
+    else: 
+        #ti = ax.set_yticks([6000,7000,8000,9000,10000,11000,12000])
+        plt.setp(ax.get_yticklabels(), visible=False)
+        
+    ax.set_xlabel('r$_{eff}$ [$\\mu$m]')
+ti = ax.set_yticks([6000,8000,10000,12000,14000,16000])
+tl = ax.set_yticklabels([6,8,10,12,14,16])
+ax.set_ylim(6000,17000)
+h1, l1 = ax.get_legend_handles_labels()
+plt.legend(h1,l1,frameon=True,bbox_to_anchor=[2.0,1.02],numpoints=1)
+plt.tight_layout()
+
+
+# ### Try it out, but using PCA to get representative radar reflectivities
+
+# In[174]:
+
+from sklearn.decomposition import PCA
+
+
+# In[186]:
+
+apr_dbz = apr['dbz'].copy()
+
+
+# In[187]:
+
+apr_dbz[np.isnan(apr_dbz)] = -999
+
+
+# In[194]:
+
+apr_dbz.shape
+
+
+# In[195]:
+
+pca = PCA(n_components=7)
+papr = pca.fit(apr_dbz[:,iiap[0][1]:iiap[0][0]].T)
+
+
+# In[198]:
+
+papr.components_.shape
+
+
+# In[205]:
+
+plt.figure()
+for i in xrange(5):
+    plt.plot(papr.components_[i,:],apr['altflt'][:,iap[0]],'.',label='{}'.format(i))
+plt.legend(numpoints=1)
+
+
+# #looks like not a good solution going forward. 
+
+# ### Now try to get a prototype member using knn and centroid analysis
+
+# In[208]:
+
+from sklearn.neighbors.nearest_centroid import NearestCentroid
+
+
+# In[209]:
+
+apr_dbz[:,iiap[0][1]:iiap[0][0]].T.shape
+
+
+# In[217]:
+
+ncc_sum = np.sum(apr_dbz[:,iiap[0][1]:iiap[0][0]],axis=0)
+ncc_set = ncc_sum.copy()*0.0
+ncc_set[ncc_sum>0] = 1.0
+
+
+# In[218]:
+
+nc = NearestCentroid()
+ncc = nc.fit(apr_dbz[:,iiap[0][1]:iiap[0][0]].T,ncc_set)
+
+
+# In[220]:
+
+ncc.centroids_[1]
+
+
+# In[237]:
+
+plt.figure()
+#plt.plot(ncc.centroids_[0],apr['altflt'][:,iap[0]],'.')
+plt.plot(ncc.centroids_[1],apr['altflt'][:,iap[0]],'.')
+
+
+# In[223]:
+
+ncc_set
+
+
+# In[235]:
+
+plt.figure()
+plt.plot(apr_dbz[:,iiap[0][1]:iiap[0][0]][:,30],apr['altflt'][:,iap[0]],'.')
+
+
 # In[ ]:
 
-apr_
+
 
