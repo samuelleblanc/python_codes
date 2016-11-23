@@ -111,6 +111,8 @@
 #             - added making a movie with the results
 #             - added filtering of data prior to ensure good retrievals
 #     Modified: Samuel LeBlanc, NASA Ames, 2016-10-20
+#     Modified: Samuel LeBlanc, Santa Cruz, 2016-11-22
+#             - added keyword for subsetting the hires parameters to a smaller range of ref and tau values defined by user
 #             
 
 # In[ ]:
@@ -151,6 +153,10 @@ parser.add_argument('-noflt','--nofilter',help='if set, will not filter out bad 
                     action='store_true')
 parser.add_argument('-db','--debug',help='if set, turn on debug comments and set_trace() at a few locations',
                     action='store_true')
+parser.add_argument('-refrange','--refrange',help='Sets the range of effective radius to be used in the lut [start end]',
+                    nargs=2,type=float)
+parser.add_argument('-taurange','--taurange',help='Sets the range of optical depth to be used in the lut [start end]',
+                    nargs=2,type=float)
 
 
 # In[70]:
@@ -268,6 +274,22 @@ make_movie = in_.get('makemovie',False)
 no_filter = in_.get('nofilter',False)
 debug = in_.get('debug',False)
 make_slides = in_.get('makeslides',False)
+refrange = in_.get('refrange')
+taurange = in_.get('taurange')
+
+
+# In[ ]:
+
+if refrange:
+    start_ref = refrange[0]
+    end_ref = refrange[1]
+else:
+    start_ref,end_ref = None,None
+if taurange:
+    start_tau = taurange[0]
+    end_tau = taurange[1]
+else:
+    start_tau,end_tau = None,None
 
 
 # # Load starzen files and the look up table
@@ -396,7 +418,7 @@ for s in xrange(len(luts['sza'])):
     ltemp = Sp.Sp(sptemp,verbose=False)
     if s in idx:
         ltemp.params(liq_only=forceliq)
-        ltemp.param_hires()
+        ltemp.param_hires(start_ref=start_ref,end_ref=end_ref,start_tau=start_tau,end_tau=end_tau)
     lut.append(ltemp)
 
 

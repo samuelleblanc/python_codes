@@ -422,6 +422,9 @@ class Sp:
                     - added a method for assuring the utc input, and getting a new datestr object for the measurement
     Modified (v1.5): Samuel LeBlanc, Santa Cruz, CA, 2016-10-21
                     - added liquid only keyword for when using the param on lut, to copy the liq lut values to ice
+    Modified (v1.6): Samuel LeBlanc, Santa Cruz, CA, 2016-11-22
+                    - added keyword for hires params to subset the ref and tau ranges
+                    - added keys() method for listing the methods of this class in a dict-like way.
 
     """    
     import numpy as np
@@ -488,6 +491,10 @@ class Sp:
     def __getitem__(self,i):
         'Method to call only the variables in the SP class like a dict'
         return self.__dict__.get(i)
+    
+    def keys(self):
+        'Method to wrap the dict call to the SP class object'
+        return self.__dict__.keys()
     
     def get_utc_datestr(self,s):
         'Method to return the utc and datestr'
@@ -568,8 +575,16 @@ class Sp:
         self.par = par
         return
     
-    def param_hires(self):
-        " Runs through the parameter space and interpolates to create a hires res version, should be run instead of sp_hires "
+    def param_hires(self,start_ref=None,end_ref=None,start_tau=None,end_tau=None):
+        """ 
+        Runs through the parameter space and interpolates to create a hires version, should be run instead of sp_hires 
+        
+        input:
+            start_ref: the starting point of the hires ref array (defaults to first ref array from original data)
+            end_ref: the ending point of the hires ref array (defaults to last ref array+1.0 from original data)
+            start_tau: first point in tau hires array (defaults to first tau from original data) 
+            end_tau: last value of hires tau array (defaults to last tau of original data)
+        """
         from Sp_parameters import param
         from scipy import interpolate
         if self.verbose: print('Running parameter hires')
@@ -580,9 +595,24 @@ class Sp:
         ref = self.ref
         par = self.par
         if self.sp.ndim == 5:
-            tau_hires = np.concatenate((np.arange(self.tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),
-                                        np.arange(4.0,self.tau[-1]+1.0,1.0)))
-            ref_hires = np.arange(self.ref[0],self.ref[-1]+1.0)
+            try:
+                if not start_ref:
+                    start_ref = self.ref[0]
+                if not end_ref:
+                    end_ref = self.ref[-1]+1.0
+                if not start_tau:
+                    start_tau = self.tau[0]    
+                if not end_tau:
+                    end_tau = self.tau[-1]+1.0
+            except ValueError:
+                print 'subsetting the hires params failed, using the data defaults'
+                start_ref = self.ref[0]
+                end_ref = self.ref[-1]+1.0
+                start_tau = self.tau[0] 
+                end_tau = self.tau[-1]+1.0
+            tau_hires = np.concatenate((np.arange(start_tau,1.0,0.1),np.arange(1.0,4.0,0.5),
+                                        np.arange(4.0,end_tau,1.0)))
+            ref_hires = np.arange(start_ref,end_ref)
             if self.verbose: print tau_hires.shape
             if self.verbose: print ref_hires.shape
             import gc; gc.collect()
