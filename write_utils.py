@@ -107,6 +107,8 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
         
     Modification History:
         Written: Samuel LeBlanc, NASA Ames, Santa Cruz, 2016-03-25, Holy Friday
+        Modified: Samuel LeBlanc, Santa Cruz, CA, 2016-11-28
+                  - fixed non matching format of missing value and actual value
     """
     # module loads
     import numpy as np
@@ -142,8 +144,19 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     head = merge_dicts(def_dict,header_dict)
     
     # Compile the header information and verify some inputs
-    head['data_head'] = ','.join(('1 '*head['num_data']).split())+'\n'+                               ','.join(('{missing_val} '*head['num_data']).split()).format(**head)
+    if not order:
+        order = data_dict.keys() 
     head['data_format'] = '{t:.0f}'
+    head['data_head'] = ','.join(('1 '*head['num_data']).split())+'\n'
+    for n in order:
+        if not n==head['indep_var_name']:
+            head['fmt'] = data_dict[n].get('format',default_format)
+            head['data_format'] = head['data_format']+',{:'+'{fmt}'.format(fmt=head['fmt'])+'}'
+            head['data_head'] = head['data_head']+'{missing_val:{fmt}},'.format(**head)
+    head['data_head'] = head['data_head'][:-1]    
+                        #+\
+                        #','.join(('{missing_val} '*head['num_data']).split()).format(**head)
+    
     head['data_names'] = '{indep_var_name}'.format(**head)
     nv = head['indep_var_name']
     head['indep_var_unit'],head['indep_var_desc'] = data_dict[nv]['unit'],data_dict[nv]['long_description']
@@ -157,19 +170,17 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     Have the current revision identifier in the top place ***"""
         print '*** exiting, file not saved ***'
         return 
-    dnames = []
-    if not order:
-        order = data_dict.keys()            
+    dnames = []           
     for n in order:
         print n
         if not n==head['indep_var_name']:
             stemp = '{n}, {unit}, {long_description}'.format(n=n,**data_dict[n])
             head['data_head'] = head['data_head']+'\n'+stemp
-            if 'format' in data_dict[n]:
-                fmt = data_dict[n]['format']
-            else:
-                fmt = default_format
-            head['data_format'] = head['data_format']+',{:'+'{fmt}'.format(fmt=fmt)+'}'
+            #if 'format' in data_dict[n]:
+            #    fmt = data_dict[n]['format']
+            #else:
+            #    fmt = default_format
+            #head['data_format'] = head['data_format']+',{:'+'{fmt}'.format(fmt=fmt)+'}'
             head['data_names'] = head['data_names']+','+n
             dnames.append(str(n))
     try:
