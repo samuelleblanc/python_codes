@@ -540,3 +540,76 @@ def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
     print 'Saving to: {}{}.pptx'.format(filepath,filename)
     prs.save(filepath+'%s.pptx' % filename)
 
+
+# In[1]:
+
+def color_box(bp, color):
+    'Coloring of all the elements of a box plot'
+    import mnatplotlib.pyplot as plt
+    
+    # Define the elements to color. You can also add medians, fliers and means
+    elements = ['boxes','caps','whiskers','medians','means','fliers']
+
+    # Iterate over each of the elements changing the color
+    for elem in elements:
+        [plt.setp(bp[elem][idx], color=color) for idx in xrange(len(bp[elem]))]
+    return
+
+
+# In[ ]:
+
+def subset_bins(vals,val_lim,lims):
+    'create the subsetted bins of values'
+    bins = []
+    for i,c in enumerate(lims[0:-1]):
+        val_fl = (val_lim>=c)&(val_lim<lims[i+1])
+        bins.append(vals[val_fl])
+    return bins
+
+
+# In[ ]:
+
+def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None):
+    'Compile the functions to make a box plot'
+
+    import matplotlib.pyplot as plt
+    from plotting_utils import subset_bins, color_box
+    
+    if not ax:
+        ax = plt.gca()
+        
+    ti = ax.get_xticks()
+    tl = ax.get_xticklabels()
+    
+    bins = subset_bins(vals,val_lim,lims)
+    
+    bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos)
+    color_box(bo,color)
+    for n in bo.keys():
+        nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in xrange(len(bo[n]))]
+    u = [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+    mean = [a.get_ydata()[0] for a in bo['means']]
+    ax.plot(pos, mean,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+    
+    #plt.gca().xaxis.set_major_locator(AutoLocator())
+    #plt.gca().xaxis.set_major_locator(AutoLocator)
+    ti1 = ax.set_xticks(ti)
+    tl1 = ax.set_xticklabels([t for t in ti])
+    
+    return mean
+
+
+# In[ ]:
+
+def prelim(ax=None):
+    'Stamp prelim in center of the plot'
+    import matplotlib.pyplot as plt
+    if not ax:
+        ax = plt.gca()
+    
+    ax.text(0.5, 0.5, 'Preliminary',
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax.transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.3)
+
