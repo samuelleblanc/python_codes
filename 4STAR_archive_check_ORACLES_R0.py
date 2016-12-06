@@ -347,9 +347,26 @@ import hdf5storage as hs
 hs.savemat(fp+'/aod_ict/all_aod_ict.mat',ar)
 
 
+# ## Optionally load the file
+
+# In[1]:
+
+import hdf5storage as hs
+
+
+# In[8]:
+
+ar = hs.loadmat(fp+'/aod_ict/all_aod_ict.mat')
+
+
 # ## Plot a histogram of all the AOD
 
-# In[78]:
+# In[10]:
+
+from plotting_utils import prelim
+
+
+# In[11]:
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
@@ -360,6 +377,7 @@ plt.xlabel('AOD at 501 nm')
 plt.ylabel('Counts')
 plt.grid()
 plt.title('Above clouds AOD distribution cloud filtered')
+prelim()
 plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
 
