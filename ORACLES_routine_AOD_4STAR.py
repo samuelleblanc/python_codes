@@ -752,7 +752,7 @@ for i,a in enumerate(daac):
 np.nanmean(ac,axis=0).shape
 
 
-# In[50]:
+# In[51]:
 
 plt.figure(figsize=(11,6))
 plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AODFM_CLIMOMEAN'].data[0,:],
@@ -802,6 +802,58 @@ box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.78, box.height])
 
 plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_and_Meyer_AAC.png',transparent=True,dpi=600)
+
+
+# In[52]:
+
+plt.figure(figsize=(11,6))
+plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AODFM_CLIMOMEAN'].data[0,:],
+         '*-',color='r',label='MODIS Fine mode climatology',zorder=50,lw=2.5)
+plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AOD_CLIMOMEAN'].data[0,:],
+         '*-',color='b',label='MODIS Total AOD climatology',zorder=51,lw=2.5)
+plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['AODFM_YRMEAN'].data[0,:,0],
+         'x-',color='grey',alpha=0.1,zorder=10,label='MODIS Yearly averages')
+plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['AODFM_YRMEAN'].data[0,:,:],'x-',color='grey',alpha=0.1,zorder=10)
+plt.ylabel('AOD 500 nm')
+plt.ylim(0,0.8)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.title('AOD above clouds along routine flight path')
+means = []
+
+for j,f in enumerate(flr):
+    binsf = []
+    for i,c in enumerate(lims3[0:-1]):
+        lon_fl = (s['Longitude'][f]>=c)&(s['Longitude'][f]<lims3[i+1])
+        binsf.append(s['AOD0501'][f][lon_fl])
+    #plt.plot(s['Longitude'][f],s['AOD0501'][f],'.',color=cls[j],alpha=0.02)
+    bo = plt.boxplot(binsf,0,'.',showmeans=True,positions=pos3)
+    color_box(bo,cls[j])
+    [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+    means.append([a.get_ydata()[0] for a in bo['means']])
+    plt.plot(pos3,[a.get_ydata()[0] for a in bo['means']],
+             's-',zorder=100,color=cls[j],label='{}/{} 4STAR [0.6-1.2km]'.format(d_rtn[j][4:6],d_rtn[j][6:8]),
+             lw=2.5,alpha=0.2)    
+    
+ac = []
+for i,a in enumerate(daac):
+    plt.plot(a['BinCenter'][0,:],a['meanAODperbin'][1:,0],'x--',lw=1,color=cls[i],alpha=0.4)
+    ac.append(a['meanAODperbin'][1:,0])
+plt.plot(a['BinCenter'][0,:],a['meanAODperbin'][1:,0],'x--',lw=1,color='k',alpha=0.4,label='MODIS AAC [Meyer] daily avg.')
+plt.plot(a['BinCenter'][0,:],np.nanmean(ac,axis=0),'^-',lw=3,color='darkgreen',label='MODIS AAC [Meyer] mean')
+    
+plt.plot(pos3,np.nanmean(np.array(means),axis=0),'s-k',lw=3.5,label='4STAR mean [0.6-1.2km]')
+plt.text(0.5, 0.5, 'Preliminary',
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=plt.gca().transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.3)
+#plt.legend(numpoints=1,frameon=True,bbox_to_anchor=(1.45,1.05))
+ti = plt.gca().set_xticks([0,2,4,6,8,10,12,14])
+tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
+box = plt.gca().get_position()
+plt.gca().set_position([box.x0, box.y0, box.width * 0.78, box.height])
+
+plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_and_Meyer_AAC_noleg.png',transparent=True,dpi=600)
 
 
 # In[ ]:
