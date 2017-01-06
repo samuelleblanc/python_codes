@@ -326,7 +326,7 @@ plt.legend(numpoints=1)
 plt.savefig(fp+'plot\\MODIS_Climatology_vs_4STAR_cld_ref.png',transparent=True,dpi=600)
 
 
-# In[122]:
+# In[150]:
 
 plt.figure(figsize=(11,6))
 plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['RE_CLIMOMEAN'].data[0,:],
@@ -348,7 +348,7 @@ plt.plot(pos3,smooth(np.nanmean(np.array(means),axis=0),6),'s--',color='grey',lw
 plt.ylabel('R$_{{eff}}$ [$\\mu$m]')
 plt.ylim(0,25)
 plt.xlabel('Longitude [$^\\circ$]')
-plt.title('Effective radius clouds along routine flight path')
+plt.title('Effective radius for clouds along routine flight path')
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.78, box.height])
