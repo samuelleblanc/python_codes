@@ -40,7 +40,7 @@
 
 # # Prepare the python environment
 
-# In[1]:
+# In[13]:
 
 import numpy as np
 import scipy.io as sio
@@ -60,12 +60,12 @@ fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
 # # Get the possible aerosol values
 
-# In[21]:
+# In[4]:
 
 aero = []
 
 
-# In[22]:
+# In[5]:
 
 # from original first try at aerosol properties
 aero.append({'z_arr':[2.0,5.0],
@@ -78,7 +78,7 @@ aero.append({'z_arr':[2.0,5.0],
            'label':'v1'})
 
 
-# In[23]:
+# In[6]:
 
 # from aeeronet at St helena on 2016-09-03
 aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
@@ -87,7 +87,7 @@ aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
              'label':'St_helena'})
 
 
-# In[24]:
+# In[7]:
 
 # from aeronet at Ascension on 2016-09-08
 aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
@@ -96,7 +96,7 @@ aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
             'label':'Ascension'})
 
 
-# In[25]:
+# In[8]:
 
 # from aeronet at Namibe on 2016-09-13
 aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
@@ -105,7 +105,7 @@ aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
             'label':'Namibe'})
 
 
-# In[26]:
+# In[9]:
 
 # from aeronet at Lubango on 2016-09-14
 aero.append({'ssa':np.array([0.867600,0.832200,0.795800,0.777500]),
@@ -114,7 +114,7 @@ aero.append({'ssa':np.array([0.867600,0.832200,0.795800,0.777500]),
                'label':'Lubango'})
 
 
-# In[28]:
+# In[10]:
 
 # saved merge properties from the above
 aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
@@ -125,12 +125,28 @@ aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
 
 # ## Plot the aerosol properties
 
-# In[29]:
+# In[11]:
 
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212,sharex=ax1)
 for d in aero:
+    ax1.plot(d['wvl_arr'],d['ssa'],'x-',label=d['label'])
+    ax2.plot(d['wvl_arr'],d['asy'],'o-',label=d['label'])
+ax2.set_xlabel('Wavelength [nm]')
+ax1.set_ylabel('SSA')
+ax2.set_ylabel('ASY')
+ax1.legend(frameon=False,numpoints=1)
+
+
+# In[12]:
+
+fig = plt.figure()
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212,sharex=ax1)
+for d in aero:
+    if d['label'] in ['v1','v3']:
+        break
     ax1.plot(d['wvl_arr'],d['ssa'],'x-',label=d['label'])
     ax2.plot(d['wvl_arr'],d['asy'],'o-',label=d['label'])
 ax2.set_xlabel('Wavelength [nm]')
