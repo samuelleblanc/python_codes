@@ -523,6 +523,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
 def dict_keys_to_unicode(d):
     'Change the dict keys to be unicode'
     out = dict()
+    if not type(d) is dict:
+        return d
     for k, v in d.items():
         out[k.decode()] = v
     return out
@@ -537,7 +539,10 @@ def iterate_dict_unicode(dt):
         if type(dt[n]) is list:
             print n
             for i,t in enumerate(dt[n]):
-                dt[n][i] = dict_keys_to_unicode(t)
+                try:
+                    dt[n][i] = dict_keys_to_unicode(t)
+                except:
+                    print 'problem with {}'.format(n)
         else:
             print 'no',n
             dt[n] = dict_keys_to_unicode(dt[n])
