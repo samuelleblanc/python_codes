@@ -285,8 +285,7 @@ else:
         star_aero_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
         star_aero_CRE['up'][i,:] = s['diffuse_up']
         star_aero_CRE_clear['up'][i,:] = sc['diffuse_up']
-        star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) - 
-                           (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
+        star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) -                            (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
         
         f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
         sn = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
@@ -297,8 +296,7 @@ else:
         star_noaero_CRE_clear['dn'][i,:] = snc['diffuse_down']+snc['direct_down']
         star_noaero_CRE['up'][i,:] = sn['diffuse_up']
         star_noaero_CRE_clear['up'][i,:] = snc['diffuse_up']
-        star_noaero_C[i,:] = (star_noaero_CRE['dn'][i,:]-star_noaero_CRE['up'][i,:]) - 
-                             (star_noaero_CRE_clear['dn'][i,:]-star_noaero_CRE_clear['up'][i,:])
+        star_noaero_C[i,:] = (star_noaero_CRE['dn'][i,:]-star_noaero_CRE['up'][i,:]) -                              (star_noaero_CRE_clear['dn'][i,:]-star_noaero_CRE_clear['up'][i,:])
 
 
 # In[ ]:
