@@ -931,6 +931,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             raise ValueError('phase value in cloud dict not recognised')
         if cloud['write_moments_file']:
+            if not 'ext' in aero:
+                output.write('disort_intcor moments\n') 
             if not cloud.get('link_to_mom_file'):
                 write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
                                          verbose=verbose,moms_dict=cloud.get('moms_dict'))
