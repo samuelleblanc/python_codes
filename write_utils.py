@@ -532,7 +532,7 @@ def dict_keys_to_unicode(d):
 
 def iterate_dict_unicode(dt):
     'Iterate through a dict object/objects to change all dict to unicode keys'
-    import dict_keys_to_unicode from write_utils
+    from write_utils import dict_keys_to_unicode
     for n in dt.keys():
         if type(dt[n]) is list:
             print n
