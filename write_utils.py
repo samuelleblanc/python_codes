@@ -517,3 +517,29 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         print 'plotting {}'.format(n)
         fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_{n}.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n),dpi=600,transparent=True)
 
+
+# In[1]:
+
+def dict_keys_to_unicode(d):
+    'Change the dict keys to be unicode'
+    out = dict()
+    for k, v in d.items():
+        out[k.decode()] = v
+    return out
+
+
+# In[ ]:
+
+def iterate_dict_unicode(dt):
+    'Iterate through a dict object/objects to change all dict to unicode keys'
+    import dict_keys_to_unicode from write_utils
+    for n in dt.keys():
+        if type(dt[n]) is list:
+            print n
+            for i,t in enumerate(dt[n]):
+                dt[n][i] = dict_keys_to_unicode(t)
+        else:
+            print 'no',n
+            dt[n] = dict_keys_to_unicode(dt[n])
+    return dt
+
