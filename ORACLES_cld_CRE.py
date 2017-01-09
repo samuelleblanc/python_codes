@@ -45,11 +45,6 @@
 
 # In[46]:
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
-import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
-import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib notebook')
 import numpy as np
 import hdf5storage as hs
 import os
@@ -84,9 +79,34 @@ elif os.sys.platform == 'linux2':
     fp_rtm = '/nobackup/sleblan2/rtm/'
     fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
     fp_rtmdat = '/nobackup/sleblan2/AAC_DARF/rtm/' #'/u/sleblan2/4STAR/rtm_dat/'
-    matfile = fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr)
+    matfile = fp+'{}_all_cld_ict.mat'.format(vr)
 else:
     raise Exception
+
+
+# ## Set up for command line arguments
+
+# In[75]:
+
+import argparse
+
+
+# In[76]:
+
+long_description = """    Prepare the Cloud radiative effect files for calculations and thn save them using the doread argument"""
+
+
+# In[ ]:
+
+parser = argparse.ArgumentParser(description=long_description)
+parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
+                    action='store_true')
+
+
+# In[ ]:
+
+in_ = vars(parser.parse_args())
+do_read = in_.get('doread',False)
 
 
 # # Load the saved files
@@ -143,6 +163,8 @@ cloud['phase'] = 'wc'
 geo['sza'] = 40.0
 cloud['tau'] = 2.0
 cloud['ref'] = 5.0
+pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
+cloud['moms_dict'] = pmom
 
 
 # In[17]:
@@ -189,36 +211,100 @@ ar.keys()
 
 # In[ ]:
 
-for i,l enumerate(ar['lat_fl']):
-    
-    print i
-    
-    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
-    geo['lat'],geo['lon'],geo['sza'] = l,ar['lon_fl'][i],ar['sza'][ar['fl'].astype(bool)][i]
-    day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
-    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
-    cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
-    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                               verbose=False,make_base=False,set_quiet=True)
-    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
-    
-    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
-    cloud['tau'] = 0.0
-    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                               verbose=False,make_base=False,set_quiet=True)
-    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
-    
-    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
-    cloud['tau'] = ar['tau_fl'][i]
-    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
-                               verbose=False,make_base=False,set_quiet=True)
-    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
-    
-    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
-    cloud['tau'] = 0.0
-    Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
-                               verbose=False,make_base=False,set_quiet=True)
-    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
-    
-f.close()
+if not do_read:
+
+
+# In[ ]:
+
+# make input
+    for i,l in enumerate(ar['lat_fl']):
+
+        print i
+
+        f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        geo['lat'],geo['lon'],geo['sza'] = l,ar['lon_fl'][i],ar['sza'][ar['fl'].astype(bool)][i]
+        day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
+        geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+        cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
+        cloud['write_moments_file'] = True
+        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+        f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+        cloud['tau'] = 0.0
+        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        cloud['tau'] = ar['tau_fl'][i]
+        cloud['write_moments_file'] = False
+        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+        f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+        cloud['tau'] = 0.0
+        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+    f.close()
+
+
+# In[ ]:
+
+else:
+
+
+# In[ ]:
+
+# read output
+    nstar = len(ar['lat_fl'])
+    star_aero_CRE = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+    star_aero_CRE_clear = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+    star_aero_C = np.zeros((nstar,2))+np.nan
+    star_noaero_CRE = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+    star_noaero_CRE_clear = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
+    star_noaero_C = np.zeros((nstar,2))+np.nan
+
+
+# In[ ]:
+
+# run through to read
+    print '4STAR'
+    for i,l in enumerate(ar['lat_fl']):
+        print '\r{}..'.format(i)
+        f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+        f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+        sc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+
+        star_aero_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
+        star_aero_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
+        star_aero_CRE['up'][i,:] = s['diffuse_up']
+        star_aero_CRE_clear['up'][i,:] = sc['diffuse_up']
+        star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) - 
+                           (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
+        
+        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        sn = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+        f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+        snc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+
+        star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+s['direct_down']
+        star_noaero_CRE_clear['dn'][i,:] = snc['diffuse_down']+snc['direct_down']
+        star_noaero_CRE['up'][i,:] = sn['diffuse_up']
+        star_noaero_CRE_clear['up'][i,:] = snc['diffuse_up']
+        star_noaero_C[i,:] = (star_noaero_CRE['dn'][i,:]-star_noaero_CRE['up'][i,:]) - 
+                             (star_noaero_CRE_clear['dn'][i,:]-star_noaero_CRE_clear['up'][i,:])
+
+
+# In[ ]:
+
+# save the output
+    print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
+    hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
+                                                                star_aero_CRE,star_aero_CRE_clear,star_aero_C)
 
