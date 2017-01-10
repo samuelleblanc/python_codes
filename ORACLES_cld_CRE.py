@@ -63,7 +63,7 @@ name = 'ORACLES'
 
 # In[48]:
 
-vv = 'v1'
+vv = 'v2'
 vr = 'R0'
 
 
@@ -183,9 +183,9 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 # In[78]:
 
 if os.sys.platform == 'win32':
-        fp_aero = fp+'model\\aero_save.txt'
+        fp_aero = fp+'model\\aero_save_v2.txt'
 else:
-        fp_aero = fp+'aero_save.txt'
+        fp_aero = fp+'aero_save_v2.txt'
 aero = load_from_json(fp_aero)
 
 
@@ -199,9 +199,9 @@ aero
 # In[71]:
 
 # open the list file
-f = open(fp+'rtm/{}_CRE.sh'.format(name),'w')
-fpp_in = '/nobackup/sleblan2/rtm/input/{}_CRE/'.format(name)
-fpp_out = '/nobackup/sleblan2/rtm/output/{}_CRE/'.format(name)
+f = open(fp+'rtm/{}_CRE_{}.sh'.format(name,vv),'w')
+fpp_in = '/nobackup/sleblan2/rtm/input/{}_CRE_{}/'.format(name,vv)
+fpp_out = '/nobackup/sleblan2/rtm/output/{}_CRE_{}/'.format(name,vv)
 fp_uv = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
 fp_in = fp+'rtm/input/CRE/'
 
@@ -237,26 +237,29 @@ if not do_read:
         geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
         cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
         cloud['write_moments_file'] = True
-        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
         f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = 0.0
-        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
         f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = ar['tau_fl'][i]
-        cloud['write_moments_file'] = False
-        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+        if cloud['ref']>25.0:
+            cloud['write_moments_file'] = True
+        else:
+            cloud['write_moments_file'] = False
+        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
         f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = 0.0
-        Rl.write_input_aac(fp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
