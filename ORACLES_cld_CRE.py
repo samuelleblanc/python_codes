@@ -48,6 +48,7 @@
 import numpy as np
 import hdf5storage as hs
 import os
+import write_utils as wu
 
 
 # In[44]:
@@ -149,7 +150,7 @@ ar['days']
 
 # In[15]:
 
-geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,100.0]}
+geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
 source = {'wvl_range':[201.0,4000.0],'source':'solar','integrate_values':True,'run_fuliou':True,
@@ -179,9 +180,18 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 
 # ## Load the aerosol values
 
-# In[50]:
+# In[78]:
 
-aero = load_from_json(fp+'aero_save.txt')
+if os.sys.platform == 'win32':
+        fp_aero = fp+'model\\aero_save.txt'
+else:
+        fp_aero = fp+'aero_save.txt'
+aero = load_from_json(fp_aero)
+
+
+# In[81]:
+
+aero
 
 
 # ## Prepare the paths and files for input files
@@ -292,7 +302,7 @@ else:
         f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
         snc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
-        star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+s['direct_down']
+        star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+sn['direct_down']
         star_noaero_CRE_clear['dn'][i,:] = snc['diffuse_down']+snc['direct_down']
         star_noaero_CRE['up'][i,:] = sn['diffuse_up']
         star_noaero_CRE_clear['up'][i,:] = snc['diffuse_up']
@@ -302,6 +312,9 @@ else:
 # In[ ]:
 
 # save the output
+    star1 = {'star_noaero_CRE':star_noaero_CRE,'star_noaero_CRE_clear':star_noaero_CRE_clear,'star_noaero_C':star_noaero_C,
+            'star_aero_CRE':star_aero_CRE,'star_aero_CRE_clear':star_aero_CRE_clear,'star_aero_C':star_aero_C}
+    star = wu.iterate_dict_unicode(star1)
     print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
     hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
                                                                 star_aero_CRE,star_aero_CRE_clear,star_aero_C)
