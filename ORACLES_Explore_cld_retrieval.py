@@ -43,7 +43,7 @@
 
 # # Import of modules
 
-# In[1]:
+# In[2]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -58,7 +58,7 @@ import hdf5storage as hs
 import Sp_parameters as Sp
 
 
-# In[2]:
+# In[3]:
 
 # set the basic directory path
 fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
@@ -67,19 +67,19 @@ fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 # # Load the files
 
-# In[3]:
+# In[4]:
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[4]:
+# In[5]:
 
 rts = []
 sps = []
 
 
-# In[5]:
+# In[6]:
 
 for daystr in dds:
     print daystr
@@ -92,12 +92,12 @@ for daystr in dds:
 
 # ## Load the cloud probe incloud flag
 
-# In[23]:
+# In[7]:
 
 from load_utils import mat2py_time,toutc
 
 
-# In[24]:
+# In[8]:
 
 p = sio.netcdf_file(fp+'..//data_other//oracles.cloud.timings.nc','r')
 
@@ -381,6 +381,11 @@ for i,daystr in enumerate(dds):
 
 # ## For use of this python, save values to mat files
 
+# In[11]:
+
+vr = 'R0'
+
+
 # In[102]:
 
 import hdf5storage as hs
@@ -411,17 +416,17 @@ for n in rtss.keys():
 
 # In[105]:
 
-hs.savemat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vv),rtss)
+hs.savemat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr),rtss)
 
 
 # ## Optionally load the saved mat files
 
-# In[82]:
+# In[12]:
 
-rtss = hs.loadmat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vv))
+rtss = hs.loadmat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr))
 
 
-# In[83]:
+# In[13]:
 
 if not rts:
     rts = []
@@ -444,7 +449,7 @@ vv = 'R0'
 out_RA = []
 out_head_RA = []
 for d in dds:
-    fname_aod = fp+'..//zen_ict/v3/4STAR-CLD_P3_{}_{vv}.ict'.format(d,vv=vv)
+    fname_aod = fp+'..//zen_ict/v3/4STAR-CLD_P3_{}_{vr}.ict'.format(d,vr=vr)
     tt,th = load_ict(fname_aod,return_header=True)
     out_RA.append(tt)
     out_head_RA.append(th)
@@ -562,15 +567,15 @@ import hdf5storage as hs
 
 # In[61]:
 
-hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vv),ar)
+hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr),ar)
 
 
 # ## Optionally load the all ict file
 
-# In[62]:
+# In[20]:
 
-if not ar:
-    ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vv))
+if not ('ar' in locals() or ar):
+    ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr))
 
 
 # ## plot the data on a map
@@ -774,7 +779,137 @@ plt.tight_layout()
 plt.savefig(fp+'..//zen_ict/v3/ref_cod_hist.png',transparent=True,dpi=600)
 
 
-# In[ ]:
+# # Evaluate the Cloud Radiative Effect (CRE) from calculated retrieved values
+
+# Based on the calculations of CRE found in Link to [ORACLES_cld_CRE](ORACLES_cld_CRE.ipynb)
+# 
+# After running calculations on Pleaides, results are read in and operated
+
+# ## Load results
+
+# In[51]:
+
+fp
 
 
+# In[52]:
+
+c = hs.loadmat(fp+'../rtm/ORACLES_CRE_{}.mat'.format('v1'))
+
+
+# In[53]:
+
+c.keys()
+
+
+# In[54]:
+
+c['star_aero_C']
+
+
+# ## Start plotting results of CRE
+
+# In[55]:
+
+import plotting_utils as pu
+
+
+# In[56]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-1000,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
+ax1.set_title('Cloud Radiative Effect from 4STAR retrievals\nSurface')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['With Aerosols','Without Aerosols'])
+pu.plot_vert_hist(fig,ax1,c['star_aero_C'][:,0],0,[-1000,0],legend=True,onlyhist=False,loc=2,color='g',bins=30)
+pu.plot_vert_hist(fig,ax1,c['star_noaero_C'][:,0],1,[-1000,0],legend=True,color='r',bins=30)
+plt.savefig(fp+'../plot/ORACLES_surface_CRE_4STAR.png',transparent=True,dpi=600)
+
+
+# In[57]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-1000,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
+ax1.set_title('Cloud Radiative Effect from 4STAR retrievals\nTop of Atmosphere')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['With Aerosols','Without Aerosols'])
+pu.plot_vert_hist(fig,ax1,c['star_aero_C'][:,1],0,[-1000,0],legend=True,onlyhist=False,loc=2,color='g',bins=30)
+pu.plot_vert_hist(fig,ax1,c['star_noaero_C'][:,1],1,[-1000,0],legend=True,color='r',bins=30)
+plt.savefig(fp+'../plot/ORACLES_CRE_toa_4STAR.png',transparent=True,dpi=600)
+
+
+# In[58]:
+
+print 'Surface CRE'
+print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,0]),np.nanmean(c['star_noaero_C'][:,0]))
+print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),np.nanmedian(c['star_noaero_C'][:,0]))
+print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nanstd(c['star_noaero_C'][:,0]))
+
+
+# In[59]:
+
+print 'TOA CRE'
+print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,1]),np.nanmean(c['star_noaero_C'][:,1]))
+print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,1]),np.nanmedian(c['star_noaero_C'][:,1]))
+print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,1]),np.nanstd(c['star_noaero_C'][:,1]))
+
+
+# ## calculate and plot the relative CRE
+
+# In[38]:
+
+star_aero_rC = np.zeros_like(c['star_aero_C'])
+star_noaero_rC = np.zeros_like(c['star_aero_C'])
+
+
+# In[39]:
+
+star_aero_rC[:,0] = c['star_aero_C'][:,0]/c['star_aero_CRE']['dn'][:,1]*100.0
+star_aero_rC[:,1] = c['star_aero_C'][:,1]/c['star_aero_CRE']['dn'][:,1]*100.0
+star_noaero_rC[:,0] = c['star_noaero_C'][:,0]/c['star_noaero_CRE']['dn'][:,1]*100.0
+star_noaero_rC[:,1] = c['star_noaero_C'][:,1]/c['star_noaero_CRE']['dn'][:,1]*100.0
+
+
+# In[40]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
+ax1.set_title('relative Cloud Radiative Effect from 4STAR retrievals\nSurface')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['With Aerosols','Without Aerosols'])
+pu.plot_vert_hist(fig,ax1,star_aero_rC[:,0],0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star_noaero_rC[:,0],1,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'../plot/ORACLES_rCRE_surface_4STAR.png',transparent=True,dpi=600)
+
+
+# In[41]:
+
+fig = plt.figure(figsize=(5,4))
+ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
+ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
+ax1.set_title('relative Cloud Radiative Effect from 4STAR retrievals\nTop of Atmosphere')
+ax1.set_xticks([0,1])
+ax1.set_xticklabels(['With Aerosols','Without Aerosols'])
+pu.plot_vert_hist(fig,ax1,star_aero_rC[:,1],0,[-100,0],legend=True,onlyhist=False,loc=4,color='g',bins=50)
+pu.plot_vert_hist(fig,ax1,star_noaero_rC[:,1],1,[-100,0],legend=True,color='r',bins=50)
+plt.savefig(fp+'../plot/ORACLES_rCRE_toa_4STAR.png',transparent=True,dpi=600)
+
+
+# In[47]:
+
+print 'Surface rCRE'
+print 'mean aero: {}, no aero: {}'.format(np.nanmean(star_aero_rC[:,0]),np.nanmean(star_noaero_rC[:,0]))
+print 'median aero: {}, no aero: {}'.format(np.nanmedian(star_aero_rC[:,0]),np.nanmedian(star_noaero_rC[:,0]))
+print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,0]),np.nanstd(star_noaero_rC[:,0]))
+
+
+# In[48]:
+
+print 'TOA rCRE'
+print 'mean aero: {}, no aero: {}'.format(np.nanmean(star_aero_rC[:,1]),np.nanmean(star_noaero_rC[:,1]))
+print 'median aero: {}, no aero: {}'.format(np.nanmedian(star_aero_rC[:,1]),np.nanmedian(star_noaero_rC[:,1]))
+print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,1]),np.nanstd(star_noaero_rC[:,1]))
 
