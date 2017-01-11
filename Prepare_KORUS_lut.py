@@ -135,12 +135,13 @@ geo = {'lat':36.9921,
        'zout':[0.2,8.0,100.0],
        'name':'Pyongtaek'}
 aero = {'z_arr':[2.0,5.0],
-        'ext':np.array([[0.6,0.4,0.10,0.04],[0.0,0.0,0.0,0.0]]),
-        'ssa':np.array([[0.8,0.85,0.9,0.95],[0.9,0.9,0.9,0.9]]),
-        'asy':np.array([[0.8,0.8,0.8,0.8],[0.8,0.8,0.8,0.8]]),
-        'wvl_arr':[400.0,500.0,650.0,940.0],
+        'ext':np.array([[0.16837,0.12837, 0.08727, 0.0655, 0.0557, 0.0357, 0.0157],[0.0,0.0,0.0,0.0]]), #tau = 0.385100,0.261800,0.196500,0.167100
+        'ssa':np.array([[0.939000,0.937000,0.934400,0.930700,0.929600,0.925600,0.920600],[0.9,0.9,0.9,0.9]]),
+        'asy':np.array([[0.680998,0.660998,0.629995,0.612484,0.606010,0.596010,0.580010],[0.8,0.8,0.8,0.8]]), 
+        'wvl_arr':[400.0,442.0,668.0,870.0,1020.0,1200.0,1700.0], #442,668,870,1020
         'disort_phase':False,
-        'expand_hg':True}
+        'expand_hg':True,
+        'details':'From AERONET Socheongcho on May 20 2017, 23:14 UTC, extrapolated by hand'}
 cloud = {'ztop':10.0,
          'zbot':12.0,
          'write_moments_file':True,
@@ -154,19 +155,19 @@ source = {'wvl_range':[350,1750],
           'zenith':True}
 albedo = {'create_albedo_file':False,
           'sea_surface_albedo':True,
-          'wind_speed':10.0}
+          'wind_speed':5.0}
 
 
 # In[60]:
 
-RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
+RL.print_version_details(fp+'{name}_lut_{vv}.txt'.format(name=name,vv=vv),vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
 
 
 # In[71]:
 
-fp_in = os.path.join(fp_rtm,'input','%s_ORACLES'%vv)
-fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
+fp_in = os.path.join(fp_rtm,'input','{vv}_{name}'.format(vv=vv,name=name))
+fp_out = os.path.join(fp_rtm,'output','{vv}_{name}'.format(vv=vv,name=name))
 
 
 # In[82]:
@@ -185,7 +186,7 @@ if not os.path.exists(fp_out):
 
 # In[79]:
 
-f_list = open(os.path.join(fp,'run','ORACLES_list_%s.sh'%vv),'w')
+f_list = open(os.path.join(fp,'run','{name}_list_{vv}.sh'.format(vv=vv,name=name)),'w')
 print f_list.name
 
 
@@ -198,7 +199,7 @@ for s in sza:
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
-            if False: #r>=5.0:
+            if r>=5.0:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
@@ -212,7 +213,7 @@ for s in sza:
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')
-            if r<=30.0:
+            if False: #r<=30.0:
                 cloud['phase'] = 'wc'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
