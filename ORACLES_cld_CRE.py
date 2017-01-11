@@ -180,7 +180,7 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 
 # ## Load the aerosol values
 
-# In[78]:
+# In[82]:
 
 if os.sys.platform == 'win32':
         fp_aero = fp+'model\\aero_save_v2.txt'
@@ -189,7 +189,7 @@ else:
 aero = load_from_json(fp_aero)
 
 
-# In[81]:
+# In[83]:
 
 aero
 
@@ -275,12 +275,13 @@ else:
 
 # read output
     nstar = len(ar['lat_fl'])
-    star_aero_CRE = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
-    star_aero_CRE_clear = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
-    star_aero_C = np.zeros((nstar,2))+np.nan
-    star_noaero_CRE = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
-    star_noaero_CRE_clear = {'dn':np.zeros((nstar,2))+np.nan,'up':np.zeros((nstar,2))+np.nan}
-    star_noaero_C = np.zeros((nstar,2))+np.nan
+    nz = len(geo['zout'])
+    star_aero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+    star_aero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+    star_aero_C = np.zeros((nstar,nz))+np.nan
+    star_noaero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+    star_noaero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+    star_noaero_C = np.zeros((nstar,nz))+np.nan
 
 
 # In[ ]:
@@ -319,6 +320,7 @@ else:
             'star_aero_CRE':star_aero_CRE,'star_aero_CRE_clear':star_aero_CRE_clear,'star_aero_C':star_aero_C}
     star = wu.iterate_dict_unicode(star1)
     print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
-    hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
-                                                                star_aero_CRE,star_aero_CRE_clear,star_aero_C)
+    hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star)
+    #hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
+     #                                                           star_aero_CRE,star_aero_CRE_clear,star_aero_C)
 
