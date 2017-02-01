@@ -33,7 +33,7 @@ fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 
 # In[4]:
 
-vr='RA'
+vr='R0'
 
 
 # # load the files
@@ -46,12 +46,17 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614','20160617','20160618']
 
 
-# In[5]:
+# In[23]:
 
-days = ['20160501','20160503','20160504','20160506']
+days = ['20160501','20160506','20160512','20160517','20160526','20160614']
 
 
 # In[6]:
+
+days = ['20160516']
+
+
+# In[7]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -80,7 +85,7 @@ for i,s in enumerate(outaod_head_RA[0]):
             print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[7]:
+# In[8]:
 
 print 'day:       AOD RA     GAS RA'
 for i,d in enumerate(days):
@@ -90,7 +95,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[7]:
+# In[25]:
 
 outaod_head_RA[0]
 
@@ -100,22 +105,22 @@ outaod_head_RA[0]
 outgas_head_RA[0]
 
 
-# In[8]:
+# In[9]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[9]:
+# In[10]:
 
 nm
 
 
-# In[10]:
+# In[11]:
 
 wl = nm[6:-1]
 
 
-# In[94]:
+# In[13]:
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -133,19 +138,23 @@ import cmaps
 cmaps.cmaps()
 
 
-# In[24]:
+# In[12]:
 
 for a in wl:
     print a
 
 
-# In[11]:
+# In[13]:
+
+wl = wl[0:16]
+
+
+# In[14]:
 
 for i,d in enumerate(days):
-    if i>0: pass
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
     ax = ax.ravel()
-    ax[0].set_title('AOD RA saved file for flight {}'.format(d))
+    ax[0].set_title('AOD {vr} saved file for flight {}'.format(d,vr=vr))
     ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl))])
     for aod in wl:
         ax[0].plot(outaod_RA[i][nm[0]],outaod_RA[i][aod],'.',label=aod)
@@ -170,7 +179,60 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/RA_{}.png'.format(d),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vr}_{}.png'.format(d,vr=vr),dpi=600,transparent=True)
+
+
+# In[15]:
+
+nm[4]
+
+
+# In[16]:
+
+fl = np.where(outaod_RA[i][nm[4]]==1)[0]
+
+
+# In[17]:
+
+fl.shape
+
+
+# In[18]:
+
+for i,d in enumerate(days):
+    if i>0: break
+    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    ax = ax.ravel()
+    fl = np.where(outaod_RA[i][nm[4]]==1)[0]
+    ax[0].set_title('AOD {vr} saved file for flight {}'.format(d,vr=vr))
+    ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl))])
+    for aod in wl:
+        ax[0].plot(outaod_RA[i][nm[0]][fl],outaod_RA[i][aod][fl],'.',label=aod)
+    #try:
+    #    for x in outaod_RA[i][nm[0]][np.where(outaod_RA[i][nm[4]]==1)[0]]:
+    #        ax[0].axvline(x,color='#DDDDDD',alpha=0.02)
+    #except:
+    #    pass
+    ax[0].set_ylabel('AOD')
+    ax[0].set_ylim(0,2)
+    ax[0].axhline(0,color='k')
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[0].legend(frameon=False,loc='center left',bbox_to_anchor=(1.1,-0.2),numpoints=1)
+    for aod in nm[6+len(wl):-1]:
+        ax[1].plot(outaod_RA[i][nm[0]][fl],outaod_RA[i][aod][fl],'.',label=aod)
+    ax[1].set_ylabel('AOD Uncertainty')
+    #ax[1].plot(outaod_RA[i][nm[0]],outaod_RA[i]['GPS_Alt'],'.')
+    #ax[1].set_ylabel('Alt [m]')
+    #axy = ax[1].twinx()
+    #axy.plot(outaod_RA[i][nm[0]],outaod_RA[i]['amass_aer'],'.g')
+    #axy.set_ylabel('Airmass factor',color='g')
+    box = ax[1].get_position()
+    ax[1].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    #box = axy.get_position()
+    #axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[1].set_xlabel('UTC [h]')
+    plt.savefig(fp+'aod_ict/{vr}_{}_unc.png'.format(d,vr=vr),dpi=600,transparent=True)
 
 
 # In[ ]:
@@ -178,7 +240,7 @@ for i,d in enumerate(days):
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
     ax = ax.ravel()
-    ax[0].set_title('Gas RA saved file for flight {}'.format(d))
+    ax[0].set_title('Gas {vr} saved file for flight {}'.format(d,vr=vr))
     ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl))])
     for aod in wl:
         ax[0].plot(outgas_RA[i][nm[0]],outgas_RA[i][aod],'.',label=aod)
@@ -203,7 +265,7 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/RA_{}.png'.format(d),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vr}_{}.png'.format(d,vr=vr),dpi=600,transparent=True)
 
 
 # In[32]:
@@ -248,19 +310,19 @@ for i,d in enumerate(days):
 
 # # Combineall the data into a single array
 
-# In[13]:
+# In[17]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[14]:
+# In[18]:
 
 ar['days'] = np.array([])
 
 
-# In[15]:
+# In[19]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -268,7 +330,7 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[16]:
+# In[20]:
 
 ar['GPS_Alt'].shape
 
