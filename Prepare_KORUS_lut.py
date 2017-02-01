@@ -142,8 +142,8 @@ aero = {'z_arr':[2.0,5.0],
         'disort_phase':False,
         'expand_hg':True,
         'details':'From AERONET Socheongcho on May 20 2017, 23:14 UTC, extrapolated by hand'}
-cloud = {'ztop':10.0,
-         'zbot':12.0,
+cloud = {'ztop':12.0,
+         'zbot':10.0,
          'write_moments_file':True,
          'moms_dict':pmom} # for cirrus mostly
 source = {'wvl_range':[350,1750],
@@ -161,7 +161,7 @@ albedo = {'create_albedo_file':False,
 # In[60]:
 
 RL.print_version_details(fp+'{name}_lut_{vv}.txt'.format(name=name,vv=vv),vv,geo=geo,
-                         aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
+                         aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza,cloud_pmom_file=fp_rtmdat)
 
 
 # In[71]:
