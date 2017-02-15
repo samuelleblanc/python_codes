@@ -41,7 +41,7 @@
 # # Prepare the python environment
 # 
 
-# In[2]:
+# In[1]:
 
 import numpy as np
 import scipy.io as sio
@@ -49,23 +49,23 @@ import os
 import matplotlib.pyplot as plt
 
 
-# In[3]:
+# In[2]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[3]:
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[5]:
+# In[4]:
 
 import hdf5storage as hs
 
 
-# In[6]:
+# In[5]:
 
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
@@ -74,44 +74,44 @@ fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
 # ## 4STAR ict
 
-# In[7]:
+# In[6]:
 
 s = hs.loadmat(fp+'/aod_ict/all_aod_ict.mat')
 
 
-# In[64]:
+# In[7]:
 
 s.keys()
 
 
 # ## MODIS climatology
 
-# In[6]:
+# In[38]:
 
 fp
 
 
-# In[8]:
+# In[39]:
 
 m = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE.nc')
 
 
-# In[66]:
+# In[40]:
 
 m.variables
 
 
-# In[9]:
+# In[41]:
 
 m2 = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE_all.nc')
 
 
-# In[67]:
+# In[42]:
 
 m2.variables
 
 
-# In[51]:
+# In[43]:
 
 m2.variables['AOD_YRMEAN'].data
 
@@ -127,39 +127,39 @@ m2.variables['AOD_YRMEAN'].data
 # Here’s a short description of the dataset (Kerry, please correct me if I’m wrong):
 # Combination of MODIS and TERRA AAC AOD, high-resolution 0.1 x 0.1º. Suggested quality filtering is applied. Parameter is "Above_Cloud_AOT_MOD04Abs" i.e retrievals assuming the MOD04 absorbing aerosol model rather than the Haywood/SAFARI-2000 model, which is what is used to create the near-real time retrieval imagery in the field for ORACLES.
 
-# In[10]:
+# In[8]:
 
 import datetime
 
 
-# In[11]:
+# In[9]:
 
 import load_utils as lu
 
 
-# In[12]:
+# In[10]:
 
 aac = sio.loadmat(fp+'data_other\\MODIS_AAC\\MODIS_AAC_per_bin.mat')
 
 
-# In[18]:
+# In[11]:
 
 aac['data_aac'][0,0].dtype.names
 
 
-# In[13]:
+# In[12]:
 
 daac = []
 
 
-# In[14]:
+# In[13]:
 
 for i in xrange(len(aac['data_aac'][0,:])):
     print aac['data_aac'][0,i]['FlightDay'][0][0][0]
     daac.append(lu.recarray_to_dict(aac['data_aac'][0,i]))
 
 
-# In[15]:
+# In[14]:
 
 # simplify the dict
 for i in xrange(len(daac)):
@@ -167,7 +167,7 @@ for i in xrange(len(daac)):
         daac[i][k] = daac[i][k][0,0]
 
 
-# In[16]:
+# In[15]:
 
 for i in xrange(len(daac)):
     daac[i]['datetime'] = datetime.datetime.strptime(daac[i]['FlightDay'][0], 'A%Y%j')
@@ -177,29 +177,29 @@ for i in xrange(len(daac)):
 
 # # Subset for routine flight
 
-# In[17]:
+# In[16]:
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[18]:
+# In[17]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[19]:
+# In[18]:
 
 s['days'][0]
 
 
-# In[20]:
+# In[19]:
 
 ff = []
 for d in d_irtn:
     ff.append(s['days']==d)
 
 
-# In[21]:
+# In[20]:
 
 for i,f in enumerate(ff):
     if i==0:
@@ -208,7 +208,7 @@ for i,f in enumerate(ff):
         fl = fl | f
 
 
-# In[22]:
+# In[21]:
 
 s['fl_rtn'] = fl & s['fl']
 
@@ -257,7 +257,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_hist_MODIS.png',transparent=True,dpi=600)
 
 # ## Use bins from heat map to make box whisker plot
 
-# In[23]:
+# In[22]:
 
 bins = []
 pos = []
@@ -267,7 +267,7 @@ for i,c in enumerate(cc[1][0:-2]):
     pos.append((c+cc[1][i+1])/2.0)
 
 
-# In[24]:
+# In[37]:
 
 def color_box(bp, color):
 
@@ -373,28 +373,28 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box2_simpler_MODIS.png',transparent=True,
 
 # ## Now try with same bins as MODIS
 
-# In[26]:
+# In[45]:
 
 pos3 = m.variables['LONGITUDE'].data[0,:]
 
 
-# In[27]:
+# In[46]:
 
 pos3
 
 
-# In[28]:
+# In[47]:
 
 lims3 = pos3-0.5
 lims3= np.append(lims3,pos3[-1]+0.5)
 
 
-# In[29]:
+# In[48]:
 
 lims3
 
 
-# In[30]:
+# In[49]:
 
 bins3 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -402,7 +402,7 @@ for i,c in enumerate(lims3[0:-1]):
     bins3.append(s['AOD0501'][s['fl_rtn']][lon_fl])
 
 
-# In[31]:
+# In[50]:
 
 len(lims3)
 
@@ -439,27 +439,27 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_MODIS.png',transparent=True,dpi=600)
 
 
-# In[34]:
+# In[24]:
 
 s['fl_alt12'] = (s['GPS_Alt']>=600)&(s['GPS_Alt']<1200)
 
 
-# In[35]:
+# In[25]:
 
 s['fl_alt12']
 
 
-# In[36]:
+# In[26]:
 
 s['fl_rtn_12'] = s['fl_alt12'] & s['fl_QA'] & fl
 
 
-# In[37]:
+# In[27]:
 
 s['fl_rtn_12']
 
 
-# In[38]:
+# In[28]:
 
 bins3_12 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -498,12 +498,12 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_2alt_MODIS.png',transparent=
 
 # ## make a plot day by day
 
-# In[39]:
+# In[29]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[40]:
+# In[30]:
 
 flr2 = s['fl_rtn_12']&(s['days']==2.0)
 flr4 = s['fl_rtn_12']&(s['days']==4.0)
@@ -513,7 +513,7 @@ flr8 = s['fl_rtn_12']&(s['days']==8.0)
 flr13 = s['fl_rtn_12']&(s['days']==13.0)
 
 
-# In[41]:
+# In[31]:
 
 fr2 = s['fl_rtn']&(s['days']==2.0)
 fr4 = s['fl_rtn']&(s['days']==4.0)
@@ -523,18 +523,18 @@ fr8 = s['fl_rtn']&(s['days']==8.0)
 fr13 = s['fl_rtn']&(s['days']==13.0)
 
 
-# In[42]:
+# In[32]:
 
 fr = [fr2,fr4,fr6,fr7,fr8,fr13]
 flr = [flr2,flr4,flr6,flr7,flr8,flr13]
 
 
-# In[43]:
+# In[33]:
 
 cls = ['green','blue','yellow','cyan','magenta','orange']
 
 
-# In[44]:
+# In[34]:
 
 d_rtn
 
@@ -669,7 +669,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_days_avg_12_MODIS.png',transparent=T
 
 # ## Redo plots for entire column 
 
-# In[45]:
+# In[35]:
 
 s['fl_alt_6'] = (s['GPS_Alt']<=600)
 s['fl_rtn_6'] = s['fl_alt_6'] & s['fl_QA'] & fl
@@ -853,7 +853,7 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.78, box.height])
 
-plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_and_Meyer_AAC_noleg.png',transparent=True,dpi=600)
+#plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_and_Meyer_AAC_noleg.png',transparent=True,dpi=600)
 
 
 # In[ ]:

@@ -90,7 +90,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[7]:
+# In[8]:
 
 outaod_head_RA[0]
 
@@ -100,17 +100,17 @@ outaod_head_RA[0]
 outgas_head_RA[0]
 
 
-# In[8]:
+# In[9]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[9]:
+# In[10]:
 
 nm
 
 
-# In[10]:
+# In[11]:
 
 wl = nm[6:-1]
 
@@ -248,19 +248,19 @@ for i,d in enumerate(days):
 
 # # Combineall the data into a single array
 
-# In[13]:
+# In[12]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[14]:
+# In[13]:
 
 ar['days'] = np.array([])
 
 
-# In[15]:
+# In[14]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -268,72 +268,80 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[16]:
+# In[15]:
 
 ar['GPS_Alt'].shape
 
 
 # ## Filterout bad data
 
-# In[17]:
+# In[16]:
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[18]:
+# In[17]:
 
 ar['fl'] = ar['fl_QA']
 
 
-# In[22]:
+# In[18]:
 
 ar['fl_alt'] = ar['GPS_Alt']<=1500
 
 
-# In[26]:
+# In[19]:
 
 ar['fl_alt1'] = ar['GPS_Alt']<=600
 
 
-# In[23]:
+# In[20]:
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[27]:
+# In[21]:
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt1']
 
 
 # ## Plot out all the data
 
-# In[19]:
+# In[22]:
 
 from plotting_utils import prelim
 
 
-# In[29]:
+# In[27]:
 
 plt.figure()
-plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='all')
-plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 1500 m')
-plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='below 600 m')
+plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',
+         label='all (mean:{:1.2f})'.format(np.nanmean(ar['AOD0501'][ar['fl']])))
+plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',
+         label='below 1500 m (mean:{:1.2f})'.format(np.nanmean(ar['AOD0501'][ar['fl1']])))
+plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',
+         label='below 600 m (mean:{:1.2f})'.format(np.nanmean(ar['AOD0501'][ar['fl2']])))
 #plt.yscale('log')
 plt.xlabel('AOD at 501 nm')
 plt.ylabel('Counts')
 plt.grid()
-plt.title('AOD distribution')
+plt.title('4STAR AOD distribution for KORUS-AQ')
 prelim()
 plt.legend(frameon=False)
-plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vr),dpi=600,transparent=True)
+plt.savefig(fp+'aod_ict/{vv}_KORUS_AOD_histogram.png'.format(vv=vr),dpi=600,transparent=True)
 
 
-# In[30]:
+# In[26]:
+
+'{:1.2f}'.format(np.nanmean(ar['AOD0501'][ar['fl2']]))
+
+
+# In[24]:
 
 np.nanmean(ar['AOD0501'][ar['fl2']])
 
 
-# In[31]:
+# In[25]:
 
 np.nanmedian(ar['AOD0501'][ar['fl2']])
 
