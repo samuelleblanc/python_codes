@@ -367,13 +367,13 @@ plt.show()
 
 # ## Get the DC8 nav data
 
-# In[440]:
+# In[17]:
 
 import load_utils
 reload(load_utils)
 
 
-# In[441]:
+# In[18]:
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
@@ -406,7 +406,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # ## Get the 4STAR data
 
-# In[182]:
+# In[10]:
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
@@ -415,19 +415,19 @@ mea.keys()
 
 # Go through and get the radiances for good points, and for the time selected
 
-# In[183]:
+# In[11]:
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[184]:
+# In[12]:
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[185]:
+# In[13]:
 
 mea['w'][0][1068]
 
@@ -473,7 +473,7 @@ for i,w in enumerate(mea['w'][0]):
         plt.text(mea['w'][0][i],mea['rad'][600,i],'%i' %i)
 
 
-# In[30]:
+# In[14]:
 
 ivis = range(1055,1069)
 inir = range(1004,1037)
@@ -482,7 +482,7 @@ mean_nir = np.nanmean(mea['rad'][600,inir])
 s_ratio_vis_nir = mean_vis/mean_nir
 
 
-# In[23]:
+# In[15]:
 
 print s_ratio_vis_nir
 
@@ -504,7 +504,7 @@ plt.figure()
 plt.plot(mea['w'][0],ss)
 
 
-# In[190]:
+# In[16]:
 
 reload(Sp)
 if 'meas' in locals():
@@ -858,7 +858,7 @@ from load_utils import load_ict
 
 # ## Load the ER2 nav files
 
-# In[306]:
+# In[19]:
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -1982,7 +1982,7 @@ print cpl_layers['bot'][ia,:]
 
 # ## Get the data from MODIS to compare
 
-# In[111]:
+# In[6]:
 
 from mpl_toolkits.basemap import Basemap,cm
 myd06_file = fp+'modis\\20130913\\MYD06_L2.A2013256.1910.006.2014267222159.hdf'
@@ -1991,7 +1991,7 @@ print os.path.isfile(myd03_file) #check if it exists
 print os.path.isfile(myd06_file)
 
 
-# In[112]:
+# In[7]:
 
 import load_utils as lm
 reload(lm)
@@ -2000,14 +2000,14 @@ if 'modis' in locals():
     import gc; gc.collect()
 
 
-# In[113]:
+# In[8]:
 
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 
 # Now plot the resulting imagery
 
-# In[114]:
+# In[9]:
 
 #set up a easy plotting function
 def seac_map(ax=plt.gca()):
@@ -2088,7 +2088,7 @@ plt.savefig(fp+'plots/modis_tau_ref_flt_20130913.png',dpi=600,transparent=True)
 plt.show()
 
 
-# In[37]:
+# In[22]:
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
@@ -2115,7 +2115,7 @@ xx1,yy1 = m1(-93.8,27.8)
 xx2,yy2 = m1(-96.5,28)
 #plt.text(xx1,yy1,'ER2',color='r')
 #plt.text(xx2,yy2,'DC8',color='b')
-m1.scatter(x1,y1,c=meas.tau,cmap=plt.cm.jet,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+#m1.scatter(x1,y1,c=meas.tau,cmap=plt.cm.jet,marker='o',vmin=clevels[0],vmax=clevels[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 
 clevels2 = np.linspace(0,60,31)
 cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
@@ -2126,11 +2126,55 @@ m2.plot(xer2,yer2,'r',lw=2)
 m2.plot(xdc8,ydc8,'b',lw=2)
 plt.text(xx1,yy1,'ER2',color='r')
 plt.text(xx2,yy2,'DC8',color='b')
-m2.scatter(x1,y1,c=meas.ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
+#m2.scatter(x1,y1,c=meas.ref,cmap=plt.cm.gist_earth,marker='o',vmin=clevels2[0],vmax=clevels2[-1],alpha=0.5,edgecolors='k',linewidth=0.15)
 figm2.subplots_adjust(wspace=0.3)
 plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.png',dpi=600,transparent=True)
 #plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
+#plt.tight_layout()
 plt.show()
+
+
+# In[29]:
+
+figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
+m1 = seac_map(axm2[0])
+xt,yt = m1(-95.3831,29.7628)
+axm2[0].text(xt,yt,'+')
+axm2[0].text(xt,yt,'Houston, TX',horizontalalignment='right',verticalalignment='top')
+xh,yh = m1(-95.3,19.1)
+axm2[0].text(xh,yh,'+')
+axm2[0].text(xh,yh,'Tropical Storm Ingrid',horizontalalignment='left',verticalalignment='bottom')
+m2 = seac_map(axm2[1])
+x,y = m1(modis['lon'],modis['lat'])
+clevels = np.linspace(0,80,41)
+
+cs1 = m1.contourf(x,y,modis['tau'],clevels,cmap=plt.cm.rainbow,extend='max')
+cbar = m1.colorbar(cs1)
+cbar.set_label('$\\tau$')
+axm2[0].set_title('MODIS - AQUA Cloud optical Thickness')
+x1,y1 = m1(meas.lon,meas.lat)
+xer2,yer2 = m1(er2['Longitude'],er2['Latitude'])
+xdc8,ydc8 = m1(dc8['G_LONG'],dc8['G_LAT'])
+
+xx1,yy1 = m1(-93.8,27.8)
+xx2,yy2 = m1(-96.5,28)
+
+clevels2 = np.linspace(0,60,31)
+cs2 = m2.contourf(x,y,modis['ref'],clevels2,cmap=plt.cm.gist_earth,extend='max')
+cbar = m2.colorbar(cs2)
+cbar.set_label('r$_{eff}$ [$\\mu$m]')
+axm2[1].set_title('MODIS - AQUA Cloud effective radius')
+m2.plot(xer2,yer2,'r',lw=2)
+m2.plot(xdc8,ydc8,'b',lw=2)
+plt.text(xx1,yy1,'ER2',color='r')
+plt.text(xx2,yy2,'DC8',color='b')
+figm2.subplots_adjust(wspace=0.3)
+
+up,dn,le,ri = 22.3,20.8,-94.8,-93.2
+xrec,yrec = m2([le,ri,ri,le,le],[up,up,dn,dn,up])
+m2.plot(xrec,yrec,color='k',lw=2)
+plt.savefig(fp+'plots/modis_dc8_tau_ref_comp_rect.png',dpi=600,transparent=True,pad_inches=0.1,bbox_inches='tight')
+#plt.savefig(fp+'plots/modis_dc8_tau_ref_comp.pdf',bbox='tight')
 
 
 # ## Import eMAS values
