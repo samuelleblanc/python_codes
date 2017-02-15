@@ -1620,7 +1620,7 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
 # In[4]:
 
 def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},
-                          tau=[None],ref=[None],sza=[None],cloud_pmom_file=None
+                          tau=[None],ref=[None],sza=[None],cloud_pmom_file=None,
                           fmt='lut_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',use_json=True):
     'Program to write an ascii file to print out the version and set up info'
     if use_json:
