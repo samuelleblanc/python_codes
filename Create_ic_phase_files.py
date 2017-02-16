@@ -175,7 +175,7 @@ if not doread:
                 print r,w
                 x = 2.0*np.pi*r/w
                 write_phase(os.path.join(fp_in,fname.format(r=r,w=w,e='dat')),ic['theta'][iw,ir,0,:],ic['phase'][iw,ir,0,:])
-                f_list.write(fp_pmom+' -n -r 3 -c -l {}'.format(int(10*np.pi*r**1.75/w))+os.path.join(fp_in,fname.format(r=r,w=w,e='dat'))+' > '+
+                f_list.write(fp_pmom+' -n -r 3 -c -l {}'.format(int(15*np.pi*r**1.75/w))+os.path.join(fp_in,fname.format(r=r,w=w,e='dat'))+' > '+
                              os.path.join(fp_out,fname.format(r=r,w=w,e='out'))+'\n')
             
 
