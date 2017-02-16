@@ -192,9 +192,13 @@ if doread:
     pmom = []
     for ir,r in enumerate(ic['ref'][0]):
         pw = []
+        wv = []
+        iwv = []
         for iw,w in enumerate(ic['wvl'][0]):
             if w > 0.39 and w < 1.71:
                 print r,w
+                wv.append(w)
+                iwv.append(iw)
                 with open(os.path.join(fp_out,fname.format(r=r,w=w,e='out')),'r') as f:
                     a = map(float,f.readline().split())
                 pw.append(a)
@@ -205,6 +209,8 @@ if doread:
 
 if doread:
     ic['pmom'] = pmom
+    ic['pmom_wvl'] = wv
+    ic['pmom_iwvl'] = iwv
     print 'saving to: {}'.format(fp+'ic.pmom.ghm.baum.mat')
     sio.savemat(fp+'ic.pmom.ghm.baum.mat',ic)
 
