@@ -70,6 +70,33 @@ vv = 'v1'
 name = 'ic_phase'
 
 
+# ## Setup command line arguments
+
+# In[52]:
+
+import argparse
+
+
+# In[53]:
+
+long_description = """    Prepare the pmom function using libradtran's pmom function 
+      from the Baum 2014 General Habit mixture ice phase functions
+      save them using the doread argument"""
+
+
+# In[54]:
+
+parser = argparse.ArgumentParser(description=long_description)
+parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
+                    action='store_true')
+
+
+# In[55]:
+
+in_ = vars(parser.parse_args())
+doread = in_.get('doread',False)
+
+
 # # Load the phase functions
 
 # In[4]:
@@ -120,8 +147,9 @@ if not os.path.exists(fp_out):
 
 # In[10]:
 
-f_list = open(os.path.join(fp,'{name}_list_{vv}.sh'.format(vv=vv,name=name)),'w')
-print f_list.name
+if not doread:
+    f_list = open(os.path.join(fp,'{name}_list_{vv}.sh'.format(vv=vv,name=name)),'w')
+    print f_list.name
 
 
 # In[29]:
@@ -138,27 +166,45 @@ def write_phase(f,angle,phase):
             fo.write('{} {}\n'.format(angle[i],phase[i]))
 
 
-# In[51]:
-
-print '{}'.format(1311.6604)
-
-
 # In[43]:
 
-for ir,r in enumerate(ic['ref'][0]):
-    if not ir>7:
-        continue
-    for iw,w in enumerate(ic['wvl'][0]):
-        if w > 0.39 and w < 1.71:
-            print r,w
-            x = 2.0*np.pi*r/w
-            write_phase(os.path.join(fp_in,fname.format(r=r,w=w,e='dat')),ic['theta'][iw,ir,0,:],ic['phase'][iw,ir,0,:])
-            f_list.write(fp_pmom+' -n -r 3 -c -l {}'.format(int(10*np.pi*r**1.75/w))+os.path.join(fp_in,fname.format(r=r,w=w,e='dat'))+' > '+
-                         os.path.join(fp_out,fname.format(r=r,w=w,e='out'))+'\n')
+if not doread:
+    for ir,r in enumerate(ic['ref'][0]):
+        for iw,w in enumerate(ic['wvl'][0]):
+            if w > 0.39 and w < 1.71:
+                print r,w
+                x = 2.0*np.pi*r/w
+                write_phase(os.path.join(fp_in,fname.format(r=r,w=w,e='dat')),ic['theta'][iw,ir,0,:],ic['phase'][iw,ir,0,:])
+                f_list.write(fp_pmom+' -n -r 3 -c -l {}'.format(int(10*np.pi*r**1.75/w))+os.path.join(fp_in,fname.format(r=r,w=w,e='dat'))+' > '+
+                             os.path.join(fp_out,fname.format(r=r,w=w,e='out'))+'\n')
             
 
 
 # In[ ]:
 
-f_list.close()
+if not doread:
+    f_list.close()
+
+
+# In[ ]:
+
+if doread:
+    pmom = []
+    for ir,r in enumerate(ic['ref'][0]):
+        pw = []
+        for iw,w in enumerate(ic['wvl'][0]):
+            if w > 0.39 and w < 1.71:
+                print r,w
+                with open(os.path.join(fp_out,fname.format(r=r,w=w,e='out')),'r') as f:
+                    a = map(float,f.readline().split())
+                pw.append(a)
+        pmom.append(pw)
+
+
+# In[ ]:
+
+if doread:
+    ic['pmom'] = pmom
+    print 'saving to: {}'.format(fp+'ic.pmom.ghm.baum.mat')
+    sio.savemat(fp+'ic.pmom.ghm.baum.mat',ic)
 
