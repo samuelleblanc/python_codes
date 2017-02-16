@@ -409,7 +409,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
         print('..File finished write_cloud_file_moments, closed')
 
 
-# In[2]:
+# In[ ]:
 
 def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False):
     """
@@ -969,7 +969,7 @@ def merge_dicts(*dict_args):
 
 # In[1]:
 
-def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar'):
+def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar',cloudtype='wc'):
     """
     Purpose:
     
@@ -979,6 +979,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
     
         fp_rtm: path to the files to load
         source: either solar or thermal (default is solar)
+        cloudtype: either 'wc' for water cloud or 'ic' for ice cloud 
     
     Dependencies:
 
@@ -990,6 +991,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
         mie_hi.out
         wc.sol.long.mie.cdf
         wc.sol.short.mie.cdf        
+        ic.pmom.ghm.baum.mat
     
     Modification History:
     
@@ -1001,76 +1003,93 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                     - added the allpmom netcdf file from Claudia Emde for Solar 
         Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
                     - fixed bugs with Claudia Emde's full pmom netcdf files. Added longer wavelengths to be saved.
+        Modified: Samuel LeBlanc, 2017-02-15, Santa Cruz, CA
+                    - added ic file from calculations of pmom from Create_ic_phase.py file
     """
     import numpy as np
     import scipy.io as sio
     
-    if source=='solar':
-        mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
-        mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
-        try:
-            rho = np.swapaxes(mie.variables['rho'].data,0,1)
-        except ValueError:
-            rho = mie.variables['rho'].data
-        mie_short = {'wvl':mie.variables['wavelen'].data,
-                     'ref':mie.variables['reff'].data,
-                     'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
-                     'rho':rho,
-                     'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
-                     'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
-                     'ext':np.swapaxes(mie.variables['ext'].data,0,1),
-                     'nim':mie.variables['refim'].data,
-                     'nre':mie.variables['refre'].data,
-                     'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
-                     'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
-                     'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
-        pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
-                'ref':mie_short['ref'],
-                'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
-                'rho':mie_short['rho'],
+    if cloudtype=='wc':
+        if source=='solar':
+            mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
+            mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
+            try:
+                rho = np.swapaxes(mie.variables['rho'].data,0,1)
+            except ValueError:
+                rho = mie.variables['rho'].data
+            mie_short = {'wvl':mie.variables['wavelen'].data,
+                         'ref':mie.variables['reff'].data,
+                         'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
+                         'rho':rho,
+                         'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
+                         'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
+                         'ext':np.swapaxes(mie.variables['ext'].data,0,1),
+                         'nim':mie.variables['refim'].data,
+                         'nre':mie.variables['refre'].data,
+                         'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
+                         'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
+                         'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
+            pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
+                    'ref':mie_short['ref'],
+                    'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
+                    'rho':mie_short['rho'],
+                    'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
+                    'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
+                    'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
+                    'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
+                    'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
+                    'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
+                                                                             np.zeros((25,72,2500))),axis=2)),axis=1),
+                    'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
+                    'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
+        elif source=='solar_sub':
+            mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
+            mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
+            pmom = mie
+            pmom['wvl'] = np.append(mie['wvl'],mie_long.variables['wavelen'].data)
+            pmom['ntheta'] = np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[:,:,0],0,1)),axis=1)
+            pmom['rho'] = np.concatenate((mie['rho'],np.swapaxes(mie_long.variables['rho'].data,0,1)),axis=1)
+            pmom['nmom'] = np.concatenate((mie['nmom'],np.swapaxes(mie_long.variables['nmom'].data[:,:,0],0,1)),axis=1)
+            pmom['ssa'] = np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data,0,1)),axis=1)
+            pmom['ext'] = np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data,0,1)),axis=1)
+            pmom['nim'] = np.append(mie['nim'],mie_long.variables['refim'].data)
+            pmom['nre'] = np.append(mie['nre'],mie_long.variables['refre'].data)
+            pmom['pmom'] = np.concatenate((mie['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[:,:,0,:],0,1),
+                                                                       np.zeros((30,79,750))),axis=2)),axis=1)
+            pmom['phase'] = np.concatenate((np.concatenate((mie['phase'],np.zeros((30,754,602))),axis=2),
+                                            np.swapaxes(mie_long.variables['phase'].data[:,:,0,:],0,1)),axis=1)
+            pmom['theta'] = np.concatenate((np.concatenate((mie['theta'],np.zeros((30,754,602))),axis=2),
+                                            np.swapaxes(mie_long.variables['theta'].data[:,:,0,:],0,1)),axis=1).shape 
+        elif source=='thermal':
+            mie_trm = sio.netcdf_file(fp_rtm+'wc_trm_longmie.cdf','r')
+            pmom = {'wvl':mie_trm.variables['wavelen'].data*1000.0, 
+                    'ref':mie_trm.variables['reff'].data,
+                    'ntheta':np.swapaxes(mie_trm.variables['ntheta'].data[:,:,0],0,1),
+                    'rho':np.swapaxes(mie_trm.variables['rho'].data,0,1),
+                    'nmom':np.swapaxes(mie_trm.variables['nmom'].data[:,:,0],0,1),
+                    'ssa':np.swapaxes(mie_trm.variables['ssa'].data,0,1),
+                    'ext':np.swapaxes(mie_trm.variables['ext'].data,0,1),
+                    'nim':mie_trm.variables['refim'].data,
+                    'nre':mie_trm.variables['refre'].data,
+                    'pmom':np.swapaxes(mie_trm.variables['pmom'].data[:,:,0,:],0,1),
+                    'phase':np.swapaxes(mie_trm.variables['phase'].data[:,:,0,:],0,1),
+                    'theta':np.swapaxes(mie_trm.variables['theta'].data[:,:,0,:],0,1)}
+        else:
+            print 'Not a correct option for source: select either solar, solar_sub, or thermal'
+            return None
+    elif cloudtype =='ic':
+        ic = sio.loadmat(fp_rtm+'ic.pmom.ghm.baum.mat')
+        pmom = {'wvl':ic['pmom_wvl'],
+                'ref':ic['ref'],
+                'rho':ic['rho'],
                 'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
-                'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
-                'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
-                'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
-                'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
-                'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
-                                                                         np.zeros((25,72,2500))),axis=2)),axis=1),
-                'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
-                'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
-    elif source=='solar_sub':
-        mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
-        mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
-        pmom = mie
-        pmom['wvl'] = np.append(mie['wvl'],mie_long.variables['wavelen'].data)
-        pmom['ntheta'] = np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[:,:,0],0,1)),axis=1)
-        pmom['rho'] = np.concatenate((mie['rho'],np.swapaxes(mie_long.variables['rho'].data,0,1)),axis=1)
-        pmom['nmom'] = np.concatenate((mie['nmom'],np.swapaxes(mie_long.variables['nmom'].data[:,:,0],0,1)),axis=1)
-        pmom['ssa'] = np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data,0,1)),axis=1)
-        pmom['ext'] = np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data,0,1)),axis=1)
-        pmom['nim'] = np.append(mie['nim'],mie_long.variables['refim'].data)
-        pmom['nre'] = np.append(mie['nre'],mie_long.variables['refre'].data)
-        pmom['pmom'] = np.concatenate((mie['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[:,:,0,:],0,1),
-                                                                   np.zeros((30,79,750))),axis=2)),axis=1)
-        pmom['phase'] = np.concatenate((np.concatenate((mie['phase'],np.zeros((30,754,602))),axis=2),
-                                        np.swapaxes(mie_long.variables['phase'].data[:,:,0,:],0,1)),axis=1)
-        pmom['theta'] = np.concatenate((np.concatenate((mie['theta'],np.zeros((30,754,602))),axis=2),
-                                        np.swapaxes(mie_long.variables['theta'].data[:,:,0,:],0,1)),axis=1).shape 
-    elif source=='thermal':
-        mie_trm = sio.netcdf_file(fp_rtm+'wc_trm_longmie.cdf','r')
-        pmom = {'wvl':mie_trm.variables['wavelen'].data*1000.0, 
-                'ref':mie_trm.variables['reff'].data,
-                'ntheta':np.swapaxes(mie_trm.variables['ntheta'].data[:,:,0],0,1),
-                'rho':np.swapaxes(mie_trm.variables['rho'].data,0,1),
-                'nmom':np.swapaxes(mie_trm.variables['nmom'].data[:,:,0],0,1),
-                'ssa':np.swapaxes(mie_trm.variables['ssa'].data,0,1),
-                'ext':np.swapaxes(mie_trm.variables['ext'].data,0,1),
-                'nim':mie_trm.variables['refim'].data,
-                'nre':mie_trm.variables['refre'].data,
-                'pmom':np.swapaxes(mie_trm.variables['pmom'].data[:,:,0,:],0,1),
-                'phase':np.swapaxes(mie_trm.variables['phase'].data[:,:,0,:],0,1),
-                'theta':np.swapaxes(mie_trm.variables['theta'].data[:,:,0,:],0,1)}
+                'ssa':ic['ssa'],
+                'ext':ic['ext'],
+                'pmom':ic['pmom'],
+                'phase':ic['phase'],
+                'theta':ic['theta']}
     else:
-        print 'Not a correct option for source: select either solar, solar_sub, or thermal'
+        print 'Not a correct cloudtype value: either wc or ic'
         return None
     return pmom
 
