@@ -1591,6 +1591,8 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
     Modification History:
     
         Written: Samuel LeBlanc, 2015-10-14, NASA Ames, Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2017-02-17, Santa Cruz, CA
+                  Added error checking for testing last file and ice as well as first file
         
     """
     import Run_libradtran as RL
@@ -1598,8 +1600,12 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
     import numpy as np
     
     #test of single load of file
-    dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
-                              zout=zout,num_rad=1)
+    try:
+        dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
+                                  zout=zout,num_rad=1)
+    except:
+        dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=0)),
+                                  zout=zout,num_rad=1)
     if split_wvl:
         dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
                                   zout=zout,num_rad=1)
