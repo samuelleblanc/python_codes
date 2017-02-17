@@ -163,7 +163,8 @@ albedo = {'create_albedo_file':False,
 # In[60]:
 
 RL.print_version_details(fp+'{name}_lut_{vv}.txt'.format(name=name,vv=vv),vv,geo=geo,
-                         aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza,cloud_pmom_file=fp_rtmdat)
+                         aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza,
+                         cloud_pmom_file=cloud['moms_dict']['file_name'])
 
 
 # In[71]:

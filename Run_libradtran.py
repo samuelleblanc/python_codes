@@ -1048,6 +1048,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                                                                              np.zeros((25,72,2500))),axis=2)),axis=1),
                     'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
                     'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
+            pmom['file_name'] = [fp_rtm+'wc_allpmom.sol.mie.cdf',fp_rtm+'wc.sol.long.mie.cdf']
         elif source=='solar_sub':
             mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
             mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
@@ -1066,6 +1067,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                                             np.swapaxes(mie_long.variables['phase'].data[:,:,0,:],0,1)),axis=1)
             pmom['theta'] = np.concatenate((np.concatenate((mie['theta'],np.zeros((30,754,602))),axis=2),
                                             np.swapaxes(mie_long.variables['theta'].data[:,:,0,:],0,1)),axis=1).shape 
+            pmom['file_name'] = [fp_rtm+'mie_hi.out',fp_rtm+'wc.sol.long.mie.cdf']
         elif source=='thermal':
             mie_trm = sio.netcdf_file(fp_rtm+'wc_trm_longmie.cdf','r')
             pmom = {'wvl':mie_trm.variables['wavelen'].data*1000.0, 
@@ -1080,6 +1082,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                     'pmom':np.swapaxes(mie_trm.variables['pmom'].data[:,:,0,:],0,1),
                     'phase':np.swapaxes(mie_trm.variables['phase'].data[:,:,0,:],0,1),
                     'theta':np.swapaxes(mie_trm.variables['theta'].data[:,:,0,:],0,1)}
+            pmom['file_name'] = [fp_rtm+'wc_trm_longmie.cdf']
         else:
             print 'Not a correct option for source: select either solar, solar_sub, or thermal'
             return None
@@ -1094,6 +1097,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                 #'phase':ic['phase'],
                 #'theta':ic['theta']}
         pmom['nmom'] = np.zeros_like(pmom['pmom'])-1
+        pmom['file_name'] = [fp_rtm+'ic.pmom.ghm.baum.mat']
     else:
         print 'Not a correct cloudtype value: either wc or ic'
         return None
@@ -1666,6 +1670,10 @@ def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={
             from copy import deepcopy
             d['cloud'] = deepcopy(cloud)
             d['cloud']['pmom'] = None
+            try:
+                d['cloud']['moms_dict'] = None
+            except:
+                pass
             d['cloud']['pmom_file'] = cloud_pmom_file
         else:
             d['cloud'] = cloud
