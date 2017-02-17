@@ -468,8 +468,12 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
     output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
     for iw,wv in enumerate(wvl):
         try:
-            output.write('%f\t%f\t%1.6f\t%s \n' % 
-                         (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:nmom[iw]])])))
+            if len(moments.shape)>1:
+                output.write('%f\t%f\t%1.6f\t%s \n' % 
+                             (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:nmom[iw]])])))
+            else:
+                output.write('%f\t%f\t%1.6f\t%s \n' % 
+                             (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:nmom[iw]])])))
         except:
             import pdb
             pdb.set_trace()
@@ -583,6 +587,8 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-30, NASA Ames, from Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2017-02-17, Santa Cruz, CA
+                  Changed the output commands to easily pass the ice pmoms as well as the wc
     """
     import numpy as np
     if verbose:
@@ -603,7 +609,7 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     if wvl[0]<1:
         wvl = wvl*1000.0
 
-    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:,:],moms_dict['nmom'][ir,:]
+    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:],moms_dict['nmom'][ir,:]
 
 
 # In[1]:
@@ -1079,15 +1085,16 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
             return None
     elif cloudtype =='ic':
         ic = sio.loadmat(fp_rtm+'ic.pmom.ghm.baum.mat')
-        pmom = {'wvl':ic['pmom_wvl'],
-                'ref':ic['ref'],
-                'rho':ic['rho'],
-                'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
-                'ssa':ic['ssa'],
-                'ext':ic['ext'],
-                'pmom':ic['pmom'],
-                'phase':ic['phase'],
-                'theta':ic['theta']}
+        nmom = np.zeros()
+        pmom = {'wvl':ic['pmom_wvl'][0,:],
+                'ref':ic['ref'][0,:],
+                'rho':ic['rho'][0,:],
+                'ssa':np.swapaxes(ic['ssa'][ic['pmom_iwvl'][0,:],:],0,1),
+                'ext':np.swapaxes(ic['ext'][ic['pmom_iwvl'][0,:],:],0,1),
+                'pmom':ic['pmom']}#,
+                #'phase':ic['phase'],
+                #'theta':ic['theta']}
+        pmom['nmom'] = np.zeros_like(pmom['pmom'])-1
     else:
         print 'Not a correct cloudtype value: either wc or ic'
         return None
