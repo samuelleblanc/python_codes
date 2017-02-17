@@ -1085,7 +1085,6 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
             return None
     elif cloudtype =='ic':
         ic = sio.loadmat(fp_rtm+'ic.pmom.ghm.baum.mat')
-        nmom = np.zeros()
         pmom = {'wvl':ic['pmom_wvl'][0,:],
                 'ref':ic['ref'][0,:],
                 'rho':ic['rho'][0,:],
