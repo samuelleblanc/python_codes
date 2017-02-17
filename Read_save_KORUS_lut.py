@@ -51,13 +51,18 @@ import hdf5storage as hs
 import os
 
 
+# In[ ]:
+
+name = 'KORUS'
+
+
 # In[5]:
 
 if os.sys.platform == 'win32':
-    fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
-    fp_rtm = 'C:\\Users\\sleblan2\\Research\\ORACLES\\rtm\\'
+    fp = 'C:\\Users\\sleblan2\\Research\\{}\\'.format(name)
+    fp_rtm = 'C:\\Users\\sleblan2\\Research\\{}\\rtm\\'.format(name)
 elif os.sys.platform == 'linux2':
-    fp = '/u/sleblan2/ORACLES/'
+    fp = '/u/sleblan2/{}/'.format(name)
     fp_rtm = '/nobackup/sleblan2/rtm/'
 else:
     raise Exception
@@ -68,7 +73,6 @@ else:
 # In[6]:
 
 vv = 'v2'
-name = 'KORUS'
 
 
 # In[ ]:
@@ -77,11 +81,19 @@ name = 'KORUS'
 from load_utils import load_from_json
 try:
     d = load_from_json(fp+'{name}_lut_{vv}.txt'.format(vv=vv,name=name))
-    sza = d['lut']['sza']
-    tau = d['lut']['tau']
-    ref = d['lut']['ref']
+    if 'lut' in d.keys():
+        sza = d['lut']['sza']
+        tau = d['lut']['tau']
+        ref = d['lut']['ref']
+        fmt = d['lut']['format']
+    elif 'lut_details' in d.keys():
+        sza = d['lut_details']['sza']
+        tau = d['lut_details']['tau']
+        ref = d['lut_details']['ref']
+        fmt = d['lut_details']['format']
+    else:
+        raise ValueError
     zout = d['geo']['zout']
-    fmt = d['lut']['format']
     mu = np.round(1.0/np.cos(sza*np.pi/180.0))
     use_json = True
 except ValueError: # not a json file try old way
