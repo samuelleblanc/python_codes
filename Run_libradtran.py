@@ -1606,8 +1606,12 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=0)),
                                   zout=zout,num_rad=1)
     if split_wvl:
-        dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
-                                  zout=zout,num_rad=1)
+        try:
+            dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
+                                      zout=zout,num_rad=1)
+        except:
+            dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=1)),
+                                      zout=zout,num_rad=1)
         dat = RL.combine_wvl(dat1,dat2)
     else:
         dat = dat1
