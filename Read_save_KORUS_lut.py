@@ -67,7 +67,8 @@ else:
 
 # In[6]:
 
-vv = 'v1'
+vv = 'v2'
+name = 'KORUS'
 
 
 # In[ ]:
@@ -75,7 +76,7 @@ vv = 'v1'
 # try to read from the saved version file
 from load_utils import load_from_json
 try:
-    d = load_from_json(fp+'ORACLES_lut_{}.txt'.format(vv))
+    d = load_from_json(fp+'{name}_lut_{vv}.txt'.format(vv=vv,name=name))
     sza = d['lut']['sza']
     tau = d['lut']['tau']
     ref = d['lut']['ref']
@@ -84,6 +85,7 @@ try:
     mu = np.round(1.0/np.cos(sza*np.pi/180.0))
     use_json = True
 except ValueError: # not a json file try old way
+    print '*** LUT definition file problem! Using predefined lut description'
     use_json = False
     fmt='lut_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat'
     if vv=='v1':
@@ -106,7 +108,7 @@ except ValueError: # not a json file try old way
 
 # In[7]:
 
-fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
+fp_out = os.path.join(fp_rtm,'output','{vv}_{name}'.format(vv=vv,name=name))
 
 
 # In[ ]:
@@ -130,5 +132,5 @@ print 'Saving matlab file'
 
 # In[10]:
 
-hs.savemat(fp+'{}_ORACLES_lut.mat'.format(vv),dat)
+hs.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
 
