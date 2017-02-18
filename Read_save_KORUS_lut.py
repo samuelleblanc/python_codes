@@ -79,7 +79,7 @@ vv = 'v2'
 # In[ ]:
 
 # try to read from the saved version file
-from load_utils import load_from_json
+from load_utils import load_from_json, deep_convert_dict
 try:
     d = load_from_json(fp+'{name}_lut_{vv}.txt'.format(vv=vv,name=name))
     if 'lut' in d.keys():
@@ -135,7 +135,7 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 # In[ ]:
 
 if use_json:
-    dat['lut_details'] = d
+    dat['lut_details'] = deep_convert_dict(d)
 
 
 # In[ ]:
