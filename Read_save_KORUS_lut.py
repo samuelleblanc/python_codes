@@ -134,6 +134,7 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 
 # In[ ]:
 
+dat = deep_convert_dict(dat)
 if use_json:
     dat['lut_details'] = deep_convert_dict(d)
 
