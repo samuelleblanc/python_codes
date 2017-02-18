@@ -1209,6 +1209,31 @@ def load_from_json(f):
     return d
 
 
+# In[ ]:
+
+def deep_convert_dict(layer):
+    """
+    Function to transform nested ordereddict to nested dict, 
+    
+    taken from http://stackoverflow.com/questions/25054003/how-to-convert-a-nested-ordereddict-to-dict
+    
+    from Patrick Collins
+    
+    """
+    import collections
+    to_ret = layer
+    if isinstance(layer, collections.OrderedDict):
+        to_ret = dict(layer)
+
+    try:
+        for key, value in to_ret.items():
+            to_ret[key] = deep_convert_dict(value)
+    except AttributeError:
+        pass
+
+    return to_ret
+
+
 # Testing of the script:
 
 # In[4]:
