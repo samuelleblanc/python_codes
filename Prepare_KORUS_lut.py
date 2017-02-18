@@ -195,6 +195,7 @@ print f_list.name
 
 # In[ ]:
 
+after_first_sza = False
 for s in sza:
     for t in tau:
         for r in ref:
@@ -202,17 +203,21 @@ for s in sza:
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
+            if after_first_sza: cloud['link_to_mom_file'] = True
             if r>=5.0:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 source['slit_file'] = f_slit_vis
+                if after_first_sza: cloud['file_name'] = os.path.join(fp_in,'lut_sza%02i_tau%06.2f_ref%04.1f' % (sza[0],t,r)+
+                                                                      +'_'+cloud['phase']+'_w0.dat_cloud')
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
                 source['slit_file'] = f_slit_nir
+                if after_first_sza: cloud['file_name'] = cloud['file_name'].replace('w0','w1')
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')
@@ -221,16 +226,20 @@ for s in sza:
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 source['slit_file'] = f_slit_vis
+                if after_first_sza: cloud['file_name'] = os.path.join(fp_in,'lut_sza%02i_tau%06.2f_ref%04.1f' % (sza[0],t,r)+
+                                                                      +'_'+cloud['phase']+'_w0.dat_cloud')
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
                 source['slit_file'] = f_slit_nir
+                if after_first_sza: cloud['file_name'] = cloud['file_name'].replace('w0','w1')
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
             print s,t,r
+    after_first_sza = True
 
 
 # In[ ]:

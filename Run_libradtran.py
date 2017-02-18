@@ -315,7 +315,8 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
 # In[45]:
 
-def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbose=False,append_directly_below=False):
+def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
+                             verbose=False,append_directly_below=False,wvl_range=None):
     """
     Purpose:
 
@@ -333,6 +334,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
         ztop: top of cloud layer [km]
         moms_dict: dictionary from saved legendre moments. 
                     Includes: ntheta, pmom, rho, nmom, ssa, nim, nre, ext, wvl, phase, theta, ref
+        wvl_range: sets the range of wavelength for the cloud properties to be saved. If not set, prints all values in moms_dict
     
     Output:
 
@@ -362,6 +364,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
         Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
         Modified (v1.1): Samuel LeBlanc, DC8 flying above Korea, 2016-05-02
                         - added the append_directly_below keyword
+        Modified (v1.2): Samuel LeBlanc, Santa Cruz, CA, 2017-02-17
+                        - added the wvl_range keyword
     """
     import numpy as np
     from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa_moms
@@ -402,7 +406,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
         file_cloud = output_file+'_zbelow'
         output.write('%4.4f\t%s\n' % (zbot,file_cloud))
     
-    write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose)
+    write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose,wvl_range=wvl_range)
     
     output.close() 
     if verbose:
@@ -411,7 +415,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,verbos
 
 # In[ ]:
 
-def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False):
+def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False,wvl_range=None):
     """
     Purpose:
 
@@ -426,7 +430,8 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         ssa: value of aerosol single scattering albedo at each wavelength [wvl]
         moments: array of moments at each wavelength [wvl]
         nmom: number of moments to be written out. 
-        wvl: array of wavelengths in nm
+        wvl: array of wavelengths in nm referring to the properties
+        wvl_range: only print the values within this wavelength range
     
     Output:
 
@@ -458,6 +463,9 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
     if not len(wvl)==len(ssa):
         raise LookupError("ssa and wvl_arr don't have the same size")  
         
+    if not wvl_range:
+        wvl_range = [min(wvl),max(wvl)]
+        
     try:
         output = file(output_file,'w')
     except Exception,e:
@@ -467,6 +475,8 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
     output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
     for iw,wv in enumerate(wvl):
+        if wv<wvl_range[0] or wv>wvl_range[1]:
+            continue
         try:
             if len(moments.shape)>1:
                 output.write('%f\t%f\t%1.6f\t%s \n' % 
@@ -945,7 +955,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             if cloud['cloud_below']:
                 if not cloud.get('link_to_mom_file'):
                     write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
-                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),append_directly_below=True)
+                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),
+                                             append_directly_below=True,wvl_range=source['wvl_range'])
                 
         else:
             if not cloud.get('link_to_mom_file'):
