@@ -49,6 +49,7 @@ import numpy as np
 import Run_libradtran as RL
 import hdf5storage as hs
 import os
+import scipy.io as sio
 
 
 # In[ ]:
@@ -144,5 +145,8 @@ print 'Saving matlab file'
 
 # In[10]:
 
-hs.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
+try:
+    hs.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
+except:
+    sio.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
 
