@@ -406,6 +406,8 @@ class Sp:
     keywords:
       - irrad: (default False) if True, then calculates the irradiance values as well
       - verbose (default True) if True, then returns many comments while processing
+      - liq_only (default False) if True, then only computes the liquid side of the lut
+      - ice_only (default False) if True only computes the ice lut
     
     
     Modification History:
@@ -425,10 +427,12 @@ class Sp:
     Modified (v1.6): Samuel LeBlanc, Santa Cruz, CA, 2016-11-22
                     - added keyword for hires params to subset the ref and tau ranges
                     - added keys() method for listing the methods of this class in a dict-like way.
+    Modified (v1.7): Samuel LeBlanc, Santa Cruz, CA, 2017-02-19
+                    - added keyword for ice_only lut development
 
     """    
     import numpy as np
-    def __init__(self,s,irrad=False,verbose=True,liq_only=False):
+    def __init__(self,s,irrad=False,verbose=True,liq_only=False,ice_only=False):
         import numpy as np
         self.verbose = verbose
         if 'nm' in s:
@@ -529,18 +533,21 @@ class Sp:
                 raise IOError('No defined time array (key t or utc) in input object')
         return utc, datestr
     
-    def params(self,liq_only=False):
+    def params(self,liq_only=False,ice_only=True):
         """
         Purpose:
             Runs through each spectrum in the sp array to calculate the parameters
         
         Keyword:
             - liq_only: (default False) if True, copies the keywords from liquid to ice values
+            - ice_only: (default False) if True, copies the keywords from ice to liquid values
         """
         useezmap = False
         from Sp_parameters import param
         import warnings
         if self.verbose: print('Running Parameters')
+        if liq_only and ice_only:
+            raise ValueError('liq_only and ice_only cannot be used together')
         if useezmap:
             import ezmap
             from ezmap import map as zmap
@@ -562,6 +569,10 @@ class Sp:
                 import warnings
                 warnings.warn('Copyig the parameters calculated for liquid LUT to the ice LUT, ice parameters will be lost')
                 par[1,:,:,:] = par[0,:,:,:]
+            if ice_only:
+                import warnings
+                warnings.warn('Copyig the parameters calculated for Ice LUT to the liquid LUT, liquid parameters will be lost')
+                par[0,:,:,:] = par[1,:,:,:]
             self.npar = par.shape[3]
         elif sp.ndim == 2:
             applypartime = lambda tt:param(sp[tt,:],wvl)
@@ -1270,7 +1281,7 @@ def plot_hist_cld_retrieval(meas):
 
 # In[ ]:
 
-def plot_lut_vs_tau(lut,forceliq=False):
+def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
     """
     Purpose:
         Create a plot of the lut for ice and liquid vs the optical depth of the cloud
@@ -1281,17 +1292,22 @@ def plot_lut_vs_tau(lut,forceliq=False):
         ax3: array of axes objects
     Keywords:
         forceliq: (default False) if True, then will not plot the ice portion of the lut.
+        forceice: (default False) if True, then will not plot the liquid portion of the lut.
     Dependencies:
         - matplotlib
         - Sp_parameters (this file)
         - mpltools
     Modification History:
         Writtten: Samuel LeBlanc, 2016-10-05,Santa Cruz, CA
+        Modified: Samuel LeBlanc, 2017-02-19, Santa Cruz, CA
+                 - added the forceice keyword
     """
     import matplotlib.pyplot as plt
     import matplotlib.lines as mlines
     import Sp_parameters as Sp
     from mpltools import color
+    if forceliq and forceice:
+        raise ValueError('forceliq and forceice cannot be used together')
     if not hasattr(lut,'tau'):
         print 'The lut object does not have the tau variable, please check the it again. Returning...'
         return None
@@ -1301,13 +1317,14 @@ def plot_lut_vs_tau(lut,forceliq=False):
     npar = len(lut.par[0,0,0,:])-1
 
     for i in xrange(npar):
-        color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.hot_r,ax=ax3[i])
-        for j in xrange(len(lut.ref[lut.ref<30])):
-            try:
-                ax3[i].plot(lut.tau,lut.par[0,j,:,i])
-            except:
-                pass
-                #import pdb; pdb.set_trace()
+        if not forceice:
+            color.cycle_cmap(len(lut.ref[lut.ref<30]),cmap=plt.cm.hot_r,ax=ax3[i])
+            for j in xrange(len(lut.ref[lut.ref<30])):
+                try:
+                    ax3[i].plot(lut.tau,lut.par[0,j,:,i])
+                except:
+                    pass
+                    #import pdb; pdb.set_trace()
         if not forceliq:
             color.cycle_cmap(len(lut.ref[lut.ref>3]),cmap=plt.cm.cool,ax=ax3[i])
             for j in xrange(len(lut.ref[lut.ref>3])):
@@ -1330,13 +1347,14 @@ def plot_lut_vs_tau(lut,forceliq=False):
     fig3.tight_layout()
     #plt.suptitle('Liquid')
     plt.subplots_adjust(top=0.90,right=0.90)
-
-    cbar_ax = fig3.add_axes([0.92,0.53,0.02,0.42])
-    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.hot_r,norm=plt.Normalize(vmin=0,vmax=1))
-    scalarmap.set_array(lut.ref[lut.ref<30])
-    cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
-    cba.ax.set_ylabel('liquid $r_{eff}$ [$\\mu$m]')
-    cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
+    
+    if not forceice:
+        cbar_ax = fig3.add_axes([0.92,0.53,0.02,0.42])
+        scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.hot_r,norm=plt.Normalize(vmin=0,vmax=1))
+        scalarmap.set_array(lut.ref[lut.ref<30])
+        cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
+        cba.ax.set_ylabel('liquid $r_{eff}$ [$\\mu$m]')
+        cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
     
     if not forceliq:
         cbar_ax = fig3.add_axes([0.92,0.05,0.02,0.42])

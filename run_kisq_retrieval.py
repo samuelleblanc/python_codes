@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <headingcell level=1>
+# coding: utf-8
 
-# Functions to run the ki^2 retrieval based on the parameters calculated in the Sp class, from modeled and measured source
+# # Functions to run the ki^2 retrieval based on the parameters calculated in the Sp class, from modeled and measured source
 
-# <codecell>
+# In[1]:
 
 def assure_input(sp):
     " A function that checks the input and runs all the required functions to generate parameters"
@@ -21,7 +19,8 @@ def assure_input(sp):
         sp.params() 
         sp.param_hires()
 
-# <codecell>
+
+# In[5]:
 
 def phase(parn,model,stdparn):
     """
@@ -47,9 +46,10 @@ def phase(parn,model,stdparn):
         ph = 1
     return ph
 
-# <codecell>
 
-def run_retrieval(meas,model,subp=range(15),force_liq=False):
+# In[1]:
+
+def run_retrieval(meas,model,subp=range(15),force_liq=False,force_ice=False):
     """ 
     Name:
 
@@ -71,6 +71,7 @@ def run_retrieval(meas,model,subp=range(15),force_liq=False):
         model: Sp object (from Sp_paramters) of modeled spectra, also considered the look-up-table (lut) object
         subp: (optional) array of parameters to use for retrieval
         force_liq: (optional, default False), if set to True, retrieval is forced to retrieve in the liquid cloud lut, no ice
+        force_ice: (optional, default False), if set to True, retrieval is forced to retrieve in the ice cloud lut, no liquid
      
     Output:
 
@@ -104,11 +105,15 @@ def run_retrieval(meas,model,subp=range(15),force_liq=False):
         Written (v1.0): Samuel LeBlanc, 2014-11-08, NASA Ames
         Modified (v1.1): Samuel LeBlanc, 2015-05-27, Santa Cruz, CA
                          - added keyword to force the retrieval to use the liquid phase only
+        Modified (v1.2): Samuel LeBlanc, 2017-02-19, Santa Cruz, CA
+                         - added keyword to force the retrieval to use the ice phase only
 
     """
     import Sp_parameters as Sp
     import numpy as np
     import run_kisq_retrieval as rk
+    if force_liq and force_ice:
+        raise ValueError('force_liq and force_ice cannot be used together')
     rk.assure_input(meas)
     rk.assure_input(model)
     # normalize the parameters
@@ -147,6 +152,8 @@ def run_retrieval(meas,model,subp=range(15),force_liq=False):
         #import pdb; pdb.set_trace()
         if force_liq:
             ph[tt] = 0
+        elif force_ice:
+            ph[tt] = 1
         else:
             ph[tt] = rk.phase(meas.parn[tt,:].ravel(),model,meas.stdparn)
         if ph[tt] == 2: # undecided, must do the kisq

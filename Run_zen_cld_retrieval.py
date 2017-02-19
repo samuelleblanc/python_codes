@@ -143,7 +143,8 @@ parser.add_argument('-o','--fp_zencld_plot',nargs='?',
 parser.add_argument('-lut','--fp_lut_mat',nargs='?',help='Put in special look up table file path')
 parser.add_argument('-f',nargs='?',help='not used')
 parser.add_argument('-n','--noplot',help='if set, will not output plots',action='store_true')
-parser.add_argument('-liq','--forceliq',help='if set, will force to only use liquid lut',action='store_true')
+parser.add_argument('-liq','--forceliq',help='if set, will force to only use liquid cloud lut',action='store_true')
+parser.add_argument('-ice','--forceice',help='if set, will force to only use ice cloud lut',action='store_true')
 parser.add_argument('-plotlut','--plotlut',help='if set, will plot the look up table',action='store_true')
 parser.add_argument('-movie','--makemovie',help='if set, will create a movie of the measurements and retrievals',
                     action='store_true')
@@ -265,6 +266,15 @@ if in_.get('forceliq'):
     print 'Force liquid cloud'
 else:
     forceliq = False
+
+
+# In[ ]:
+
+if in_.get('forceice'):
+    forceice = True
+    print 'Force Ice cloud'
+else:
+    forceice = False
 
 
 # In[ ]:
@@ -417,7 +427,7 @@ for s in xrange(len(luts['sza'])):
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp,verbose=False)
     if s in idx:
-        ltemp.params(liq_only=forceliq)
+        ltemp.params(liq_only=forceliq,ice_only=forceice)
         ltemp.param_hires(start_ref=start_ref,end_ref=end_ref,start_tau=start_tau,end_tau=end_tau)
     lut.append(ltemp)
 
@@ -474,7 +484,7 @@ for i in np.unique(idx):
             print 'exception: {}'.format(ei)
             import pdb; pdb.set_trace()
     print 'meas.good lengh: {},meas.utc length: {}'.format(meas.good.shape,meas.utc.shape)
-    tau,ref,phase,ki = rk.run_retrieval(meas,lut[i],force_liq=forceliq)
+    tau,ref,phase,ki = rk.run_retrieval(meas,lut[i],force_liq=forceliq,force_ice=forceice)
     meas.taut[meas.good] = tau[meas.good]
     meas.ref[meas.good] = ref[meas.good]
     meas.phase[meas.good] = phase[meas.good]
@@ -537,7 +547,7 @@ if plot_lut:
         if not i in np.unique(idx):
             continue
         try: 
-            figl,axl = Sp.plot_lut_vs_tau(lut[i],forceliq=forceliq)
+            figl,axl = Sp.plot_lut_vs_tau(lut[i],forceliq=forceliq,forceice=forceice)
             figl.savefig(fp_zencld_plot+'{datestr}_lut_only_sza_{sza:02.1f}.png'.format(datestr=datestr,sza=ll['sza'][i]),
                          dpi=600,transparent=True)
         except:
