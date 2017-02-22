@@ -43,7 +43,7 @@ vr='R0'
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160512','20160516','20160517','20160519','20160521','20160524',
         '20160526','20160529','20160601','20160602','20160604','20160608',
-        '20160609','20160614','20160617','20160618']
+        '20160609','20160614']#,'20160617','20160618']
 
 
 # In[23]:
@@ -56,7 +56,7 @@ days = ['20160501','20160506','20160512','20160517','20160526','20160614']
 days = ['20160516']
 
 
-# In[7]:
+# In[6]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -95,7 +95,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[25]:
+# In[7]:
 
 outaod_head_RA[0]
 
@@ -105,22 +105,22 @@ outaod_head_RA[0]
 outgas_head_RA[0]
 
 
-# In[9]:
+# In[8]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[10]:
+# In[9]:
 
 nm
 
 
-# In[11]:
+# In[10]:
 
 wl = nm[6:-1]
 
 
-# In[13]:
+# In[11]:
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -182,17 +182,22 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vr}_{}.png'.format(d,vr=vr),dpi=600,transparent=True)
 
 
-# In[15]:
+# In[14]:
 
 nm[4]
 
 
-# In[16]:
+# In[ ]:
+
+
+
+
+# In[15]:
 
 fl = np.where(outaod_RA[i][nm[4]]==1)[0]
 
 
-# In[17]:
+# In[16]:
 
 fl.shape
 
@@ -268,7 +273,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vr}_{}.png'.format(d,vr=vr),dpi=600,transparent=True)
 
 
-# In[32]:
+# In[17]:
 
 outgas_RA[0].dtype.names
 
@@ -310,19 +315,19 @@ for i,d in enumerate(days):
 
 # # Combineall the data into a single array
 
-# In[17]:
+# In[18]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[18]:
+# In[19]:
 
 ar['days'] = np.array([])
 
 
-# In[19]:
+# In[20]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -330,34 +335,46 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[20]:
+# In[21]:
 
 ar['GPS_Alt'].shape
 
 
+# ## Save the combined data
+
+# In[31]:
+
+import hdf5storage as hs
+
+
+# In[33]:
+
+hs.savemat(fp+'/aod_ict/all_aod_KORUS_ict.mat',ar)
+
+
 # ## Filterout bad data
 
-# In[17]:
+# In[22]:
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[18]:
+# In[23]:
 
 ar['fl'] = ar['fl_QA']
 
 
-# In[22]:
+# In[24]:
 
 ar['fl_alt'] = ar['GPS_Alt']<=1500
 
 
-# In[26]:
+# In[25]:
 
 ar['fl_alt1'] = ar['GPS_Alt']<=600
 
 
-# In[23]:
+# In[26]:
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt']
 
@@ -369,7 +386,7 @@ ar['fl2'] = ar['fl_QA']&ar['fl_alt1']
 
 # ## Plot out all the data
 
-# In[19]:
+# In[28]:
 
 from plotting_utils import prelim
 
@@ -390,12 +407,12 @@ plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vr),dpi=600,transparent=True)
 
 
-# In[30]:
+# In[29]:
 
 np.nanmean(ar['AOD0501'][ar['fl2']])
 
 
-# In[31]:
+# In[30]:
 
 np.nanmedian(ar['AOD0501'][ar['fl2']])
 
