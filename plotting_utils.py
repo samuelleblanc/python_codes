@@ -545,7 +545,7 @@ def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
 
 def color_box(bp, color):
     'Coloring of all the elements of a box plot'
-    import mnatplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
     
     # Define the elements to color. You can also add medians, fliers and means
     elements = ['boxes','caps','whiskers','medians','means','fliers']
@@ -567,10 +567,19 @@ def subset_bins(vals,val_lim,lims):
     return bins
 
 
-# In[ ]:
+# In[1]:
 
-def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None):
-    'Compile the functions to make a box plot'
+def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False):
+    """Compile the functions to make a box plot
+    
+    vals: values to box
+    val_lim: values to use as basis for binning
+    lims: limits of the bins to use
+    pos: center position of the limites
+    y:?
+    vert: (default True) if True, return vertical boxes, false for horizontal boxes
+    fliers_off: (default False) if True, turns off the plotting of the outliers
+    """
 
     import matplotlib.pyplot as plt
     from plotting_utils import subset_bins, color_box
@@ -578,25 +587,41 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
     if not ax:
         ax = plt.gca()
         
-    ti = ax.get_xticks()
-    tl = ax.get_xticklabels()
-    
+    if vert:
+        ti = ax.get_xticks()
+        tl = ax.get_xticklabels()
+    else:
+        ti = ax.get_yticks()
+        tl = ax.get_yticklabels()
+        
     bins = subset_bins(vals,val_lim,lims)
     
-    bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos)
+    bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos,vert=vert)
     color_box(bo,color)
     for n in bo.keys():
         nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in xrange(len(bo[n]))]
-    u = [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    if fliers_off:
+        u = [plt.setp(bo['fliers'][idx],alpha=0.00)for idx in xrange(len(bo['fliers']))]
+    else:
+        u = [plt.setp(bo['fliers'][idx],alpha=0.04)for idx in xrange(len(bo['fliers']))]
     v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
-    mean = [a.get_ydata()[0] for a in bo['means']]
-    ax.plot(pos, mean,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+    if vert:
+        mean = [a.get_ydata()[0] for a in bo['means']]
+        ax.plot(pos, mean,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+    else:
+        mean = [a.get_xdata()[0] for a in bo['means']]
+        ax.plot( mean,pos,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+        
     
     #plt.gca().xaxis.set_major_locator(AutoLocator())
     #plt.gca().xaxis.set_major_locator(AutoLocator)
-    ti1 = ax.set_xticks(ti)
-    tl1 = ax.set_xticklabels([t for t in ti])
-    
+    if vert:
+        ti1 = ax.set_xticks(ti)
+        tl1 = ax.set_xticklabels([t for t in ti])
+    else:
+        ti1 = ax.set_yticks(ti)
+        tl1 = ax.set_yticklabels([t for t in ti])
+        
     return mean
 
 
