@@ -113,6 +113,8 @@
 #     Modified: Samuel LeBlanc, NASA Ames, 2016-10-20
 #     Modified: Samuel LeBlanc, Santa Cruz, 2016-11-22
 #             - added keyword for subsetting the hires parameters to a smaller range of ref and tau values defined by user
+#     Modified: Samuel LeBlanc, Mountain View, CA, 2017-02-22
+#             - added index_zout keyword for setting a different zout index used for calculating the lut parameters
 #             
 
 # In[ ]:
@@ -158,6 +160,8 @@ parser.add_argument('-refrange','--refrange',help='Sets the range of effective r
                     nargs=2,type=float)
 parser.add_argument('-taurange','--taurange',help='Sets the range of optical depth to be used in the lut [start end]',
                     nargs=2,type=float)
+parser.add_arguments('-iz','--index_zout',help='Sets the index of the zout to use for building the lut. Default is 0',
+                    type=int)
 
 
 # In[70]:
@@ -275,6 +279,11 @@ if in_.get('forceice'):
     print 'Force Ice cloud'
 else:
     forceice = False
+
+
+# In[ ]:
+
+iz = in_.get('index_zout',0)
 
 
 # In[ ]:
@@ -427,7 +436,7 @@ for s in xrange(len(luts['sza'])):
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp,verbose=False)
     if s in idx:
-        ltemp.params(liq_only=forceliq,ice_only=forceice)
+        ltemp.params(liq_only=forceliq,ice_only=forceice,iz=iz)
         ltemp.param_hires(start_ref=start_ref,end_ref=end_ref,start_tau=start_tau,end_tau=end_tau)
     lut.append(ltemp)
 

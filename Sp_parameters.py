@@ -429,6 +429,8 @@ class Sp:
                     - added keys() method for listing the methods of this class in a dict-like way.
     Modified (v1.7): Samuel LeBlanc, Santa Cruz, CA, 2017-02-19
                     - added keyword for ice_only lut development
+    Modified (v1.8): Samuel LeBlanc, Mountain View, CA, 2017-02-22
+                    - added keyword in params for defining which zout to use when calculating parameters for luts.
 
     """    
     import numpy as np
@@ -533,7 +535,7 @@ class Sp:
                 raise IOError('No defined time array (key t or utc) in input object')
         return utc, datestr
     
-    def params(self,liq_only=False,ice_only=True):
+    def params(self,liq_only=False,ice_only=True,iz=0):
         """
         Purpose:
             Runs through each spectrum in the sp array to calculate the parameters
@@ -541,6 +543,7 @@ class Sp:
         Keyword:
             - liq_only: (default False) if True, copies the keywords from liquid to ice values
             - ice_only: (default False) if True, copies the keywords from ice to liquid values
+            - iz: (default 0 or lowest) zout index value used in calculating the parameters
         """
         useezmap = False
         from Sp_parameters import param
@@ -558,11 +561,11 @@ class Sp:
         if sp.ndim == 5:
             w,r,t = np.mgrid[0:2,0:len(self.ref),0:len(self.tau)]
             if useezmap:
-                gx = lambda a:param(sp[a[0],:,0,a[1],a[2]],wvl)
+                gx = lambda a:param(sp[a[0],:,iz,a[1],a[2]],wvl)
                 args = ((aw,ar,at) for aw in w.ravel() for ar in r.ravel() for at in t.ravel())
                 partemp = zmap(gx,args,progress=True,ncpu=2)
             else:
-                applypar = lambda w,r,t:param(sp[w,:,0,r,t],wvl)
+                applypar = lambda w,r,t:param(sp[w,:,iz,r,t],wvl)
                 partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
             par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
             if liq_only:
@@ -711,7 +714,7 @@ class Sp:
         if self.verbose: print tau_hires.shape 
         if self.verbose: print ref_hires.shape
         import gc; gc.collect()
-        sp_hires = np.zeros([2,len(wvl),2,len(ref_hires),len(tau_hires)])*np.nan
+        sp_hires = np.zeros([2,len(wvl),self.zout,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
         refranges = self.get_refrange() #(range(0,23),range(3,35))
         if ~hasattr(self,'refranges'):
