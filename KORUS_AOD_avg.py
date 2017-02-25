@@ -59,18 +59,18 @@ import hdf5storage as hs
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[15]:
+# In[4]:
 
 import plotting_utils as pu
 
 
-# In[4]:
+# In[5]:
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[5]:
+# In[6]:
 
 fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 
@@ -85,64 +85,64 @@ vr = 'R0'
 
 # ## Load the AOD files from 4STAR
 
-# In[ ]:
+# In[8]:
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_ict.mat')
 
 
-# In[13]:
+# In[9]:
 
 ar.keys()
 
 
 # ## Adjust the AOD to reflect dirt contamination
 
-# In[142]:
+# In[10]:
 
 arc = {}
 arc['AOD0501'] = ar['AOD0501']-ar['UNCAOD0501']
 
 
-# In[143]:
+# In[11]:
 
 arc['AOD0501'][ar['UNCAOD0501']>0.02] = arc['AOD0501'][ar['UNCAOD0501']>0.02]+0.02
 
 
 # ## Filter out bad data
 
-# In[19]:
+# In[12]:
 
 ar['fl'][0]
 
 
-# In[18]:
+# In[13]:
 
 ar['AOD0501'].shape
 
 
 # ## Make some filters for altitudes 
 
-# In[33]:
+# In[14]:
 
 ar['fl_2_8'] = (ar['GPS_Alt']<=8000) & (ar['GPS_Alt']>2000) & ar['fl_QA']
 
 
-# In[35]:
+# In[15]:
 
 ar['fl_1.5_2'] = (ar['GPS_Alt']<=2000) & (ar['GPS_Alt']>1500) & ar['fl_QA']
 
 
-# In[36]:
+# In[16]:
 
 ar['fl_1_1.5'] = (ar['GPS_Alt']<=1500) & (ar['GPS_Alt']>1000) & ar['fl_QA']
 
 
-# In[37]:
+# In[17]:
 
 ar['fl_0.5_1'] = (ar['GPS_Alt']<=1000) & (ar['GPS_Alt']>500) & ar['fl_QA']
 
 
-# In[38]:
+# In[18]:
 
 ar['fl_0.5'] = (ar['GPS_Alt']<=500) & ar['fl_QA']
 
@@ -195,19 +195,19 @@ plt.legend(frameon=False)
 n[-2][:-1]
 
 
-# In[111]:
+# In[19]:
 
 y=[(nn+n[-2][j+1])/2.0 for j,nn in enumerate(n[-2][:-1])]
 
 
-# In[123]:
+# In[20]:
 
 n[1]
 
 
-# In[145]:
+# In[26]:
 
-plt.figure()
+fig = plt.figure()
 n=plt.hist([arc['AOD0501'][ar['fl']],
           arc['AOD0501'][ar['fl_2_8']],
           arc['AOD0501'][ar['fl_1.5_2']],
@@ -225,6 +225,21 @@ plt.xlim(0,0.5)
 plt.xlabel('AOD @ 501 nm')
 plt.ylabel('Frequency')
 plt.title('All 4STAR AOD from KORUS-AQ subsetted by altitude')
+
+left, bottom, width, height = [0.6, 0.3, 0.35, 0.2]
+ax2 = fig.add_axes([left, bottom, width, height])
+n = ax2.hist([arc['AOD0501'][ar['fl']],
+          arc['AOD0501'][ar['fl_2_8']],
+          arc['AOD0501'][ar['fl_1.5_2']],
+          arc['AOD0501'][ar['fl_1_1.5']],
+          arc['AOD0501'][ar['fl_0.5_1']],
+          arc['AOD0501'][ar['fl_0.5']]
+         ],bins=20,range=(0,1.2),normed=True,edgecolor='None',alpha=0.4)
+ax2.set_xlim(0.4,1.2)
+ax2.set_ylim(0,0.5)
+ax2.grid()
+ax2.set_xlabel('AOT @ 501 nm')
+
 plt.savefig(fp+'plot/AOD_hist_alt_KORUS.png',dpi=600,transparent=True)
 
 
