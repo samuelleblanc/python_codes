@@ -160,7 +160,7 @@ parser.add_argument('-refrange','--refrange',help='Sets the range of effective r
                     nargs=2,type=float)
 parser.add_argument('-taurange','--taurange',help='Sets the range of optical depth to be used in the lut [start end]',
                     nargs=2,type=float)
-parser.add_arguments('-iz','--index_zout',help='Sets the index of the zout to use for building the lut. Default is 0',
+parser.add_argument('-iz','--index_zout',help='Sets the index of the zout to use for building the lut. Default is 0',
                     type=int)
 
 
