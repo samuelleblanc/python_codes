@@ -39,7 +39,8 @@ def __init__():
     Modification History:
 
         Written: Samuel LeBlanc, Mauna Loa Observatory, Hawaii, 2016-07-03
-        Modified: 
+        Modified: Samuel LeBlanc, From SFO to Seoul, 2017-02-25
+                  Added tools to calculate the angstrom exponent from a polynomial fit
     """
     pass
 
@@ -292,6 +293,131 @@ def calc_sza_airmass(datetime_utc,lat,lon,alt,c={}):
         c['m_ray'].append(m_r)
         c['m_o3'].append(m_o)
     return c
+
+
+# # Tools for calculating the angstrom exponent
+
+# In[ ]:
+
+def aod_polyfit(wvl,aod,polynum=False):
+    """
+    Purpose:  
+        Take in an array of aod spectra and calculate the polynomials associated with each spectrum
+        takes in the wvl
+
+    Input:
+         aod: numpy array of time,wvl
+         wvl: numpy array of wavelengths in nm
+        
+    Output:
+        array of polynomial coefficients for each time point in the aod
+
+    Keywords:
+        polynum: (optional, defaults to N-2 where N is the number of points in the spectrum) 
+                 number of polynomials coefficients to return (order of the polynomial), if set to False, uses default N-2
+        
+    Dependencies:
+        - numpy
+        - scipy
+
+    Needed Files:
+      - None
+
+    Modification History:
+
+        Written: Samuel LeBlanc, Flight between San Francisco and Seoul, 2017-02-25
+        Modified: 
+    """
+    import numpy as np
+    from scipy import polyfit
+    # sanitize inputs
+    shape = aod.shape
+    wvl = np.array(wvl)
+    if not len(wvl.shape)==1:
+        raise ValueError('wvl is not a array with one dimension')
+    if not len(wvl) in shape:
+        raise ValueError('No size of aod is the same as wvl')
+        
+    if not polynum:
+        polynum = len(wvl)-2
+        
+    if len(shape)>1:
+        ni,n = [(i,j) for (i,j) in enumerate(shape) if not j==len(wvl)][0]
+        cc = np.zeros((polynum,n))
+        for i in range(n):
+            if ni==0: 
+                cc[:,i] = polyfit(wvl,aod[i,:],polynum)
+            else:
+                cc[:,i] = polyfit(wvl,aod[:,i],polynum)
+    else:
+        cc = polyfit(wvl,aod,polynum)
+        
+    return cc
+
+
+# In[86]:
+
+def angstrom_from_poly(c,wvl):
+    """
+    Purpose:  
+        calculate the angstrom at a defined wavelength, can take in arrays
+
+    Input:
+        c: polynomial coefficients from output of aod_polyfit (can be an array of coefficients,time)
+        wvl: wavelengths (in nm) to calculate the angstrom exponent
+        
+    Output:
+        array of angstrom values, one for each time in c
+
+    Keywords:
+        polynum: (optional, defaults to 4) number of polynomials coefficients to return (order of the polynomial) 
+        
+    Dependencies:
+        - numpy
+        - scipy
+
+    Needed Files:
+      - None
+
+    Modification History:
+
+        Written: Samuel LeBlanc, Flight between San Francisco and Seoul, 2017-02-25
+    """
+    print 'Not tested yet!!'
+    from scipy import polyval
+    import numpy as np
+    if len(c.shape)>1:
+        try:
+            ang = np.zeros((len(c[0,:]),len(wvl)))
+            for iv,v in enumerate(wvl):
+                vu = np.array([v-0.2,v-0.1,v,v+0.1,v+0.2])
+                dv = np.gradient(vu)
+                for j in xrange(len(c[0,:])):
+                    a = np.gradient(np.log(polyval(c[:,j],vu))*(-1.0),dv )
+                    ang[j,iv] = a[2]
+        except TypeError:
+            ang = np.zeros((len(c[0,:])))
+            v = wvl
+            vu = np.array([v-0.2,v-0.1,v,v+0.1,v+0.2])
+            dv = np.gradient(vu)
+            for j in xrange(len(c[0,:])):
+                a = np.gradient(np.log(polyval(c[:,j],vu))*(-1.0),dv)
+                ang[j,iv] = a[2]
+    else:
+        try: 
+            ang = np.zeros((len(wvl)))
+            for iv,v in enumerate(wvl):
+                vu = np.array([v-0.2,v-0.1,v,v+0.1,v+0.2])
+                dv = np.gradient(vu)
+                a = np.gradient(np.log(polyval(c,vu))*(-1.0),dv )
+                ang[iv] = a[2]
+        except TypeError:
+            v = wvl
+            vu = np.array([v-0.2,v-0.1,v,v+0.1,v+0.2])
+            dv = np.gradient(vu)
+            a = np.gradient(np.log(polyval(c,vu))*(-1.0),dv)
+            ang = a[2]
+    return ang
 
 
 # In[ ]:
