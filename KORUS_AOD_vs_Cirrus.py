@@ -42,7 +42,7 @@
 # # Prepare the python environment
 # 
 
-# In[122]:
+# In[2]:
 
 import numpy as np
 import scipy.io as sio
@@ -50,38 +50,38 @@ import os
 import matplotlib.pyplot as plt
 
 
-# In[123]:
+# In[3]:
 
 import hdf5storage as hs
 
 
-# In[124]:
+# In[4]:
 
 import Sp_parameters as Sp
 
 
-# In[125]:
+# In[5]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[126]:
+# In[6]:
 
 import plotting_utils as pu
 
 
-# In[127]:
+# In[7]:
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[128]:
+# In[8]:
 
 fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
-# In[129]:
+# In[9]:
 
 vr = 'R0'
 
@@ -91,90 +91,91 @@ vr = 'R0'
 
 # ## Load the AOD files from 4STAR
 
-# In[249]:
+# In[10]:
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_ict.mat')
 
 
-# In[250]:
+# In[11]:
 
 ar.keys()
 
 
 # ## Adjust the AOD to reflect dirt contamination
 
-# In[251]:
+# In[12]:
 
 aod_names = sorted([a for a in ar.keys() if ('AOD' in a) and not ('UNC' in a)])
 
 
-# In[252]:
+# In[13]:
 
 aod_names
 
 
-# In[253]:
+# In[14]:
 
 arc = {}
 
 
-# In[254]:
+# In[15]:
 
 for nn in aod_names:
     arc[nn] = ar[nn]-ar['UNC'+nn]
-    arc[nn][ar['UNC'+nn]>0.02] = arc[nn][ar['UNC'+nn]>0.02]+0.02
+    arc[nn][ar['UNC'+nn]<0.02] = arc[nn][ar['UNC'+nn]<0.02]+0.02
+    arc[nn][ar['UNC'+nn]>1.00] = ar[nn][ar['UNC'+nn]>1.00]-1.00
 
 
-# In[255]:
+# In[16]:
 
 arc.keys()
 
 
 # ## Filter out bad data
 
-# In[256]:
+# In[17]:
 
 ar['fl'][0]
 
 
-# In[257]:
+# In[18]:
 
 ar['AOD0501'].shape
 
 
 # ## Make some filters for altitudes 
 
-# In[258]:
+# In[19]:
 
 ar['fl_8'] = ar['GPS_Alt']>8000
 
 
-# In[259]:
+# In[20]:
 
 ar['fl_2_8'] = (ar['GPS_Alt']<=8000) & (ar['GPS_Alt']>2000) & ar['fl_QA']
 
 
-# In[260]:
+# In[21]:
 
 ar['fl_1.5_2'] = (ar['GPS_Alt']<=2000) & (ar['GPS_Alt']>1500) & ar['fl_QA']
 
 
-# In[261]:
+# In[22]:
 
 ar['fl_1_1.5'] = (ar['GPS_Alt']<=1500) & (ar['GPS_Alt']>1000) & ar['fl_QA']
 
 
-# In[262]:
+# In[23]:
 
 ar['fl_0.5_1'] = (ar['GPS_Alt']<=1000) & (ar['GPS_Alt']>500) & ar['fl_QA']
 
 
-# In[263]:
+# In[24]:
 
 ar['fl_0.5'] = (ar['GPS_Alt']<=500) & ar['fl_QA']
 
 
-# In[265]:
+# In[25]:
 
 ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
 
@@ -183,7 +184,7 @@ ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
 
 # ## Make some simple plots first
 
-# In[142]:
+# In[26]:
 
 plt.figure()
 plt.plot(arc['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.')
@@ -194,7 +195,7 @@ plt.xlabel('AOD @ 501 nm')
 plt.ylabel('GPS Altitude [m]')
 
 
-# In[143]:
+# In[27]:
 
 plt.figure()
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=(0,1.5),edgecolor='None',alpha=0.2,label='All points')
@@ -208,7 +209,7 @@ plt.xlabel('AOD @ 501 nm')
 plt.legend(frameon=False)
 
 
-# In[144]:
+# In[28]:
 
 plt.figure()
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=(0,1.2),edgecolor='None',alpha=0.2,label='All points',normed=True)
@@ -222,22 +223,22 @@ plt.xlabel('AOD @ 501 nm')
 plt.legend(frameon=False)
 
 
-# In[109]:
+# In[29]:
 
 n[-2][:-1]
 
 
-# In[19]:
+# In[30]:
 
 y=[(nn+n[-2][j+1])/2.0 for j,nn in enumerate(n[-2][:-1])]
 
 
-# In[20]:
+# In[31]:
 
 n[1]
 
 
-# In[151]:
+# In[32]:
 
 fig = plt.figure()
 n=plt.hist([arc['AOD0501'][ar['fl']],
@@ -248,7 +249,8 @@ n=plt.hist([arc['AOD0501'][ar['fl']],
           arc['AOD0501'][ar['fl_0.5_1']],
           arc['AOD0501'][ar['fl_0.5']]
          ],bins=20,range=(0,1.2),normed=True,edgecolor='None',alpha=0.7,
-         label=['All points','above 8000 m','2000 m to 8000 m','1500 m to 2000 m','1000 m to 1500 m','500 m to 1000 m','below 500 m'])
+         label=['All points','above 8000 m','2000 m to 8000 m',
+                '1500 m to 2000 m','1000 m to 1500 m','500 m to 1000 m','below 500 m'])
 y = [(nn+n[1][j+1])/2.0 for j,nn in enumerate(n[1][:-1])]
 for i,p in enumerate(n[-1]):
     plt.plot(y,n[0][i],'-',color=p[0].get_facecolor(),lw=3)
@@ -257,7 +259,7 @@ plt.grid()
 plt.xlim(0,0.5)
 plt.xlabel('AOD @ 501 nm')
 plt.ylabel('Frequency')
-plt.title('All 4STAR AOD from KORUS-AQ subsetted by altitude')
+plt.title('Histogram of 4STAR AOD from KORUS-AQ subsetted by altitude')
 
 left, bottom, width, height = [0.63, 0.3, 0.35, 0.2]
 ax2 = fig.add_axes([left, bottom, width, height])
@@ -277,7 +279,7 @@ ax2.set_xlabel('AOT @ 501 nm')
 plt.savefig(fp+'plot/AOD_hist_alt_KORUS.png',dpi=600,transparent=True)
 
 
-# In[153]:
+# In[33]:
 
 plt.figure()
 n,bins,p = plt.hist(ar['GPS_Alt'][ar['fl']],bins=30,range=(0,10000))
@@ -288,22 +290,22 @@ plt.title('KORUS Altitudes')
 
 # ## Build vertical distribution of AOD
 
-# In[154]:
+# In[34]:
 
 bins.shape
 
 
-# In[155]:
+# In[35]:
 
 pos = np.array([(bins[i]+bins[i+1])/2.0 for i,b in enumerate(bins[:-1])])
 
 
-# In[156]:
+# In[36]:
 
 len(pos)
 
 
-# In[320]:
+# In[37]:
 
 plt.figure(figsize=(8,7))
 plt.plot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.',alpha=0.0,color='w')
@@ -321,7 +323,7 @@ plt.grid()
 plt.savefig(fp+'plot\\KORUS_AOD_profile_avg.png',transparent=True,dpi=600)
 
 
-# In[317]:
+# In[38]:
 
 fig = plt.figure(figsize=(8,6))
 
@@ -369,6 +371,151 @@ plt.tight_layout()
 plt.subplots_adjust(top=0.92)
 
 plt.savefig(fp+'plot\\KORUS_AOD_profile_wvl_avg.png',transparent=True,dpi=600)
+
+
+# ## Plot some AOD wavelength dependence
+
+# In[39]:
+
+aod_names
+
+
+# In[40]:
+
+wvl = np.array([380,452,501,520,532,550,606,620,675,781,865,1020,1040,1064,1236,1559,1627])
+
+
+# In[41]:
+
+wvl_bins = np.append(wvl[0]-10,wvl+10)
+
+
+# In[42]:
+
+wvl_bins
+
+
+# Make a single arrays for all wavelengths for easier plotting
+
+# In[43]:
+
+arcs = []
+wvls = []
+fls = {'fl':[],'fl_8':[],'fl_2_8':[],'fl_1.5_2':[],'fl_1_1.5':[],'fl_0.5_1':[],'fl_0.5':[]}
+for i,a in enumerate(aod_names):
+    arcs.append(arc[a])
+    wvls.append(arc[a]*0.0+wvl[i])
+    for ff in fls.keys():
+        fls[ff].append(ar[ff])
+arcs = np.array(arcs)
+wvls = np.array(wvls)
+for ff in fls.keys():
+    fls[ff] = np.array(fls[ff])
+    fls[ff] = fls[ff].reshape(fls[ff].size)
+arcsn = arcs.reshape(arcs.size)
+wvlsn = wvls.reshape(wvls.size)
+
+
+# In[431]:
+
+plt.figure()
+plt.plot(wvlsn[fls['fl_0.5']],arcsn[fls['fl_0.5']],'.',alpha=0)
+plt.xticks([400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700])
+plt.xlim(350,1700)
+plt.ylim([0,0.8])
+
+pu.make_boxplot(arcsn[fls['fl']],wvlsn[fls['fl']],wvl_bins,wvl,y=1,alpha=0.5,label='All points',fliers_off=True,color='b')
+pu.make_boxplot(arcsn[fls['fl_8']],wvlsn[fls['fl_8']],wvl_bins,wvl+2,y=1,alpha=0.5,label='Above 8 km',fliers_off=True,color='g')
+pu.make_boxplot(arcsn[fls['fl_2_8']],wvlsn[fls['fl_2_8']],wvl_bins,wvl+4,y=1,alpha=0.5,label='2 km to 8 km',
+                fliers_off=True,color='r')
+pu.make_boxplot(arcsn[fls['fl_1.5_2']],wvlsn[fls['fl_1.5_2']],wvl_bins,wvl+6,y=1,alpha=0.5,label='1.5 km to 2 km',
+                fliers_off=True,color='c')
+pu.make_boxplot(arcsn[fls['fl_1_1.5']],wvlsn[fls['fl_1_1.5']],wvl_bins,wvl+8,y=1,alpha=0.5,label='1 km to 1.5 km',
+                fliers_off=True,color='m')
+pu.make_boxplot(arcsn[fls['fl_0.5_1']],wvlsn[fls['fl_0.5_1']],wvl_bins,wvl+10,y=1,alpha=0.5,label='0.5 km to 1 km',
+                fliers_off=True,color='y')
+pu.make_boxplot(arcsn[fls['fl_0.5']],wvlsn[fls['fl_0.5']],wvl_bins,wvl+12,y=1,alpha=0.5,label='Below 0.5 km',
+                fliers_off=True,color='k')
+plt.legend(frameon=False)
+
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('AOD')
+plt.grid()
+plt.title('Average AOD spectra')
+
+plt.savefig(fp+'plot\\KORUS_AOD_wvl.png',dpi=500,transparent=True)
+
+
+# In[44]:
+
+arcs.shape
+
+
+# In[45]:
+
+import Sun_utils as su
+
+
+# In[63]:
+
+reload(su)
+
+
+# In[ ]:
+
+
+
+
+# In[102]:
+
+c = su.aod_polyfit(wvl,arcs[:,ar['fl_0.5'][0]],polynum=4)
+
+
+# In[103]:
+
+plt.figure()
+plt.plot(wvl,arcs[:,ar['fl_0.5'][0]],'s-r')
+plt.plot(wvl,polyval(c,wvl),'d-b')
+
+
+# In[87]:
+
+reload(su)
+
+
+# In[104]:
+
+c
+
+
+# In[113]:
+
+su.angstrom_from_poly(c,[400,500,600])
+
+
+# In[109]:
+
+np.gradient(polyval(c,[499,500,501]))
+
+
+# In[ ]:
+
+
+
+
+# In[76]:
+
+help(np.gradient)
+
+
+# In[78]:
+
+a = np.gradient(np.log([499,500,501]))
+
+
+# In[79]:
+
+np.gradient(-1.0*np.log(polyval(c,[499,500,501])),a)
 
 
 # # Load the cloud files
