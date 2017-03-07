@@ -238,7 +238,7 @@ y=[(nn+n[-2][j+1])/2.0 for j,nn in enumerate(n[-2][:-1])]
 n[1]
 
 
-# In[32]:
+# In[124]:
 
 fig = plt.figure()
 n=plt.hist([arc['AOD0501'][ar['fl']],
@@ -258,7 +258,7 @@ plt.legend(frameon=False)
 plt.grid()
 plt.xlim(0,0.5)
 plt.xlabel('AOD @ 501 nm')
-plt.ylabel('Frequency')
+plt.ylabel('Normalized counts')
 plt.title('Histogram of 4STAR AOD from KORUS-AQ subsetted by altitude')
 
 left, bottom, width, height = [0.63, 0.3, 0.35, 0.2]
@@ -277,6 +277,16 @@ ax2.grid()
 ax2.set_xlabel('AOT @ 501 nm')
 
 plt.savefig(fp+'plot/AOD_hist_alt_KORUS.png',dpi=600,transparent=True)
+
+
+# In[114]:
+
+np.nanmean(arc['AOD0501'][ar['fl']]),np.nanmedian(arc['AOD0501'][ar['fl']])
+
+
+# In[115]:
+
+np.nanmean(arc['AOD0501'][ar['fl_0.5']]),np.nanmedian(arc['AOD0501'][ar['fl_0.5']])
 
 
 # In[33]:
@@ -444,6 +454,38 @@ plt.grid()
 plt.title('Average AOD spectra')
 
 plt.savefig(fp+'plot\\KORUS_AOD_wvl.png',dpi=500,transparent=True)
+
+
+# In[125]:
+
+plt.figure()
+plt.plot(wvlsn[fls['fl_0.5']],arcsn[fls['fl_0.5']],'.',alpha=0)
+plt.yscale('log')
+plt.xscale('log')
+plt.xticks([350,400,500,600,700,800,900,1000,1200,1400,1700])
+plt.xlim(350,1700)
+plt.ylim([0.005,3.0])
+
+pu.make_boxplot(arcsn[fls['fl']],wvlsn[fls['fl']],wvl_bins,wvl,y=1,alpha=0.5,label='All points',fliers_off=True,color='b')
+pu.make_boxplot(arcsn[fls['fl_8']],wvlsn[fls['fl_8']],wvl_bins,wvl+2,y=1,alpha=0.5,label='Above 8 km',fliers_off=True,color='g')
+pu.make_boxplot(arcsn[fls['fl_2_8']],wvlsn[fls['fl_2_8']],wvl_bins,wvl+4,y=1,alpha=0.5,label='2 km to 8 km',
+                fliers_off=True,color='r')
+pu.make_boxplot(arcsn[fls['fl_1.5_2']],wvlsn[fls['fl_1.5_2']],wvl_bins,wvl+6,y=1,alpha=0.5,label='1.5 km to 2 km',
+                fliers_off=True,color='c')
+pu.make_boxplot(arcsn[fls['fl_1_1.5']],wvlsn[fls['fl_1_1.5']],wvl_bins,wvl+8,y=1,alpha=0.5,label='1 km to 1.5 km',
+                fliers_off=True,color='m')
+pu.make_boxplot(arcsn[fls['fl_0.5_1']],wvlsn[fls['fl_0.5_1']],wvl_bins,wvl+10,y=1,alpha=0.5,label='0.5 km to 1 km',
+                fliers_off=True,color='y')
+pu.make_boxplot(arcsn[fls['fl_0.5']],wvlsn[fls['fl_0.5']],wvl_bins,wvl+12,y=1,alpha=0.5,label='Below 0.5 km',
+                fliers_off=True,color='k')
+plt.legend(frameon=False)
+
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('AOD')
+plt.grid()
+plt.title('Average AOD spectra')
+
+plt.savefig(fp+'plot\\KORUS_AOD_wvl_loglog.png',dpi=500,transparent=True)
 
 
 # In[44]:
