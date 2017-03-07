@@ -60,7 +60,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
             # z [km]    IWC/LWC [g/m^3]    Reff [um]
             
         ** translates tau and ref to lwc/iwc with the equation LWP = 2/3*tau*ref and LWC=LWP/z_extent*0.001
-        ** Writes out file based on layer properties, not level properties. (given value of ref and tau are for a cloud from zbot to ztop)
+        ** Writes out file based on layer properties, not level properties. 
+           (given value of ref and tau are for a cloud from zbot to ztop)
     
     Input: 
   
@@ -78,7 +79,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
-        append_directly_below: (default False) if true then opens a already existing file and only writes out the last line as an append
+        append_directly_below: (default False) if true then opens a already existing file
+                               and only writes out the last line as an append
     
     Dependencies:
 
