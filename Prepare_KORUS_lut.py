@@ -86,7 +86,7 @@ else:
 
 # In[84]:
 
-vv = 'v3'
+vv = 'v3b'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
 
@@ -204,13 +204,14 @@ for s in sza:
             cloud['tau'] = t
             cloud['ref'] = r
             if after_first_sza: cloud['link_to_mom_file'] = True
-            if r>=5.0:
+            if r>=50.0:
                 cloud['phase'] = 'ic'
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 source['slit_file'] = f_slit_vis
-                if after_first_sza: cloud['file_name'] = os.path.join(fp_in,'lut_sza%02i_tau%06.2f_ref%04.1f' % (sza[0],t,r)+
-                                                                      +'_'+cloud['phase']+'_w0.dat_cloud')
+                if after_first_sza: 
+                    cloud['file_name'] = os.path.join(fp_in,'lut_sza{s:02.0f}_tau{t:06.2f}_ref{r:04.1f}_{p}_w0.dat_cloud'.format(
+                                          s=sza[0],t=t,r=r,p=cloud['phase']))
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
@@ -226,8 +227,9 @@ for s in sza:
                 fname0 = fname+'_'+cloud['phase']+'_w0.dat'
                 source['wvl_range'] = [400.,981.]
                 source['slit_file'] = f_slit_vis
-                if after_first_sza: cloud['file_name'] = os.path.join(fp_in,'lut_sza%02i_tau%06.2f_ref%04.1f' % (sza[0],t,r)+
-                                                                      +'_'+cloud['phase']+'_w0.dat_cloud')
+                if after_first_sza: 
+                    cloud['file_name'] = os.path.join(fp_in,'lut_sza{s:02.0f}_tau{t:06.2f}_ref{r:04.1f}_{p}_w0.dat_cloud'.format(
+                                          s=sza[0],t=t,r=r,p=cloud['phase']))
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')

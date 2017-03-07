@@ -73,7 +73,7 @@ else:
 
 # In[6]:
 
-vv = 'v2'
+vv = 'v3'
 
 
 # In[ ]:
@@ -147,7 +147,12 @@ print 'Saving matlab file'
 # In[10]:
 
 try:
-    hs.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
+    try:
+        hs.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
+    except:
+        sio.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
 except:
+    import pdb
+    pdb.set_trace()
     sio.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
 
