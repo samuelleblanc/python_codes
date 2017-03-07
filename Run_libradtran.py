@@ -1118,7 +1118,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 # In[3]:
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1'):
     """
     Purpose:
     
@@ -1136,6 +1136,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         wvl_file_sol: full path to solar wavelength file (wavelengths in nm in second column)
         wvl_file_thm: full path of thermal wavelength file (wavelengths in nm in second column)
         aero_clear: if set to True, then aerosol extinction is set to zero in all cases. (defaults to False) 
+        version: (defaults to v1) version number of the files for tracking
         
     Dependencies:
     
@@ -1173,6 +1174,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 - added aero_clear keyword to define clear value
         Modified: Samuel LeBlanc, 2015-07-10, Santa Cruz, CA
                 - changed to have seperate path and list file for each mmm
+        MOdified: Samuel LeBlanc, 2017-03-06, Santa Cruz, CA
+                - added the version keyword for version tracking
         
     """
     import numpy as np
@@ -1198,7 +1201,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     
     
     for mmm in ['DJF','MAM','JJA','SON']:
-        fpm = fp+'Input_to_DARF_%s.mat' % mmm
+        fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
         print 'in %s months, getting mat file: %s' % (mmm,fpm)
         input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
         if mmm=='DJF':
@@ -1215,7 +1218,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             doy = 321
             
         try:
-            file_list = file(fp_out+'AAC_list_file_%s.sh' % mmm,'w')
+            file_list = file(fp_out+'AAC_list_file_{m}_{v}.sh'.format(m=mmm,v=version),'w')
         except Exception,e:
             print 'Problem with accessing file, return Exception: ',e
             return
