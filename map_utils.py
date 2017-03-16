@@ -335,16 +335,19 @@ def get_sza_azi(lat,lon,datetime,alt=None,return_sunearthfactor=False,return_sun
     optional output of sun earth distance factor and sun declination if return_sunf_and_dec is set to True
     """
     import ephem
-    from numpy import pi
+    from numpy import pi,isscalar
     sun = ephem.Sun()
     obs = ephem.Observer()
-    try:
-        n = len(lat)
-    except TypeError:
-        lat = [lat]
-        lon = [lon]
-        datetime = [datetime]
-        n = len(lat)
+    if isscalar(lat):
+        if isscalar(datetime):
+            lat = [lat]
+            lon = [lon]
+            datetime = [datetime]
+        else:
+            lati = [lat for i in xrange(len(datetime))]
+            loni = [lon for i in xrange(len(datetime))]
+            lat,lon = lati,loni
+    n = len(lat)
     sza = []
     azi = []
     sunf = []
