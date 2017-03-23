@@ -302,7 +302,7 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
 
 # In[440]:
 
-def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1'):
+def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_type='ocean',vv='v1'):
     """
     Purpose:
         Main function to create the files for the DARE calculations for a single solx file defined by fname 
@@ -319,6 +319,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',v
         list file for calling fuliou from NAS
     
     Keywords: 
+        fp_alb: File path for MODIS surface albedo, must be defined if surfacetype is land_MODIS
         surface_type: (default to ocean) can be either ocean, land, or land_MODIS
         vv: (default to v1) version number
     
@@ -384,7 +385,9 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',v
         albedo = {'sea_surface_albedo':False,'land_surface_albedo':True,'modis_surface_albedo':False}
     elif surface_type=='land_MODIS':
         albedo = {'sea_surface_albedo':False,'land_surface_albedo':True,'modis_surface_albedo':False}
-        albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_rtm,tt.timetuple().tm_yday,geo['lat'],geo['lon'],year_of_MODIS=2007)
+        if not fp_alb:
+            raise ValueError('fp_alb is not set, must be set to find the MCD43GF files')
+        albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_alb,tt.timetuple().tm_yday,geo['lat'],geo['lon'],year_of_MODIS=2007)
     else:
         raise ValueError("surface_type can only be 'ocean', 'land', or 'land_MODIS'")
     
@@ -563,11 +566,12 @@ def run_fuliou_pc():
 
 def run_fuliou_linux():
     import Run_fuliou as rf
-    fname = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
-    f_calipso = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
-    fp_rtm = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\'
-    fp_fuliou = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\fuliou.exe'
-    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1')
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
+    fp_rtm = '/nobackup/sleblan2/MOCfolder/'
+    fp_fuliou = '/u/sleblan2/fuliou/v20140906/fuliou'
+    fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
+    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='ocean',vv='v1')
 
 
 # In[445]:
