@@ -134,7 +134,8 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         geo['hour'] = int(geo['utc'])*1.0
         geo['minute'] = int((geo['utc']-geo['hour'])*60.0)*1.0
         geo['second'] = int((geo['utc']-geo['hour']-geo['minute']/60.0)*3600.0)*1.0
-    geo['datetime'] = datetime(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second'])
+    geo['datetime'] = datetime(int(geo['year']),int(geo['month']),int(geo['day']),
+                               int(geo['hour']),int(geo['minute']),int(geo['second']))
     if not geo.get('pressure'):
         geo['pressure'] = 1013.25
     if not geo.get('sza'):
@@ -345,6 +346,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
                         migrated to python from matlab based on codes in read_FuLiou_input_file_Calipso_revFeb2015.m
                         originally written by John Livingston
     """
+    import numpy as np
     import scipy.io as sio
     import os
     from datetime import datetime
@@ -358,7 +360,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     da = da.lstrip('MOCsolutions')
     xt = xt.rstrip('.mat')
     
-    lm = sio.loadmat(fp+'yohei_MOC_lambda.mat')
+    lm = sio.loadmat(fp_rtm+'yohei_MOC_lambda.mat')
     cal = sio.loadmat(f_calipso)
     
     # prep the write out paths
@@ -475,8 +477,8 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     # Select the proper grid points to load from the MCD43GF gapfilled albedo files
     latgrid = np.arange(90,-90,-30.0/3600.0)
     longrid = np.arange(-180.0,180,30.0/3600.0)
-    iy = np.where((latgrid>=lats.min())&(latgrid<=lats.max()))[0]
-    ix = np.where((longrid>=lons.min())&(longrid<=lons.max()))[0]
+    ix = np.where((latgrid>=lats.min())&(latgrid<=lats.max()))[0]
+    iy = np.where((longrid>=lons.min())&(longrid<=lons.max()))[0]
     
     # assure that all the grid points are within the lats/lons
     # not used for now
@@ -535,6 +537,7 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     
         Written (v1.0): Samuel LeBlanc, 2017-03-22, Santa Cruz, CA
     """
+    import numpy as np
     from pyhdf.SD import SD, SDC
     hdf = SD(filename, SDC.READ)
     if hasattr(ix,'__len__'):
@@ -571,11 +574,12 @@ def run_fuliou_linux():
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     fp_fuliou = '/u/sleblan2/fuliou/v20140906/fuliou'
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
-    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='ocean',vv='v1')
+    
+    print 'Starting the prepr DARE single solx for fuliou for file: '+fname
+    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='land_MODIS',vv='v1')
 
 
 # In[445]:
 
-if __name__!='__main__':
-    run_fuliou_linux()
+run_fuliou_linux()
 

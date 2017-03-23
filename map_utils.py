@@ -325,11 +325,11 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
 
 # In[1]:
 
-def get_sza_azi(lat,lon,datetime,alt=None,return_sunearthfactor=False,return_sunf_and_dec=False):
+def get_sza_azi(lat,lon,datetimet,alt=None,return_sunearthfactor=False,return_sunf_and_dec=False):
     """
     Program wrapper for pyephem.Sun to get the solar zenith angle and the solar azimuth angle
     can use inputs of list or numpy arrays
-    require input of lat,lon,datetime 
+    require input of lat,lon,datetimet
     optional input of altitutde (in meters)
     optional output of sun earth distance factor if return_sunearthfactor is set to True
     optional output of sun earth distance factor and sun declination if return_sunf_and_dec is set to True
@@ -339,13 +339,13 @@ def get_sza_azi(lat,lon,datetime,alt=None,return_sunearthfactor=False,return_sun
     sun = ephem.Sun()
     obs = ephem.Observer()
     if isscalar(lat):
-        if isscalar(datetime):
+        if isscalar(datetimet):
             lat = [lat]
             lon = [lon]
-            datetime = [datetime]
+            datetime = [datetimet]
         else:
-            lati = [lat for i in xrange(len(datetime))]
-            loni = [lon for i in xrange(len(datetime))]
+            lati = [lat for i in xrange(len(datetimet))]
+            loni = [lon for i in xrange(len(datetimet))]
             lat,lon = lati,loni
     n = len(lat)
     sza = []
@@ -353,7 +353,7 @@ def get_sza_azi(lat,lon,datetime,alt=None,return_sunearthfactor=False,return_sun
     sunf = []
     dec = []
     for i in range(n):
-        obs.lat,obs.lon,obs.date = lat[i]/180.0*pi,lon[i]/180.0*pi,datetime[i]
+        obs.lat,obs.lon,obs.date = lat[i]/180.0*pi,lon[i]/180.0*pi,datetimet[i]
         if alt:
             obs.elevation = alt
         sun.compute(obs)
