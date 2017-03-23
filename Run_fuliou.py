@@ -50,7 +50,7 @@
 
 # # Load up the various methods
 
-# In[ ]:
+# In[437]:
 
 def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
     """
@@ -127,6 +127,7 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
     import numpy as np
 
     # Verify inputs
+    if verbose: print 'verifying inputs'
     if not geo.get('utc'):
         geo['utc'] = geo['hour']+geo['minute']/60.0+geo['second']/3600.0
     else:
@@ -145,22 +146,30 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         raise AttributeError('Length of the extinction array is not 30, check extinction wavelength input')
         
     # Calculate SZA for every 5 minutes
+    if verbose: print 'calculating sza for every 5 minutes'
     geo['datetime_fine'] = [datetime(geo['year'],geo['month'],geo['day'])+timedelta(minutes=5*i) for i in range(24*60/5)]
     geo['sza_fine'],geo['azi_fine'] = mu.get_sza_azi(geo['lat'],geo['lon'],geo['datetime_fine'])
     
     # Get the surface albedo for every 5 minutes
     if albedo.get('sea_surface_albedo'):
+        if verbose: print 'albedo set to sea_surface_albedo'
         albedo['albedo_fine'] = 0.037/(1.1*np.cos(np.array(geo['sza_fine'])*np.pi/180.0)**1.4+0.15)
     if albedo.get('land_surface_albedo'):
+        if verbose: print 'albedo set to land_surface_albedo'
         albedo['albedo_fine'] = 0.070/(0.3*np.cos(np.array(geo['sza_fine'])*np.pi/180.0)**1.4+0.15)
     if albedo.get('modis_surface_albedo'):
-        fiso,fvol,fgeo,frac_diffuse = prep_albedo_calc(albedo['modis_albedo'],geo['sza_fine'],ext=aero['ext'],z=aero['z_arr'])
+        if verbose: print 'albedo set to modis_surface_albedo'
+        fiso = albedo['modis_albedo']['mean_iso']
+        fvol = albedo['modis_albedo']['mean_vol']
+        fgeo = albedo['modis_albedo']['mean_geo']
+        frac_diffuse = get_frac_diffuse(albedo['modis_albedo'],geo['sza_fine'],ext=aero['ext'],z=aero['z_arr'])
         albedo['albedo_fine'] = calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,geo['sza_fine'])
     if not albedo.get('albedo_fine'):
         raise AttributeError('No albedo defined please review albedo dict input')
     else:
         albedo['albedo_fine'][np.logical_or((np.isfinite(albedo['albedo_fine'])!=True),(albedo['albedo_fine']<0))]=0.0
         
+    if verbose: print 'writing to file:'+output_file
     with open(output_file,'r') as f:
         # write the title setup line
         f.write('%4i %2i %2i %12.5f %11.4f %11.4f %11.4f %11.4f %11.5f %11.5f\n' % (                geo['year'],geo['month'],geo['day'],geo['year'],geo['utc'],geo['sza'],geo['pressure'],
@@ -174,13 +183,14 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
             f.write('%12.4e %11.4e %11.4e\n'%(aero['ext'][0,i],aero['ssa'][0,i],aero['asy'][0,i]))
 
 
-# In[ ]:
+# In[438]:
 
-def prep_albedo_calc(mod,sza,ext=[],z=[],aod=[]):
+def get_frac_diffuse(mod,sza,ext=[],z=[],aod=None,iwvl_midvis=8):
     """
     Purpose:
         Prepares the indices for MODIS (Schaaf et al.) black-sky and white-sky albedos 
         using assumed and subsequent surface albedo
+        Calculates the fractional diffuse protion of the sky from the modis_albedo lut tables.
     
     Input: 
         
@@ -189,9 +199,9 @@ def prep_albedo_calc(mod,sza,ext=[],z=[],aod=[]):
         ext: array of extinction coefficients used for calculating the AOD and the draction of diffuse light
         z: array of altitude values at which the extinction is defined
         aod: (optional instead of ext and z) array of aod values
+        iwvl: (defaults to 8) index of the midvisible wavelenght in ext array
         
     Output:
-        fiso,fvol,fgeo are single values
         frac_diffuse is a vector (with length=length(SZAIN))that is a function of SZA (hence, for a specific AOD)
     
     Keywords: 
@@ -199,6 +209,7 @@ def prep_albedo_calc(mod,sza,ext=[],z=[],aod=[]):
     
     Dependencies:
         numpy
+        scipy.interpolate
     
     Required files:
         None
@@ -214,11 +225,25 @@ def prep_albedo_calc(mod,sza,ext=[],z=[],aod=[]):
                         originally written by John Livingston
     """
     import numpy as np
+    from scipy import interpolate
     
-    aod = 
+    dz = z[-1]-z[0]
+    if not aod:
+        aod = dz*ext[0,iwvl_midvis]
+    
+    #Now interpolate the table at the right AOD
+    new_szas = np.zeros_like(mod['table_SZA'])
+    for i in xrange(len(mod['table_SZA'])): 
+        ftab = interpolate.interp1d(mod['table_AOD'],mod['table_fracdiffuse'][i,:])
+        new_szas[i] = ftab(aod)
+        
+    fftab = interpolate.interp1d(mod['table_SZA'],new_szas)
+    frac_diffuse = fftab(sza)
+    
+    return frac_diffuse
 
 
-# In[46]:
+# In[439]:
 
 def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
     """
@@ -275,7 +300,7 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
     return albedo_sfc
 
 
-# In[ ]:
+# In[440]:
 
 def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1'):
     """
@@ -322,6 +347,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',v
     import scipy.io as sio
     import os
     from datetime import datetime
+    from Run_fuliou import get_MODIS_surf_albedo
     
     # load the materials
     sol = sio.loadmat(fname)
@@ -358,9 +384,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',v
         albedo = {'sea_surface_albedo':False,'land_surface_albedo':True,'modis_surface_albedo':False}
     elif surface_type=='land_MODIS':
         albedo = {'sea_surface_albedo':False,'land_surface_albedo':True,'modis_surface_albedo':False}
-        
-        albedo['modis_albedo'] = 
-        
+        albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_rtm,tt.timetuple().tm_yday,geo['lat'],geo['lon'],year_of_MODIS=2007)
     else:
         raise ValueError("surface_type can only be 'ocean', 'land', or 'land_MODIS'")
     
@@ -378,7 +402,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',v
     f_list.close()
 
 
-# In[144]:
+# In[441]:
 
 def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     """
@@ -392,8 +416,13 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
         lon: longitude of the surface albedo to get
         
     Output:
-        
-    
+        modis_albedo: dict containing the values used to create the albedo from a subset of aod, and sza
+                      mean_geo, mean_iso, mean_vol : mean values within the lat and lon space
+                      std_geo, std_iso, std_vol: standard deviation of the values within the lat and lon space
+                      table_AOD: lut tabel of fractional diffuse proportion, value of the AODs
+                      table_SZA: lut table value of sza
+                      table_fracdiffuse: lut table of the fractional diffuse proportion linked to AOD and SZA                      
+                          
     Keywords: 
         year_of_MODIS: (default to 2007) year as integer of the MODIS albedo files to use
     
@@ -409,7 +438,6 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
             MCD43GF_geo_shortwave_%03d_2007.hdf
             MCD43GF_iso_shortwave_%03d_2007.hdf
             MCD43GF_vol_shortwave_%03d_2007.hdf
-
     
     Example:
         
@@ -426,13 +454,14 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     from Run_fuliou import load_hdf_spec
     
     MODIS_start_days = np.append(np.arange(1,367,8),367)
+    modis_albedo = {}
     
     # read file of the fractional diffuse for bbshortwave per aod and sza
     f = fp+'skyl_lut_bbshortwave.dat'
-    table_AOD = np.arange(0,0.99,0.02)
+    modis_albedo['table_AOD'] = np.arange(0,0.99,0.02)
     r = np.genfromtxt(f,skip_header=2)
-    table_SZA = r[:,0]
-    table_fracdiffuse = r[:,1:-1]
+    modis_albedo['table_SZA'] = r[:,0]
+    modis_albedo['table_fracdiffuse'] = r[:,1:-1]
     
     # get the MODIS file day
     MODIS_select_day = MODIS_start_days[(doy-MODIS_start_days)>=0][-1]
@@ -447,18 +476,24 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     ix = np.where((longrid>=lons.min())&(longrid<=lons.max()))[0]
     
     # assure that all the grid points are within the lats/lons
-    
+    # not used for now
     
     # Load the modis gap filled albedo files
     buffer_geo = load_hdf_spec(fp+'MCD43GF_geo_shortwave_%03d_%d.hdf'%(MODIS_select_day,year_of_MODIS),ix,iy)
     buffer_iso = load_hdf_spec(fp+'MCD43GF_iso_shortwave_%03d_%d.hdf'%(MODIS_select_day,year_of_MODIS),ix,iy)
     buffer_vol = load_hdf_spec(fp+'MCD43GF_vol_shortwave_%03d_%d.hdf'%(MODIS_select_day,year_of_MODIS),ix,iy)
     
+    modis_albedo['mean_geo'] = np.nanmean(buffer_geo)
+    modis_albedo['mean_iso'] = np.nanmean(buffer_iso)
+    modis_albedo['mean_vol'] = np.nanmean(buffer_vol)
+    modis_albedo['std_geo'] = np.nanstd(buffer_geo)
+    modis_albedo['std_iso'] = np.nanstd(buffer_geo)
+    modis_albedo['std_vol'] = np.nanstd(buffer_geo)
     
-    
+    return modis_albedo
 
 
-# In[346]:
+# In[442]:
 
 def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     """
@@ -513,107 +548,30 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     return dat    
 
 
-# In[409]:
+# In[443]:
 
-reload(map_utils)
-
-
-# In[410]:
-
-from map_utils import WithinArea
-
-
-# In[411]:
-
-WithinArea(longrid[ix][0],latgrid[iy][0],lons,lats)
+def run_fuliou_pc():
+    import Run_fuliou as rf
+    fname = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    f_calipso = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
+    fp_rtm = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\'
+    fp_fuliou = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\fuliou.exe'
+    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1')
 
 
-# In[395]:
+# In[444]:
 
-a = 0.0
-
-
-# In[398]:
-
-a+= 1.0
-
-
-# In[399]:
-
-a
+def run_fuliou_linux():
+    import Run_fuliou as rf
+    fname = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    f_calipso = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
+    fp_rtm = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\'
+    fp_fuliou = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\fuliou.exe'
+    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1')
 
 
-# In[392]:
+# In[445]:
 
-b = load_hdf_spec(fp+'MCD43GF_geo_shortwave_193_2007.hdf',[200,201,202],[503,504,505,506])
-
-
-# In[394]:
-
-b.shape
-
-
-# In[390]:
-
-MODIS_select_day = MODIS_start_days[(22-MODIS_start_days)>=0][-1]
-
-
-# In[391]:
-
-MODIS_select_day
-
-
-# In[304]:
-
-fp = 'C:\\Users\\sleblan2\\Research\\Calipso\\surface_albedo\\'
-
-
-# In[90]:
-
-fname = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
-
-
-# In[107]:
-
-f_calipso = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+'2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
-
-
-# In[110]:
-
-cal = sio.loadmat(f_calipso)
-
-
-# In[130]:
-
-cal['calipso_zmax_oneday'][num][0]
-
-
-# In[131]:
-
-af = 0.070/(0.3*np.cos(np.array(geo['sza_fine'])*np.pi/180.0)**1.4+0.15)
-
-
-# In[122]:
-
-sol = sio.loadmat(fname)
-
-
-# In[128]:
-
-sol['solutions']['lambda']
-
-
-# In[136]:
-
-rr = np.array([sol['asym'][i,:],sol['asym'][i,:]])
-
-
-# In[137]:
-
-rr[0,:]
-
-
-# In[ ]:
-
-
+if __name__!='__main__':
+    run_fuliou_linux()
 
