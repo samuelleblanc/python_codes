@@ -397,3 +397,29 @@ def mplot_spec(m,lon,lat,*args,**kwargs):
         lines.append(m.plot(x,y,*args,**kwargs))
     return lines  
 
+
+# In[3]:
+
+def PolyArea(x,y):
+    'Program to calculate the area within a polygon defined by vertices x,y (both arrays)'
+    import numpy as np
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+
+
+# In[2]:
+
+def WithinArea(xpoint,ypoint,xpoly,ypoly):
+    'return True if point (at xpoint,ypoint coordinates) within area defined by xpoly,ypoly vertices'
+    from map_utils import PolyArea
+    import numpy as np
+    area = PolyArea(xpoly,ypoly)
+    area_sup = 0.0
+    for i in xrange(len(xpoly)-1):
+        area_sup += PolyArea([xpoint,xpoly[i],xpoly[i+1]],[ypoint,ypoly[i],ypoly[i+1]])
+    return area_sup<=area
+
+
+# In[ ]:
+
+
+
