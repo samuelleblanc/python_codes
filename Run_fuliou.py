@@ -151,7 +151,7 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         
     # Calculate SZA for every 5 minutes
     if verbose: print 'calculating sza for every 5 minutes'
-    geo['datetime_fine'] = [datetime(geo['year'],geo['month'],geo['day'])+timedelta(minutes=5*i) for i in range(24*60/5)]
+    geo['datetime_fine'] = [datetime(geo['year'],geo['month'],geo['day'])+timedelta(minutes=5*i) for i in xrange(24*60/5+1)]
     geo['sza_fine'],geo['azi_fine'] = mu.get_sza_azi(geo['lat'],geo['lon'],geo['datetime_fine'])
     
     # Get the surface albedo for every 5 minutes
@@ -179,9 +179,11 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         f.write('%4i %2i %2i %12.5f %11.4f %11.4f %11.4f %11.4f %11.5f %11.5f\n' % (                geo['year'],geo['month'],geo['day'],geo['utc'],geo['sza'],geo['pressure'],
                 min(aero['z_arr']),max(aero['z_arr']),geo['lat'],geo['lon']))
         # write the fine sza
-        f.write("\n".join(["".join((' %9.4f' % s for s in geo['sza_fine'][i:i+8])) for i in xrange(0,len(geo['sza_fine']),8)]))
+        f.write("\n".join([" ".join(('%9.4f' % s for s in geo['sza_fine'][i:i+8])) for i in xrange(0,len(geo['sza_fine']),8)]))
+        f.write('\n')
         # write the fine surface albedo    
-        f.write("\n".join(["".join((' %9.4f' % s for s in albedo['albedo_fine'][i:i+8]))                            for i in xrange(0,len(albedo['albedo_fine']),8)]))
+        f.write("\n".join([" ".join(('%9.4f' % s for s in albedo['albedo_fine'][i:i+8]))                            for i in xrange(0,len(albedo['albedo_fine']),8)]))
+        f.write('\n')
         # write the aerosol properties on one line for each wavelength
         for i,w in enumerate(aero['wvl_arr']):
             f.write('%12.4e %11.4e %11.4e\n'%(aero['ext'][0,i],aero['ssa'][0,i],aero['asy'][0,i]))
@@ -400,16 +402,16 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
 
     startprogress('Writing MOC files')
     for i in xrange(len(sol['ssa'])):
-        input_file = os.path.join(fp_in,'MOC_{num}_{i}.datin'.format(num=num,i=i))
-        output_file = os.path.join(fp_out,'MOC_{num}_{i}.wrt'.format(num=num,i=i))
+        input_file = os.path.join(fp_in,'MOC_{num}_{i:04d}.datin'.format(num=num,i=i))
+        output_file = os.path.join(fp_out,'MOC_{num}_{i:04d}.wrt'.format(num=num,i=i))
         aero['ssa'] = np.array([sol['ssa'][i,:],sol['ssa'][i,:]])
         aero['asy'] = np.array([sol['asym'][i,:],sol['asym'][i,:]])
         aero['ext'] = np.array([sol['ext'][i,:],sol['ext'][i,:]])
         write_fuliou_input(input_file,geo=geo,aero=aero,albedo=albedo,verbose=False)
         
-        progress(i/len(sol['ssa']))
-        f_list.write(fp_fuliou+' '+input_file+' '+output_file+'/n')
-        
+        progress(i/len(sol['ssa'])*100.0)
+        f_list.write(fp_fuliou+' '+input_file+' '+output_file+'\n')
+    
     f_list.close()
     endprogress()
 
@@ -564,18 +566,18 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
 # In[443]:
 
 def run_fuliou_pc():
-    import Run_fuliou as rf
+    from Run_fuliou import Prep_DARE_single_sol
     fname = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
     f_calipso = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
     fp_rtm = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\'
     fp_fuliou = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\fuliou.exe'
-    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1')
+    Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,surface_type='ocean',vv='v1')
 
 
 # In[444]:
 
 def run_fuliou_linux():
-    import Run_fuliou as rf
+    from Run_fuliou import Prep_DARE_single_sol
     fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
     f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
@@ -583,15 +585,10 @@ def run_fuliou_linux():
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     
     print 'Starting the prepr DARE single solx for fuliou for file: '+fname
-    rf.Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='land_MODIS',vv='v1')
+    Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='land_MODIS',vv='v1')
 
 
 # In[445]:
 
 run_fuliou_linux()
-
-
-# In[ ]:
-
-
 
