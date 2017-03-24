@@ -50,7 +50,7 @@
 
 # # Load up the various methods
 
-# In[437]:
+# In[64]:
 
 def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
     """
@@ -148,6 +148,18 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         raise AttributeError('Length of the wavelength array is not 30, check wavelength input')
     if len(aero['ext'][0,:])!=30:
         raise AttributeError('Length of the extinction array is not 30, check extinction wavelength input')
+        
+    # verify that inputs are physical
+    try: aero['ext'][0,aero['ext'][0,:]<0.0] = 0.0
+    except: pass
+    try: aero['ssa'][0,aero['ssa'][0,:]<0.0] = 0.0
+    except: pass
+    try: aero['ssa'][0,aero['ssa'][0,:]>1.0] = 1.0
+    except: pass
+    try: aero['asy'][0,aero['asy'][0,:]<0.0] = 0.0
+    except: pass
+    try: aero['asy'][0,aero['asy'][0,:]>1.0] = 1.0
+    except: pass
         
     # Calculate SZA for every 5 minutes
     if verbose: print 'calculating sza for every 5 minutes'
@@ -409,26 +421,27 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
         aero['ext'] = np.array([sol['ext'][i,:],sol['ext'][i,:]])
         write_fuliou_input(input_file,geo=geo,aero=aero,albedo=albedo,verbose=False)
         
-        progress(i/len(sol['ssa'])*100.0)
+        progress(float(i)/float(len(sol['ssa']))*100.0)
         f_list.write(fp_fuliou+' '+input_file+' '+output_file+'\n')
-        
+    
+    endprogress()
+    sel = sol['solutions']['select'][0,0]
     i_str = ['m1','s0','p1']
     for ie in [-1,0,1]:
         for ia in [-1,0,1]:
-            for im [-1,0,1]:
+            for im in [-1,0,1]:
                 form = {'num':num,'e':i_str[ie+1],'a':i_str[ia+1],'s':i_str[im+1]}
                 input_file = os.path.join(fp_in,'MOC_{num}_{e}{a}{s}.datin'.format(**form))
                 output_file = os.path.join(fp_out,'MOC_{num}_{e}{a}{s}.wrt'.format(**form))
-                aero['ssa'] = np.array([sol['solutions']['select']['ssa'][0,:]+ia*sol['solutions']['select']['ssa'][1,:]]*2)
-                aero['asy'] = np.array([sol['solutions']['select']['asym'][0,:]+im*sol['solutions']['select']['asym'][1,:]]*2)
-                aero['ext'] = np.array([sol['solutions']['select']['ext'][0,:]+ie*sol['solutions']['select']['ext'][1,:]]*2)
+                aero['ssa'] = np.array([sel['ssa'][0,0][0,:]+ia*sel['ssa'][0,0][1,:]]*2)
+                aero['asy'] = np.array([sel['asym'][0,0][0,:]+im*sel['asym'][0,0][1,:]]*2)
+                aero['ext'] = np.array([sel['ext'][0,0][0,:]+ie*sel['ext'][0,0][1,:]]*2)
                 write_fuliou_input(input_file,geo=geo,aero=aero,albedo=albedo,verbose=False)
 
                 print '{e}{a}{s}'.format(**form)
                 f_list.write(fp_fuliou+' '+input_file+' '+output_file+'\n')
     
     f_list.close()
-    endprogress()
 
 
 # In[441]:
