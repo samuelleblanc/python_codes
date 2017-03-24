@@ -138,8 +138,11 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
                                int(geo['hour']),int(geo['minute']),int(geo['second']))
     if not geo.get('pressure'):
         geo['pressure'] = 1013.25
+    if hasattr(geo['lat'],'__len__'):
+        geo['lat'], geo['lon'] = geo['lat'][0],geo['lon'][0]
     if not geo.get('sza'):
-        geo['sza'],geo['azi'] = mu.get_sza_azi(geo['lat'],geo['lon'],geo['datetime'])
+        geo['sza'],geo['azi'] = mu.get_sza_azi(geo['lat'],geo['lon'],[geo['datetime']])
+        geo['sza'] = geo['sza'][0]
         
     if len(aero['wvl_arr'])!=30:
         raise AttributeError('Length of the wavelength array is not 30, check wavelength input')
@@ -165,15 +168,15 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         fgeo = albedo['modis_albedo']['mean_geo']
         frac_diffuse = get_frac_diffuse(albedo['modis_albedo'],geo['sza_fine'],ext=aero['ext'],z=aero['z_arr'])
         albedo['albedo_fine'] = calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,geo['sza_fine'])
-    if not albedo.get('albedo_fine'):
+    if not 'albedo_fine' in albedo:
         raise AttributeError('No albedo defined please review albedo dict input')
     else:
         albedo['albedo_fine'][np.logical_or((np.isfinite(albedo['albedo_fine'])!=True),(albedo['albedo_fine']<0))]=0.0
         
     if verbose: print 'writing to file:'+output_file
-    with open(output_file,'r') as f:
+    with open(output_file,'w') as f:
         # write the title setup line
-        f.write('%4i %2i %2i %12.5f %11.4f %11.4f %11.4f %11.4f %11.5f %11.5f\n' % (                geo['year'],geo['month'],geo['day'],geo['year'],geo['utc'],geo['sza'],geo['pressure'],
+        f.write('%4i %2i %2i %12.5f %11.4f %11.4f %11.4f %11.4f %11.5f %11.5f\n' % (                geo['year'],geo['month'],geo['day'],geo['utc'],geo['sza'],geo['pressure'],
                 min(aero['z_arr']),max(aero['z_arr']),geo['lat'],geo['lon']))
         # write the fine sza
         f.write("\n".join(["".join((' %9.4f' % s for s in geo['sza_fine'][i:i+8])) for i in xrange(0,len(geo['sza_fine']),8)]))
@@ -330,6 +333,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
         os
         scipy
         datetime
+        Sp_parameters
     
     Required files:
         matlab MOC solution for single solx 
@@ -351,6 +355,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     import os
     from datetime import datetime
     from Run_fuliou import get_MODIS_surf_albedo
+    from Sp_parameters import startprogress, progress, endprogress
     
     # load the materials
     sol = sio.loadmat(fname)
@@ -364,8 +369,8 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     cal = sio.loadmat(f_calipso)
     
     # prep the write out paths
-    fp_in = os.path.join(fp_rtm,'input','MOC_single_solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
-    fp_out = os.path.join(fp_rtm,'output','MOC_single_solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
+    fp_in = os.path.join(fp_rtm,'input','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
+    fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
     if not os.path.exists(fp_in):
         os.makedirs(fp_in)
     if not os.path.exists(fp_out):
@@ -377,8 +382,8 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     # prep the standard input definitions
     tt = datetime.strptime(cal['calipso_date'][num],'%Y-%m-%d')
     
-    geo = {'lat':cal['calipso_lat_oneday'][num], 'lon':cal['calipso_lon_oneday'][num],'utc':cal['calipso_date'][num]/100.0,
-           'year':tt.year,'month':tt.month,'day':tt.day}
+    geo = {'lat':cal['calipso_lat_oneday'][num], 'lon':cal['calipso_lon_oneday'][num],
+           'utc':cal['calipso_time_oneday'][num][0]/100.0,'year':tt.year,'month':tt.month,'day':tt.day}
     aero = {'wvl_arr':sol['solutions']['lambda'][0,0][0]*1000.0,
             'z_arr':[cal['calipso_zmin_oneday'][num][0],cal['calipso_zmax_oneday'][num][0]]}
     if surface_type=='ocean':
@@ -392,19 +397,21 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
         albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_alb,tt.timetuple().tm_yday,geo['lat'],geo['lon'],year_of_MODIS=2007)
     else:
         raise ValueError("surface_type can only be 'ocean', 'land', or 'land_MODIS'")
-    
+
+    startprogress('Writing MOC files')
     for i in xrange(len(sol['ssa'])):
-        input_file = os.path.join(fp_in,'MOC_single_solx_{num}_{i}.datin'.format(num=num,i=i))
-        output_file = os.path.join(fp_out,'MOC_single_solx_{num}_{i}.wrt'.format(num=num,i=i))
+        input_file = os.path.join(fp_in,'MOC_{num}_{i}.datin'.format(num=num,i=i))
+        output_file = os.path.join(fp_out,'MOC_{num}_{i}.wrt'.format(num=num,i=i))
         aero['ssa'] = np.array([sol['ssa'][i,:],sol['ssa'][i,:]])
         aero['asy'] = np.array([sol['asym'][i,:],sol['asym'][i,:]])
         aero['ext'] = np.array([sol['ext'][i,:],sol['ext'][i,:]])
         write_fuliou_input(input_file,geo=geo,aero=aero,albedo=albedo,verbose=False)
         
-        print i
-        f_list.write(fp_fuliou+' '+input_file+' '+output_file)
+        progress(i/len(sol['ssa']))
+        f_list.write(fp_fuliou+' '+input_file+' '+output_file+'/n')
         
     f_list.close()
+    endprogress()
 
 
 # In[441]:
@@ -582,4 +589,9 @@ def run_fuliou_linux():
 # In[445]:
 
 run_fuliou_linux()
+
+
+# In[ ]:
+
+
 
