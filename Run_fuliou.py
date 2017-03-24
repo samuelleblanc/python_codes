@@ -411,6 +411,21 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
         
         progress(i/len(sol['ssa'])*100.0)
         f_list.write(fp_fuliou+' '+input_file+' '+output_file+'\n')
+        
+    i_str = ['m1','s0','p1']
+    for ie in [-1,0,1]:
+        for ia in [-1,0,1]:
+            for im [-1,0,1]:
+                form = {'num':num,'e':i_str[ie+1],'a':i_str[ia+1],'s':i_str[im+1]}
+                input_file = os.path.join(fp_in,'MOC_{num}_{e}{a}{s}.datin'.format(**form))
+                output_file = os.path.join(fp_out,'MOC_{num}_{e}{a}{s}.wrt'.format(**form))
+                aero['ssa'] = np.array([sol['solutions']['select']['ssa'][0,:]+ia*sol['solutions']['select']['ssa'][1,:]]*2)
+                aero['asy'] = np.array([sol['solutions']['select']['asym'][0,:]+im*sol['solutions']['select']['asym'][1,:]]*2)
+                aero['ext'] = np.array([sol['solutions']['select']['ext'][0,:]+ie*sol['solutions']['select']['ext'][1,:]]*2)
+                write_fuliou_input(input_file,geo=geo,aero=aero,albedo=albedo,verbose=False)
+
+                print '{e}{a}{s}'.format(**form)
+                f_list.write(fp_fuliou+' '+input_file+' '+output_file+'\n')
     
     f_list.close()
     endprogress()
@@ -581,7 +596,7 @@ def run_fuliou_linux():
     fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
     f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
-    fp_fuliou = '/u/sleblan2/fuliou/v20140906/fuliou'
+    fp_fuliou = '/u/sleblan2/fuliou/v20170324/fuliou'
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     
     print 'Starting the prepr DARE single solx for fuliou for file: '+fname
