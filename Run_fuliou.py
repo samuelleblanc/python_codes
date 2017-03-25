@@ -412,6 +412,7 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     else:
         raise ValueError("surface_type can only be 'ocean', 'land', or 'land_MODIS'")
 
+    # Run through the possible solutions to the files and write out the fuliou input files
     startprogress('Writing MOC files')
     for i in xrange(len(sol['ssa'])):
         input_file = os.path.join(fp_in,'MOC_{num}_{i:04d}.datin'.format(num=num,i=i))
@@ -589,6 +590,127 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     dat[dat==32767] = np.nan
     dat = dat/1000.0
     return dat    
+
+
+# In[ ]:
+
+def read_DARE_single_sol(fp_rtm,num,fp_save,vv='v1'):
+    """
+    Purpose:
+        Read the DARE fuliou output files for a single solution
+        saves the results as a .mat file
+    
+    Input: 
+        fp_rtm: base folder path (adds the /output/MOC_...)
+        num: number of the single solution
+        fp_save: full file path of the folder to contain the saved mat file
+        
+    Output:
+        None
+    
+    Keywords: 
+        vv: (default v1) version of the files 
+    
+    Dependencies:
+        os
+        numpy
+        scipy.io
+        Run_fuliou (this file)
+    
+    Required files:
+        fuliou file output
+        
+    Example:
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2017-03-24, Santa Cruz, CA
+    """
+    import os
+    from Run_fuliou import read_fuliou_output
+    
+    fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
+    d = []
+    raise ValueError('File not finished yet')
+
+
+# In[176]:
+
+def read_fuliou_output(fname,verbose=False):
+    """
+    Purpose:
+        Reads a single fuliou output file
+    
+    Input: 
+        fname: full file path to be read (*.wrt)
+        
+    Output:
+        d: dict of returned values in the file
+    
+    Keywords: 
+        verbose: (default False) If True prints out the operation steps 
+    
+    Dependencies:
+        numpy
+        sys
+    
+    Required files:
+        fname file 
+        
+    Example:
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2017-03-24, Santa Cruz, CA
+    """
+    import numpy as np
+    import sys
+    d = {}
+    if verbose: print 'opening :'+fname
+    with open(fname,'r') as f:
+        # read header line with info
+        if verbose: print 'opening header lines'
+        s = f.readline().split()
+        d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
+        d['year'],d['month'],d['day'] = int(d['year']),int(d['month']),int(d['day'])
+        # define the variables to be read
+        d['cosSZA'],d['AOD550'],d['swdn17lev_aer'],d['swup17lev_aer'] = [],[],[],[]
+        d['swdntoa_aer'],d['swuptoa_aer'],d['directsfc_aer'],d['diffusesfc_aer'] = [],[],[],[]
+        d['swdn17lev_noaer'],d['swup17lev_noaer'] = [],[]
+        d['swdntoa_noaer'],d['swuptoa_noaer'],d['directsfc_noaer'],d['diffusesfc_noaer'] = [],[],[],[]
+        i = 0 
+        while True:
+            line = f.readline()
+            if not line: break
+            if verbose: sys.stdout.write('{}..'.format(i))
+            c,nul = map(float,line.split())
+            a = map(float,f.readline().split())
+            d['cosSZA'].append(c)
+            d['AOD550'].append(a)
+            t = map(float,f.readline().split()[1:])
+            n = map(float,f.readline().split()[1:])
+            d['swdn17lev_aer'].append(t[1:17])
+            d['swup17lev_aer'].append(t[18:34])
+            d['swdntoa_aer'].append(t[35])
+            d['swuptoa_aer'].append(t[36])
+            d['directsfc_aer'].append(t[37])
+            d['diffusesfc_aer'].append(t[38])
+            d['swdn17lev_noaer'].append(n[1:17])
+            d['swup17lev_noaer'].append(n[18:34])
+            d['swdntoa_noaer'].append(n[35])
+            d['swuptoa_noaer'].append(n[36])
+            d['directsfc_noaer'].append(n[37])
+            d['diffusesfc_noaer'].append(n[38])
+            i+=1
+            
+        # now make sure it returns as numpy arrays
+        if verbose: print '...\ntransforming to numpy arrays'
+        for m in d.keys():
+            if not m in ['year','month','day','utc','sza','pressure','zmin','zmax','lat','lon']:
+                d[m] = np.array(d[m])
+        return d
 
 
 # In[443]:
