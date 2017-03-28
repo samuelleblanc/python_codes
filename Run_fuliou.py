@@ -592,9 +592,9 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     return dat    
 
 
-# In[4]:
+# In[5]:
 
-def read_DARE_single_sol(fname,fp_rtm,num,fp_save,vv='v1',verbose=False):
+def read_DARE_single_sol(fname,fp_rtm,fp_save,vv='v1',verbose=False):
     """
     Purpose:
         Read the DARE fuliou output files for a single solution
@@ -844,7 +844,7 @@ def read_fuliou_linux():
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     
     print 'Starting the readinf of DARE single solx for fuliou for file: '+fname
-    read_DARE_single_sol(fname,fp_rtm,num,fp_rtm,vv='v1',verbose=True)
+    read_DARE_single_sol(fname,fp_rtm,fp_rtm,vv='v1',verbose=True)
 
 
 # In[445]:
