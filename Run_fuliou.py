@@ -721,7 +721,7 @@ def read_fuliou_output(fname,verbose=False):
             s = line.split()
             d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
         except:
-            w = [0,4,3,3,13,12,12,12,12,12,12]
+            w = [0,5,3,3,13,12,12,12,12,12,12]
             s = [ line[ sum(w[0:i]) : ii ].strip() for i,ii in enumerate(np.cumsum(w))][1:]
             d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
         d['year'],d['month'],d['day'] = int(d['year']),int(d['month']),int(d['day'])
