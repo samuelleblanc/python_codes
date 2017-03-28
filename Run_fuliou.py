@@ -592,15 +592,17 @@ def load_hdf_spec(filename,ix,iy,data_name='MCD43GF_CMG'):
     return dat    
 
 
-# In[ ]:
+# In[4]:
 
-def read_DARE_single_sol(fp_rtm,num,fp_save,vv='v1'):
+def read_DARE_single_sol(fname,fp_rtm,num,fp_save,vv='v1',verbose=False):
     """
     Purpose:
         Read the DARE fuliou output files for a single solution
         saves the results as a .mat file
     
     Input: 
+        fname: full file path for matlab file solution for single solutions
+               (e.g., MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat)
         fp_rtm: base folder path (adds the /output/MOC_...)
         num: number of the single solution
         fp_save: full file path of the folder to contain the saved mat file
@@ -610,6 +612,7 @@ def read_DARE_single_sol(fp_rtm,num,fp_save,vv='v1'):
     
     Keywords: 
         vv: (default v1) version of the files 
+        verbose: (default False) if true, then prints out to screen messages
     
     Dependencies:
         os
@@ -628,14 +631,54 @@ def read_DARE_single_sol(fp_rtm,num,fp_save,vv='v1'):
         Written (v1.0): Samuel LeBlanc, 2017-03-24, Santa Cruz, CA
     """
     import os
+    import scipy.io as sio
     from Run_fuliou import read_fuliou_output
     
     fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
     d = []
-    raise ValueError('File not finished yet')
+    
+    # load the materials
+    if verbose: print 'loading mat file for extra info on source: '+fname
+    sol = sio.loadmat(fname)
+    name = fname.split(os.path.sep)[-1]
+    da,num,xt = name.split('_')
+    num = int(num)-1 #convert from matlab indexing to python
+    da = da.lstrip('MOCsolutions')
+    xt = xt.rstrip('.mat')
+    
+    if verbose: print 'running through all the solutions'
+    for i,s in enumerate(sol['ssa']):
+        if verbose: print i
+        output_file = os.path.join(fp_out,'MOC_{num}_{i:04d}.wrt'.format(num=num,i=i))
+        d.append(read_fuliou_output(output_file))
+        d[i]['ssa'] = sol['ssa'][i,:]
+        d[i]['asy'] = sol['asym'][i,:]
+        d[i]['ext'] = sol['ext'][i,:]
+        analyse_fuliou_output(d[i])
+    
+    if verbose: print 'starting on select solutions'
+    ds = {}
+    sel = sol['solutions']['select'][0,0]
+    i_str = ['m1','s0','p1']
+    for ie in [-1,0,1]:
+        for ia in [-1,0,1]:
+            for im in [-1,0,1]:
+                form = {'num':num,'e':i_str[ie+1],'a':i_str[ia+1],'s':i_str[im+1]}
+                val = '{e}{a}{s}'.format(**form)
+                if verbose: print val
+                output_file = os.path.join(fp_out,'MOC_{num}_{e}{a}{s}.wrt'.format(**form))
+                ds[val]['ssa'] = [sel['ssa'][0,0][0,:]+ia*sel['ssa'][0,0][1,:]]
+                ds[val]['asy'] = [sel['asym'][0,0][0,:]+im*sel['asym'][0,0][1,:]]
+                ds[val]['ext'] = [sel['ext'][0,0][0,:]+ie*sel['ext'][0,0][1,:]]
+                ds[val] = read_fuliou_output(output_file)
+                analyse_fuliou_output(ds[val])
+    
+    f_out = os.path.join(fp_save,'MOC_1solx_DARE_{vv}_{num}.mat'.format(vv=vv,num=num))
+    if verbose: print 'saving to matlab file: '+f_out
+    sio.savemat(f_out,{'solutions':d,'select':ds})    
 
 
-# In[176]:
+# In[2]:
 
 def read_fuliou_output(fname,verbose=False):
     """
@@ -713,6 +756,61 @@ def read_fuliou_output(fname,verbose=False):
         return d
 
 
+# In[3]:
+
+def analyse_fuliou_output(d):
+    """
+    Purpose:
+        Runs typical calculations of the fuliou ouput
+    
+    Input: 
+        d: data dict read from single file
+        
+    Output:
+        d: dict containing calculated values (24h integrated, interpolation, surface, toa...)
+    
+    Keywords: 
+        None
+    
+    Dependencies:
+        numpy
+    
+    Required files:
+        None 
+        
+    Example:
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2017-03-27, Santa Cruz, CA
+    """
+    import numpy as np
+    from scipy.interpolate import interp1d
+    
+    dt = np.arange(0,24*60.0,5.0)
+    isun = d['cosSZA']>=0
+    
+    fx_dn = interp1d(dt,d['swdn17lev_aer'][0,:])
+    fx_up = interp1d(dt,d['swup17lev_aer'][0,:])
+    d['swdnsfc_aer_118_instant'] = fx_dn(d['utc'])
+    d['swtoaup_aer_118_instant'] = fx_up(d['utc'])
+    
+    d['swnet17lev_aer_118'] = d['swdn17lev_aer']-d['swup17lev_aer']
+    d['swnet17lev_noaer_118'] = d['swdn17lev_noaer']-d['swup17lev_noaer']
+    
+    d['dF_toa_all'] = d['swuptoa_noaer']-d['swuptoa_aer']
+    d['dF_17lev_all'] = d['swnet17lev_aer_118']-d['swnet17lev_noaer_118']  
+    d['dF_sfc_all'] = d['dF_17lev_all'][0,:]
+    
+    # calculate the integrals
+    d['dF_toa_24hr'] = np.trapz(d['dF_toa_all'],x=dt)/24.0
+    d['dF_sfc_24hr'] = np.trapz(d['dF_sfc_all'],x=dt)/24.0
+    d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'],x=dt,axis=2)/24.0       
+    d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'],x=dt)/24.0
+    d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'],x=dt)/24.0
+
+
 # In[443]:
 
 def run_fuliou_pc():
@@ -738,7 +836,29 @@ def run_fuliou_linux():
     Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='land_MODIS',vv='v1')
 
 
+# In[1]:
+
+def read_fuliou_linux():
+    from Run_fuliou import read_DARE_single_sol
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    fp_rtm = '/nobackup/sleblan2/MOCfolder/'
+    
+    print 'Starting the readinf of DARE single solx for fuliou for file: '+fname
+    read_DARE_single_sol(fname,fp_rtm,num,fp_rtm,vv='v1',verbose=True)
+
+
 # In[445]:
 
-run_fuliou_linux()
+import argparse
+long_description = """    Prepare or read the fuliou DARE calculations"""
+parser = argparse.ArgumentParser(description=long_description)
+parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
+                    action='store_true')
+in_ = vars(parser.parse_args())
+doread = in_.get('doread',False)
+
+if not doread:
+    run_fuliou_linux()
+else:
+    read_fuliou_linux()
 
