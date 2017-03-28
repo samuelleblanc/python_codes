@@ -632,10 +632,7 @@ def read_DARE_single_sol(fname,fp_rtm,fp_save,vv='v1',verbose=False):
     """
     import os
     import scipy.io as sio
-    from Run_fuliou import read_fuliou_output
-    
-    fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
-    d = []
+    from Run_fuliou import read_fuliou_output, analyse_fuliou_output
     
     # load the materials
     if verbose: print 'loading mat file for extra info on source: '+fname
@@ -645,6 +642,9 @@ def read_DARE_single_sol(fname,fp_rtm,fp_save,vv='v1',verbose=False):
     num = int(num)-1 #convert from matlab indexing to python
     da = da.lstrip('MOCsolutions')
     xt = xt.rstrip('.mat')
+    
+    fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
+    d = []
     
     if verbose: print 'running through all the solutions'
     for i,s in enumerate(sol['ssa']):
