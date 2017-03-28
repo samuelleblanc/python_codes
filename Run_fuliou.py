@@ -767,7 +767,7 @@ def analyse_fuliou_output(d):
         d: data dict read from single file
         
     Output:
-        d: dict containing calculated values (24h integrated, interpolation, surface, toa...)
+        None but modifies d containing calculated values (24h integrated, interpolation, surface, toa...)
     
     Keywords: 
         None
@@ -788,11 +788,11 @@ def analyse_fuliou_output(d):
     import numpy as np
     from scipy.interpolate import interp1d
     
-    dt = np.arange(0,24*60.0,5.0)
+    dt = np.arange(0,24*60.0+5.0,5.0)/60.0
     isun = d['cosSZA']>=0
     
-    fx_dn = interp1d(dt,d['swdn17lev_aer'][0,:])
-    fx_up = interp1d(dt,d['swup17lev_aer'][0,:])
+    fx_dn = interp1d(dt,d['swdn17lev_aer'][:,0])
+    fx_up = interp1d(dt,d['swup17lev_aer'][:,0])
     d['swdnsfc_aer_118_instant'] = fx_dn(d['utc'])
     d['swtoaup_aer_118_instant'] = fx_up(d['utc'])
     
@@ -801,14 +801,23 @@ def analyse_fuliou_output(d):
     
     d['dF_toa_all'] = d['swuptoa_noaer']-d['swuptoa_aer']
     d['dF_17lev_all'] = d['swnet17lev_aer_118']-d['swnet17lev_noaer_118']  
-    d['dF_sfc_all'] = d['dF_17lev_all'][0,:]
+    d['dF_sfc_all'] = d['dF_17lev_all'][:,0]
     
-    # calculate the integrals
-    d['dF_toa_24hr'] = np.trapz(d['dF_toa_all'],x=dt)/24.0
-    d['dF_sfc_24hr'] = np.trapz(d['dF_sfc_all'],x=dt)/24.0
-    d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'],x=dt,axis=2)/24.0       
-    d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'],x=dt)/24.0
-    d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'],x=dt)/24.0
+    # handle only the contiguous daytime
+    isub = np.split(np.where(isun)[0],np.where(np.diff(np.where(isun)[0])!= 1)[0]+1)
+    if len(isub) > 1:
+        dt_sub = np.concatenate((dt[isub[1]],dt[isub[0]]+24.0))
+        ii = np.concatenate((isub[1],isub[0]))
+    else:
+        ii = isub[0]
+        dt_sub = dt[ii]
+        
+    # calculate the integrals    
+    d['dF_toa_24hr'] = np.trapz(d['dF_toa_all'][ii],x=dt_sub)/24.0
+    d['dF_sfc_24hr'] = np.trapz(d['dF_sfc_all'][ii],x=dt_sub)/24.0
+    d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'][ii,:],x=dt_sub,axis=0)/24.0       
+    d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'][ii],x=dt_sub)/24.0
+    d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'][ii],x=dt_sub)/24.0
 
 
 # In[443]:
@@ -843,7 +852,7 @@ def read_fuliou_linux():
     fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     
-    print 'Starting the readinf of DARE single solx for fuliou for file: '+fname
+    print 'Starting to read fuliou DARE single solx for file: '+fname
     read_DARE_single_sol(fname,fp_rtm,fp_rtm,vv='v1',verbose=True)
 
 
