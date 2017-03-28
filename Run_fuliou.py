@@ -667,6 +667,7 @@ def read_DARE_single_sol(fname,fp_rtm,fp_save,vv='v1',verbose=False):
                 val = '{e}{a}{s}'.format(**form)
                 if verbose: print val
                 output_file = os.path.join(fp_out,'MOC_{num}_{e}{a}{s}.wrt'.format(**form))
+                ds[val] = {}
                 ds[val]['ssa'] = [sel['ssa'][0,0][0,:]+ia*sel['ssa'][0,0][1,:]]
                 ds[val]['asy'] = [sel['asym'][0,0][0,:]+im*sel['asym'][0,0][1,:]]
                 ds[val]['ext'] = [sel['ext'][0,0][0,:]+ie*sel['ext'][0,0][1,:]]
@@ -715,8 +716,14 @@ def read_fuliou_output(fname,verbose=False):
     with open(fname,'r') as f:
         # read header line with info
         if verbose: print 'opening header lines'
-        s = f.readline().split()
-        d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
+        line = f.readline()
+        try:
+            s = line.split()
+            d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
+        except:
+            w = [0,4,3,3,13,12,12,12,12,12,12]
+            s = [ line[ sum(w[0:i]) : ii ].strip() for i,ii in enumerate(np.cumsum(w))][1:]
+            d['year'],d['month'],d['day'],d['utc'],d['sza'],d['pressure'],d['zmin'],d['zmax'],d['lat'],d['lon'] = map(float,s)
         d['year'],d['month'],d['day'] = int(d['year']),int(d['month']),int(d['day'])
         # define the variables to be read
         d['cosSZA'],d['AOD550'],d['swdn17lev_aer'],d['swup17lev_aer'] = [],[],[],[]
@@ -849,7 +856,8 @@ def run_fuliou_linux():
 
 def read_fuliou_linux():
     from Run_fuliou import read_DARE_single_sol
-    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat'
+    # 'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     
     print 'Starting to read fuliou DARE single solx for file: '+fname
