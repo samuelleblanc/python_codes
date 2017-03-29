@@ -765,7 +765,7 @@ def read_fuliou_output(fname,verbose=False):
 
 # In[3]:
 
-def analyse_fuliou_output(d):
+def analyse_fuliou_output(d,smaller=True):
     """
     Purpose:
         Runs typical calculations of the fuliou ouput
@@ -777,7 +777,7 @@ def analyse_fuliou_output(d):
         None but modifies d containing calculated values (24h integrated, interpolation, surface, toa...)
     
     Keywords: 
-        None
+        smaller: (default True) removes some variables to make the files smaller
     
     Dependencies:
         numpy
@@ -825,6 +825,12 @@ def analyse_fuliou_output(d):
     d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'][ii,:],x=dt_sub,axis=0)/24.0       
     d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'][ii],x=dt_sub)/24.0
     d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'][ii],x=dt_sub)/24.0
+    
+    if smaller:
+        nn = ['swup17lev_aer','swdn17lev_aer','swdn17lev_noaer','swup17lev_noaer',
+              'swuptoa_noaer','swuptoa_aer','swnet17lev_aer_118','swnet17lev_noaer_118','dF_toa_all','dF_17lev_all','dF_sfc_all']
+        for il in nn:
+            d.pop(il,None)
 
 
 # In[443]:
