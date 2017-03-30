@@ -285,6 +285,30 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_SFC_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
+# In[243]:
+
+plt.figure(figsize=(12,5))
+plt.hist(dfsfc,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
+plt.axvline(np.mean(dfsfc),color='k',lw=3,label='Mean')
+plt.axvline(np.median(dfsfc),color='grey',ls='--',lw=2,label='Median')
+cs = cm.jet(np.arange(27)/27.0)
+ms = ['s','*','x','d']
+#for i,k in enumerate(sfc_sel.keys()):
+#    plt.axvline(sfc_sel[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
+    
+plt.axvspan(np.mean(dfsfc)-np.std(dfsfc), np.mean(dfsfc)+np.std(dfsfc), alpha=0.2, color='red',label='Std')
+plt.xlim(-55,-20)
+plt.xlabel('DARE Surface [W/m$^2$]')
+plt.ylabel('Number of solutions')
+plt.title('DARE Surface for all solutions on single pixel #{}'.format(num))
+
+box = plt.gca().get_position()
+plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
+
+plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
+plt.savefig(fp+'plot\\DARE_SFC_{num}_nosup.png'.format(num=num),dpi=600,transparent=True)
+
+
 # # Redo the analysis for number 22134
 
 # In[213]:

@@ -308,8 +308,8 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
     SZAcub = SZAinrad*SZAsq
 
     for i in xrange(len(fiso)):
-        alb_bs = fiso[i]*(g0bs[1] + g1bs[1]*SZAsq + g2bs[1]*SZAcub) +                  fvol[i]*(g0bs[2] + g1bs[2]*SZAsq + g2bs[2]*SZAcub) +                  fgeo[i]*(g0bs[3] + g1bs[3]*SZAsq + g2bs[3]*SZAcub)
-        alb_ws = fiso[i]*gws[1] + fvol[i]*gws[2] + fgeo[i]*gws[3]
+        alb_bs = fiso[i]*(g0bs[0] + g1bs[0]*SZAsq + g2bs[0]*SZAcub) +                  fvol[i]*(g0bs[1] + g1bs[1]*SZAsq + g2bs[2]*SZAcub) +                  fgeo[i]*(g0bs[2] + g1bs[2]*SZAsq + g2bs[3]*SZAcub)
+        alb_ws = fiso[i]*gws[0] + fvol[i]*gws[1] + fgeo[i]*gws[2]
 
         albedo_sfc[i,:] = alb_ws*frac_diffuse + (1-frac_diffuse)*alb_bs;
 
@@ -378,6 +378,8 @@ def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_ty
     num = int(num)-1 #convert from matlab indexing to python
     da = da.lstrip('MOCsolutions')
     xt = xt.rstrip('.mat')
+    
+    if verbose: print 'Preparing the input files for pixel: {}'.format(num)
     
     lm = sio.loadmat(fp_rtm+'yohei_MOC_lambda.mat')
     cal = sio.loadmat(f_calipso)
@@ -643,6 +645,8 @@ def read_DARE_single_sol(fname,fp_rtm,fp_save,vv='v1',verbose=False):
     da = da.lstrip('MOCsolutions')
     xt = xt.rstrip('.mat')
     
+    if verbose: print 'Opening the file at pixel number: {}'.format(num)
+    
     fp_out = os.path.join(fp_rtm,'output','MOC_1solx_DARE_{vv}_{num}'.format(vv=vv,num=num))
     d = []
     
@@ -826,9 +830,14 @@ def analyse_fuliou_output(d,smaller=True):
     d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'][ii],x=dt_sub)/24.0
     d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'][ii],x=dt_sub)/24.0
     
+    # get the instantaneous values
+    iutc = np.argmin(abs(dt-d['utc']))
+    d['dF_toa_instant'] = d['dF_toa_all'][iutc]
+    d['dF_sfc_instant'] = d['dF_sfc_all'][iutc]
+    
     if smaller:
         nn = ['swup17lev_aer','swdn17lev_aer','swdn17lev_noaer','swup17lev_noaer',
-              'swuptoa_noaer','swuptoa_aer','swnet17lev_aer_118','swnet17lev_noaer_118','dF_toa_all','dF_17lev_all','dF_sfc_all']
+              'swuptoa_noaer','swuptoa_aer','swnet17lev_aer_118','swnet17lev_noaer_118','dF_17lev_all']
         for il in nn:
             d.pop(il,None)
 
@@ -846,9 +855,11 @@ def run_fuliou_pc():
 
 # In[444]:
 
-def run_fuliou_linux():
+def run_fuliou_linux(i=0):
     from Run_fuliou import Prep_DARE_single_sol
-    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
+    fname = fname + ff[i]
     f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     fp_fuliou = '/u/sleblan2/fuliou/v20170324/fuliou'
@@ -860,10 +871,11 @@ def run_fuliou_linux():
 
 # In[1]:
 
-def read_fuliou_linux():
+def read_fuliou_linux(i=0):
     from Run_fuliou import read_DARE_single_sol
-    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat'
-    # 'MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat'
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
+    fname = fname + ff[i]
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     
     print 'Starting to read fuliou DARE single solx for file: '+fname
@@ -872,16 +884,24 @@ def read_fuliou_linux():
 
 # In[445]:
 
-import argparse
-long_description = """    Prepare or read the fuliou DARE calculations"""
-parser = argparse.ArgumentParser(description=long_description)
-parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
-                    action='store_true')
-in_ = vars(parser.parse_args())
-doread = in_.get('doread',False)
+if __name__ == '__main__':
+    import argparse
+    long_description = """    Prepare or read the fuliou DARE calculations"""
+    parser = argparse.ArgumentParser(description=long_description)
+    parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
+                        action='store_true')
+    parser.add_argument('-dowrite','--dowrite',help='if set, will write the input and list files for fuliou',
+                        action='store_true')
+    parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
+    in_ = vars(parser.parse_args())
+    doread = in_.get('doread',False)
+    dowrite = in_.get('dowrite',False)
+    i = in_.get('index',0)
 
-if not doread:
-    run_fuliou_linux()
-else:
-    read_fuliou_linux()
+    if dowrite:
+        run_fuliou_linux(i=i)
+    elif doread:
+        read_fuliou_linux(i=i)
+    else:
+        run_fuliou_linux(i=i)
 
