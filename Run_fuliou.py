@@ -857,7 +857,8 @@ def run_fuliou_pc():
 
 def run_fuliou_linux(i=0):
     from Run_fuliou import Prep_DARE_single_sol
-    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'
+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
           'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
     fname = fname + ff[i]
     f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
@@ -873,7 +874,8 @@ def run_fuliou_linux(i=0):
 
 def read_fuliou_linux(i=0):
     from Run_fuliou import read_DARE_single_sol
-    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
+    fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'
+    ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
           'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
     fname = fname + ff[i]
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'

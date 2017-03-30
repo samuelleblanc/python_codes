@@ -103,11 +103,9 @@ s['solutions'][0,1]['dF_toa_24hr'][0,0][0,0]
 # In[33]:
 
 dftoa = np.array([s['solutions'][0,i]['dF_toa_24hr'][0,0][0,0] for i in xrange(len(s['solutions'][0,:]))])
-
-
-# In[35]:
-
 dfsfc = np.array([s['solutions'][0,i]['dF_sfc_24hr'][0,0] for i in xrange(len(s['solutions'][0,:]))])[:,0,0]
+dftoai = np.array([s['solutions'][0,i]['dF_toa_instant'][0,0][0,0] for i in xrange(len(s['solutions'][0,:]))])
+dfsfci = np.array([s['solutions'][0,i]['dF_sfc_instant'][0,0] for i in xrange(len(s['solutions'][0,:]))])[:,0,0]
 
 
 # In[36]:
@@ -124,6 +122,8 @@ s['select'][0,0][1]['dF_sfc_24hr'][0][0][0,0]
 
 toa_sel = {}
 sfc_sel = {}
+toa_seli = {}
+sfc_seli = {}
 i_str = ['m1','s0','p1']
 ii = 0
 for ie in [-1,0,1]:
@@ -133,6 +133,8 @@ for ie in [-1,0,1]:
             val = '{e}{a}{s}'.format(**form)
             toa_sel[val] = s['select'][0,0][ii]['dF_toa_24hr'][0][0][0,0]
             sfc_sel[val] = s['select'][0,0][ii]['dF_sfc_24hr'][0][0][0,0]
+            toa_seli[val] = s['select'][0,0][ii]['dF_toa_instant'][0][0][0,0]
+            sfc_seli[val] = s['select'][0,0][ii]['dF_sfc_instant'][0][0][0,0]
             ii += 1
 
 
@@ -235,6 +237,8 @@ for i,k in enumerate(toa_sel.keys()):
     print tuple(cs[i,:])
 
 
+# ### Plot the 24h averages
+
 # In[209]:
 
 plt.figure(figsize=(12,5))
@@ -250,14 +254,14 @@ plt.axvspan(np.mean(dftoa)-np.std(dftoa), np.mean(dftoa)+np.std(dftoa), alpha=0.
 
 plt.xlabel('DARE TOA [W/m$^2$]')
 plt.ylabel('Number of solutions')
-plt.title('DARE TOA for all solutions on single pixel #{}'.format(num))
+plt.title('DARE TOA 24hr average for all solutions on single pixel #{}'.format(num))
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
 
 plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 
-plt.savefig(fp+'plot\\DARE_TOA_{num}.png'.format(num=num),dpi=600,transparent=True)
+plt.savefig(fp+'plot\\DARE_TOA_24h_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
 # In[210]:
@@ -275,14 +279,14 @@ plt.axvspan(np.mean(dfsfc)-np.std(dfsfc), np.mean(dfsfc)+np.std(dfsfc), alpha=0.
 
 plt.xlabel('DARE Surface [W/m$^2$]')
 plt.ylabel('Number of solutions')
-plt.title('DARE Surface for all solutions on single pixel #{}'.format(num))
+plt.title('DARE Surface 24hr average for all solutions on single pixel #{}'.format(num))
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
 
 plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 
-plt.savefig(fp+'plot\\DARE_SFC_{num}.png'.format(num=num),dpi=600,transparent=True)
+plt.savefig(fp+'plot\\DARE_SFC_24h_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
 # In[243]:
@@ -300,13 +304,65 @@ plt.axvspan(np.mean(dfsfc)-np.std(dfsfc), np.mean(dfsfc)+np.std(dfsfc), alpha=0.
 plt.xlim(-55,-20)
 plt.xlabel('DARE Surface [W/m$^2$]')
 plt.ylabel('Number of solutions')
-plt.title('DARE Surface for all solutions on single pixel #{}'.format(num))
+plt.title('DARE Surface 24hr average for all solutions on single pixel #{}'.format(num))
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
 
 plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
-plt.savefig(fp+'plot\\DARE_SFC_{num}_nosup.png'.format(num=num),dpi=600,transparent=True)
+plt.savefig(fp+'plot\\DARE_SFC_24h_{num}_nosup.png'.format(num=num),dpi=600,transparent=True)
+
+
+# ### Plot the instantaneous values
+
+# In[ ]:
+
+plt.figure(figsize=(12,5))
+plt.hist(dftoai,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
+plt.axvline(np.mean(dftoai),color='k',lw=3,label='Mean')
+plt.axvline(np.median(dftoai),color='grey',ls='--',lw=2,label='Median')
+cs = cm.jet(np.arange(27)/27.0)
+ms = ['s','*','x','d']
+for i,k in enumerate(toa_sel.keys()):
+    plt.axvline(toa_seli[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
+    
+plt.axvspan(np.mean(dftoai)-np.std(dftoai), np.mean(dftoai)+np.std(dftoai), alpha=0.2, color='red',label='Std')
+
+plt.xlabel('DARE TOA [W/m$^2$]')
+plt.ylabel('Number of solutions')
+plt.title('DARE TOA instantaneous for all solutions on single pixel #{}'.format(num))
+
+box = plt.gca().get_position()
+plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
+
+plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
+
+plt.savefig(fp+'plot\\DARE_TOA_instantaneous_{num}.png'.format(num=num),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+plt.figure(figsize=(12,5))
+plt.hist(dfsfci,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
+plt.axvline(np.mean(dfsfci),color='k',lw=3,label='Mean')
+plt.axvline(np.median(dfsfci),color='grey',ls='--',lw=2,label='Median')
+cs = cm.jet(np.arange(27)/27.0)
+ms = ['s','*','x','d']
+for i,k in enumerate(sfc_seli.keys()):
+    plt.axvline(sfc_seli[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
+    
+plt.axvspan(np.mean(dfsfci)-np.std(dfsfci), np.mean(dfsfci)+np.std(dfsfci), alpha=0.2, color='red',label='Std')
+
+plt.xlabel('DARE Surface [W/m$^2$]')
+plt.ylabel('Number of solutions')
+plt.title('DARE Surface instantaneous for all solutions on single pixel #{}'.format(num))
+
+box = plt.gca().get_position()
+plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
+
+plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
+
+plt.savefig(fp+'plot\\DARE_SFC_instantaneous_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
 # # Redo the analysis for number 22134
@@ -394,14 +450,14 @@ plt.axvspan(np.mean(dftoa2)-np.std(dftoa2), np.mean(dftoa2)+np.std(dftoa2), alph
 
 plt.xlabel('DARE TOA [W/m$^2$]')
 plt.ylabel('Number of solutions')
-plt.title('DARE TOA for all solutions on single pixel #{}'.format(num2))
+plt.title('DARE TOA 24hr average for all solutions on single pixel #{}'.format(num2))
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
 
 plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 
-plt.savefig(fp+'plot\\DARE_TOA_{num}.png'.format(num=num2),dpi=600,transparent=True)
+plt.savefig(fp+'plot\\DARE_TOA_24h_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
 # In[222]:
@@ -419,14 +475,14 @@ plt.axvspan(np.mean(dfsfc2)-np.std(dfsfc2), np.mean(dfsfc2)+np.std(dfsfc2), alph
 
 plt.xlabel('DARE Surface [W/m$^2$]')
 plt.ylabel('Number of solutions')
-plt.title('DARE Surface for all solutions on single pixel #{}'.format(num2))
+plt.title('DARE Surface 24hr average for all solutions on single pixel #{}'.format(num2))
 
 box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.65, box.height])
 
 plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 
-plt.savefig(fp+'plot\\DARE_SFC_{num}.png'.format(num=num2),dpi=600,transparent=True)
+plt.savefig(fp+'plot\\DARE_SFC_24h_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
 # In[223]:
