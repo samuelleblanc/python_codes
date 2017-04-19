@@ -750,14 +750,14 @@ def read_fuliou_output(fname,verbose=False):
             d['AOD550'].append(a)
             t = map(float,f.readline().split()[1:])
             n = map(float,f.readline().split()[1:])
-            d['swdn17lev_aer'].append(t[1:17])
-            d['swup17lev_aer'].append(t[18:34])
+            d['swdn17lev_aer'].append(t[1:18])
+            d['swup17lev_aer'].append(t[18:35])
             d['swdntoa_aer'].append(t[35])
             d['swuptoa_aer'].append(t[36])
             d['directsfc_aer'].append(t[37])
             d['diffusesfc_aer'].append(t[38])
-            d['swdn17lev_noaer'].append(n[1:17])
-            d['swup17lev_noaer'].append(n[18:34])
+            d['swdn17lev_noaer'].append(n[1:18])
+            d['swup17lev_noaer'].append(n[18:35])
             d['swdntoa_noaer'].append(n[35])
             d['swuptoa_noaer'].append(n[36])
             d['directsfc_noaer'].append(n[37])
@@ -769,6 +769,11 @@ def read_fuliou_output(fname,verbose=False):
         for m in d.keys():
             if not m in ['year','month','day','utc','sza','pressure','zmin','zmax','lat','lon']:
                 d[m] = np.array(d[m])
+        
+        trans = ['swdn17lev_aer','swup17lev_aer','swdn17lev_noaer','swup17lev_noaer']
+        for t in trans:
+            d[t] = d[t].transpose()
+        
         return d
 
 
@@ -815,7 +820,7 @@ def analyse_fuliou_output(d,smaller=True):
         d['swtoaup_noaer_118_24hr'] = np.nan
         d['dF_toa_24hr'] = np.nan
         d['dF_sfc_24hr'] = np.nan
-        d['dF_17lev_24hr'] = np.zeros(16)+np.nan
+        d['dF_17lev_24hr'] = np.zeros((17,1))+np.nan
         
     # get the delta z
     try:
@@ -827,8 +832,8 @@ def analyse_fuliou_output(d,smaller=True):
     d['AOD550'] = d['AOD550'][0][0]
     
     # get the instant values
-    fx_dn = interp1d(dt,d['swdn17lev_aer'][:,0])
-    fx_up = interp1d(dt,d['swup17lev_aer'][:,0])
+    fx_dn = interp1d(dt,d['swdn17lev_aer'][0,:])
+    fx_up = interp1d(dt,d['swup17lev_aer'][0,:])
     d['swdnsfc_aer_118_instant'] = float(fx_dn(d['utc']))
     d['swtoaup_aer_118_instant'] = float(fx_up(d['utc']))
     
@@ -837,7 +842,7 @@ def analyse_fuliou_output(d,smaller=True):
     
     d['dF_toa_all'] = d['swuptoa_noaer']-d['swuptoa_aer']
     d['dF_17lev_all'] = d['swnet17lev_aer_118']-d['swnet17lev_noaer_118']  
-    d['dF_sfc_all'] = d['dF_17lev_all'][:,0]
+    d['dF_sfc_all'] = d['dF_17lev_all'][0,:]
     
     # handle only the contiguous daytime
     isub = np.split(np.where(isun)[0],np.where(np.diff(np.where(isun)[0])!= 1)[0]+1)
