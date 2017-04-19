@@ -931,9 +931,9 @@ def read_fuliou_moc(fp,fp_save):
     results = p.map(rf.read_analyse,files)
     p.close()
     
-    print 'Saving to file:'+fp_save+'intermediate.mat'
-    ro = {'results':results}
-    sio.savemat(fp_save+'intermediate.mat',ro)
+    #print 'Saving to file:'+fp_save+'intermediate.mat'
+    #ro = {'results':results}
+    #sio.savemat(fp_save+'intermediate.mat',ro)
     
     nm_list = {'year_case':'year','month_case':'month','day_case':'day',
                'UT_case':'utc','lon_case':'lon','lat_case':'lat',
