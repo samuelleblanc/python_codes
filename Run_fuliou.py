@@ -815,7 +815,7 @@ def analyse_fuliou_output(d,smaller=True):
         d['swtoaup_noaer_118_24hr'] = np.nan
         d['dF_toa_24hr'] = np.nan
         d['dF_sfc_24hr'] = np.nan
-        d['dF_17lev_24hr'] = np.nan
+        d['dF_17lev_24hr'] = np.zeros(16)+np.nan
         
     # get the delta z
     try:
@@ -927,11 +927,9 @@ def read_fuliou_moc(fp,fp_save):
     n = len(files)
     print 'reading {} files'.format(n)
     
-    p = Pool(12)
+    p = Pool(16)
     results = p.map(rf.read_analyse,files)
     p.close()
-    
-    
     
     print 'Saving to file:'+fp_save+'intermediate.mat'
     ro = {'results':results}
@@ -940,17 +938,13 @@ def read_fuliou_moc(fp,fp_save):
     nm_list = {'year_case':'year','month_case':'month','day_case':'day',
                'UT_case':'utc','lon_case':'lon','lat_case':'lat',
                'SZA_case':'sza','deltazkm_case':'deltaz','zkmmin_CALIOP':'zmin',
-               'zkmmax_CALIOP':'zmax','AOD550_case':'AOD550',
-               'swdnsfc_aer_118_instant':'swdnsfc_aer_118_instant','swtoaup_aer_118_instant':'swtoaup_aer_118_instant',
-               'swtoaup_noaer_118_24hr':'swtoaup_noaer_118_24hr','dF_toa_24hr':'dF_toa_24hr',
-               'dF_sfc_24hr':'dF_sfc_24hr','swtoaup_aer_118_24hr':'swtoaup_aer_118_24hr'}
+               'zkmmax_CALIOP':'zmax','AOD550_case':'AOD550','swdnsfc_aer_118_instant':'swdnsfc_aer_118_instant',
+               'swtoaup_aer_118_instant':'swtoaup_aer_118_instant','swtoaup_noaer_118_24hr':'swtoaup_noaer_118_24hr',
+               'dF_toa_24hr':'dF_toa_24hr','dF_sfc_24hr':'dF_sfc_24hr',
+               'swtoaup_aer_118_24hr':'swtoaup_aer_118_24hr','dF_17lev_24hr':'dF_17lev_24hr'}
     saves = {}
     for a in nm_list.keys():
         saves[a] = np.array([results[i][nm_list[a]] for i in xrange(n)])
-    for i in xrange(n):
-        if not 'dF_17lev_24hr' in results[i]:
-            results[i]['dF_17lev_24hr'] = np.zeros(16)+np.nan
-    saves['dF_17lev_24hr'] = np.array([results[i]['dF_17lev_24hr'] for i in xrange(n)])
     
     print 'Saving analysed file: '+fp_save
     sio.savemat(fp_save,saves)
