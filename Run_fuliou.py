@@ -833,7 +833,7 @@ def analyse_fuliou_output(d,smaller=True):
     
     # get the instant values
     fx_dn = interp1d(dt,d['swdn17lev_aer'][0,:])
-    fx_up = interp1d(dt,d['swup17lev_aer'][0,:])
+    fx_up = interp1d(dt,d['swuptoa_aer'][:])
     d['swdnsfc_aer_118_instant'] = float(fx_dn(d['utc']))
     d['swtoaup_aer_118_instant'] = float(fx_up(d['utc']))
     
@@ -856,7 +856,7 @@ def analyse_fuliou_output(d,smaller=True):
     # calculate the integrals    
     d['dF_toa_24hr'] = np.trapz(d['dF_toa_all'][ii],x=dt_sub)/24.0
     d['dF_sfc_24hr'] = np.trapz(d['dF_sfc_all'][ii],x=dt_sub)/24.0
-    d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'][ii,:],x=dt_sub,axis=0)/24.0       
+    d['dF_17lev_24hr'] = np.trapz(d['dF_17lev_all'][:,ii],x=dt_sub,axis=0)/24.0       
     d['swtoaup_noaer_118_24hr'] = np.trapz(d['swuptoa_noaer'][ii],x=dt_sub)/24.0
     d['swtoaup_aer_118_24hr'] = np.trapz(d['swuptoa_aer'][ii],x=dt_sub)/24.0
     
@@ -881,7 +881,7 @@ def read_analyse(filename):
     try:
         d = rf.read_fuliou_output(filename)
         rf.analyse_fuliou_output(d)
-    except:
+    except IOError:
         pass
     return d
 
