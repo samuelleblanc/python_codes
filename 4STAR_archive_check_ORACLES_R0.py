@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[2]:
+# In[1]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -21,24 +21,24 @@ from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[3]:
+# In[2]:
 
 from linfit import linfit
 
 
-# In[4]:
+# In[3]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[5]:
+# In[4]:
 
 fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 
 # # load the files
 
-# In[6]:
+# In[5]:
 
 days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
@@ -49,12 +49,12 @@ days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160
 days = ['20160920']#,'20160927','20160929','20160930']#,'20160825']
 
 
-# In[7]:
+# In[6]:
 
 vv = 'R0'
 
 
-# In[8]:
+# In[7]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -95,12 +95,12 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[9]:
+# In[8]:
 
 outaod_head_RA[0]
 
 
-# In[41]:
+# In[9]:
 
 outgas_head_RA[0]
 
@@ -130,7 +130,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[45]:
+# In[13]:
 
 for a in wl:
     print a
@@ -169,6 +169,36 @@ for i,d in enumerate(days):
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
     plt.savefig(fp+'aod_ict/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[14]:
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    ax = ax.ravel()
+    ax[0].set_title('AOD {} at high altitude ($>$5.0km) for flight {}'.format(vv,d))
+    ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl))])
+    for aod in wl:
+        ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>5000))[0]
+        ax[0].plot(outaod_RA[i][nm[0]][ii],outaod_RA[i][aod][ii],'.',label=aod)
+    ax[0].set_ylabel('AOD')
+    ax[0].set_ylim(0,0.08)
+    ax[0].axhline(0,color='k')
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[0].legend(frameon=False,loc='center left',bbox_to_anchor=(1.1,-0.2),numpoints=1)
+    ax[1].plot(outaod_RA[i][nm[0]],outaod_RA[i]['GPS_Alt'],'.')
+    ax[1].set_ylabel('Alt [m]')
+    axy = ax[1].twinx()
+    axy.plot(outaod_RA[i][nm[0]],outaod_RA[i]['amass_aer'],'.g')
+    axy.set_ylabel('Airmass factor',color='g')
+    box = ax[1].get_position()
+    ax[1].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    box = axy.get_position()
+    axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[1].set_xlabel('UTC [h]')
+    plt.savefig(fp+'aod_ict/{vv}/{vv}_high_alt_AOD_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    break
 
 
 # In[17]:
