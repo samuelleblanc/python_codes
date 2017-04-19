@@ -717,6 +717,11 @@ def read_fuliou_output(fname,verbose=False):
     import sys
     d = {}
     if verbose: print 'opening :'+fname
+    d['fname'] = fname
+    try:
+        d['num'] = int(fname.split('.')[0].split('_')[-1])
+    except:
+        d['num'] = -9999
     with open(fname,'r') as f:
         # read header line with info
         if verbose: print 'opening header lines'
@@ -847,8 +852,11 @@ def analyse_fuliou_output(d,smaller=True):
 def read_analyse(filename):
     'combine the read and analyse statement, return analysed dict'
     import Run_fuliou as rf
-    d = rf.read_fuliou_output(filename)
-    rf.analyse_fuliou_output(d)
+    try:
+        d = rf.read_fuliou_output(filename)
+        rf.analyse_fuliou_output(d)
+    except:
+        pass
     return d
 
 
