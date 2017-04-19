@@ -842,6 +842,69 @@ def analyse_fuliou_output(d,smaller=True):
             d.pop(il,None)
 
 
+# In[ ]:
+
+def read_analyse(filename):
+    'combine the read and analyse statement, return analysed dict'
+    import Run_fuliou as rf
+    d = rf.read_fuliou_output(filename)
+    rf.analyse_fuliou_output(d)
+    return d
+
+
+# In[ ]:
+
+def read_fuliou_moc(fp,fp_save):
+    """
+    Purpose:
+        Read the full fuliou solutions for either Ocean, DarkTarget, or DeepBlue
+        Uses parallel processing for faster reading times
+        Reads the output wrt files
+    
+    Input: 
+        fp: basic folder file path which contains the wrt files
+        fp_save: save file path
+        
+    Output:
+        None but saves to file
+    
+    Keywords: 
+        None
+    
+    Dependencies:
+        numpy
+        multiprocessing/Pool
+        os
+        scipy.io
+    
+    Required files:
+        wrt files
+        
+    Example:
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2017-04-18, Santa Cruz, CA
+    """
+    import Run_fuliou as rf
+    import numpy as np
+    import os
+    from multiprocessing import Pool
+    import scipy.io as sio
+    
+    files = [fp+f for f in os.listdir(fp) if f.endswith(".wrt")]
+    files.sort()
+    
+    p = Pool(12)
+    results = p.map(rf.read_analyse,files)
+    p.close()
+    
+    print 'Saving to file:'+fp_save
+    sio.savemat(fp_save,results)
+    return    
+
+
 # In[443]:
 
 def run_fuliou_pc():
