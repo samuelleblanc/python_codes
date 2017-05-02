@@ -66,14 +66,14 @@ fp = 'C:/Users/sleblan2/Research/NAAMES/starzen/'
 fp_plot = 'C:/Users/sleblan2/Research/NAAMES/plot/'
 
 
-# In[44]:
+# In[3]:
 
 vv = 'v1'
 
 
 # # Load the files
 
-# In[3]:
+# In[4]:
 
 dds = ['20151104','20151109','20151112','20151114','20151117','20151118','20151123']
 
@@ -391,16 +391,31 @@ hs.savemat(fp+'..//zen_ict/{}_all_retrieved.mat'.format(vv),rtss)
 
 # ## Optionally load the saved mat files
 
-# In[82]:
+# In[7]:
 
-rtss = hs.loadmat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vv))
+rtss = hs.loadmat(fp+'..//zen_ict/{}_all_retrieved.mat'.format(vv))
 
 
-# In[83]:
+# In[13]:
+
+rk = rtss.keys()
+
+
+# In[14]:
+
+rk.sort()
+
+
+# In[15]:
+
+rk
+
+
+# In[16]:
 
 if not rts:
     rts = []
-    for n in rtss.keys().sort():
+    for n in rk:
         rts.append(rtss[n])
 
 
@@ -408,12 +423,12 @@ if not rts:
 
 # ## Read the files as a verification
 
-# In[46]:
+# In[17]:
 
 from load_utils import load_ict
 
 
-# In[48]:
+# In[18]:
 
 vv = 'R0'
 out_RA = []
@@ -428,22 +443,22 @@ for d in dds:
         pass
 
 
-# In[49]:
+# In[19]:
 
 out_head_RA[0]
 
 
-# In[51]:
+# In[20]:
 
 nm = out_RA[0].dtype.names
 
 
-# In[81]:
+# In[21]:
 
 nm
 
 
-# In[82]:
+# In[22]:
 
 ax[0].get_xticks()
 
@@ -511,19 +526,19 @@ for i,d in enumerate(dds):
 
 # ## Combine the data into a single array
 
-# In[53]:
+# In[23]:
 
 ar = {}
 for n in rts[0].keys():
     ar[n] = np.array([])
 
 
-# In[54]:
+# In[24]:
 
 ar['days'] = np.array([])
 
 
-# In[55]:
+# In[25]:
 
 for i,d in enumerate(dds):
     ar['days'] = np.append(ar['days'],np.zeros_like(rts[i]['utc'])+i)
@@ -545,7 +560,7 @@ hs.savemat(fp+'..//zen_ict/{}_all_cld_ict.mat'.format(vv),ar)
 
 # ## Optionally load the all ict file
 
-# In[62]:
+# In[26]:
 
 if not ar:
     ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vv))
@@ -553,58 +568,167 @@ if not ar:
 
 # ## plot the data on a map
 
-# In[58]:
+# In[27]:
 
 import plotting_utils as pu
 
 
-# In[59]:
+# In[28]:
 
 from map_interactive import build_basemap
 
 
-# In[60]:
+# In[29]:
 
 rts[i]['tau_fl']
 
 
-# In[61]:
+# In[30]:
 
 for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
 
 
-# In[82]:
+# In[31]:
 
 print rts[i]['tau_fl'].shape
 print rts[i]['tau'].shape
 
 
-# In[84]:
+# In[32]:
 
 print rts[i]['lon'][:,0].shape
 print rts[i]['lon'][:,0].shape
 
 
-# In[92]:
+# In[36]:
+
+import scipy.stats as ss
+
+
+# In[62]:
+
+lons,lats,taus,refs,fls = [],[],[],[],[]
+for i,d in enumerate(dds):
+    lons.append(np.array(rts[i]['lon'][:,0]))
+    lats.append(np.array(rts[i]['lat'][:,0]))
+    taus.append(np.array(rts[i]['tau']))
+    refs.append(np.array(rts[i]['ref']))
+    fls.append(np.array(rts[i]['fl']))
+lons,lats,taus,refs,fls = np.hstack(lons),np.hstack(lats),np.hstack(taus),np.hstack(refs),np.hstack(fls)
+
+
+# In[150]:
+
+taufl = ss.binned_statistic_2d( lons[fls],lats[fls],taus[fls], statistic='mean', bins=(25,15),range=[[-55,-35],[40,55]])
+reffl = ss.binned_statistic_2d( lons[fls],lats[fls],refs[fls], statistic='mean', bins=(25,15),range=[[-55,-35],[40,55]])
+
+
+# In[154]:
+
+taufl.statistic
+
+
+# In[152]:
+
+taufl.x_edge
+
+
+# In[153]:
+
+taufl.y_edge
+
+
+# In[135]:
+
+plt.figure()
+plt.scatter(lons[fls],lats[fls],taus[fls])
+
+
+# In[129]:
+
+plt.figure()
+plt.plot(lats[fls],taus[fls],'.')
+plt.figure()
+plt.plot(lons[fls],taus[fls],'.g')
+
+
+# In[156]:
+
+taufl.statistic.shape
+
+
+# In[163]:
+
+taufl.x_edge
+
+
+# In[164]:
+
+taufl.y_edge
+
+
+# In[158]:
+
+taufl.x_edge.shape,taufl.y_edge.shape
+
+
+# In[167]:
+
+help(m.pcolor)
+
+
+# In[166]:
 
 fig = plt.figure()
 ax = plt.subplot(111)
 m = build_basemap(lower_left=[-55,40],upper_right=[-35,55],ax=ax,larger=False)
+x,y = m((taufl.x_edge[:-1]+taufl.x_edge[1:])/2.0,(taufl.y_edge[:-1]+taufl.y_edge[1:])/2.0)
+cc = m.contourf(x,y,taufl.statistic,vmin=0,vmax=26,cmap=plt.cm.gnuplot2_r)
+ax.set_title('Mean COD from NAAMES 2015 for boundary layer liquid clouds')
+cb = plt.colorbar(cc)
+cb.set_label('COD')
+#plt.savefig(fp+'../plot/NAAMES_map_COD_stasts.png',dpi=600,transparent=True)
+
+
+# In[132]:
+
+reffl.statistic
+
+
+# In[122]:
+
+fig = plt.figure()
+ax = plt.subplot(111)
+m = build_basemap(lower_left=[-55,40],upper_right=[-35,55],ax=ax,larger=False)
+x,y = m(reffl.x_edge,reffl.y_edge)
+cc = m.pcolor(x,y,reffl.statistic,vmin=0,vmax=30,cmap=plt.cm.gist_earth_r)
+ax.set_title('Mean REF from NAAMES 2015 for boundary layer liquid clouds')
+cb = plt.colorbar(cc)
+cb.set_label('r$_{{eff}}$ [$\\mu$m]')
+plt.savefig(fp+'../plot/NAAMES_map_ref_stasts.png',dpi=600,transparent=True)
+
+
+# In[91]:
+
+fig = plt.figure()
+ax = plt.subplot(111)
+m = build_basemap(lower_left=[-65,36],upper_right=[-35,55],ax=ax,larger=False)
 sa = []
+ms = ['s','+','d','^','o','x','v']
 for i,daystr in enumerate(dds):
     x,y = m(rts[i]['lon'][:,0],rts[i]['lat'][:,0])
-    sca = ax.scatter(x,y,c=rts[i]['tau'],
+    sca = ax.scatter(x,y,c=rts[i]['tau'],marker=ms[i],
               s=40,alpha=0.7,vmin=0.0,vmax=60.0,edgecolor='None')
     sa.append(sca)
 ax.set_title('Cloud Optical Depth for all data from NAAMES 2015')
     #pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('COD')
-plt.savefig(fp+'..//zen_ict/COD_map_all.png',transparent=True,dpi=600)
+#plt.savefig(fp+'..//zen_ict/COD_map_all.png',transparent=True,dpi=600)
 
 
-# In[78]:
+# In[88]:
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -618,10 +742,10 @@ for i,daystr in enumerate(dds):
 pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('COD')
-plt.savefig(fp+'..//zen_ict/COD_map.png',transparent=True,dpi=600)
+#plt.savefig(fp+'..//zen_ict/COD_map.png',transparent=True,dpi=600)
 
 
-# In[91]:
+# In[124]:
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -636,7 +760,7 @@ ax.set_title('Cloud effective radius for all data from NAAMES 2015')
     #pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('r$_{{eff}}$ [$\\mu$m]')
-plt.savefig(fp+'..//zen_ict/REF_map_all.png',transparent=True,dpi=600)
+#plt.savefig(fp+'..//zen_ict/REF_map_all.png',transparent=True,dpi=600)
 
 
 # In[74]:
@@ -712,7 +836,7 @@ plt.title('4STAR Effective Radius for all ORACLES flights')
 plt.savefig(fp+'..//zen_ict/v3/ref_hist_lat.png',transparent=True,dpi=600)
 
 
-# In[97]:
+# In[168]:
 
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
@@ -795,4 +919,38 @@ plt.legend(frameon=False)
 plt.tight_layout()
 
 plt.savefig(fp+'..//zen_ict/NAAMES_ref_cod_hist.png',transparent=True,dpi=600)
+
+
+# In[177]:
+
+fig,ax = plt.subplots(2,1,figsize=(7,6))
+ax = ax.ravel()
+ax[0].hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
+ax[0].axvline(np.nanmean(ar['tau_fl']),color='r',ls='-',linewidth=3,label='mean')
+ax[0].axvline(np.nanmedian(ar['tau_fl']),color='k',ls='--',linewidth=3,label='median')
+ax[0].hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='all points')
+ax[0].set_ylabel('Normed counts')
+ax[0].set_xlabel('COD')
+ax[0].set_ylim(0,0.1)
+ax[0].grid()
+ax[0].legend(frameon=False)
+
+ax[1].hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
+ax[1].axvline(np.nanmean(ar['ref_fl']),color='r',ls='-',linewidth=3,label='mean')
+ax[1].axvline(np.nanmedian(ar['ref_fl']),color='k',ls='--',linewidth=3,label='median')
+ax[1].hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,30),label='all points')
+ax[1].set_ylim(0,0.1)
+ax[1].set_ylabel('Normed counts')
+ax[1].set_xlabel('r$_{{eff}}$ [$\\mu$m]')
+plt.grid()
+plt.legend(frameon=False)
+
+plt.tight_layout()
+
+plt.savefig(fp+'..//plot/NAAMES_ref_cod_hist_x.png',transparent=True,dpi=600)
+
+
+# In[ ]:
+
+
 
