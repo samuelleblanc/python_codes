@@ -38,15 +38,21 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 # # load the files
 
-# In[21]:
+# In[120]:
 
-days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
-       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
+days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
 # In[5]:
 
-days = ['20160920']#,'20160927','20160929','20160930']#,'20160825']
+days = ['20160824','20160825','20160827','20160830','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
+
+
+# In[115]:
+
+days = ['20160912']#,'20160927','20160929','20160930']#,'20160825']
 
 
 # In[5]:
@@ -59,7 +65,7 @@ days = ['20160827']
 vv = 'R1'
 
 
-# In[14]:
+# In[15]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -68,7 +74,7 @@ outgas_head_RA = []
 for i,d in enumerate(days):
     try:
         print 'Doing day: {}'.format(d)
-        fname_aod = fp+'aod_ict/v3/4STAR-AOD_P3_{}_{vv}.ict'.format(d,vv=vv)
+        fname_aod = fp+'aod_ict/v4/4STAR-AOD_P3_{}_{vv}.ict'.format(d,vv=vv)
         tt,th = load_ict(fname_aod,return_header=True)
     except:
         print '*** Problem with day: {} *** Skipping '.format(d)
@@ -84,19 +90,19 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[28]:
+# In[16]:
 
 len(outaod_RA)
 
 
-# In[29]:
+# In[17]:
 
 len(days)
 
 
 # ## Check the files for integrity and header info
 
-# In[30]:
+# In[123]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -107,7 +113,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 #            print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[39]:
+# In[124]:
 
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
 for i,d in enumerate(days):
@@ -117,7 +123,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[31]:
+# In[18]:
 
 outaod_head_RA[0]
 
@@ -129,17 +135,17 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[8]:
+# In[19]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[33]:
+# In[20]:
 
 nm
 
 
-# In[9]:
+# In[21]:
 
 wl = nm[6:-1]
 
@@ -152,7 +158,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[10]:
+# In[22]:
 
 for a in wl:
     print a
@@ -160,7 +166,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[37]:
+# In[23]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -190,10 +196,12 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/{vv}/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
 
 
-# In[15]:
+# ## Plot the high altitude subset of the data for calibration
+
+# In[24]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -219,8 +227,142 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/{vv}/{vv}_high_alt_AOD_v3_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
 
+
+# In[25]:
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    ax = ax.ravel()
+    ax[0].set_title('AOD {} at high altitude ($>$5.0km) for flight {} VIS'.format(vv,d))
+    ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl[0:11]))])
+    for aod in wl[0:11]:
+        ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>5000))[0]
+        ax[0].plot(outaod_RA[i][nm[0]][ii],outaod_RA[i][aod][ii],'.',label=aod)
+    ax[0].set_ylabel('AOD')
+    ax[0].set_ylim(0,0.08)
+    ax[0].axhline(0,color='k')
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[0].legend(frameon=False,loc='center left',bbox_to_anchor=(1.1,-0.2),numpoints=1)
+    ax[1].plot(outaod_RA[i][nm[0]],outaod_RA[i]['GPS_Alt'],'.')
+    ax[1].set_ylabel('Alt [m]')
+    axy = ax[1].twinx()
+    axy.plot(outaod_RA[i][nm[0]],outaod_RA[i]['amass_aer'],'.g')
+    axy.set_ylabel('Airmass factor',color='g')
+    box = ax[1].get_position()
+    ax[1].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    box = axy.get_position()
+    axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[1].set_xlabel('UTC [h]')
+    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}_vis.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[26]:
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    ax = ax.ravel()
+    ax[0].set_title('AOD {} at high altitude ($>$5.0km) for flight {} NIR'.format(vv,d))
+    ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl[11:])+1)])
+    for aod in wl[11:]:
+        ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>5000))[0]
+        ax[0].plot(outaod_RA[i][nm[0]][ii],outaod_RA[i][aod][ii],'.',label=aod)
+    ax[0].set_ylabel('AOD')
+    ax[0].set_ylim(0,0.08)
+    ax[0].axhline(0,color='k')
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[0].legend(frameon=False,loc='center left',bbox_to_anchor=(1.1,-0.2),numpoints=1)
+    ax[1].plot(outaod_RA[i][nm[0]],outaod_RA[i]['GPS_Alt'],'.')
+    ax[1].set_ylabel('Alt [m]')
+    axy = ax[1].twinx()
+    axy.plot(outaod_RA[i][nm[0]],outaod_RA[i]['amass_aer'],'.g')
+    axy.set_ylabel('Airmass factor',color='g')
+    box = ax[1].get_position()
+    ax[1].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    box = axy.get_position()
+    axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[1].set_xlabel('UTC [h]')
+    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}_nir.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[118]:
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    ax = ax.ravel()
+    ax[0].set_title('AOD {} at high altitude ($>$5.0km) for flight {} NIR'.format(vv,d))
+    ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl[11:])+1)])
+    for aod in wl[11:]:
+        ii = np.where((outaod_RA4[i][nm[4]]==0)&(outaod_RA4[i]['GPS_Alt']>5000))[0]
+        ax[0].plot(outaod_RA4[i][nm[0]][ii],outaod_RA4[i][aod][ii],'.',label=aod)
+    ax[0].set_ylabel('AOD')
+    ax[0].set_ylim(0,0.08)
+    ax[0].axhline(0,color='k')
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[0].legend(frameon=False,loc='center left',bbox_to_anchor=(1.1,-0.2),numpoints=1)
+    ax[1].plot(outaod_RA4[i][nm[0]],outaod_RA4[i]['GPS_Alt'],'.')
+    ax[1].set_ylabel('Alt [m]')
+    axy = ax[1].twinx()
+    axy.plot(outaod_RA4[i][nm[0]],outaod_RA4[i]['amass_aer'],'.g')
+    axy.set_ylabel('Airmass factor',color='g')
+    box = ax[1].get_position()
+    ax[1].set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    box = axy.get_position()
+    axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax[1].set_xlabel('UTC [h]')
+    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}_nir.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# ## Plot spectral aod figures for high altitude
+
+# In[40]:
+
+wv = [float(v[3:]) for v in wl]
+
+
+# In[54]:
+
+wv
+
+
+# In[114]:
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(1,sharex=True,figsize=(9,5))
+    #ax = ax.ravel()
+    ax.set_title('AOD Spectra {} at high altitude ($>$5.0km) for flight {}'.format(vv,d))
+    ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>5000))[0]
+    if not any(ii): continue
+    js = np.linspace(0,len(ii)-1,15).astype(int)
+    ax.set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, 16)])
+    for j in js:
+        sp = np.array([outaod_RA[i][n][ii[j]] for n in wl])
+        fo = {'u':outaod_RA[i]['Start_UTC'][ii[j]],'a':outaod_RA[i]['GPS_Alt'][ii[j]]}
+        if not np.isfinite(sp).any(): continue
+        if any(sp>0.0):
+            ax.plot(wv,sp,'x-',label='{u:5.2f}h, Alt: {a:5.0f} m'.format(**fo))
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel('AOD')
+    ax.set_ylim(0.0001,0.15)
+    ax.set_xlabel('Wavelength [nm]')
+    ax.set_xlim(350.0,1600.0)
+    plt.xticks([350,400,500,600,800,1000,1200,1400])
+    
+    ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax.legend(frameon=False,loc='top left',bbox_to_anchor=(1.01,1.04),numpoints=1)
+    ax.grid()
+    plt.savefig(fp+'aod_ict/{vv}/{vv}_high_alt_AOD_spectra_v3_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# ## Special case plotting
 
 # In[38]:
 
