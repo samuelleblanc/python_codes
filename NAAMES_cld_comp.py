@@ -128,17 +128,17 @@ star['tau'][star['tau']<1.0]=np.nan
 
 # ### Load the second day 4STAR retrieval
 
-# In[74]:
+# In[10]:
 
 star2 = hs.loadmat(fp+'retrieve/20151123_zen_cld_retrieved.mat')
 
 
-# In[75]:
+# In[11]:
 
 star2.keys()
 
 
-# In[76]:
+# In[12]:
 
 star2['tau'] = Sp.smooth(star2['tau'],4,nan=False)
 star2['ref'] = Sp.smooth(star2['ref'],4,nan=False)
@@ -147,38 +147,44 @@ star2['tau'][star2['tau']<1.0]=np.nan
 
 # ## Load the MODIS file
 
-# In[10]:
+# In[13]:
 
 myd3 = fp+'c130/20151117_flt/MYD03.A2015321.1540.006.2015322160400.hdf'
 myd6 = fp+'c130/20151117_flt/MYD06_L2.A2015321.1540.006.2015322185040.hdf'
 
 
-# In[11]:
+# In[46]:
 
-modis,modis_dicts = lm.load_modis(myd3,myd6)
+import load_utils as lu
+reload(lu)
+
+
+# In[51]:
+
+modis,modis_dicts = lu.load_modis(myd3,myd6)
 
 
 # ### Load the second day MODIS file
 
-# In[77]:
+# In[15]:
 
 myd3_2 = fp+'c130/20151123_flt05/MYD03.A2017103.1620.006.2017108173138.hdf'
 myd6_2 = fp+'c130/20151123_flt05/MYD06_L2.A2017103.1620.006.2017108180657.hdf'
 
 
-# In[78]:
+# In[50]:
 
-modis2,modis2_dicts = lm.load_modis(myd3_2,myd6_2)
+modis2,modis2_dicts = lu.load_modis(myd3_2,myd6_2)
 
 
 # ## Load the insitu probe liquid vs ice water content
 
-# In[12]:
+# In[17]:
 
 help(lm.load_ict)
 
 
-# In[13]:
+# In[18]:
 
 wf = fp+'c130/20151117_flt/NAAMES-LARGE-WCM_C130_20151117_RA.ict'
 wcm,wcm_head = lm.load_ict(wf,return_header=True)
@@ -250,18 +256,18 @@ plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_ref.png',dpi=600,transparent=True)
 
 # Combine the MODIS map figures into a single tau and ref figure, for only the cloud phase of water
 
-# In[27]:
+# In[19]:
 
 imod_wat = modis['phase']==1
 
 
-# In[35]:
+# In[20]:
 
 mtau = modis['tau'].copy()
 mref = modis['ref'].copy()
 
 
-# In[36]:
+# In[21]:
 
 mtau[imod_wat] = np.nan
 mref[imod_wat] = np.nan
@@ -320,7 +326,7 @@ def naames_map2(ax=plt.gca()):
     return m
 
 
-# In[108]:
+# In[22]:
 
 imod2_wat = modis2['phase']==1
 mtau2 = modis2['tau'].copy()
@@ -389,22 +395,22 @@ plt.savefig(fp+'plot/20151117_MODIS_4STAR_map_phase.png',dpi=600,transparent=Tru
 
 # ## Subset the MODIS values to match the flight path
 
-# In[47]:
+# In[23]:
 
 import map_utils as mu
 
 
-# In[48]:
+# In[24]:
 
 mod_ind = mu.map_ind(modis['lon'],modis['lat'],star['lon'],star['lat'])
 
 
-# In[49]:
+# In[25]:
 
 mod_ind.shape
 
 
-# In[50]:
+# In[26]:
 
 modis['lat'].shape
 
@@ -414,7 +420,7 @@ modis['lat'].shape
 star['lat'].shape
 
 
-# In[52]:
+# In[27]:
 
 star['tau'][star['tau']<1.0] = np.nan
 
@@ -465,16 +471,51 @@ plt.xlabel('UTC [H]')
 plt.savefig(fp+'plot/20151117_cld_retr_vs_MODIS_time.png',transparent=True,dpi=600)
 
 
+# In[31]:
+
+plt.figure()
+plt.plot(star['ref'],modis['ref'][mod_ind[0,:],mod_ind[1,:]],'or')
+
+
+# In[36]:
+
+import plotting_utils as pu
+
+
+# In[38]:
+
+plt.figure()
+plt.plot(modis['ref'][mod_ind[0,:],mod_ind[1,:]],star['ref'],'xg')
+pu.plot_lin(modis['ref'][mod_ind[0,:],mod_ind[1,:]],star['ref'])
+
+
 # ### Subset the modis to 4STAR for the second day
 
-# In[102]:
+# In[28]:
 
 mod_ind2 = mu.map_ind(modis2['lon'],modis2['lat'],star2['lon'],star2['lat'])
 
 
-# In[103]:
+# In[29]:
 
 star2['tau'][star2['tau']<1.0] = np.nan
+
+
+# In[41]:
+
+len(modis2['ref'][mod_ind2[0,:],mod_ind2[1,:]])
+
+
+# In[42]:
+
+modis.keys()
+
+
+# In[39]:
+
+plt.figure()
+plt.plot(modis2['ref'][mod_ind2[0,:],mod_ind2[1,:]],star2['ref'],'xg')
+#pu.plot_lin(modis2['ref'][mod_ind2[0,:],mod_ind2[1,:]],star2['ref'])
 
 
 # ## Load aicraft files

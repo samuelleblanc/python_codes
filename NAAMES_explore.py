@@ -127,6 +127,52 @@ for d in days:
 cih
 
 
+# ## Load the CCN from LARGE
+
+# In[77]:
+
+ff = fp+'data_other/LARGE/'
+rr = 'R0'
+
+
+# In[78]:
+
+ccn = []
+ccn_header = []
+for d in days:
+    cn,cnh = lu.load_ict(ff+'NAAMES-LARGE-CCN_C130_{d}_{r}.ict'.format(d=d,r=rr),return_header=True)
+    ccn.append(cn)
+    ccn_header.append(cnh)
+
+
+# In[79]:
+
+cnh
+
+
+# ## Load the Winds from LARGE
+
+# In[59]:
+
+ff = fp+'data_other/LARGE/'
+rr = 'R0'
+
+
+# In[61]:
+
+wind = []
+wind_header = []
+for d in days:
+    w,wh = lu.load_ict(ff+'NAAMES-LARGE-WINDS_C130_{d}_{r}.ict'.format(d=d,r=rr),return_header=True)
+    wind.append(w)
+    wind_header.append(wh)
+
+
+# In[62]:
+
+wh
+
+
 # ## Read in the RSP cloud retrievals
 
 # In[9]:
@@ -366,6 +412,22 @@ for i,d in enumerate(days):
     ams[i]['alt'] = nearest_neighbor(hsk[i]['Start_UTC'],hsk[i]['GPS_Altitude'],cdp[i]['UTC_mid'],dist=1.0/3600.0)
 
 
+# In[63]:
+
+for i,d in enumerate(days):
+    wind[i] = recarray_to_dict(wind[i])
+
+
+# In[82]:
+
+for i,d in enumerate(days):
+    try:
+        ccn[i] = recarray_to_dict(ccn[i])
+    except:
+        pass
+    ccn[i]['alt'] = nearest_neighbor(hsk[i]['Start_UTC'],hsk[i]['GPS_Altitude'],ccn[i]['UTC_mid'],dist=1.0/3600.0)
+
+
 # ## Check out AMS data
 
 # In[185]:
@@ -411,6 +473,16 @@ import plotting_utils as pu
 # In[248]:
 
 days
+
+
+# In[128]:
+
+plt.figure()
+for i,d in enumerate(days):
+
+    plt.plot(ams[i]['UTC_mid'],Sp.smooth(ams[i]['Org_STP'],14),label=d)
+    
+plt.legend()
 
 
 # In[50]:
@@ -551,6 +623,226 @@ ax[0].set_ylim(0,10)
 ax[1].set_xlim(0,0.07)
 ax[1].set_ylim(0,12)
 plt.savefig(fp+'plot/nCIP_vs_AMS.png',transparent=True,dpi=600)
+
+
+# ## Get the relationship between vertical winds and AMS, COD, REF
+
+# In[66]:
+
+wind[0].keys()
+
+
+# In[71]:
+
+fig,ax = plt.subplots(1,2)
+ax = ax.ravel()
+cs = ['c','y','b','r','g']
+dd = ['11/12','11/14','11/17','11/18','11/23']
+
+for i,d in enumerate(days):
+    try:
+        ic = (np.isfinite(star[i]['COD'])) & (star[i]['alt']<900.0)
+    except:
+        continue
+    wind_utc = nearest_neighbor(wind[i]['UTC_mid'],Sp.smooth(wind[i]['w_ms1'],14),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    print d,np.nanmean(wind_utc)
+    
+    org_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['Org_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+    so4_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['SO4_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+
+    roo = np.corrcoef(org_utc,wind_utc)
+    rss = np.corrcoef(so4_utc,wind_utc)
+    ro = roo[0,1]
+    rs = rss[0,1]
+    #print roo,rss
+    
+    ax[0].scatter(org_utc,wind_utc,c=cs[i],marker='x',label=dd[i]+' R={:1.2f}'.format(ro))
+    ax[1].scatter(so4_utc,wind_utc,c=cs[i],marker='o',label=dd[i]+' R={:1.2f}'.format(rs),edgecolor='None')
+    pu.plot_lin(org_utc,wind_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[0])
+    pu.plot_lin(so4_utc,wind_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[1])
+    
+
+ax[0].set_ylabel('LARGE Vertical Winds [m/s]')
+ax[0].set_xlabel('LARGE AMS Organics [$\\mu$g/m$^3$]')
+ax[0].legend(frameon=True)
+ax[1].set_xlabel('LARGE AMS SO4 [$\\mu$g/m$^3$]')
+plt.legend(frameon=True)
+ax[0].set_xlim(0,0.07)
+ax[0].set_ylim(-1,1)
+ax[1].set_xlim(0,0.07)
+ax[1].set_ylim(-1,1)
+plt.savefig(fp+'plot/winds_vs_AMS.png',transparent=True,dpi=600)
+
+
+# In[76]:
+
+fig,ax = plt.subplots(1,2)
+ax = ax.ravel()
+cs = ['c','y','b','r','g']
+dd = ['11/12','11/14','11/17','11/18','11/23']
+
+for i,d in enumerate(days):
+    try:
+        ic = (np.isfinite(star[i]['COD'])) & (star[i]['alt']<900.0)
+    except:
+        continue
+    wind_utc = nearest_neighbor(wind[i]['UTC_mid'],Sp.smooth(wind[i]['w_ms1'],14),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    print d,np.nanmean(wind_utc)
+    
+    #org_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['Org_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+    #so4_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['SO4_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+
+    roo = np.corrcoef(star[i]['COD'][ic],wind_utc)
+    rss = np.corrcoef(star[i]['REF'][ic],wind_utc)
+    ro = roo[0,1]
+    rs = rss[0,1]
+    #print roo,rss
+    
+    ax[0].scatter(star[i]['COD'][ic],wind_utc,c=cs[i],marker='x',label=dd[i]+' R={:1.2f}'.format(ro))
+    ax[1].scatter(star[i]['REF'][ic],wind_utc,c=cs[i],marker='o',label=dd[i]+' R={:1.2f}'.format(rs),edgecolor='None')
+    pu.plot_lin(star[i]['COD'][ic],wind_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[0])
+    pu.plot_lin(star[i]['REF'][ic],wind_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[1])
+    
+
+ax[0].set_ylabel('LARGE Vertical Winds [m/s]')
+ax[0].set_xlabel('4TAR COD')
+ax[0].legend(frameon=True)
+ax[1].set_xlabel('4STAR REF [$\\mu$m]')
+plt.legend(frameon=True)
+ax[0].set_xlim(0,60)
+ax[0].set_ylim(-2,2)
+ax[1].set_xlim(0,30)
+ax[1].set_ylim(-2,2)
+plt.savefig(fp+'plot/NAAMES_winds_vs_COD_REF.png',transparent=True,dpi=600)
+
+
+# In[75]:
+
+plt.figure()
+plt.plot(wind[2]['UTC_mid'],wind[2]['w_ms1'],'.',color='grey')
+plt.plot(wind[2]['UTC_mid'],Sp.smooth(wind[2]['w_ms1'],30),'-')
+plt.xlim(14.8,16.2)
+
+
+# ## Plot relationship between CCN and COD/REF
+
+# In[85]:
+
+cn_vals = ccn[0].keys()
+
+
+# In[97]:
+
+try: 
+    cn_vals.remove('alt')
+except:
+    pass
+try:
+    cn_vals.remove('UTC_mid')
+except:
+    pass
+cn_vals.sort()
+
+
+# In[98]:
+
+cn_vals
+
+
+# In[101]:
+
+for i,d in enumerate(days):
+    plt.figure()
+    plt.title('CCN: '+d)
+    for g in cn_vals:
+        plt.plot(ccn[i]['UTC_mid'],ccn[i][g],'.',label=g)
+    plt.legend(frameon=False,numpoints=1)
+
+
+# In[124]:
+
+fig,ax = plt.subplots(1,2)
+ax = ax.ravel()
+cs = ['c','y','b','r','g']
+dd = ['11/12','11/14','11/17','11/18','11/23']
+
+for i,d in enumerate(days):
+    try:
+        ic = (np.isfinite(star[i]['COD'])) & (star[i]['alt']<900.0)
+    except:
+        continue
+    wind_utc = nearest_neighbor(wind[i]['UTC_mid'],Sp.smooth(wind[i]['w_ms1'],14),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    print d,np.nanmean(wind_utc)
+    ccn_utc = nearest_neighbor(ccn[i]['UTC_mid'],Sp.smooth(ccn[i]['CCN40'],10),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    
+    #org_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['Org_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+    #so4_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['SO4_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+
+    roo = np.corrcoef(star[i]['COD'][ic],ccn_utc)
+    rss = np.corrcoef(star[i]['REF'][ic],ccn_utc)
+    ro = roo[0,1]
+    rs = rss[0,1]
+    #print roo,rss
+    
+    ax[0].scatter(star[i]['COD'][ic],ccn_utc,c=cs[i],marker='x',label=dd[i]+' R={:1.2f}'.format(ro))
+    ax[1].scatter(star[i]['REF'][ic],ccn_utc,c=cs[i],marker='o',label=dd[i]+' R={:1.2f}'.format(rs),edgecolor='None')
+    pu.plot_lin(star[i]['COD'][ic],ccn_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[0])
+    pu.plot_lin(star[i]['REF'][ic],ccn_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[1])
+    
+
+ax[0].set_ylabel('CCN number concentration at 0.375-0.425\% SS [cm$^{{-3}}$]')
+ax[0].set_xlabel('4TAR COD')
+ax[0].legend(frameon=True)
+ax[1].set_xlabel('4STAR REF [$\\mu$m]')
+plt.legend(frameon=True)
+ax[0].set_xlim(0,60)
+ax[0].set_ylim(0,800)
+ax[1].set_xlim(0,30)
+ax[1].set_ylim(0,800)
+plt.savefig(fp+'plot/NAAMES_ccn40_vs_COD_REF.png',transparent=True,dpi=600)
+
+
+# In[123]:
+
+fig,ax = plt.subplots(1,2)
+ax = ax.ravel()
+cs = ['c','y','b','r','g']
+dd = ['11/12','11/14','11/17','11/18','11/23']
+
+for i,d in enumerate(days):
+    try:
+        ic = (np.isfinite(star[i]['COD'])) & (star[i]['alt']<900.0)
+    except:
+        continue
+    wind_utc = nearest_neighbor(wind[i]['UTC_mid'],Sp.smooth(wind[i]['w_ms1'],14),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    print d,np.nanmean(wind_utc)
+    ccn_utc = nearest_neighbor(ccn[i]['UTC_mid'],Sp.smooth(ccn[i]['CCN21'],10),star[i]['Start_UTC'][ic],dist=10.0/3600.0)
+    
+    #org_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['Org_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+    #so4_utc = nearest_neighbor(ams[i]['UTC_mid'],Sp.smooth(ams[i]['SO4_STP'],14),star[i]['Start_UTC'][ic],dist=40.0/3600.0)
+
+    roo = np.corrcoef(star[i]['COD'][ic],ccn_utc)
+    rss = np.corrcoef(star[i]['REF'][ic],ccn_utc)
+    ro = roo[0,1]
+    rs = rss[0,1]
+    #print roo,rss
+    
+    ax[0].scatter(star[i]['COD'][ic],ccn_utc,c=cs[i],marker='x',label=dd[i]+' R={:1.2f}'.format(ro))
+    ax[1].scatter(star[i]['REF'][ic],ccn_utc,c=cs[i],marker='o',label=dd[i]+' R={:1.2f}'.format(rs),edgecolor='None')
+    pu.plot_lin(star[i]['COD'][ic],ccn_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[0])
+    pu.plot_lin(star[i]['REF'][ic],ccn_utc,color=cs[i],labels=False,shaded_ci=False,ax=ax[1])
+    
+
+ax[0].set_ylabel('CCN number concentration at 0.21\% SS [cm$^{{-3}}$]')
+ax[0].set_xlabel('4TAR COD')
+ax[0].legend(frameon=True)
+ax[1].set_xlabel('4STAR REF [$\\mu$m]')
+plt.legend(frameon=True)
+ax[0].set_xlim(0,60)
+ax[0].set_ylim(0,10)
+ax[1].set_xlim(0,30)
+ax[1].set_ylim(0,10)
+plt.savefig(fp+'plot/NAAMES_ccn21_vs_COD_REF.png',transparent=True,dpi=600)
 
 
 # ## Plot out latitude and altitude dependence
@@ -719,6 +1011,8 @@ plt.ylabel('Altitude [m]')
 cb = plt.colorbar()
 cb.set_label('dN/dlogD')
 
+
+# ## Plot out the time dependence
 
 # In[ ]:
 
