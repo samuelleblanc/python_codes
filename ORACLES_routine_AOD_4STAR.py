@@ -70,48 +70,53 @@ import hdf5storage as hs
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
 
+# In[6]:
+
+vv = 'R1'
+
+
 # # Load files
 
 # ## 4STAR ict
 
-# In[6]:
+# In[9]:
 
-s = hs.loadmat(fp+'/aod_ict/all_aod_ict.mat')
+s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
 
 
-# In[7]:
+# In[10]:
 
 s.keys()
 
 
 # ## MODIS climatology
 
-# In[38]:
+# In[11]:
 
 fp
 
 
-# In[39]:
+# In[12]:
 
 m = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE.nc')
 
 
-# In[40]:
+# In[13]:
 
 m.variables
 
 
-# In[41]:
+# In[14]:
 
 m2 = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE_all.nc')
 
 
-# In[42]:
+# In[15]:
 
 m2.variables
 
 
-# In[43]:
+# In[16]:
 
 m2.variables['AOD_YRMEAN'].data
 
@@ -127,39 +132,39 @@ m2.variables['AOD_YRMEAN'].data
 # Here’s a short description of the dataset (Kerry, please correct me if I’m wrong):
 # Combination of MODIS and TERRA AAC AOD, high-resolution 0.1 x 0.1º. Suggested quality filtering is applied. Parameter is "Above_Cloud_AOT_MOD04Abs" i.e retrievals assuming the MOD04 absorbing aerosol model rather than the Haywood/SAFARI-2000 model, which is what is used to create the near-real time retrieval imagery in the field for ORACLES.
 
-# In[8]:
+# In[17]:
 
 import datetime
 
 
-# In[9]:
+# In[18]:
 
 import load_utils as lu
 
 
-# In[10]:
+# In[42]:
 
-aac = sio.loadmat(fp+'data_other\\MODIS_AAC\\MODIS_AAC_per_bin.mat')
+aac = sio.loadmat(fp+'data_other\\MODIS_AAC\\MODIS_AAC_per_bin_all_flights_20160801_20160930.mat')
 
 
-# In[11]:
+# In[43]:
 
 aac['data_aac'][0,0].dtype.names
 
 
-# In[12]:
+# In[44]:
 
 daac = []
 
 
-# In[13]:
+# In[45]:
 
 for i in xrange(len(aac['data_aac'][0,:])):
     print aac['data_aac'][0,i]['FlightDay'][0][0][0]
     daac.append(lu.recarray_to_dict(aac['data_aac'][0,i]))
 
 
-# In[14]:
+# In[46]:
 
 # simplify the dict
 for i in xrange(len(daac)):
@@ -167,39 +172,55 @@ for i in xrange(len(daac)):
         daac[i][k] = daac[i][k][0,0]
 
 
-# In[15]:
+# In[47]:
 
 for i in xrange(len(daac)):
     daac[i]['datetime'] = datetime.datetime.strptime(daac[i]['FlightDay'][0], 'A%Y%j')
     daac[i]['date'] = daac[i]['datetime'].strftime('%Y%m%d')
-    print i,daac[i]['date']
+    print i,daac[i]['date'], aac['data_aac'][0,i]['FlightDay'][0][0][0]
 
+
+# In[54]:
+
+i_aug = range(0,31)
+i_sep = range(31,61)
+i_flt = [30,34,38,40,42,55]
+
+
+# days in the binned for flights only
+# 
+#  - 0 20160831 A2016244
+#  - 1 20160904 A2016248
+#  - 2 20160908 A2016252
+#  - 3 20160910 A2016254
+#  - 4 20160912 A2016256
+#  - 5 20160925 A2016269
 
 # # Subset for routine flight
 
-# In[16]:
+# In[55]:
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[17]:
+# In[56]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[18]:
+# In[57]:
 
 s['days'][0]
 
 
-# In[19]:
+# In[58]:
 
 ff = []
 for d in d_irtn:
     ff.append(s['days']==d)
 
 
-# In[20]:
+# In[59]:
 
 for i,f in enumerate(ff):
     if i==0:
@@ -208,7 +229,7 @@ for i,f in enumerate(ff):
         fl = fl | f
 
 
-# In[21]:
+# In[60]:
 
 s['fl_rtn'] = fl & s['fl']
 
@@ -217,7 +238,7 @@ s['fl_rtn'] = fl & s['fl']
 
 # ## all points
 
-# In[150]:
+# In[61]:
 
 plt.figure()
 plt.plot(s['Longitude'][s['fl_rtn']],s['AOD0501'][s['fl_rtn']],'.',label='4STAR [600m - 1800m]',zorder=100)
@@ -236,7 +257,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_all_MODIS.png',transparent=True,dpi=600)
 
 # ## heat map of points
 
-# In[75]:
+# In[65]:
 
 plt.figure()
 cc = plt.hist2d(s['Longitude'][s['fl_rtn']],s['AOD0501'][s['fl_rtn']],bins=25,cmap=plt.cm.hot_r)
@@ -257,7 +278,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_hist_MODIS.png',transparent=True,dpi=600)
 
 # ## Use bins from heat map to make box whisker plot
 
-# In[22]:
+# In[66]:
 
 bins = []
 pos = []
@@ -267,7 +288,7 @@ for i,c in enumerate(cc[1][0:-2]):
     pos.append((c+cc[1][i+1])/2.0)
 
 
-# In[37]:
+# In[63]:
 
 def color_box(bp, color):
 
@@ -330,14 +351,14 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box_simpler_MODIS.png',transparent=True,d
 
 # ## Make another binning product, with less bins
 
-# In[78]:
+# In[67]:
 
 plt.figure()
 cc2 = plt.hist2d(s['Longitude'][s['fl_rtn']],s['AOD0501'][s['fl_rtn']],bins=15,cmap=plt.cm.hot_r)
 cb = plt.colorbar()
 
 
-# In[25]:
+# In[68]:
 
 bins2 = []
 pos2 = []
@@ -373,28 +394,28 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box2_simpler_MODIS.png',transparent=True,
 
 # ## Now try with same bins as MODIS
 
-# In[45]:
+# In[119]:
 
 pos3 = m.variables['LONGITUDE'].data[0,:]
 
 
-# In[46]:
+# In[120]:
 
 pos3
 
 
-# In[47]:
+# In[121]:
 
 lims3 = pos3-0.5
 lims3= np.append(lims3,pos3[-1]+0.5)
 
 
-# In[48]:
+# In[122]:
 
 lims3
 
 
-# In[49]:
+# In[123]:
 
 bins3 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -402,17 +423,17 @@ for i,c in enumerate(lims3[0:-1]):
     bins3.append(s['AOD0501'][s['fl_rtn']][lon_fl])
 
 
-# In[50]:
+# In[124]:
 
 len(lims3)
 
 
-# In[32]:
+# In[125]:
 
 len(bins3)
 
 
-# In[33]:
+# In[126]:
 
 len(pos3)
 
@@ -439,27 +460,29 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_MODIS.png',transparent=True,dpi=600)
 
 
-# In[24]:
+# In[160]:
 
 s['fl_alt12'] = (s['GPS_Alt']>=600)&(s['GPS_Alt']<1200)
+s['fl_alt16'] = (s['GPS_Alt']>=500)&(s['GPS_Alt']<1600)
 
 
-# In[25]:
+# In[128]:
 
 s['fl_alt12']
 
 
-# In[26]:
+# In[161]:
 
 s['fl_rtn_12'] = s['fl_alt12'] & s['fl_QA'] & fl
+s['fl_rtn_16'] = s['fl_alt16'] & s['fl_QA'] & fl
 
 
-# In[27]:
+# In[130]:
 
 s['fl_rtn_12']
 
 
-# In[28]:
+# In[131]:
 
 bins3_12 = []
 for i,c in enumerate(lims3[0:-1]):
@@ -498,22 +521,22 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_2alt_MODIS.png',transparent=
 
 # ## make a plot day by day
 
-# In[29]:
+# In[154]:
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[30]:
+# In[162]:
 
-flr2 = s['fl_rtn_12']&(s['days']==2.0)
-flr4 = s['fl_rtn_12']&(s['days']==4.0)
-flr6 = s['fl_rtn_12']&(s['days']==6.0)
-flr7 = s['fl_rtn_12']&(s['days']==7.0)
-flr8 = s['fl_rtn_12']&(s['days']==8.0)
-flr13 = s['fl_rtn_12']&(s['days']==13.0)
+flr2 = s['fl_rtn_16']&(s['days']==2.0)
+flr4 = s['fl_rtn_16']&(s['days']==4.0)
+flr6 = s['fl_rtn_16']&(s['days']==6.0)
+flr7 = s['fl_rtn_16']&(s['days']==7.0)
+flr8 = s['fl_rtn_16']&(s['days']==8.0)
+flr13 = s['fl_rtn_16']&(s['days']==13.0)
 
 
-# In[31]:
+# In[147]:
 
 fr2 = s['fl_rtn']&(s['days']==2.0)
 fr4 = s['fl_rtn']&(s['days']==4.0)
@@ -523,23 +546,23 @@ fr8 = s['fl_rtn']&(s['days']==8.0)
 fr13 = s['fl_rtn']&(s['days']==13.0)
 
 
-# In[32]:
+# In[163]:
 
 fr = [fr2,fr4,fr6,fr7,fr8,fr13]
 flr = [flr2,flr4,flr6,flr7,flr8,flr13]
 
 
-# In[33]:
+# In[136]:
 
 cls = ['green','blue','yellow','cyan','magenta','orange']
 
 
-# In[34]:
+# In[157]:
 
 d_rtn
 
 
-# In[236]:
+# In[88]:
 
 plt.figure()
 plt.plot(s['Longitude'][f],s['AOD0501'][f],'.')
@@ -669,7 +692,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_days_avg_12_MODIS.png',transparent=T
 
 # ## Redo plots for entire column 
 
-# In[35]:
+# In[138]:
 
 s['fl_alt_6'] = (s['GPS_Alt']<=600)
 s['fl_rtn_6'] = s['fl_alt_6'] & s['fl_QA'] & fl
@@ -722,22 +745,17 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_days_avg_surf_MODIS.png',transparent
 
 # ## Redo plots but with the MODIS AAC
 
-# In[46]:
+# In[139]:
 
 daac[0].keys()
 
 
-# In[ ]:
-
-
-
-
-# In[113]:
+# In[140]:
 
 a['meanAODperbin']
 
 
-# In[121]:
+# In[142]:
 
 plt.figure()
 
@@ -747,7 +765,7 @@ for i,a in enumerate(daac):
     plt.plot(a['BinCenter'][0,:],a['meanAODperbin'][0:-1],'x-',lw=1,color='orange',alpha=0.2)
 
 
-# In[1]:
+# In[141]:
 
 np.nanmean(ac,axis=0).shape
 
@@ -854,6 +872,71 @@ box = plt.gca().get_position()
 plt.gca().set_position([box.x0, box.y0, box.width * 0.78, box.height])
 
 #plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_and_Meyer_AAC_noleg.png',transparent=True,dpi=600)
+
+
+# ## Plot out the previous plot comparison, but with MODIS AAC per monthly
+
+# In[167]:
+
+plt.figure(figsize=(11,6))
+plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AODFM_CLIMOMEAN'].data[0,:],
+         '*-',color='r',label='MODIS Fine mode climatology',zorder=50,lw=2.5)
+plt.plot(m.variables['LONGITUDE'].data[0,:],m.variables['AOD_CLIMOMEAN'].data[0,:],
+         '*-',color='b',label='MODIS Total AOD climatology',zorder=51,lw=2.5)
+#plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['AODFM_YRMEAN'].data[0,:,0],
+#         'x-',color='grey',alpha=0.1,zorder=10,label='MODIS Yearly averages')
+#plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['AODFM_YRMEAN'].data[0,:,:],'x-',color='grey',alpha=0.1,zorder=10)
+plt.ylabel('AOD 500 nm')
+plt.ylim(0,0.8)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.title('AOD above clouds along routine flight path')
+means = []
+
+for j,f in enumerate(flr):
+    binsf = []
+    for i,c in enumerate(lims3[0:-1]):
+        lon_fl = (s['Longitude'][f]>=c)&(s['Longitude'][f]<lims3[i+1])
+        binsf.append(s['AOD0501'][f][lon_fl])
+    #plt.plot(s['Longitude'][f],s['AOD0501'][f],'.',color=cls[j],alpha=0.02)
+    bo = plt.boxplot(binsf,0,'.',showmeans=True,positions=pos3)
+    color_box(bo,cls[j])
+    [plt.setp(bo['fliers'][idx],alpha=0.05)for idx in xrange(len(bo['fliers']))]
+    [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+    means.append([a.get_ydata()[0] for a in bo['means']])
+    plt.plot(pos3,[a.get_ydata()[0] for a in bo['means']],
+             's-',zorder=100,color=cls[j],label='{}/{} 4STAR R1 [0.5-1.6km]'.format(d_rtn[j][4:6],d_rtn[j][6:8]),
+             lw=2.5,alpha=0.2)    
+    
+ac = []
+for i,a in enumerate([daac[j] for j in i_flt]):
+#    plt.plot(a['BinCenter'][0,:],a['meanAODperbin'][1:,0],'x--',lw=1,color=cls[i],alpha=0.4)
+    ac.append(a['meanAODperbin'][1:,0])
+#plt.plot(a['BinCenter'][0,:],a['meanAODperbin'][1:,0],'x--',lw=1,color='k',alpha=0.4,label='MODIS AAC [Meyer] daily avg.')
+plt.plot(a['BinCenter'][0,:],np.nanmean(ac,axis=0),'^-',lw=3,color='darkgreen',label='MODIS AAC for flights')
+
+ac_aug = []
+for i,a in enumerate([daac[j] for j in i_aug]):
+    ac_aug.append(a['meanAODperbin'][1:,0])
+plt.plot(a['BinCenter'][0,:],np.nanmean(ac_aug,axis=0),'<-',lw=3,color='purple',label='MODIS AAC for August')
+
+ac_sep = []
+for i,a in enumerate([daac[j] for j in i_sep]):
+    ac_sep.append(a['meanAODperbin'][1:,0])
+plt.plot(a['BinCenter'][0,:],np.nanmean(ac_sep,axis=0),'d-',lw=3,color='orange',label='MODIS AAC for September')
+
+
+plt.plot(pos3,np.nanmean(np.array(means),axis=0),'s-k',lw=3.5,zorder=200,label='4STAR R1 mean [0.5-1.6km]')
+plt.text(0.5, 0.6, 'Preliminary',
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=plt.gca().transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.4)
+plt.legend(numpoints=1,frameon=True,bbox_to_anchor=(1.60,1.05))
+ti = plt.gca().set_xticks([0,2,4,6,8,10,12,14])
+tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
+box = plt.gca().get_position()
+plt.gca().set_position([box.x0, box.y0, box.width * 0.70, box.height])
+
+plt.savefig(fp+'plot\\MODIS_Climatology_vs_AAC_4STAR_R1_and_Meyer_AAC_and_monthlyavg.png',transparent=True,dpi=600)
 
 
 # In[ ]:

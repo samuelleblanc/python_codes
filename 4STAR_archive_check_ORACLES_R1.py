@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[1]:
+# In[27]:
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -21,24 +21,24 @@ from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
-# In[2]:
+# In[28]:
 
 from linfit import linfit
 
 
-# In[3]:
+# In[29]:
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[30]:
 
 fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 
 # # load the files
 
-# In[120]:
+# In[31]:
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
@@ -50,22 +50,27 @@ days = ['20160824','20160825','20160827','20160830','20160902','20160904','20160
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[115]:
-
-days = ['20160912']#,'20160927','20160929','20160930']#,'20160825']
-
-
 # In[5]:
 
-days = ['20160827']
+days = ['20160918']#,'20160927','20160929','20160930']#,'20160825']
 
 
-# In[6]:
+# In[24]:
+
+days = ['20160908']
+
+
+# In[32]:
 
 vv = 'R1'
 
 
-# In[15]:
+# In[33]:
+
+vi = 'v4'
+
+
+# In[34]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -74,7 +79,7 @@ outgas_head_RA = []
 for i,d in enumerate(days):
     try:
         print 'Doing day: {}'.format(d)
-        fname_aod = fp+'aod_ict/v4/4STAR-AOD_P3_{}_{vv}.ict'.format(d,vv=vv)
+        fname_aod = fp+'aod_ict/{vi}/4STAR-AOD_P3_{}_{vv}.ict'.format(d,vv=vv,vi=vi)
         tt,th = load_ict(fname_aod,return_header=True)
     except:
         print '*** Problem with day: {} *** Skipping '.format(d)
@@ -90,7 +95,7 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[16]:
+# In[35]:
 
 len(outaod_RA)
 
@@ -123,7 +128,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[18]:
+# In[54]:
 
 outaod_head_RA[0]
 
@@ -135,17 +140,17 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[19]:
+# In[36]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[20]:
+# In[37]:
 
 nm
 
 
-# In[21]:
+# In[38]:
 
 wl = nm[6:-1]
 
@@ -158,7 +163,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[22]:
+# In[12]:
 
 for a in wl:
     print a
@@ -166,7 +171,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[23]:
+# In[82]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -196,12 +201,12 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[24]:
+# In[15]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -227,10 +232,10 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_high_alt_AOD_v5_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[25]:
+# In[18]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -256,10 +261,10 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}_vis.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_high_alt_AOD_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[26]:
+# In[19]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -285,10 +290,10 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict/v4/{vv}/{vv}_high_alt_AOD_v4_{}_nir.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_high_alt_AOD_{vi}_{}_nir.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[118]:
+# In[16]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -319,17 +324,17 @@ for i,d in enumerate(days):
 
 # ## Plot spectral aod figures for high altitude
 
-# In[40]:
+# In[39]:
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[54]:
+# In[22]:
 
 wv
 
 
-# In[114]:
+# In[26]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(9,5))
@@ -359,7 +364,7 @@ for i,d in enumerate(days):
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax.legend(frameon=False,loc='top left',bbox_to_anchor=(1.01,1.04),numpoints=1)
     ax.grid()
-    plt.savefig(fp+'aod_ict/{vv}/{vv}_high_alt_AOD_spectra_v3_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_high_alt_AOD_spectra_{vi}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
 # ## Special case plotting
@@ -398,9 +403,40 @@ plt.grid()
 plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,transparent=True)
 
 
+# ### Special plotting of AOD per altitude and latitude
+
+# In[55]:
+
+days
+
+
+# In[74]:
+
+days[15]
+
+
+# In[79]:
+
+for i,d in enumerate(days):
+    plt.figure()
+    #d = days[15]
+    plt.plot(outaod_RA[i]['AOD0501'],outaod_RA[i]['GPS_Alt'],'+',zorder=0)
+    b = plt.scatter(outaod_RA[i]['AOD0501'][outaod_RA[i]['qual_flag']==0],outaod_RA[i]['GPS_Alt'][outaod_RA[i]['qual_flag']==0],
+                marker='o',edgecolor='None',c=outaod_RA[i]['Longitude'][outaod_RA[i]['qual_flag']==0])
+    plt.axhline(600)
+    plt.axhline(1200)
+    plt.xlim(0,0.8)
+    plt.xlabel('AOD 500 nm')
+    plt.ylabel('Altitude [m]')
+    plt.title('AOD per altidude and longitude for {}'.format(d))
+    cb = plt.colorbar(b)
+    cb.set_label('Longitude [$\\circ$]')
+    plt.savefig(fp+'aod_ict/{vv}/{vv}_{}_aod_alt_lon.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
 # ## Make plots of angstrom exponent
 
-# In[42]:
+# In[60]:
 
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
@@ -417,12 +453,12 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[43]:
+# In[61]:
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[44]:
+# In[62]:
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -466,19 +502,19 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[46]:
+# In[40]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[47]:
+# In[41]:
 
 ar['days'] = np.array([])
 
 
-# In[48]:
+# In[42]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -486,61 +522,61 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[49]:
+# In[43]:
 
 ar['GPS_Alt'].shape
 
 
-# In[50]:
+# In[44]:
 
 ar.keys()
 
 
 # ## filter for low altitudes
 
-# In[51]:
+# In[45]:
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[52]:
+# In[46]:
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[53]:
+# In[47]:
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[54]:
+# In[48]:
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[55]:
+# In[49]:
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[56]:
+# In[50]:
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[57]:
+# In[51]:
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
 # ## save to file
 
-# In[58]:
+# In[52]:
 
 import hdf5storage as hs
 
 
-# In[59]:
+# In[53]:
 
 hs.savemat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv),ar)
 
@@ -671,11 +707,6 @@ ax[1].set_ylabel('AOD 1064 nm')
 ax[1].grid()
 
 plt.savefig(fp+'aod_ict/{vv}/AOD_airmass_R0_vs_R1.png'.format(vv=vv),dpi=600,transparent=True)
-
-
-# In[88]:
-
-help(plt.hist)
 
 
 # In[91]:
