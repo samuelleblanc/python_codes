@@ -82,6 +82,7 @@ def load_modis(geofile,datfile):
             #        ('ecwp',96),
                     ('multi_layer',105),
                     ('qa',123),
+                    ('cth',183)
              #       ('cloud_mask',110)
                     )
     geosds = gdal.Open(geofile)
