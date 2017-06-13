@@ -943,7 +943,7 @@ def load_netcdf(datfile,values=None,verbose=True):
 
 # In[ ]:
 
-def load_aeronet(f,verbose=True):
+def load_aeronet(f,verbose=True,version=2):
     """
     Name:
 
@@ -968,6 +968,7 @@ def load_aeronet(f,verbose=True):
     Keywords: 
 
        verbose: (default True) if True, then prints out info as data is read
+       version: (default 2) version of the AERONET file (version 3 has a different amount of header)
     
     Dependencies:
 
@@ -995,7 +996,7 @@ def load_aeronet(f,verbose=True):
     if not(os.path.isfile(f)):
         raise IOError('Data file {} not found!'.format(f))
     if f.split('.')[-1].find('lev10')<0 | f.split('.')[-1].find('LEV10')<0:
-        raise IOError('Data file {} is not a level 1.0 file - it is not yet available to read'.foramt(f))
+        raise IOError('Data file {} is not a level 1.0 file - it is not yet available to read'.format(f))
     def makeday(txt):
         return datetime.strptime(txt,'%d:%m:%Y').timetuple().tm_yday
     def maketime(txt):
@@ -1003,17 +1004,22 @@ def load_aeronet(f,verbose=True):
     conv = {'Dateddmmyy':makeday,'Timehhmmss':maketime}
     if verbose:
         print 'Opening file: {}'.format(f)
-    ra = np.genfromtxt(f,skip_header=4,names=True,delimiter=',',converters=conv)
+    if version==3:
+        header_lines = 6
+    else:
+        header_lines = 4
+    ra = np.genfromtxt(f,skip_header=header_lines,names=True,delimiter=',',converters=conv)
     da = lm.recarray_to_dict(ra)
     ff = open(f,'r')
     lines = ff.readlines()
-    da['header'] = lines[0:4]
-    for n in da['header'][2].split(','):
-        u = n.split('=')
-        try:
-            da[u[0]]=float(u[1])
-        except:
-            da[u[0]] = u[1].strip()
+    da['header'] = lines[0:header_lines]
+    if version==2:
+        for n in da['header'][2].split(','):
+            u = n.split('=')
+            try:
+                da[u[0]]=float(u[1])
+            except:
+                da[u[0]] = u[1].strip()
     return da    
 
 
