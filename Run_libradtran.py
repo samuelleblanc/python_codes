@@ -1286,7 +1286,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
                 aero['ssa'] = aero['ssa']+stdfac_dict['ssa']*input_mmm['MOC_ssa_std'][0,0][ilat,ilon,:]
                 aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
-                aero['asy'] = aero['asy']+stdfac_dict['asy']*input_mmm['MOC_asy_std'][0,0][ilat,ilon,:]
+                aero['asy'] = aero['asy']+stdfac_dict['asy']*input_mmm['MOC_asym_std'][0,0][ilat,ilon,:]
                 
                 #sanitize inputs after adding subtracting standard deviations
                 aero['ssa'][aero['ssa']<0.0] = 0.0
@@ -1303,7 +1303,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
                 cloud['tau'] = cloud['tau']+stdfac_dict['COD']*input_mmm['MODIS_COD_std'][0,0][ilat,ilon]
                 cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
-                cloud['ref'] = cloud['ref']+stdfac_dict['ref']*input_mmm['MODIS_effrad_std'][0,0][ilat,ilon]
+                cloud['ref'] = cloud['ref']+stdfac_dict['ref']*input_mmm['MODIS_Effrad_std'][0,0][ilat,ilon]
                 cloud['tau'][cloud['tau']<0.0] = 0.0
                 cloud['ref'][cloud['ref']<2.0] = 2.0
                 
