@@ -1135,7 +1135,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 # In[3]:
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1'):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={}):
     """
     Purpose:
     
@@ -1154,6 +1154,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         wvl_file_thm: full path of thermal wavelength file (wavelengths in nm in second column)
         aero_clear: if set to True, then aerosol extinction is set to zero in all cases. (defaults to False) 
         version: (defaults to v1) version number of the files for tracking
+        stdfac_dict: Dict that contains the multiplicative factors to the standard deviation stored in the keys:
+                     'ext','ssa','asym', 'COD','ref'
+       
         
     Dependencies:
     
@@ -1216,6 +1219,15 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     else:
         change_fp_output = False
     
+    stdfac_dict = RL.merge_dicts({'ext':0.0,'ssa':0.0,'asym':0.0,
+                                  'COD':0.0,'ref':0.0},stdfac_dict)
+    std_label = ''
+    for k in stdfac_dict.keys():
+        if stdfac_dict[k] != 0.0:
+            if stdfac_dict[k]>0.0: 
+                n='p' 
+            else: n='m'
+            std_label = std_label+'_'k+n
     
     for mmm in ['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
@@ -1235,12 +1247,12 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             doy = 321
             
         try:
-            file_list = file(fp_out+'AAC_list_file_{m}_{v}.sh'.format(m=mmm,v=version),'w')
+            file_list = file(fp_out+'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=version,lbl=std_label),'w')
         except Exception,e:
             print 'Problem with accessing file, return Exception: ',e
             return
         print 'Starting list file'
-        fp_out2 = fp_out+mmm+'/'
+        fp_out2 = fp_out+mmm+std_label+'/'
         if not os.path.exists(fp_out2):
             os.mkdir(fp_out2)
         if change_fp_output:
@@ -1264,13 +1276,24 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])
+                aero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])
+                aero['ext'][aero['ext']<0.0] = 0.0
                 if aero_clear:
                     aero['ext'] = aero['ext']*0.0
                 if np.isnan(aero['ext']).all():
                     print 'skipping lat:%i, lon:%i' % (ilat,ilon)
                     continue
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
+                aero['ssa'] = aero['ssa']+stdfac_dict['ssa']*input_mmm['MOC_ssa_std'][0,0][ilat,ilon,:]
                 aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+                aero['asy'] = aero['asy']+stdfac_dict['asy']*input_mmm['MOC_asy_std'][0,0][ilat,ilon,:]
+                
+                #sanitize inputs after adding subtracting standard deviations
+                aero['ssa'][aero['ssa']<0.0] = 0.0
+                aero['ssa'][aero['ssa']>1.0] = 1.0
+                aero['asy'][aero['asy']<0.0] = 0.0
+                aero['asy'][aero['asy']>1.0] = 1.0
+                
                 if aero['wvl_arr'].max()<100000.0:
                     aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
                     aero['ext'] = np.append(aero['ext'],aero['ext'][-1])
@@ -1278,7 +1301,12 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     aero['asy'] = np.append(aero['asy'],aero['asy'][-1])
                 # set the cloud values
                 cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
+                cloud['tau'] = cloud['tau']+stdfac_dict['COD']*input_mmm['MODIS_COD_std'][0,0][ilat,ilon]
                 cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
+                cloud['ref'] = cloud['ref']+stdfac_dict['ref']*input_mmm['MODIS_effrad_std'][0,0][ilat,ilon]
+                cloud['tau'][cloud['tau']<0.0] = 0.0
+                cloud['ref'][cloud['ref']<2.0] = 2.0
+                
                 # set the albedo
                 alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
                 if np.isnan(alb): 
