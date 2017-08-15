@@ -252,10 +252,10 @@ def get_frac_diffuse(mod,sza,ext=[],z=[],aod=None,iwvl_midvis=8):
     #Now interpolate the table at the right AOD
     new_szas = np.zeros_like(mod['table_SZA'])
     for i in xrange(len(mod['table_SZA'])): 
-        ftab = interpolate.interp1d(mod['table_AOD'],mod['table_fracdiffuse'][i,:])
+        ftab = interpolate.interp1d(mod['table_AOD'],mod['table_fracdiffuse'][i,:],bounds_error=False,fill_value=1.0)
         new_szas[i] = ftab(aod)
         
-    fftab = interpolate.interp1d(mod['table_SZA'],new_szas)
+    fftab = interpolate.interp1d(mod['table_SZA'],new_szas,bounds_error=False,fill_value=1.0)
     frac_diffuse = fftab(sza)
     
     return frac_diffuse
@@ -294,6 +294,8 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
         Written (v1.0): Samuel LeBlanc, 2015-03-15, Santa Cruz, CA
                         Translated calc_sfc_albedo_Schaaf.m from matlab to python
                         originally written by John Livingston
+        Modified (v1.1): Samuel LeBlanc, 2017-07-07, Santa Cruz, CA
+                         Made some bug fixes. needed to ensure truth values of SZAin is an array: made into a numpy array
     """
     import numpy as np
     g0bs = np.array([1.0, -0.007574, -1.284909])
@@ -308,13 +310,13 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
     SZAcub = SZAinrad*SZAsq
 
     for i in xrange(len(fiso)):
-        alb_bs = fiso[i]*(g0bs[0] + g1bs[0]*SZAsq + g2bs[0]*SZAcub) +                  fvol[i]*(g0bs[1] + g1bs[1]*SZAsq + g2bs[2]*SZAcub) +                  fgeo[i]*(g0bs[2] + g1bs[2]*SZAsq + g2bs[3]*SZAcub)
+        alb_bs = fiso[i]*(g0bs[0] + g1bs[0]*SZAsq + g2bs[0]*SZAcub) +                  fvol[i]*(g0bs[1] + g1bs[1]*SZAsq + g2bs[1]*SZAcub) +                  fgeo[i]*(g0bs[2] + g1bs[2]*SZAsq + g2bs[2]*SZAcub)
         alb_ws = fiso[i]*gws[0] + fvol[i]*gws[1] + fgeo[i]*gws[2]
 
-        albedo_sfc[i,:] = alb_ws*frac_diffuse + (1-frac_diffuse)*alb_bs;
+        albedo_sfc[i,:] = alb_ws*frac_diffuse + (1-frac_diffuse)*alb_bs
 
     #now for all SZA>=90 set surface albedo=0
-    albedo_sfc[:,SZAin>=90]=0.0
+    albedo_sfc[:,np.array(SZAin)>=90]=0.0
     return albedo_sfc
 
 

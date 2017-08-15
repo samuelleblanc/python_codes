@@ -88,19 +88,19 @@ s = sio.loadmat(fp+'MOC_1solx_DARE_{vv}_{num}.mat'.format(vv=vv,num=num))
 s.keys()
 
 
-# In[11]:
+# In[9]:
 
 s['solutions'][0,0].dtype.names
 
 
 # # Format results in useable arrays
 
-# In[9]:
+# In[10]:
 
 s['solutions'][0,1]['dF_toa_24hr'][0,0][0,0]
 
 
-# In[10]:
+# In[11]:
 
 dftoa = np.array([s['solutions'][0,i]['dF_toa_24hr'][0,0][0,0] for i in xrange(len(s['solutions'][0,:]))])
 dfsfc = np.array([s['solutions'][0,i]['dF_sfc_24hr'][0,0] for i in xrange(len(s['solutions'][0,:]))])[:,0,0]
@@ -108,78 +108,86 @@ dftoai = np.array([s['solutions'][0,i]['dF_toa_instant'][0,0][0,0] for i in xran
 dfsfci = np.array([s['solutions'][0,i]['dF_sfc_instant'][0,0] for i in xrange(len(s['solutions'][0,:]))])[:,0,0]
 
 
-# In[11]:
+# In[12]:
 
 dftoa.shape
 
 
-# In[12]:
+# In[13]:
 
 s['select'][0,0][1]['dF_sfc_24hr'][0][0][0,0]
 
 
-# In[13]:
+# In[60]:
+
+s['select']['s0s0s0'][0][0]['dF_toa_24hr'][0][0][0][0]
+
+
+# In[61]:
 
 toa_sel = {}
 sfc_sel = {}
 toa_seli = {}
 sfc_seli = {}
 i_str = ['m1','s0','p1']
-ii = 0
 for ie in [-1,0,1]:
     for ia in [-1,0,1]:
         for im in [-1,0,1]:
             form = {'num':num,'e':i_str[ie+1],'a':i_str[ia+1],'s':i_str[im+1]}
             val = '{e}{a}{s}'.format(**form)
-            toa_sel[val] = s['select'][0,0][ii]['dF_toa_24hr'][0][0][0,0]
-            sfc_sel[val] = s['select'][0,0][ii]['dF_sfc_24hr'][0][0][0,0]
-            toa_seli[val] = s['select'][0,0][ii]['dF_toa_instant'][0][0][0,0]
-            sfc_seli[val] = s['select'][0,0][ii]['dF_sfc_instant'][0][0][0,0]
-            ii += 1
+            toa_sel[val] = s['select'][val][0][0]['dF_toa_24hr'][0][0][0][0]
+            sfc_sel[val] = s['select'][val][0][0]['dF_sfc_24hr'][0][0][0][0]
+            toa_seli[val] = s['select'][val][0][0]['dF_toa_instant'][0][0][0][0]
+            sfc_seli[val] = s['select'][val][0][0]['dF_sfc_instant'][0][0][0][0]
 
 
-# In[14]:
+# In[62]:
 
 sfc_sel.keys()
 
 
 # ## set it up for the rouces values
 
-# In[15]:
+# In[63]:
 
 len(s['solutions'][0,:])
 
 
-# In[16]:
+# In[64]:
 
 s['solutions'][0,1]['ssa'][0,0][0]
 
 
-# In[17]:
+# In[65]:
 
 ssa = np.array([s['solutions'][0,i]['ssa'][0,0][0,8] for i in xrange(len(s['solutions'][0,:]))])
 
 
-# In[18]:
+# In[66]:
 
 ssa[0]
 
 
-# In[19]:
+# In[20]:
 
 ext = np.array([s['solutions'][0,i]['ext'][0,0][0,8] for i in xrange(len(s['solutions'][0,:]))])
 
 
-# In[20]:
+# In[21]:
 
 asy = np.array([s['solutions'][0,i]['asy'][0,0][0,8] for i in xrange(len(s['solutions'][0,:]))])
+
+
+# In[33]:
+
+s['solutions'][0,0].dtype.names
 
 
 # # Start to plot out results
 
 # ## plot the source distribution
 
-# In[208]:
+# In[22]:
 
 fig,ax = plt.subplots(1,3,figsize=(12,6))
 
@@ -210,28 +218,28 @@ plt.savefig(fp+'\\plot\\MOC_solutions_hist_{num}.png'.format(num=num),dpi=600,tr
 
 # ## plot the DARE from theses sources
 
-# In[21]:
+# In[67]:
 
 dftoa
 
 
-# In[38]:
+# In[68]:
 
 plt.figure()
 plt.plot(dftoa)
 
 
-# In[22]:
+# In[25]:
 
 a = cm.hsv(np.arange(10))
 
 
-# In[23]:
+# In[26]:
 
 cs = cm.hsv(np.arange(27)/27.0)
 
 
-# In[24]:
+# In[27]:
 
 for i,k in enumerate(toa_sel.keys()):
     print tuple(cs[i,:])
@@ -239,13 +247,13 @@ for i,k in enumerate(toa_sel.keys()):
 
 # ### Plot the 24h averages
 
-# In[21]:
+# In[137]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoa,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dftoa),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dftoa),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(toa_sel.keys()):
     plt.axvline(toa_sel[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -264,13 +272,28 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_TOA_24h_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[22]:
+# In[70]:
+
+toa_sel['s0s0s0']
+
+
+# In[73]:
+
+toa_sel['s0p1s0']
+
+
+# In[74]:
+
+toa_sel['s0m1s0']
+
+
+# In[136]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfc,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dfsfc),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dfsfc),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(sfc_sel.keys()):
     plt.axvline(sfc_sel[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -289,7 +312,7 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_SFC_24h_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[23]:
+# In[76]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfc,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
@@ -315,13 +338,13 @@ plt.savefig(fp+'plot\\DARE_SFC_24h_{num}_nosup.png'.format(num=num),dpi=600,tran
 
 # ### Plot the instantaneous values
 
-# In[24]:
+# In[134]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoai,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dftoai),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dftoai),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(toa_sel.keys()):
     plt.axvline(toa_seli[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -340,13 +363,13 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_TOA_instantaneous_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[25]:
+# In[135]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfci,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dfsfci),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dfsfci),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(sfc_seli.keys()):
     plt.axvline(sfc_seli[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -365,19 +388,24 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_SFC_instantaneous_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
+# In[133]:
+
+fp
+
+
 # # Redo the analysis for number 22134
 
-# In[25]:
+# In[138]:
 
 num2 = 22134
 
 
-# In[26]:
+# In[139]:
 
 s2 = sio.loadmat(fp+'MOC_1solx_DARE_{vv}_{num}.mat'.format(vv=vv,num=num2))
 
 
-# In[27]:
+# In[97]:
 
 dftoa2 = np.array([s2['solutions'][0,i]['dF_toa_24hr'][0,0][0,0] for i in xrange(len(s2['solutions'][0,:]))])
 dfsfc2 = np.array([s2['solutions'][0,i]['dF_sfc_24hr'][0,0] for i in xrange(len(s2['solutions'][0,:]))])[:,0,0]
@@ -385,34 +413,32 @@ dftoai2 = np.array([s2['solutions'][0,i]['dF_toa_instant'][0,0][0,0] for i in xr
 dfsfci2 = np.array([s2['solutions'][0,i]['dF_sfc_instant'][0,0] for i in xrange(len(s2['solutions'][0,:]))])[:,0,0]
 
 
-# In[28]:
+# In[98]:
 
 toa_sel2 = {}
 sfc_sel2 = {}
 toa_seli2 = {}
 sfc_seli2 = {}
 i_str = ['m1','s0','p1']
-ii = 0
 for ie in [-1,0,1]:
     for ia in [-1,0,1]:
         for im in [-1,0,1]:
             form = {'num':num,'e':i_str[ie+1],'a':i_str[ia+1],'s':i_str[im+1]}
             val = '{e}{a}{s}'.format(**form)
-            toa_sel2[val] = s2['select'][0,0][ii]['dF_toa_24hr'][0][0][0,0]
-            sfc_sel2[val] = s2['select'][0,0][ii]['dF_sfc_24hr'][0][0][0,0]
-            toa_seli2[val] = s2['select'][0,0][ii]['dF_toa_instant'][0][0][0,0]
-            sfc_seli2[val] = s2['select'][0,0][ii]['dF_sfc_instant'][0][0][0,0]
-            ii += 1
+            toa_sel2[val] = s2['select'][val][0][0]['dF_toa_24hr'][0][0][0][0]
+            sfc_sel2[val] = s2['select'][val][0][0]['dF_sfc_24hr'][0][0][0][0]
+            toa_seli2[val] = s2['select'][val][0][0]['dF_toa_instant'][0][0][0][0]
+            sfc_seli2[val] = s2['select'][val][0][0]['dF_sfc_instant'][0][0][0][0]
 
 
-# In[29]:
+# In[99]:
 
 ssa2 = np.array([s2['solutions'][0,i]['ssa'][0,0][0,8] for i in xrange(len(s2['solutions'][0,:]))])
 ext2 = np.array([s2['solutions'][0,i]['ext'][0,0][0,8] for i in xrange(len(s2['solutions'][0,:]))])
 asy2 = np.array([s2['solutions'][0,i]['asy'][0,0][0,8] for i in xrange(len(s2['solutions'][0,:]))])
 
 
-# In[30]:
+# In[100]:
 
 fig,ax = plt.subplots(1,3,figsize=(12,6))
 
@@ -441,13 +467,13 @@ plt.legend(loc=2,frameon=False)
 plt.savefig(fp+'\\plot\\MOC_solutions_hist_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
-# In[42]:
+# In[140]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoa2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dftoa2),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dftoa2),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(toa_sel.keys()):
     plt.axvline(toa_sel2[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -466,13 +492,13 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_TOA_24h_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
-# In[32]:
+# In[141]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfc2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dfsfc2),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dfsfc2),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(sfc_sel2.keys()):
     plt.axvline(sfc_sel2[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -491,18 +517,18 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_SFC_24h_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
-# In[33]:
+# In[103]:
 
 len(ext2)
 
 
-# In[34]:
+# In[142]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoai2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dftoai2),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dftoai2),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(toa_seli.keys()):
     plt.axvline(toa_seli2[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -521,13 +547,13 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=2)
 plt.savefig(fp+'plot\\DARE_TOA_instant_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
-# In[35]:
+# In[143]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfci2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
 plt.axvline(np.mean(dfsfci2),color='k',lw=3,label='Mean')
 plt.axvline(np.median(dfsfci2),color='grey',ls='--',lw=2,label='Median')
-cs = cm.jet(np.arange(27)/27.0)
+cs = cm.hsv(np.arange(27)/27.0)
 ms = ['s','*','x','d']
 for i,k in enumerate(sfc_seli2.keys()):
     plt.axvline(sfc_seli2[k],lw=1,label=k,ls='-',color=tuple(cs[i,:]),marker=ms[i%4],ms=10)
@@ -548,7 +574,7 @@ plt.savefig(fp+'plot\\DARE_SFC_instant_{num}.png'.format(num=num2),dpi=600,trans
 
 # # Print out all the resulting values
 
-# In[43]:
+# In[106]:
 
 print 'TOA {}'.format(num)
 print 'Mean:',np.mean(dftoa)
@@ -559,24 +585,39 @@ for k in np.sort(toa_sel.keys()):
     print k,toa_sel[k]
 
 
-# In[44]:
+# In[124]:
 
-print 'TOA {}'.format(num)
-print 'Mean:',np.mean(dfsfc)
-print 'Median',np.median(dfsfc)
-print 'Mean+std:',np.mean(dfsfc)+np.std(dfsfc)
-print 'Mean-std:',np.mean(dfsfc)-np.std(dfsfc)
+print 'TOA SFC {}'.format(num)
+print 'Mean:',np.mean(dftoa),np.mean(dfsfc)
+print 'Median',np.median(dftoa),np.median(dfsfc)
+print 'Mean+std:',np.mean(dftoa)+np.std(dftoa),np.mean(dfsfc)+np.std(dfsfc)
+print 'Mean-std:',np.mean(dftoa)-np.std(dftoa),np.mean(dfsfc)-np.std(dfsfc)
 for k in np.sort(toa_sel.keys()):
     print k,toa_sel[k],sfc_sel[k]
 
 
-# In[45]:
+# In[144]:
+
+import pandas as pd
+
+
+# In[183]:
+
+pd.DataFrame.from_dict(toa_sel,'index')
+
+
+# In[184]:
+
+pd.DataFrame.from_dict(sfc_sel,'index')
+
+
+# In[181]:
 
 for k in np.sort(toa_sel.keys()):
-    print sfc_sel[k]
+    print k,sfc_sel[k]
 
 
-# In[46]:
+# In[126]:
 
 print 'TOA, SFC {}'.format(num2)
 print 'Mean:',np.mean(dftoa2),np.mean(dfsfc2)
@@ -587,21 +628,31 @@ for k in np.sort(toa_sel2.keys()):
     print k,toa_sel2[k],sfc_sel2[k]
 
 
-# In[47]:
+# In[185]:
+
+pd.DataFrame.from_dict(toa_sel2,'index')
+
+
+# In[186]:
+
+pd.DataFrame.from_dict(sfc_sel2,'index')
+
+
+# In[127]:
 
 for k in np.sort(toa_sel2.keys()):
-    print toa_sel2[k]
+    print k,toa_sel2[k]
 
 
-# In[48]:
+# In[128]:
 
 for k in np.sort(toa_sel2.keys()):
-    print sfc_sel2[k]
+    print k,sfc_sel2[k]
 
 
 # # Select a few representative values and see their DARE
 
-# In[60]:
+# In[112]:
 
 ii = {'ssa':[],'asy':[],'ext':[],'ssa2':[],'asy2':[],'ext2':[]}
 for r in ii.keys():
@@ -611,19 +662,19 @@ for r in ii.keys():
              np.argmin(abs(v-np.nanmean(v)-np.std(v)))]
 
 
-# In[61]:
+# In[113]:
 
 ii
 
 
 # ## plot the representative DARES
 
-# In[62]:
+# In[114]:
 
 str_names = ['mean {nm}','mean {nm}-std','mean {nm}+std']
 
 
-# In[99]:
+# In[115]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoa,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
@@ -652,7 +703,7 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=1)
 plt.savefig(fp+'plot\\DARE_TOA_24h_selected_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[100]:
+# In[116]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dftoa2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
@@ -681,7 +732,7 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=1)
 plt.savefig(fp+'plot\\DARE_TOA_24h_selected_{num}.png'.format(num=num2),dpi=600,transparent=True)
 
 
-# In[101]:
+# In[117]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfc,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
@@ -710,7 +761,7 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=1)
 plt.savefig(fp+'plot\\DARE_SFC_24h_selected_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[102]:
+# In[118]:
 
 plt.figure(figsize=(12,5))
 plt.hist(dfsfc2,bins=40,alpha=1.0,edgecolor='None',label='all retrievals')
@@ -741,7 +792,7 @@ plt.savefig(fp+'plot\\DARE_SFC_24h_selected_{num}.png'.format(num=num2),dpi=600,
 
 # ## Print out the representative DARE
 
-# In[113]:
+# In[119]:
 
 print 'DARE TOA {}'.format(num)
 print 'DARE Mean: \t{}'.format(np.nanmean(dftoa))
@@ -755,7 +806,7 @@ for i,k in enumerate(['ssa','asy','ext']):
         io +=1
 
 
-# In[114]:
+# In[120]:
 
 print 'DARE Surface {}'.format(num)
 print 'DARE Mean: \t{}'.format(np.nanmean(dfsfc))
@@ -780,7 +831,7 @@ for i,k in enumerate(['ssa','asy','ext']):
         io +=1
 
 
-# In[115]:
+# In[121]:
 
 print 'Properties {}: ssa, asy, ext'.format(num2)
 io = 0
@@ -791,7 +842,7 @@ for i,k in enumerate(['ssa','asy','ext']):
         io +=1
 
 
-# In[116]:
+# In[122]:
 
 print 'DARE TOA {}'.format(num2)
 print 'DARE Mean: \t{}'.format(np.nanmean(dftoa2))
@@ -805,7 +856,7 @@ for i,k in enumerate(['ssa2','asy2','ext2']):
         io +=1
 
 
-# In[117]:
+# In[123]:
 
 print 'DARE Surface {}'.format(num2)
 print 'DARE Mean: \t{}'.format(np.nanmean(dfsfc2))
@@ -821,7 +872,7 @@ for i,k in enumerate(['ssa2','asy2','ext2']):
 
 # # Inverse link from mean DARE to input properties
 
-# In[121]:
+# In[129]:
 
 ii['DARE_TOA'] = [np.argmin(abs(dftoa-np.nanmean(dftoa))),
                  np.argmin(abs(dftoa-np.nanmean(dftoa)+np.std(dftoa))),
@@ -843,12 +894,12 @@ ii['DARE2_SFC'] = [np.argmin(abs(dfsfc2-np.nanmean(dfsfc2))),
 
 # ## now plot the input with the linked DARE properties
 
-# In[131]:
+# In[130]:
 
 str_names = ['mean {nm}','mean {nm}-std','mean {nm}+std','median {nm}']
 
 
-# In[137]:
+# In[131]:
 
 fig,ax = plt.subplots(1,4,figsize=(15,6))
 
@@ -904,7 +955,7 @@ plt.legend(bbox_to_anchor=(1.03,1.07),loc=2,ncol=1)
 plt.savefig(fp+'\\plot\\MOC_solutions_hist_linked_{num}.png'.format(num=num),dpi=600,transparent=True)
 
 
-# In[138]:
+# In[132]:
 
 fig,ax = plt.subplots(1,4,figsize=(15,6))
 
