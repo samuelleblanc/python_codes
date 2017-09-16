@@ -284,6 +284,11 @@ else:
 # In[ ]:
 
 iz = in_.get('index_zout',0)
+if in_.get('index_zout'):
+    iz = in_.get('index_zout')
+else:
+    iz = 0
+print 'Z level index set at:  {}'.format(iz)
 
 
 # In[ ]:
