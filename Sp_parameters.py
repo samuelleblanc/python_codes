@@ -167,7 +167,13 @@ def param(sp,wvlin,iws=None):
     from linfit import linfit
     from Sp_parameters import nanmasked, norm2max, smooth, deriv, find_closest
     npar = 16
+    #print 'lenght of sp and wvlin',sp.shape,wvlin.shape
     spc, mask = nanmasked(sp)
+    try:
+        if len(mask.shape)==3:
+            mask = mask[:,0,0]
+    except:
+        pass
     wvl = wvlin[mask]
     if len(wvl)<600:
         par = np.zeros(npar)*np.nan
@@ -186,7 +192,10 @@ def param(sp,wvlin,iws=None):
         par = np.zeros(npar)*np.nan
         return par
     norm2 = spc/spc[i1000]
-    dsp = smooth(deriv(norm2,wvl/1000),2,nan=False,old=True)
+    try:
+        dsp = smooth(deriv(norm2,wvl/1000),2,nan=False,old=True)
+    except:
+        import pdb; pdb.set_trace()
     imaxwvl = np.argmax(spc)
     maxwvl = wvl[mask[imaxwvl]]
     # now calculate each parameter
@@ -194,7 +203,7 @@ def param(sp,wvlin,iws=None):
     fit0_fn = np.poly1d(fit0)
     fit7 = np.polyfit(np.array([wvl[i1493],wvl[i1600]]),np.array([norm2[i1493],norm2[i1600]]),1)
     fit7_fn = np.poly1d(fit7)
-    fit8,z = linfit(wvl[i1000:i1077],dsp[i1000:i1077])
+    fit8,z = linfit(wvl[i1000:i1077],dsp[i1000:i1077]) 
     fit9,z = linfit(wvl[i1200:i1300],dsp[i1200:i1300])
     fit10,z = linfit(wvl[i530:i610]/1000,norm[i530:i610])
     fit14,z = linfit(wvl[i1565:i1634],spc[i1565:i1634]/norm[i1565])
@@ -566,6 +575,7 @@ class Sp:
                 partemp = zmap(gx,args,progress=True,ncpu=2)
             else:
                 applypar = lambda w,r,t:param(sp[w,:,iz,r,t],wvl)
+                #import pdb; pdb.set_trace()
                 partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
             par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
             if liq_only:
