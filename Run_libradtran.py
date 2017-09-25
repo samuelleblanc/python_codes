@@ -635,14 +635,16 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     wvl = moms_dict['wvl']
     if wvl[0]<1:
         wvl = wvl*1000.0
+        
+    nm = moms_dict.get('max_nmoms',-1)
 
-    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:],moms_dict['nmom'][ir,:]
+    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:nm],moms_dict['nmom'][ir,:nm]
 
 
 # In[1]:
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
-                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True):
+                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None):
     """
     Name:
 
@@ -731,6 +733,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         fp_base_file: full file path for base file. 
                       If set to a file path and make_base to False, then include path is printed to input file. 
         set_quiet: if True then quiet is set in the input file, if False, quiet is not set. (default True)
+        max_nmom: set the maximum number of moments to write out (default None)
     
     Output:
 
@@ -1135,7 +1138,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 # In[3]:
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={}):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None):
     """
     Purpose:
     
@@ -1156,6 +1159,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         version: (defaults to v1) version number of the files for tracking
         stdfac_dict: Dict that contains the multiplicative factors to the standard deviation stored in the keys:
                      'ext','ssa','asym', 'COD','ref'
+        max_nmom: Maximum number of phase function moments to write out. (defaults to none)
        
         
     Dependencies:
@@ -1209,6 +1213,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     else:
         pmom_solar = RL.make_pmom_inputs(source='solar')
         pmom_thermal = RL.make_pmom_inputs(source='thermal')
+    if max_nmom:
+        pmom_solar['max_nmom'] = max_nmom
+        pmom_thermal['max_nmom'] = max_nmom
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
     aero = {'z_arr':[3.0,4.0]}
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
