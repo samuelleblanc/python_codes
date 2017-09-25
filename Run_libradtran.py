@@ -1293,13 +1293,17 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
                 aero['ssa'] = aero['ssa']+stdfac_dict['ssa']*input_mmm['MOC_ssa_std'][0,0][ilat,ilon,:]
                 aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
-                aero['asy'] = aero['asy']+stdfac_dict['asy']*input_mmm['MOC_asym_std'][0,0][ilat,ilon,:]
+                aero['asy'] = aero['asy']+stdfac_dict['asym']*input_mmm['MOC_asym_std'][0,0][ilat,ilon,:]
                 
                 #sanitize inputs after adding subtracting standard deviations
-                aero['ssa'][aero['ssa']<0.0] = 0.0
-                aero['ssa'][aero['ssa']>1.0] = 1.0
-                aero['asy'][aero['asy']<0.0] = 0.0
-                aero['asy'][aero['asy']>1.0] = 1.0
+                try: aero['ssa'][aero['ssa']<0.0] = 0.0
+                except: pass
+                try: aero['ssa'][aero['ssa']>1.0] = 1.0
+                except: pass
+                try: aero['asy'][aero['asy']<0.0] = 0.0
+                except: pass
+                try: aero['asy'][aero['asy']>1.0] = 1.0
+                except: pass
                 
                 if aero['wvl_arr'].max()<100000.0:
                     aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
@@ -1311,8 +1315,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 cloud['tau'] = cloud['tau']+stdfac_dict['COD']*input_mmm['MODIS_COD_std'][0,0][ilat,ilon]
                 cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
                 cloud['ref'] = cloud['ref']+stdfac_dict['ref']*input_mmm['MODIS_Effrad_std'][0,0][ilat,ilon]
-                cloud['tau'][cloud['tau']<0.0] = 0.0
-                cloud['ref'][cloud['ref']<2.0] = 2.0
+                try: cloud['tau'][cloud['tau']<0.0] = 0.0
+                except: pass
+                try: cloud['ref'][cloud['ref']<2.0] = 2.0
+                except: pass
                 
                 # set the albedo
                 alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
