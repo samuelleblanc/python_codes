@@ -636,11 +636,12 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     if wvl[0]<1:
         wvl = wvl*1000.0
         
-    nm = moms_dict.get('max_nmoms',-1)
     if moms_dict.get('max_nmoms',False):
-        moms_dict['nmom'][ir,:] = nm
+        nmom = moms_dict['nmom'][ir,:]*0+nm
+    else:
+        nmom = moms_dict['nmom'][ir,:]
 
-    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:nm],moms_dict['nmom'][ir,:nm]
+    return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:],nmom
 
 
 # In[1]:
@@ -1589,6 +1590,8 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
                         thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
                 except IOError:
                     print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
+                    if iutc==0:
+                        print file_out_sol
                     continue
                 except ValueError:
                     print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
