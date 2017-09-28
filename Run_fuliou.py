@@ -322,7 +322,7 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
 
 # In[440]:
 
-def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_type='ocean',vv='v1'):
+def Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=None,surface_type='ocean',vv='v1',verbose=True):
     """
     Purpose:
         Main function to create the files for the DARE calculations for a single solx file defined by fname 
