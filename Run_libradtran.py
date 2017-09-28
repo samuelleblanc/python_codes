@@ -637,6 +637,8 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
         wvl = wvl*1000.0
         
     nm = moms_dict.get('max_nmoms',-1)
+    if moms_dict.get('max_nmoms',False):
+        moms_dict['nmom'][ir,:] = nm
 
     return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:nm],moms_dict['nmom'][ir,:nm]
 
@@ -644,7 +646,7 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
 # In[1]:
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
-                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None):
+                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None,solver='disort'):
     """
     Name:
 
@@ -846,7 +848,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             base.write('mol_abs_param fu\n')
         else:
             base.write('mol_abs_param sbdart\n')
-        base.write('rte_solver disort\n')
+        base.write('rte_solver {}\n'.format(solver))
         if set_quiet:
             base.write('quiet\n')
     elif include_base:
@@ -858,7 +860,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             output.write('mol_abs_param fu\n')
         else:
             output.write('mol_abs_param sbdart\n')
-        output.write('rte_solver disort\n')
+        output.write('rte_solver {}\n'.format(solver))
     
     
     if verbose: print '..write out source dict values'
@@ -1138,7 +1140,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 # In[3]:
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False):
     """
     Purpose:
     
@@ -1160,6 +1162,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         stdfac_dict: Dict that contains the multiplicative factors to the standard deviation stored in the keys:
                      'ext','ssa','asym', 'COD','ref'
         max_nmom: Maximum number of phase function moments to write out. (defaults to none)
+        list_only: (default False) When True, only write out the list file (for debugging)
        
         
     Dependencies:
@@ -1214,8 +1217,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         pmom_solar = RL.make_pmom_inputs(source='solar')
         pmom_thermal = RL.make_pmom_inputs(source='thermal')
     if max_nmom:
-        pmom_solar['max_nmom'] = max_nmom
-        pmom_thermal['max_nmom'] = max_nmom
+        pmom_solar['max_nmoms'] = max_nmom
+        pmom_thermal['max_nmoms'] = max_nmom
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
     aero = {'z_arr':[3.0,4.0]}
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
@@ -1345,8 +1348,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     cloud['moms_dict'] = pmom_solar
                     cloud['file_name'] = cloud_file_name_sol
                     file_out_sol = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
-                    RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=make_base,fp_base_file=fp_base_file,set_quiet=True)
+                    if not list_only:
+                        RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
+                                       make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
                     if make_base:
                         make_base = False
                     #build the thermal input file
@@ -1359,8 +1363,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     cloud['moms_dict'] = pmom_thermal
                     cloud['file_name'] = cloud_file_name_thm
                     file_out_thm = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
-                    RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=False,fp_base_file=fp_base_file,set_quiet=True)
+                    
+                    if not list_only:
+                        RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
+                                       make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
                     file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
                                     +'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out\n' % (ilat,ilon,mmm,HH))
                     file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
@@ -1442,15 +1448,27 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
     dat = np.fromfile(fp,sep=' ')
     if len(dat)==0 :
         raise IOError('File {} empty'.format(fp))
-    dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
-    output = {'wvl':dat[:,0,0].squeeze(),
-              'zout':zout,
-              'direct_down':dat[:,:,1].squeeze(),
-              'diffuse_down':dat[:,:,2].squeeze(),
-              'diffuse_up':dat[:,:,3].squeeze(),
-              'int_dir_dn':dat[:,:,4].squeeze(),
-              'int_dif_dn':dat[:,:,5].squeeze(),
-              'int_dif_up':dat[:,:,6].squeeze()}
+    try:
+        dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
+    except ValueError:
+        arr_len = 5
+        dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
+    try:
+        output = {'wvl':dat[:,0,0].squeeze(),
+                  'zout':zout,
+                  'direct_down':dat[:,:,1].squeeze(),
+                  'diffuse_down':dat[:,:,2].squeeze(),
+                  'diffuse_up':dat[:,:,3].squeeze(),
+                  'int_dir_dn':dat[:,:,4].squeeze(),
+                  'int_dif_dn':dat[:,:,5].squeeze(),
+                  'int_dif_up':dat[:,:,6].squeeze()}
+    except:
+        output = {'wvl':dat[:,0,0].squeeze(),
+                  'zout':zout,
+                  'direct_down':dat[:,:,1].squeeze(),
+                  'diffuse_down':dat[:,:,2].squeeze(),
+                  'diffuse_up':dat[:,:,3].squeeze(),
+                  'int_tot':dat[:,:,4].squeeze()}
     if num_rad:
         output['rad'] = dat[:,:,10].squeeze()
         output['rad_avg'] = dat[:,:,9].squeeze()
