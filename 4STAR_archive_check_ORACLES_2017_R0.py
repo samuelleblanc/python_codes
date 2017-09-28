@@ -43,27 +43,28 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 days = ['20170809', '20170812','20170813','20170815','20170817','20170818','20170819','20170821'] #,'20170818','20170819']
 
 
-# In[105]:
+# In[5]:
 
 days = ['20170813','20170817']
 days = ['20170818','20170819']
 days = ['20170821']
 days = ['20170824','20170826']
 days = ['20170812']
-days = ['20170830','20170831','20170902']
+days = ['20170801','20170802','20170903','20170904']
+days = ['20170807']
 
 
-# In[106]:
+# In[6]:
 
 vv = 'R0'
 
 
-# In[107]:
+# In[7]:
 
 vi = ''
 
 
-# In[109]:
+# In[8]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -88,7 +89,7 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[110]:
+# In[9]:
 
 len(outaod_RA)
 
@@ -100,7 +101,7 @@ len(days)
 
 # ## Check the files for integrity and header info
 
-# In[123]:
+# In[11]:
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -111,7 +112,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 #            print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[11]:
+# In[12]:
 
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
 for i,d in enumerate(days):
@@ -121,34 +122,34 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[113]:
-
-outaod_head_RA[2]
-
-
 # In[13]:
+
+outaod_head_RA[0]
+
+
+# In[14]:
 
 outgas_head_RA[0]
 
 
 # ## Check the variables in header
 
-# In[114]:
+# In[15]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[115]:
+# In[16]:
 
 nm
 
 
-# In[116]:
+# In[17]:
 
 wl = nm[6:-1]
 
 
-# In[117]:
+# In[18]:
 
 wl = wl[0:24]
 
@@ -161,7 +162,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[118]:
+# In[19]:
 
 for a in wl:
     print a
@@ -169,7 +170,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[119]:
+# In[20]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -204,7 +205,7 @@ for i,d in enumerate(days):
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[120]:
+# In[21]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -233,12 +234,12 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_high_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[121]:
+# In[22]:
 
 wl[0:16]
 
 
-# In[122]:
+# In[23]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -268,7 +269,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_high_alt_AOD_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[128]:
+# In[24]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -300,12 +301,12 @@ for i,d in enumerate(days):
 
 # ## Plot the AOD with the uncertainty
 
-# In[129]:
+# In[25]:
 
 nm[30:46]
 
 
-# In[130]:
+# In[26]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -337,12 +338,12 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_uncert_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[126]:
+# In[27]:
 
 nm[46:]
 
 
-# In[127]:
+# In[28]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -374,12 +375,12 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_uncert_{vi}_{}_nir.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[75]:
+# In[29]:
 
 outaod_RA[i][unc][ii]
 
 
-# In[131]:
+# In[30]:
 
 nm[4]
 
@@ -393,17 +394,17 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[132]:
+# In[31]:
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[133]:
+# In[32]:
 
 wv
 
 
-# In[134]:
+# In[33]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(9,5))
@@ -484,7 +485,7 @@ days
 days[15]
 
 
-# In[136]:
+# In[34]:
 
 for i,d in enumerate(days):
     plt.figure()
@@ -498,14 +499,17 @@ for i,d in enumerate(days):
     plt.xlabel('AOD 500 nm')
     plt.ylabel('Altitude [m]')
     plt.title('AOD per altidude and longitude for {}'.format(d))
-    cb = plt.colorbar(b)
-    cb.set_label('Longitude [$\\circ$]')
+    try:
+        cb = plt.colorbar(b)
+        cb.set_label('Longitude [$\\circ$]')
+    except:
+        pass
     plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_{}_aod_alt_lon.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
 # ## Make plots of angstrom exponent
 
-# In[137]:
+# In[35]:
 
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
@@ -522,17 +526,17 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[138]:
+# In[36]:
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[139]:
+# In[37]:
 
 wls = np.array(wv)/1000.0
 
 
-# In[140]:
+# In[38]:
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -546,7 +550,7 @@ for i,d in enumerate(days):
     angarr.append(ang)
 
 
-# In[141]:
+# In[39]:
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
