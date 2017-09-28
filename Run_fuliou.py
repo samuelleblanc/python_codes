@@ -979,15 +979,23 @@ def run_fuliou_linux(i=0):
     from Run_fuliou import Prep_DARE_single_sol
     fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'
     ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
-          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
+          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183703_200122_x20080x2D120x2D15100x3A030x2CPoint0x2324367500x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183703_500_x20080x2D010x2D01200x3A240x2CPoint0x2366620x2F25645720x2CH0x3D8.mat']
     fname = fname + ff[i]
-    f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+    '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat'
+    cal = ['2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat',
+           '2008c_MDQA3p1240nm_OUV388SSAvH_CQACOD0.mat',
+           '2008c_MOQA123_OO388SSA_CQACOD0.mat',
+           '2008c_MOQA123_OO388SSA_CQACOD0.mat']
+    f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+cal[i]
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     fp_fuliou = '/u/sleblan2/fuliou/v20170324/fuliou'
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     
+    surf = ['land_MODIS','land_MODIS','ocean','ocean']
+    
     print 'Starting the prepr DARE single solx for fuliou for file: '+fname
-    Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type='land_MODIS',vv='v1')
+    Prep_DARE_single_sol(fname,f_calipso,fp_rtm,fp_fuliou,fp_alb=fp_alb,surface_type=surf[i],vv='v1')
 
 
 # In[1]:
@@ -996,7 +1004,9 @@ def read_fuliou_linux(i=0):
     from Run_fuliou import read_DARE_single_sol
     fname = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'
     ff = ['MOCsolutions20150508T183717_19374_x20080x2D070x2D11120x3A250x2CPoint0x2313387030x2F25645720x2CH0x.mat',
-          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat']
+          'MOCsolutions20150508T183717_22135_x20080x2D080x2D10170x3A320x2CPoint0x2315421760x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183703_200122_x20080x2D120x2D15100x3A030x2CPoint0x2324367500x2F25645720x2CH0x.mat',
+          'MOCsolutions20150508T183703_500_x20080x2D010x2D01200x3A240x2CPoint0x2366620x2F25645720x2CH0x3D8.mat']
     fname = fname + ff[i]
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
     
