@@ -45,19 +45,19 @@ fname = 'Hskping_P3_20170809_R0.ict'
 f = fp+'data_other_2017/'+fname
 
 
-# In[11]:
+# In[7]:
 
 h = load_ict(f)
 
 
-# In[14]:
+# In[8]:
 
 h.dtype.names
 
 
 # # Plot out some figures of altitudes and lat lon
 
-# In[19]:
+# In[10]:
 
 plt.figure()
 plt.plot(h['Start_UTC'],h['MSL_GPS_Altitude'])
@@ -65,6 +65,22 @@ plt.xlabel('UTC [h]')
 plt.ylabel('GPS Altitude [m]')
 plt.title('PRF00Y17')
 plt.savefig(fp+'plot/2017/20170809_PRF00Y17_alt.png',dpi=600,transparent=True)
+
+
+# In[18]:
+
+plt.figure()
+plt.plot(h['Longitude'],h['MSL_GPS_Altitude'],lw=0.01)
+sc = plt.scatter(h['Longitude'],h['MSL_GPS_Altitude'],c=h['Start_UTC'],marker='o',edgecolor='None')
+plt.ylim(0,6000)
+plt.xlim(-15,8)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('GPS Altitude [m]')
+plt.title('PRF00Y17')
+
+cb = plt.colorbar(sc)
+cb.set_label('UTC [H]')
+plt.savefig(fp+'plot/2017/20170809_PRF00Y17_alt_lon.png',dpi=600,transparent=True)
 
 
 # In[47]:

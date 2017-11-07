@@ -44,7 +44,7 @@
 
 # # Import the required python modules and set paths
 
-# In[145]:
+# In[32]:
 
 import scipy.io as sio
 import numpy as np
@@ -53,17 +53,22 @@ import matplotlib as mpl
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[2]:
+# In[33]:
 
 import load_utils as lu
 
 
-# In[3]:
+# In[34]:
 
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other\\'
 
 
-# In[63]:
+# In[35]:
+
+fp2 = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other_2017\\'
+
+
+# In[36]:
 
 def nat_sort(l):
     n = max([len(j) for j in l])+1
@@ -189,6 +194,64 @@ b['aod'] = np.array(baod)
 # In[91]:
 
 b['aod'].shape
+
+
+# ## Load the file for Sao Tomé
+
+# In[44]:
+
+c = lu.load_aeronet(fp2+'170801_170930_Sao_Tome.lev10',version=2)
+
+
+# In[45]:
+
+c.keys()
+
+
+# In[46]:
+
+from datetime import datetime, timedelta
+
+
+# In[47]:
+
+list(c['Julian_Day'])
+
+
+# In[48]:
+
+dt = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(c['Julian_Day'])]
+
+
+# In[49]:
+
+plt.figure()
+plt.plot(dt,c['AOT_500'],'.')
+plt.grid()
+
+
+# ## Load the Ascension island aeronet data (from the airport)
+
+# In[50]:
+
+d = lu.load_aeronet(fp2+'170801_170930_Ascension_Island.lev15',version=2)
+
+
+# In[51]:
+
+d['dt'] = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(d['Julian_Day'])]
+
+
+# In[53]:
+
+plt.figure()
+plt.plot(d['dt'],d['AOT_500'],'.')
+plt.grid()
+
+
+# In[ ]:
+
+
 
 
 # # Plot out the AOD spectra for each point
