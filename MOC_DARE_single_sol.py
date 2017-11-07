@@ -376,7 +376,7 @@ plt.savefig(fp+'plot\\DARE_s0s0s0_vs_mean_reldiff.png',dpi=600,transparent=True)
 # In[30]:
 
 fig,ax = plt.subplots(1,3,figsize=(12,5))
-get_ipython().magic(u"ax [0].plot(toa_mean,toa_arr_sel['s0s0s0'],'x')")
+ax[0].plot(toa_mean,toa_arr_sel['s0s0s0'],'x')
 cs = cm.hsv(np.arange(len(nums))/float(len(nums)))
 for i,n in enumerate(nums):
     ax[0].plot(toa_mean[i],(toa_arr_sel['s0s0s0'][i]-toa_mean[i]),'o',markersize=10,
