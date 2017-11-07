@@ -989,7 +989,7 @@ def run_fuliou_linux(i=0):
            '2008c_MOQA123_OO388SSA_CQACOD0.mat']
     f_calipso = '/nobackup/sleblan2/MOCfolder/moc_single_solution/'+cal[i]
     fp_rtm = '/nobackup/sleblan2/MOCfolder/'
-    fp_fuliou = '/u/sleblan2/fuliou/v20170324/fuliou'
+    fp_fuliou = '/u/sleblan2/fuliou/v20171003/fuliou'
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     
     surf = ['land_MODIS','land_MODIS','ocean','ocean']

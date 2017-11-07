@@ -635,7 +635,7 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     wvl = moms_dict['wvl']
     if wvl[0]<1:
         wvl = wvl*1000.0
-        
+    nm = moms_dict.get('max_nmoms',-1)
     if moms_dict.get('max_nmoms',False):
         nmom = moms_dict['nmom'][ir,:]*0+nm
     else:
