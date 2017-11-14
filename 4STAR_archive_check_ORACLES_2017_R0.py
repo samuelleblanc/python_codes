@@ -38,9 +38,11 @@ fp ='C:/Users/sleblan2/Research/ORACLES/'
 
 # # load the files
 
-# In[5]:
+# In[165]:
 
-days = ['20170809', '20170812','20170813','20170815','20170817','20170818','20170819','20170821'] #,'20170818','20170819']
+days = ['20170809', '20170812','20170813',
+        '20170815','20170817','20170818','20170819','20170821',
+        '20170824','20170826','20170828','20170830','20170831','20170902'] #,'20170818','20170819']
 
 
 # In[5]:
@@ -64,7 +66,7 @@ vv = 'R0'
 vi = ''
 
 
-# In[8]:
+# In[166]:
 
 outaod_RA = []
 outaod_head_RA = []
@@ -89,12 +91,12 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[9]:
+# In[167]:
 
 len(outaod_RA)
 
 
-# In[10]:
+# In[168]:
 
 len(days)
 
@@ -122,7 +124,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[13]:
+# In[12]:
 
 outaod_head_RA[0]
 
@@ -134,22 +136,22 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[15]:
+# In[169]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[16]:
+# In[170]:
 
 nm
 
 
-# In[17]:
+# In[15]:
 
 wl = nm[6:-1]
 
 
-# In[18]:
+# In[16]:
 
 wl = wl[0:24]
 
@@ -162,7 +164,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[19]:
+# In[17]:
 
 for a in wl:
     print a
@@ -394,12 +396,12 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[31]:
+# In[18]:
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[32]:
+# In[19]:
 
 wv
 
@@ -454,7 +456,7 @@ ax[0].set_ylim(0,15)
 fig.show()
 
 
-# In[82]:
+# In[20]:
 
 nm
 
@@ -475,7 +477,7 @@ plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,tr
 
 # ### Special plotting of AOD per altitude and latitude
 
-# In[135]:
+# In[21]:
 
 days
 
@@ -509,7 +511,7 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[35]:
+# In[22]:
 
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
@@ -526,17 +528,17 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[36]:
+# In[23]:
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[37]:
+# In[24]:
 
 wls = np.array(wv)/1000.0
 
 
-# In[38]:
+# In[25]:
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -580,19 +582,19 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[142]:
+# In[171]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[143]:
+# In[172]:
 
 ar['days'] = np.array([])
 
 
-# In[144]:
+# In[173]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -600,93 +602,118 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[145]:
+# In[174]:
 
 ar['GPS_Alt'].shape
 
 
-# In[95]:
+# In[175]:
 
 ar.keys()
 
 
 # ## filter for low altitudes
 
-# In[146]:
+# In[176]:
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[147]:
+# In[177]:
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[148]:
+# In[178]:
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[149]:
+# In[179]:
+
+ar['fl_alt_22'] = (ar['GPS_Alt']<=2200) & (ar['GPS_Alt']>=800)
+
+
+# In[180]:
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[150]:
+# In[181]:
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[151]:
+# In[182]:
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[152]:
+# In[183]:
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
+# In[184]:
+
+ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
+
+
+# In[187]:
+
+ar['fl_routine'] = (ar['days']==1.0)|(ar['days']==3.0)|(ar['days']==8.0)|(ar['days']==10.0)|(ar['days']==11.0)
+
+
+# In[194]:
+
+ar['flr'] = ar['fl_routine'] & ar['fl_QA'] & ar['fl_alt']
+
+
 # ## save to file
 
-# In[52]:
+# In[189]:
 
 import hdf5storage as hs
 
 
-# In[53]:
+# In[195]:
 
-hs.savemat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv),ar)
+hs.savemat(fp+'/aod_ict_2017/{vv}/all_aod_ict_{vv}_2017.mat'.format(vv=vv),ar)
 
 
 # ## Optionally load the file
 
-# In[1]:
+# In[40]:
 
 import hdf5storage as hs
 
 
-# In[8]:
+# In[41]:
 
-ar = hs.loadmat(fp+'/aod_ict/all_aod_ict.mat')
+ar = hs.loadmat(fp+'/aod_ict_2017/all_aod_ict_2017.mat')
 
 
 # ## Plot a histogram of all the AOD
 
-# In[153]:
+# In[78]:
 
 from plotting_utils import prelim
 
 
-# In[154]:
+# In[198]:
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
 plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
+plt.hist(ar['AOD0501'][ar['flr']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='y',label='Routine only')
 #plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='above 1800 m')
 #plt.yscale('log')
-plt.axvline(x=np.nanmean(ar['AOD0501'][ar['fl']]),ls='-',color='r',lw=2.5,label='Mean')
+plt.axvline(x=np.nanmean(ar['AOD0501'][ar['fl']]),ls='-',color='g',lw=2.5,label='Mean')
 plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['fl']]),ls='--',color='grey',label='Median')
+
+plt.axvline(x=np.nanmean(ar['AOD0501'][ar['flr']]),ls='-',color='y',lw=2.5)
+plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['flr']]),ls='--',color='darkkhaki')
+
 plt.xlabel('AOD at 501 nm')
 plt.ylabel('Counts')
 plt.grid()
@@ -694,6 +721,65 @@ plt.title('Above clouds AOD distribution cloud filtered for 2017')
 prelim()
 plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[200]:
+
+np.nanmean(ar['AOD0501'][ar['flr']])
+
+
+# In[85]:
+
+from plotting_utils import make_boxplot
+
+
+# In[192]:
+
+lim = np.linspace(-15,7,12)
+pos = np.array([(l+lim[i+1])/2.0 for i,l in enumerate(lim[0:-1])])
+
+
+# In[193]:
+
+plt.figure()
+plt.plot(ar['Longitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,markersize=0.4,label='All data')
+plt.xlim([-15,7])
+make_boxplot(ar['AOD0501'][ar['fl']],ar['Longitude'][ar['fl']],lim,pos,color='blue',label='Statistics',fliers_off=True)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('4STAR AOD at 501 nm between 600 - 1800 m')
+plt.grid()
+plt.xlim([-15,7])
+plt.legend(frameon=False,numpoints=1,loc=2)
+prelim()
+
+plt.title('ORACLES 2017 above cloud AOD')
+plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_longitude.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[205]:
+
+lima = np.linspace(-15,0,11)
+posa = np.array([(l+lima[i+1])/2.0 for i,l in enumerate(lima[0:-1])])
+plt.figure()
+plt.plot(ar['Latitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,markersize=0.4,label='All data')
+plt.xlim([-15,1])
+make_boxplot(ar['AOD0501'][ar['fl']],ar['Latitude'][ar['fl']],lima,posa,color='blue',label='Statistics',fliers_off=True)
+
+plt.plot(ar['Latitude'][ar['flr']],ar['AOD0501'][ar['flr']],'.',color='lightyellow',alpha=0.5,markersize=0.4,
+         label='Routine flights')
+plt.xlim([-15,1])
+make_boxplot(ar['AOD0501'][ar['flr']],ar['Latitude'][ar['flr']],lima,posa,color='yellow',label='Statistics for routine',
+             fliers_off=True)
+
+plt.xlabel('Latitude [$^\\circ$]')
+plt.ylabel('4STAR AOD at 501 nm between 600 - 1800 m')
+plt.grid()
+plt.xlim([-15,1])
+plt.legend(frameon=False,numpoints=1,loc=1)
+prelim()
+
+plt.title('ORACLES 2017 above cloud AOD')
+plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_latitude.png'.format(vv=vv),dpi=600,transparent=True)
 
 
 # In[155]:
@@ -715,17 +801,12 @@ plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram_nox.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[37]:
+# In[45]:
 
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
-# In[ ]:
-
-
-
-
-# In[156]:
+# In[46]:
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
@@ -743,7 +824,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[157]:
+# In[47]:
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='grey',cumulative=True)
@@ -753,17 +834,17 @@ plt.title('Above clouds AOD distribution [600-1800 m, cloud filtered]')
 plt.savefig(fp+'aod_ict/{vv}_AOD_histogram_cum.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[158]:
+# In[48]:
 
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
-# In[159]:
+# In[49]:
 
 np.nanmedian(ar['AOD0501'][ar['fl']])
 
 
-# In[160]:
+# In[50]:
 
 np.nanstd(ar['AOD0501'][ar['fl']])
 
@@ -790,6 +871,122 @@ plt.title('Above clouds airmass distribution')
 plt.legend(frameon=False)
 plt.gca().set_yscale('log')
 plt.savefig(fp+'aod_ict/{vv}/{vv}_Airmass_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# ## Make histogram and compare to 2016
+
+# ### Load 2016
+
+# In[117]:
+
+ar_1 = hs.loadmat(fp+'/aod_ict/R2/all_aod_ict_R2.mat')
+
+
+# ### Plot the histogram comparisons
+
+# In[144]:
+
+len(ar['AOD0501'][ar['fl']]), len(ar_1['AOD0501'][ar_1['fl']])
+
+
+# In[145]:
+
+np.nanmean(ar['AOD0501'][ar['fl']]),np.nanmean(ar_1['AOD0501'][ar_1['fl']])
+
+
+# In[152]:
+
+plt.figure()
+plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='b',label='2017')
+plt.hist(ar_1['AOD0501'][ar_1['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='r',label='2016')
+#plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
+#plt.hist(ar['AOD0501'][ar['fl3']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='y',label='800-2200 m')
+#plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='above 1800 m')
+#plt.yscale('log')
+plt.axvline(x=np.nanmean(ar['AOD0501'][ar['fl']]),ls='-',color='k',lw=2.5,label='Mean')
+plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['fl']]),ls='--',color='k',label='Median')
+plt.axvline(x=np.nanmean(ar['AOD0501'][ar['fl']]),ls='-',color='b',lw=2.5)
+plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['fl']]),ls='--',color='b')
+
+plt.axvline(x=np.nanmean(ar_1['AOD0501'][ar_1['fl']]),ls='-',color='r',lw=2.5)
+plt.axvline(x=np.nanmedian(ar_1['AOD0501'][ar_1['fl']]),ls='--',color='coral')
+
+plt.xlabel('AOD at 501 nm between 600 - 1800 m')
+plt.ylabel('Normalized Counts')
+plt.grid()
+plt.title('Above clouds AOD distribution cloud filtered')
+prelim()
+plt.legend(frameon=False)
+plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_normed_histogram_2017_vs_2016.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[153]:
+
+ar.keys()
+
+
+# ### Plot the longitudinal dependence of 2017 vs 2016
+
+# In[133]:
+
+lim2 = np.linspace(-15,15,16)
+pos2 = np.array([(l+lim2[i+1])/2.0 for i,l in enumerate(lim2[0:-1])])
+
+
+# In[142]:
+
+plt.figure()
+plt.plot(ar['Longitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,
+         markersize=0.4,label='All 2017 data')
+plt.xlim([-15,15])
+make_boxplot(ar['AOD0501'][ar['fl']],ar['Longitude'][ar['fl']],lim,pos,color='blue',label='2017 Statistics',fliers_off=True)
+plt.plot(ar_1['Longitude'][ar_1['fl']],ar_1['AOD0501'][ar_1['fl']],'.',color='lightcoral',alpha=0.5,
+         markersize=0.4,label='All 2016 data')
+make_boxplot(ar_1['AOD0501'][ar_1['fl']],ar_1['Longitude'][ar_1['fl']],lim2,pos2,color='red',
+             label='20167 Statistics',fliers_off=True)
+
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('4STAR AOD at 501 nm between 600 - 1800 m')
+plt.grid()
+plt.xlim([-15,15])
+plt.legend(frameon=False,numpoints=1,loc=2)
+prelim()
+
+plt.title('ORACLES above cloud AOD')
+plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_longitude_2016_vs_2017.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[210]:
+
+lima = np.linspace(-15,0,13)
+posa = np.array([(l+lima[i+1])/2.0 for i,l in enumerate(lima[0:-1])])
+plt.figure()
+plt.plot(ar['Latitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,
+         markersize=0.4,label='All 2017 data')
+plt.xlim([-22,0])
+make_boxplot(ar['AOD0501'][ar['fl']],ar['Latitude'][ar['fl']],lima,posa,color='blue',label='2017 Statistics',fliers_off=True)
+plt.plot(ar['Latitude'][ar['flr']],ar['AOD0501'][ar['flr']],'.',color='lightyellow',alpha=0.5,
+         markersize=0.4,label='Routine 2017')
+make_boxplot(ar['AOD0501'][ar['flr']],ar['Latitude'][ar['flr']],lima,posa,color='yellow',label='2017 Routine Statistics',
+             fliers_off=True)
+
+
+lim2a = np.linspace(-22,-7,13)
+pos2a = np.array([(l+lim2a[i+1])/2.0 for i,l in enumerate(lim2a[0:-1])])
+plt.plot(ar_1['Latitude'][ar_1['fl']],ar_1['AOD0501'][ar_1['fl']],'.',color='lightcoral',alpha=0.5,
+         markersize=0.4,label='All 2016 data')
+make_boxplot(ar_1['AOD0501'][ar_1['fl']],ar_1['Latitude'][ar_1['fl']],lim2a,pos2a,color='red',
+             label='2016 Statistics',fliers_off=True)
+
+plt.xlabel('Latitude [$^\\circ$]')
+plt.ylabel('4STAR AOD at 501 nm between 600 - 1800 m')
+plt.grid()
+plt.xlim([-22,0])
+plt.legend(frameon=False,numpoints=1,loc=2)
+prelim()
+
+plt.title('ORACLES above cloud AOD')
+plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_latitude_2016_vs_2017.png'.format(vv=vv),dpi=600,transparent=True)
 
 
 # # Make histogram for each flight 

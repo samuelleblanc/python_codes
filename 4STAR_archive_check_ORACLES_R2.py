@@ -67,7 +67,7 @@ days = ['20160831']
 
 # In[6]:
 
-vv = 'R1'
+vv = 'R2'
 
 
 # In[7]:
@@ -145,12 +145,12 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[10]:
+# In[11]:
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[11]:
+# In[12]:
 
 nm
 
@@ -588,19 +588,19 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[17]:
+# In[13]:
 
 ar = {}
 for n in nm:
     ar[n] = np.array([])
 
 
-# In[18]:
+# In[14]:
 
 ar['days'] = np.array([])
 
 
-# In[19]:
+# In[15]:
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -608,61 +608,61 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[20]:
+# In[16]:
 
 ar['GPS_Alt'].shape
 
 
-# In[21]:
+# In[17]:
 
 ar.keys()
 
 
 # ## filter for low altitudes
 
-# In[22]:
+# In[18]:
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[23]:
+# In[19]:
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[24]:
+# In[20]:
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[25]:
+# In[21]:
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[26]:
+# In[22]:
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[27]:
+# In[23]:
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[28]:
+# In[24]:
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
 # ## save to file
 
-# In[52]:
+# In[25]:
 
 import hdf5storage as hs
 
 
-# In[53]:
+# In[26]:
 
 hs.savemat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv),ar)
 
