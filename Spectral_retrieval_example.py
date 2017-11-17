@@ -51,11 +51,12 @@
 
 # # Initial Imports and default folders
 
-# In[1]:
+# In[5]:
+
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+#matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
@@ -69,105 +70,153 @@ from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 import cPickle as pickle
 get_ipython().magic(u'matplotlib notebook')
+from path_utils import getpath
 
 
 # In[4]:
 
+
 # set the basic directory path
-fp='C:/Users/sleblan2/Research/cloud_retrieval/'
-fp_in = 'C:/Users/sleblan2/Research/SEAC4RS/'
+#fp='C:/Users/sleblan2/Research/cloud_retrieval/'
+#fp_in = 'C:/Users/sleblan2/Research/SEAC4RS/'
+
+
+# In[34]:
+
+
+fp = getpath('cloud_retrieval',make_path=True,verbose=True)
+fp_in = getpath('SEAC4RS',make_path=True,verbose=True)
 
 
 # # Load data and models
 
 # ## Load the modeled radiance and irradiance data and run the parameters
 
-# In[106]:
+# In[35]:
+
 
 vv = 'v2'
-s = sio.idl.readsav(fp_in+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
+s = sio.idl.readsav(fp_in+'model/sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[6]:
+# In[36]:
+
 
 s.keys()
 
 
-# In[122]:
+# In[37]:
+
 
 s['sp'].shape
 
 
-# In[124]:
+# In[38]:
+
 
 np.any(np.isfinite(s['sp'][1,:,1,:,:]))
 
 
-# In[107]:
+# In[39]:
+
 
 # create custom key for sorting via wavelength
 iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[108]:
+# In[40]:
+
 
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
 
 
-# In[109]:
+# In[41]:
+
 
 lut.sp_hires()
 
 
-# In[110]:
+# In[42]:
+
 
 lut.sp_hires(doirrad=True)
 
 
 # ## Load the measured 4STAR data
 
-# In[22]:
+# In[44]:
+
+
+import os
+
+
+# In[45]:
+
+
+os.path.isfile(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
+
+
+# In[46]:
+
 
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
 mea.keys()
 
 
-# In[23]:
+# In[47]:
+
 
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[24]:
+# In[48]:
+
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
+
+
+# In[58]:
+
+
+meas = Sp.Sp(mea)
+
+
+# In[59]:
+
+
+meas.sp
 
 
 # # Plot the various modeled and measured data
 
 # ## First plot the spectra of reflected light and transmitted light
 
-# In[27]:
+# In[49]:
+
 
 lut.sp.shape
 
 
-# In[32]:
+# In[50]:
+
 
 lut.ref
 
 
-# In[33]:
+# In[51]:
+
 
 lut.tau
 
 
-# In[73]:
+# In[52]:
+
 
 t1,t2 = 7,22 
 r1,r2 = 8,8
@@ -199,7 +248,8 @@ plt.savefig(fp+'plots/Refl_Trans_spectra.png',transparent=True,dpi=600)
 
 # ### Add the measurements
 
-# In[ ]:
+# In[53]:
+
 
 t1,t2 = 7,22 
 r1,r2 = 8,8
@@ -229,9 +279,43 @@ ax2.set_xlim([350,1700])
 plt.savefig(fp+'plots/Refl_Trans_spectra_meas.png',transparent=True,dpi=600)
 
 
+# In[67]:
+
+
+t1,t2 = 7,22 
+r1,r2 = 8,8
+fig = plt.figure()
+ax1 = plt.subplot(211)
+ax1.plot(lut.wvl,lut.reflect[1,:,1,r1,t1]*lut.sp_irrdn[1,:,1,r1,t1],'r',lw=3,
+         label='$\\tau$={tau}, r$_e$={ref} $\\mu$m'.format(tau=lut.tau[t1],ref=lut.ref[r1]))
+ax1.plot(lut.wvl,lut.reflect[1,:,1,r2,t2]*lut.sp_irrdn[1,:,1,r1,t1],'b',lw=3,
+         label='$\\tau$={tau}, r$_e$={ref} $\\mu$m'.format(tau=lut.tau[t2],ref=lut.ref[r2]))
+
+ax1.set_title('Reflected Irradiance',fontsize=16)
+ax1.set_ylabel('Irradiance [W/m$^{2}$/nm]')
+
+plt.legend(frameon=False)
+
+ax2 = plt.subplot(212,sharex=ax1)
+ax2.plot(lut.wvl,lut.sp[1,:,0,r1,t1],'r',lw=3,
+         label='$\\tau$={tau}, r$_e$={ref} $\\mu$m'.format(tau=lut.tau[t1],ref=lut.ref[r1]))
+ax2.plot(lut.wvl,lut.sp[1,:,0,r2,t2],'b',lw=3,
+         label='$\\tau$={tau}, r$_e$={ref} $\\mu$m'.format(tau=lut.tau[t2],ref=lut.ref[r2]))
+
+ax2.plot(meas.wvl,meas.sp[100,:]/1000.0,'k.',lw=3)
+
+ax2.text(1050,0.8*ax2.get_ybound()[1],'Transmitted Radiance (zenith)',fontsize=16,horizontalalignment='center')
+ax2.set_ylabel('Radiance [[W/m$^{2}$/nm/sr]')
+ax2.set_xlabel('Wavelength [nm]')
+ax2.set_xlim([350,1700])
+
+#plt.savefig(fp+'plots/Refl_Trans_spectra_meas.png',transparent=True,dpi=600)
+
+
 # ## Now plot the reflected light and transmitted light as a function of tau
 
 # In[81]:
+
 
 i500 = np.argmin(abs(lut.wvl-500.0))
 i1650 = np.argmin(abs(lut.wvl-1650.0))
@@ -263,7 +347,8 @@ plt.savefig(fp+'plots/Refl_Trans_cod.png',transparent=True,dpi=600)
 
 # ## Now plot the lut of reflected and transmitted light
 
-# In[82]:
+# In[56]:
+
 
 w500 = np.argmin(abs(lut.wvl-500.0))
 w750 = np.argmin(abs(lut.wvl-742.0))
@@ -273,6 +358,7 @@ w1250 = np.argmin(abs(lut.wvl-1250.0))
 
 
 # In[191]:
+
 
 plt.figure(figsize=(8,3))
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -297,7 +383,8 @@ plt.ylim([0.25,0.8])
 plt.savefig(fp+'plots/Reflectance_lut_ice_1650nm.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[132]:
+# In[54]:
+
 
 lut.trans = np.zeros_like(lut.sp)
 for i in [0,1]:
@@ -307,13 +394,15 @@ for i in [0,1]:
                 lut.trans[i,:,ip,ir,it] = lut.sp[i,:,ip,ir,it]/lut.sp_irrdn[1,:,1,6,0]
 
 
-# In[139]:
+# In[57]:
+
 
 plt.figure()
 plt.plot(lut.trans[1,w1650,0,:,:])
 
 
 # In[190]:
+
 
 plt.figure(figsize=(8,3))
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -343,21 +432,12 @@ plt.savefig(fp+'plots/transmittance_lut_ice_1650nm.png'.format(vv),dpi=600,trans
 
 # In[164]:
 
+
 lut.trans[1,w1650,0,3,0]
 
 
 # ## Movie of spectral changes in transmitted light and reflected light
 
-# In[ ]:
-
-
-
-
 # # Now modify measurement with an uncertainty and show results
 
 # ## Put on results of measured radiance and retrieved properties
-
-# In[ ]:
-
-
-
