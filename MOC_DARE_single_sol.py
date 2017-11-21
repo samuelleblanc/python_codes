@@ -47,6 +47,7 @@
 
 # In[1]:
 
+
 import scipy.io as sio
 import matplotlib.pyplot as plt
 get_ipython().magic(u'matplotlib notebook')
@@ -56,10 +57,12 @@ import numpy as np
 
 # In[2]:
 
+
 fp = 'C:\\Users\\sleblan2\\Research\\Calipso\\moc\\MOCsolutions_individual\\'
 
 
 # In[3]:
+
 
 vv = 'v1'
 
@@ -67,6 +70,7 @@ vv = 'v1'
 # # Prepare and load the single solution files
 
 # In[4]:
+
 
 nums = [19373,22134,200121,3000,499,53001,4200,19477,6367,918,18802,65533]
 labels = ['Sahara (Algeria)','Amazon','Indian Ocean (E of Africa)','South Pacific','Pacific Equator','South China Sea',
@@ -78,11 +82,13 @@ srf_str = ['ocean','land']
 
 # In[9]:
 
+
 # nums = [4201,19478,6368,919,18803,65534]
 # labels = ['Nigeria','Sahara','Bangladesh','South East Atlantic (Sao Tomé)','Bay of Bangal','East China Sea']
 
 
 # In[5]:
+
 
 so = []
 dftoa,dfsfc,dftoai,dfsfci = [],[],[],[]
@@ -92,6 +98,7 @@ ssa,ext,asy = [],[],[]
 
 
 # In[6]:
+
 
 for i,n in enumerate(nums):
     print 'MOC_1solx_DARE_{vv}_{num}.mat'.format(vv=vv,num=n)
@@ -126,6 +133,7 @@ for i,n in enumerate(nums):
 # ## Plot the SSA, ASY, and EXT for each pixel
 
 # In[7]:
+
 
 for i,n in enumerate(nums):
 
@@ -163,10 +171,12 @@ for i,n in enumerate(nums):
 
 # In[45]:
 
+
 sel_list = np.sort(toa_sel[0].keys()).astype(list)
 
 
 # In[9]:
+
 
 for i,n in enumerate(nums):
 
@@ -208,6 +218,7 @@ for i,n in enumerate(nums):
 
 # In[10]:
 
+
 for i,n in enumerate(nums):
 
     form = {'num':n,'surf':srf_str[surf[i]],'lbl':labels[i],'aod':aods_calipso[i]}
@@ -248,6 +259,7 @@ for i,n in enumerate(nums):
 
 # In[92]:
 
+
 toa_mean,sfc_mean = [],[]
 toa_median,sfc_median = [],[]
 toa_pstd,sfc_pstd,toa_mstd,sfc_mstd = [],[],[],[]
@@ -258,6 +270,7 @@ sfc_arr_sel = {u:[] for u in toa_sel[0].keys()}
 
 
 # In[93]:
+
 
 for i,n in enumerate(nums):
     toa_mean.append(np.mean(dftoa[i]))
@@ -279,6 +292,7 @@ for i,n in enumerate(nums):
 
 # In[94]:
 
+
 toa_arr_sel['spec_avg'] = []
 toa_arr_sel['spec_std'] = []
 sfc_arr_sel['spec_avg'] = []
@@ -286,6 +300,7 @@ sfc_arr_sel['spec_std'] = []
 
 
 # In[95]:
+
 
 for i,n in enumerate(nums):
     tu = []
@@ -301,6 +316,7 @@ for i,n in enumerate(nums):
 
 # In[96]:
 
+
 for n in toa_arr_sel.keys():
     toa_arr_sel[n] = np.array(toa_arr_sel[n])
     sfc_arr_sel[n] = np.array(sfc_arr_sel[n])
@@ -309,6 +325,7 @@ for n in toa_arr_sel.keys():
 # ## Plot the s0s0s0 values compared to mean DARE
 
 # In[9]:
+
 
 fig,ax = plt.subplots(1,3,figsize=(12,5))
 ax[0].plot(toa_mean,toa_arr_sel['s0s0s0'],'x')
@@ -344,6 +361,7 @@ plt.savefig(fp+'plot\\DARE_s0s0s0_vs_mean.png',dpi=600,transparent=True)
 
 # In[10]:
 
+
 fig,ax = plt.subplots(1,3,figsize=(12,5))
 get_ipython().magic(u"ax [0].plot(toa_mean,toa_arr_sel['s0s0s0'],'x')")
 cs = cm.hsv(np.arange(len(nums))/float(len(nums)))
@@ -374,6 +392,7 @@ plt.savefig(fp+'plot\\DARE_s0s0s0_vs_mean_reldiff.png',dpi=600,transparent=True)
 
 
 # In[30]:
+
 
 fig,ax = plt.subplots(1,3,figsize=(12,5))
 ax[0].plot(toa_mean,toa_arr_sel['s0s0s0'],'x')
@@ -407,6 +426,7 @@ plt.savefig(fp+'plot\\DARE_s0s0s0_vs_mean_diff.png',dpi=600,transparent=True)
 # ## Compare the DARE + standard deviation to selected solutions to DARE
 
 # In[46]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,9))
 ax = ax.ravel()
@@ -444,6 +464,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_pstd.png',dpi=600,transparent=True)
 
 
 # In[62]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,9))
 ax = ax.ravel()
@@ -490,6 +511,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_pstd_reldiff.png',dpi=600,transparent=Tru
 
 
 # In[68]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,9))
 ax = ax.ravel()
@@ -539,6 +561,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_pstd_reldiff_zoom.png',dpi=600,transparen
 
 # In[67]:
 
+
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
 #ax[0].plot(toa_pstd,toa_arr_sel['s0s0s0'],'x')
@@ -586,6 +609,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_pstd_diff.png',dpi=600,transparent=True)
 
 # In[71]:
 
+
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
 ax[0].plot(toa_pstd,toa_arr_sel['s0s0s0'],'x')
@@ -621,6 +645,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_mstd.png',dpi=600,transparent=True)
 
 
 # In[79]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
@@ -665,6 +690,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_mstd_reldiff.png',dpi=600,transparent=Tru
 
 
 # In[80]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
@@ -711,6 +737,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_mstd_reldiff_zoom.png',dpi=600,transparen
 
 
 # In[83]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
@@ -759,6 +786,7 @@ plt.savefig(fp+'plot\\DARE_selected_vs_mstd_diff.png',dpi=600,transparent=True)
 
 # In[111]:
 
+
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
 cs = cm.hsv(np.arange(len(sel_list))/float(len(sel_list)))
@@ -800,6 +828,7 @@ plt.savefig(fp+'plot\\stdDARE_selected_vs_std.png',dpi=600,transparent=True)
 
 
 # In[110]:
+
 
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
@@ -844,6 +873,7 @@ plt.savefig(fp+'plot\\stdDARE_selected_vs_std_reldiff.png',dpi=600,transparent=T
 
 # In[109]:
 
+
 fig,ax = plt.subplots(2,2,figsize=(12,8))
 ax = ax.ravel()
 cs = cm.hsv(np.arange(len(sel_list))/float(len(sel_list)))
@@ -883,9 +913,4 @@ ax[2].set_visible(False)
 ax[3].set_visible(False)
 
 plt.savefig(fp+'plot\\stdDARE_selected_vs_std_diff.png',dpi=600,transparent=True)
-
-
-# In[ ]:
-
-
 

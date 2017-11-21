@@ -49,6 +49,7 @@
 
 # In[66]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -58,10 +59,12 @@ reload(RL)
 
 # In[ ]:
 
+
 from load_utils import load_from_json
 
 
 # In[68]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
@@ -81,6 +84,7 @@ else:
 
 # In[84]:
 
+
 vv = 'v4'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
@@ -88,12 +92,14 @@ mu.shape
 
 # In[139]:
 
+
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
 #sza = np.arange(40,91,5)
 print(sza)
 
 
 # In[108]:
+
 
 tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
        6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,25.0,30.0,35.0,40.0,50.0,
@@ -103,10 +109,12 @@ ref = np.append(np.append(np.arange(1,15),np.arange(15,30,2)),np.ceil(np.arange(
 
 # In[109]:
 
+
 ref
 
 
 # In[112]:
+
 
 print(ref.shape)
 print(tau.shape)
@@ -114,15 +122,18 @@ print(tau.shape)
 
 # In[ ]:
 
+
 pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
 
 
 # In[ ]:
 
+
 aero = load_from_json(fp+'aero_save.txt')
 
 
 # In[70]:
+
 
 geo = {'lat':-22.979,
        'lon':14.645,
@@ -153,11 +164,13 @@ albedo = {'create_albedo_file':False,
 
 # In[60]:
 
+
 RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
 
 
 # In[71]:
+
 
 fp_in = os.path.join(fp_rtm,'input','%s_ORACLES'%vv)
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
@@ -165,11 +178,13 @@ fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 # In[82]:
 
+
 f_slit_vis = os.path.join(fp_rtm,'4STAR_vis_slit_1nm.dat')
 f_slit_nir = os.path.join(fp_rtm,'4STAR_nir_slit_1nm.dat')
 
 
 # In[72]:
+
 
 if not os.path.exists(fp_in):
     os.makedirs(fp_in)
@@ -179,11 +194,13 @@ if not os.path.exists(fp_out):
 
 # In[79]:
 
+
 f_list = open(os.path.join(fp,'run','ORACLES_list_%s.sh'%vv),'w')
 print f_list.name
 
 
 # In[ ]:
+
 
 for s in sza:
     for t in tau:
@@ -224,6 +241,7 @@ for s in sza:
 
 
 # In[ ]:
+
 
 f_list.close()
 

@@ -1,6 +1,8 @@
 
 # coding: utf-8
 
+# # Intro
+# 
 # Name:  
 # 
 #     load_model_sp_params
@@ -55,7 +57,10 @@
 #   - sp_v1_20130219_4STAR.out : modeled spectra output for TCAP in idl save file
 #   - 20130219starzen_rad.mat : special zenith radiance 4star matlab file 
 
+# # Load the modules and set up the paths
+
 # In[ ]:
+
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -77,17 +82,22 @@ import Sp_parameters as Sp
 
 # In[ ]:
 
+
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
 # In[ ]:
 
+
 # set the basic directory path
 fp='C:\\Users\\sleblan2\\Research\\TCAP\\'
 
 
+# # Load the files
+
 # In[4]:
+
 
 # load the idl save file containing the modeled radiances
 s=sio.idl.readsav(fp+'model/sp_v1_20130219_4STAR.out')
@@ -100,6 +110,7 @@ s.wv = np.sort(s.zenlambda)
 
 
 # In[5]:
+
 
 # load the matlab file containing the measured TCAP radiances
 m = sio.loadmat(fp+'4STAR/20130219starzen_rad.mat')
@@ -116,6 +127,7 @@ print sm.good.shape, sm.good.max()
 
 # In[6]:
 
+
 from Sp_parameters import nanmasked, closestindex, norm2max
     
 time_ref=17.22
@@ -126,6 +138,7 @@ rad,mask = nanmasked(sm.rad[sm.good[ii],:])
 # #### Plotting functions defined
 
 # In[9]:
+
 
 # set up plotting of a few of the zenith radiance spectra
 def pltzen(fig=None,ax=None, tit='Zenith spectra'):
@@ -226,12 +239,14 @@ def plot_greys(fig=None,ax=None):
 
 # In[9]:
 
+
 fig,ax=pltzen()
 
 
 # Next figure with modeled spectra
 
 # In[10]:
+
 
 # now go through and add the different modeled spectra
 fig,ax=pltzen()
@@ -257,6 +272,7 @@ pltzen(fig,ax)
 
 # In[13]:
 
+
 fig,ax = norm(dolegend=False)
 plt.axvspan(350,1700,color='#FFFFFF')
 ax.text(600,0.19/0.22,'4STAR Measurement')
@@ -264,6 +280,7 @@ plt.savefig(fp+'plots/zen_spectra_nomodel.png',dpi=600,transparent=True)
 
 
 # In[11]:
+
 
 fig,ax=norm()
 lines = [('Liquid Cloud Model, $\\tau$=0.5','Reds',0,[0,13],1,[420,0.01]),
@@ -286,10 +303,12 @@ plt.savefig(fp+'plots/zen_spectra_model.png',dpi=600,transparent=True)
 
 # In[17]:
 
+
 fp
 
 
 # In[16]:
+
 
 fig,ax=norm()
 fig.set_figheight(5)
@@ -313,10 +332,12 @@ plt.savefig(fp+'plots/zen_spectra_model_squeeze.png',dpi=600,transparent=True)
 
 # In[12]:
 
+
 map(lambda x:x*x,[-1,1,24])
 
 
 # In[13]:
+
 
 reload(Sp)
 if 'meas' in locals():
@@ -326,6 +347,7 @@ if 'meas' in locals():
 
 # In[14]:
 
+
 # first convert measurements to Sp class, with inherent parameters defined
 meas = Sp.Sp(m)
 meas.params()
@@ -334,6 +356,7 @@ meas.params()
 # Plot the parameters for the specified time
 
 # In[15]:
+
 
 fig2,ax2 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax2 = ax2.ravel()
@@ -353,6 +376,7 @@ plt.show()
 
 # In[ ]:
 
+
 reload(Sp)
 if 'lut' in locals():
     del lut
@@ -361,12 +385,14 @@ if 'lut' in locals():
 
 # In[16]:
 
+
 lut = Sp.Sp(s)
 lut.params()
 lut.param_hires()
 
 
 # In[17]:
+
 
 import gc; gc.collect()
 import sys
@@ -375,10 +401,12 @@ print sys.version
 
 # In[18]:
 
+
 lut.sp_hires()
 
 
 # In[19]:
+
 
 print lut.tau.shape
 print lut.ref.shape
@@ -389,6 +417,7 @@ print lut.par.shape
 
 # In[20]:
 
+
 print lut.ref
 print lut.sp[0,400,0,23,10]
 print lut.sp[1,400,0,:,10]
@@ -398,6 +427,7 @@ print lut.par.shape
 # Now plot the resulting lut of parameters
 
 # In[21]:
+
 
 fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
@@ -427,6 +457,7 @@ plt.show()
 
 
 # In[22]:
+
 
 fig4,ax4 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax4 = ax4.ravel()
@@ -458,6 +489,7 @@ plt.show()
 
 # In[23]:
 
+
 fig5,ax5 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax5 = ax5.ravel()
 
@@ -484,6 +516,7 @@ plt.show()
 
 
 # In[24]:
+
 
 fig6,ax6 = plt.subplots(5,3,sharex=True,figsize=(15,8))
 ax6 = ax6.ravel()
@@ -514,21 +547,25 @@ plt.show()
 
 # In[25]:
 
+
 print lut.sp.shape
 print lut.tau[80]
 
 
 # In[26]:
 
+
 print meas.par.shape
 
 
 # In[27]:
 
+
 print meas.par[meas.good[200],13]
 
 
 # In[28]:
+
 
 plt.figure()
 color.cycle_cmap(31,cmap=plt.cm.gist_ncar)
@@ -547,6 +584,7 @@ cba.ax.set_yticklabels(np.linspace(lut.ref[0],lut.ref[30],6));
 
 # In[29]:
 
+
 all_zeros = not np.any(lut.sp[0,:,0,40,39])
 print all_zeros
 print np.max(lut.sp[0,:,0,20,80]), np.min(lut.sp[0,:,0,20,80])
@@ -563,6 +601,7 @@ plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
 # In[30]:
 
+
 plt.figure()
 plt.plot(lut.wvl,lut.sp[0,:,0,28,70])
 plt.title('Liquid water cloud with R$_{ef}$ = '+str(lut.ref[28])+' at $\\tau$ '+str(lut.tau[70]))
@@ -572,11 +611,13 @@ plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
 # In[31]:
 
+
 print np.any(lut.sp[0,:,0,28,70])
 print lut.ref[3]
 
 
 # In[32]:
+
 
 ro = (range(1,20),range(4,50))
 print ro[1]
@@ -584,6 +625,7 @@ print ro[0]
 
 
 # In[33]:
+
 
 from scipy import interpolate
 print np.shape([lut.tau[69],lut.tau[71]])
@@ -593,6 +635,7 @@ sss = fs(lut.tau[70])
 
 
 # In[34]:
+
 
 print np.shape(sss)
 plt.figure()
@@ -608,6 +651,7 @@ plt.ylabel('Radiance [Wm$^{-2}$sr$^{-1}$nm$^{-1}$]')
 
 # In[35]:
 
+
 import run_kisq_retrieval as rk
 reload(rk)
 import Sp_parameters as Sp
@@ -618,20 +662,24 @@ reload(Sp)
 
 # In[36]:
 
+
 print max(meas.good)
 
 
 # In[37]:
+
 
 (tau,ref,phase,ki) = rk.run_retrieval(meas,lut)
 
 
 # In[38]:
 
+
 del lut
 
 
 # In[39]:
+
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
@@ -639,11 +687,13 @@ print len(meas.good), max(meas.good)
 
 # In[40]:
 
+
 reload(Sp)
 from Sp_parameters import smooth
 
 
 # In[41]:
+
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -670,10 +720,12 @@ plt.savefig(fp+'plots/TCAP_retri_results.png',dpi=600)
 
 # In[42]:
 
+
 print tau.shape
 
 
 # In[43]:
+
 
 tau[meas.good[:,0],0] = smooth(tau[meas.good[:,0],0],20)
 ref[meas.good[:,0],0] = smooth(ref[meas.good[:,0],0],20)
@@ -684,6 +736,7 @@ ref[meas.good[:,0],0] = smooth(ref[meas.good[:,0],0],20)
 # Check the day of year
 
 # In[44]:
+
 
 import datetime
 doy = datetime.datetime(2013,2,19)
@@ -696,10 +749,12 @@ print dd.timetuple().tm_yday
 
 # In[45]:
 
+
 from mpl_toolkits.basemap import Basemap,cm
 
 
 # In[46]:
+
 
 myd06_file = fp+'MODIS\\MYD06_L2.A2013050.1725.006.2014260074007.hdf'
 myd03_file = fp+'MODIS\\MYD03.A2013050.1725.006.2013051163424.hdf'
@@ -708,6 +763,7 @@ print os.path.isfile(myd06_file)
 
 
 # In[47]:
+
 
 import load_utils as lm
 reload(lm)
@@ -721,6 +777,7 @@ if 'modis' in locals():
 
 # In[48]:
 
+
 print 'after import'
 import gc; gc.collect()
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
@@ -728,15 +785,18 @@ modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 # In[49]:
 
+
 print modis_dicts['qa']['description']
 
 
 # In[50]:
 
+
 modis['qa'].shape
 
 
 # In[51]:
+
 
 bb = modis['qa'][100,100,:]
 print bb
@@ -749,21 +809,25 @@ bin(bb[0])
 
 # In[52]:
 
+
 bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
 
 
 # In[53]:
+
 
 mqa = modis['qa']
 
 
 # In[54]:
 
+
 for i in mqa:
     print i
 
 
 # In[55]:
+
 
 if bin8(bb[1])[-4]:
     print 'yes'
@@ -773,6 +837,7 @@ bin8(bb[1])[-4]
 # Now plot the resulting imagery
 
 # In[56]:
+
 
 #set up a easy plotting function
 def tcap_map(ax=plt.gca()):
@@ -790,6 +855,7 @@ def tcap_map(ax=plt.gca()):
 
 # In[57]:
 
+
 figm = plt.figure()
 axm = figm.add_axes([0.1,0.1,0.8,0.8])
 m = tcap_map(axm)
@@ -803,10 +869,12 @@ axm.set_title('MODIS - AQUA Cloud optical Thickness')
 
 # In[58]:
 
+
 get_ipython().magic(u'pinfo plt.savefig')
 
 
 # In[59]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -834,10 +902,12 @@ plt.savefig(fp+'plots/modis_only_tau_ref_comp.pdf',bbox='tight')
 
 # In[60]:
 
+
 reload(lm)
 
 
 # In[61]:
+
 
 # load the ict file and check out the results
 iwg = lm.load_ict(fp+'arm-iop/aaf.iwg1001s.g1.TCAP.20130219.145837.a1.dat')
@@ -850,10 +920,12 @@ iwg['Lat']
 
 # In[62]:
 
+
 iwg_utch = np.array([i.hour+i.minute/60.+i.second/3600.+i.microsecond/3600000. for i in iwg['Date_Time']])
 
 
 # In[86]:
+
 
 fig = plt.figure()
 fig.add_subplot(3,1,1)
@@ -873,10 +945,12 @@ plt.ylabel('Altitude [m]')
 
 # In[64]:
 
+
 from scipy import interpolate
 
 
 # In[65]:
+
 
 flat = interpolate.interp1d(iwg_utch,iwg['Lat'])
 meas.lat = flat(meas.utc)
@@ -889,6 +963,7 @@ meas.alt = falt(meas.utc)
 # Now plot on top of the maps
 
 # In[92]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -922,6 +997,7 @@ plt.savefig(fp+'plots/modis_g1_tau_ref_path.png',dpi=600,transparent=True)
 
 
 # In[94]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,13))
 m1 = tcap_map(axm2[0])
@@ -957,11 +1033,13 @@ plt.show()
 
 # In[67]:
 
+
 from Sp_parameters import closestindex,startprogress,progress,endprogress
 import scipy.spatial
 
 
 # In[68]:
+
 
 if max(meas.good) > meas.utc.size:
     meas.good = sm.good
@@ -976,17 +1054,20 @@ plt.plot(meas.good)
 
 # In[69]:
 
+
 imodis = np.logical_and(np.logical_and(modis['lon']>min(meas.lon[meas.good])-0.02 , modis['lon']<max(meas.lon[meas.good])+0.02),
                         np.logical_and(modis['lat']>min(meas.lat[meas.good])-0.02 , modis['lat']<max(meas.lat[meas.good])+0.02))
 
 
 # In[70]:
 
+
 wimodis = np.where(imodis)
 print np.shape(wimodis)
 
 
 # In[71]:
+
 
 def spherical_dist(pos1, pos2, r=3958.75):
     pos1 = pos1 * np.pi / 180
@@ -999,6 +1080,7 @@ def spherical_dist(pos1, pos2, r=3958.75):
 
 
 # In[72]:
+
 
 N1 = modis['lon'][imodis].size
 modis_grid = np.hstack([modis['lon'][imodis].reshape((N1,1)),modis['lat'][imodis].reshape((N1,1))])
@@ -1015,6 +1097,7 @@ print len(meas_grid[0])
 
 # In[73]:
 
+
 d = spherical_dist(meas_grid[0],modis_grid)
 print d.shape
 print np.argmin(d)
@@ -1026,6 +1109,7 @@ print wimodis[1][np.argmin(d)]
 
 # In[74]:
 
+
 print meas.lat[0]
 print meas.lon[0]
 print modis['lon'][292,891]
@@ -1033,6 +1117,7 @@ print modis['lat'][292,891]
 
 
 # In[75]:
+
 
 meas.ind = np.array([meas.good.ravel()*0,meas.good.ravel()*0])
 print np.shape(meas.ind)
@@ -1045,6 +1130,7 @@ print meas.ind[:,0]
 
 # In[76]:
 
+
 startprogress('Running through flight track')
 for i in xrange(meas.good.size):
     d = spherical_dist(meas_grid[i],modis_grid)
@@ -1055,6 +1141,7 @@ endprogress()
 
 
 # In[77]:
+
 
 print modis['tau'].shape
 print np.shape(modis['tau'][meas.ind])
@@ -1067,6 +1154,7 @@ print meas.good.shape
 
 # In[78]:
 
+
 fig = plt.figure()
 plt.plot(modis['lat'][meas.ind[0,:],meas.ind[1,:]],modis['lon'][meas.ind[0,:],meas.ind[1,:]])
 plt.title('Nearest MODIS points')
@@ -1076,6 +1164,7 @@ plt.xlabel('longitude')
 
 # In[79]:
 
+
 fig = plt.figure()
 plt.plot(meas.utc[meas.good].ravel(),modis['tau'][meas.ind[0,:],meas.ind[1,:]])
 plt.title('raw tau values')
@@ -1084,10 +1173,12 @@ plt.xlabel('UTC [Hours]')
 
 # In[80]:
 
+
 modis_dicts['phase']
 
 
 # In[81]:
+
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -1121,6 +1212,7 @@ plt.savefig(fp+'plots/modis_4star_time_comp.pdf',bbox='tight')
 
 # In[82]:
 
+
 fig,ax = plt.subplots(2,sharex=True)
 ax[0].set_title('Retrieval results time trace')
 ax[0].plot(meas.utc,tau,'rx',label='4STAR')
@@ -1153,6 +1245,7 @@ plt.savefig(fp+'plots/modis_4star_time_comp_tau_ref.png',dpi=600)
 
 # In[83]:
 
+
 figs2,axs2 = plt.subplots(1,2,figsize=(13,13))
 ma1 = tcap_map(axs2[0])
 ma2 = tcap_map(axs2[1])
@@ -1181,12 +1274,14 @@ ma2.scatter(xi,yi,c=ref[meas.good],
 
 # In[256]:
 
+
 utc = meas.utc[meas.good].ravel()
 print utc.shape
 ut = (utc > 17.25) & (utc < 17.75)
 
 
 # In[279]:
+
 
 reload(Sp)
 from Sp_parameters import doublenanmask
@@ -1195,11 +1290,13 @@ mtau,meastau = doublenanmask(modis['tau'][meas.ind[0,ut],meas.ind[1,ut]],tau[mea
 
 # In[280]:
 
+
 print len(meastau)
 print len(mtau)
 
 
 # In[291]:
+
 
 plt.figure()
 plt.hist(mtau, bins=10, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')
@@ -1221,10 +1318,12 @@ plt.savefig(fp+'plots/hist_modis_4star_tau.pdf',bbox='tight')
 
 # In[282]:
 
+
 mref,measref = doublenanmask(modis['ref'][meas.ind[0,ut],meas.ind[1,ut]],ref[meas.good[ut]].ravel())
 
 
 # In[283]:
+
 
 plt.figure()
 plt.hist(mref, bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.7, label='Modis')

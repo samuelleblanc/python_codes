@@ -119,12 +119,14 @@
 
 # In[ ]:
 
+
 import argparse
 
 
 # ## Prepare command line argument parser
 
 # In[39]:
+
 
 long_description = """    Run the zenith cloud property retrieval on the supplied 4STAR starzen.mat file
     Applies the 15 parameters spectral cloud retrieval [LeBlanc et al., 2015, amt]
@@ -133,6 +135,7 @@ long_description = """    Run the zenith cloud property retrieval on the supplie
 
 
 # In[69]:
+
 
 parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('fp_starzen',nargs='?',help='the full path (with .mat extension) of the starzen file to read')
@@ -166,12 +169,14 @@ parser.add_argument('-iz','--index_zout',help='Sets the index of the zout to use
 
 # In[70]:
 
+
 in_ = vars(parser.parse_args())
 
 
 # ## Import rest of needed modules
 
 # In[ ]:
+
 
 import sys
 import os
@@ -200,6 +205,7 @@ except:
 
 # In[74]:
 
+
 if in_['f']:
     print 'Using interactive version hard coded fp_starzen'
     if os.sys.platform == 'win32':
@@ -224,6 +230,7 @@ else:
 
 # In[75]:
 
+
 fp,fname = os.path.split(fp_starzen)
 if fname[0:5]=='4STAR':
     datestr = fname[6:14]
@@ -233,6 +240,7 @@ else:
 
 # In[76]:
 
+
 if in_.get('fp_zencld'):
     fp_zencld = in_.get('fp_zencld')
 else:
@@ -240,6 +248,7 @@ else:
 
 
 # In[77]:
+
 
 if in_.get('fp_zencld_plot'):
     fp_zencld_plot = in_.get('fp_zencld_plot')
@@ -249,6 +258,7 @@ else:
 
 # In[93]:
 
+
 if in_.get('fp_lut_mat'):
     fp_lut_mat = in_.get('fp_lut_mat')
 else:
@@ -257,6 +267,7 @@ else:
 
 # In[ ]:
 
+
 if in_.get('noplot'):
     noplot = True
 else:
@@ -264,6 +275,7 @@ else:
 
 
 # In[ ]:
+
 
 if in_.get('forceliq'):
     forceliq = True
@@ -274,6 +286,7 @@ else:
 
 # In[ ]:
 
+
 if in_.get('forceice'):
     forceice = True
     print 'Force Ice cloud'
@@ -282,6 +295,7 @@ else:
 
 
 # In[ ]:
+
 
 iz = in_.get('index_zout',0)
 if in_.get('index_zout'):
@@ -293,6 +307,7 @@ print 'Z level index set at:  {}'.format(iz)
 
 # In[ ]:
 
+
 plot_lut = in_.get('plotlut',False)
 make_movie = in_.get('makemovie',False)
 no_filter = in_.get('nofilter',False)
@@ -303,6 +318,7 @@ taurange = in_.get('taurange')
 
 
 # In[ ]:
+
 
 if refrange:
     start_ref = refrange[0]
@@ -320,16 +336,19 @@ else:
 
 # In[79]:
 
+
 if not os.path.isfile(fp_starzen):
     raise IOError('file {} is not found'.format(fp_starzen))
 
 
 # In[ ]:
 
+
 print 'loading file {}'.format(fp_starzen)
 
 
 # In[ ]:
+
 
 try:
     mea = hs.loadmat(fp_starzen)
@@ -340,11 +359,13 @@ except Exception as ei:
 
 # In[ ]:
 
+
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
 # In[ ]:
+
 
 print 'Running the parameter calculations on measured spectra'
 meas = Sp.Sp(mea,verbose=False)
@@ -354,6 +375,7 @@ meas.params()
 # ### plot out the different spectra
 
 # In[ ]:
+
 
 if not noplot:
     print('Making plots...')
@@ -392,6 +414,7 @@ if not noplot:
 
 # In[90]:
 
+
 print('Loading the lut file:{}'.format(fp_lut_mat))
 if not os.path.isfile(fp_lut_mat):
     print('File {} does not exist'.format(fp_lut_mat))
@@ -407,10 +430,12 @@ except Exception as ei:
 
 # In[ ]:
 
+
 airmass = 1./np.cos(luts['sza']*np.pi/180.0)
 
 
 # In[ ]:
+
 
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
 if len(airmass) > 1:
@@ -422,10 +447,12 @@ else:
 
 # In[ ]:
 
+
 lut = []
 
 
 # In[ ]:
+
 
 for s in xrange(len(luts['sza'])):
     sptemp = {}
@@ -450,6 +477,7 @@ for s in xrange(len(luts['sza'])):
 
 # In[ ]:
 
+
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
 if len(airmass) > 1:
     idx = Sp.find_closest(airmass,meas.airmass)
@@ -460,15 +488,18 @@ else:
 
 # In[ ]:
 
+
 (meas.taut,meas.ref,meas.phase,meas.ki) = (np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc))
 
 
 # In[ ]:
 
+
 (meas.taut,meas.ref,meas.phase,meas.ki) = (meas.taut*np.nan,meas.ref*np.nan,meas.phase*np.nan,meas.ki*np.nan)
 
 
 # In[ ]:
+
 
 print 'Running through the airmasses'
 for i in np.unique(idx):
@@ -507,6 +538,7 @@ for i in np.unique(idx):
 
 # In[ ]:
 
+
 meas.tau = meas.taut
 
 
@@ -514,11 +546,13 @@ meas.tau = meas.taut
 
 # In[ ]:
 
+
 mdict = {'tau':meas.tau,'ref':meas.ref,'phase':meas.phase,'ki':meas.ki,
          'utc':meas.utc,'sza':meas.sza,'lat':meas.lat,'lon':meas.lon,'alt':meas.alt}
 
 
 # In[ ]:
+
 
 fp_out = os.path.join(fp,'{datestr}_zen_cld_retrieved.mat'.format(datestr=datestr))
 print 'saving to file: {fp_out}'.format(fp_out=fp_out)
@@ -529,6 +563,7 @@ hs.savemat(fp_out,mdict)
 
 # In[ ]:
 
+
 if not noplot:
     print 'making the retrieval plots'
     figz = Sp.plot_zen_cld_retrieval(meas)
@@ -536,6 +571,7 @@ if not noplot:
 
 
 # In[ ]:
+
 
 if not noplot:
     print 'making the retrieval histogram plots'
@@ -545,6 +581,7 @@ if not noplot:
 
 # In[ ]:
 
+
 if not noplot:
     print 'making the map'
     figm = Sp.plot_map_cld_retrieval(meas)
@@ -552,6 +589,7 @@ if not noplot:
 
 
 # In[ ]:
+
 
 if plot_lut:
     print 'making the lut plots'
@@ -591,12 +629,14 @@ if plot_lut:
 
 # In[ ]:
 
+
 if make_movie:
     print 'Making the movie of measurement and retrievals'
     Sp.plot_sp_movie(meas,fp_zencld_plot,gif=False)
 
 
 # In[ ]:
+
 
 if make_slides:
     print 'Making the powerpoint slides of the figures'

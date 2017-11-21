@@ -45,6 +45,7 @@
 
 # In[46]:
 
+
 import numpy as np
 import hdf5storage as hs
 import os
@@ -53,21 +54,25 @@ import write_utils as wu
 
 # In[44]:
 
+
 from load_utils import load_from_json
 
 
 # In[19]:
+
 
 name = 'ORACLES'
 
 
 # In[48]:
 
+
 vv = 'v2'
 vr = 'R0'
 
 
 # In[49]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
@@ -89,15 +94,18 @@ else:
 
 # In[75]:
 
+
 import argparse
 
 
 # In[76]:
 
+
 long_description = """    Prepare the Cloud radiative effect files for calculations and thn save them using the doread argument"""
 
 
 # In[ ]:
+
 
 parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
@@ -105,6 +113,7 @@ parser.add_argument('-doread','--doread',help='if set, will only read the output
 
 
 # In[ ]:
+
 
 in_ = vars(parser.parse_args())
 do_read = in_.get('doread',False)
@@ -114,15 +123,18 @@ do_read = in_.get('doread',False)
 
 # In[5]:
 
+
 ar = hs.loadmat(matfile)
 
 
 # In[6]:
 
+
 ar.keys()
 
 
 # In[12]:
+
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
@@ -132,6 +144,7 @@ dds = ['20160827','20160830','20160831','20160902','20160904','20160906','201609
 
 # In[7]:
 
+
 import Run_libradtran as Rl
 
 
@@ -139,16 +152,19 @@ import Run_libradtran as Rl
 
 # In[10]:
 
+
 from datetime import datetime
 datetime(2015,11,17).timetuple().tm_yday
 
 
 # In[14]:
 
+
 ar['days']
 
 
 # In[15]:
+
 
 geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,1.5,100.0]}
 aero_no = {} # none
@@ -160,6 +176,7 @@ albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 # In[16]:
 
+
 cloud['phase'] = 'wc'
 geo['sza'] = 40.0
 cloud['tau'] = 2.0
@@ -170,10 +187,12 @@ cloud['moms_dict'] = pmom
 
 # In[17]:
 
+
 phase_star = {0:'wc',1:'ic'}
 
 
 # In[18]:
+
 
 phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 
@@ -181,6 +200,7 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 # ## Load the aerosol values
 
 # In[82]:
+
 
 if os.sys.platform == 'win32':
         fp_aero = fp+'model\\aero_save_v2.txt'
@@ -191,12 +211,14 @@ aero = load_from_json(fp_aero)
 
 # In[83]:
 
+
 aero
 
 
 # ## Prepare the paths and files for input files
 
 # In[71]:
+
 
 # open the list file
 f = open(fp+'rtm/{}_CRE_{}.sh'.format(name,vv),'w')
@@ -208,6 +230,7 @@ fp_in = fp+'rtm/input/CRE/'
 
 # In[74]:
 
+
 if not os.path.isdir(fpp_in):
     os.mkdir(fpp_in)
 if not os.path.isdir(fpp_out):
@@ -216,15 +239,18 @@ if not os.path.isdir(fpp_out):
 
 # In[23]:
 
+
 ar.keys()
 
 
 # In[ ]:
 
+
 if not do_read:
 
 
 # In[ ]:
+
 
 # make input
     for i,l in enumerate(ar['lat_fl']):
@@ -268,10 +294,12 @@ if not do_read:
 
 # In[ ]:
 
+
 else:
 
 
 # In[ ]:
+
 
 # read output
     nstar = len(ar['lat_fl'])
@@ -285,6 +313,7 @@ else:
 
 
 # In[ ]:
+
 
 # run through to read
     print '4STAR'
@@ -314,6 +343,7 @@ else:
 
 
 # In[ ]:
+
 
 # save the output
     star1 = {'star_noaero_CRE':star_noaero_CRE,'star_noaero_CRE_clear':star_noaero_CRE_clear,'star_noaero_C':star_noaero_C,

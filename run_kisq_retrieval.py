@@ -1,9 +1,10 @@
 
 # coding: utf-8
 
-# # Functions to run the ki^2 retrieval based on the parameters calculated in the Sp class, from modeled and measured source
+# # Functions to run the ki$^{2}$ retrieval based on the parameters calculated in the Sp class, from modeled and measured source
 
 # In[1]:
+
 
 def assure_input(sp):
     " A function that checks the input and runs all the required functions to generate parameters"
@@ -21,6 +22,7 @@ def assure_input(sp):
 
 
 # In[5]:
+
 
 def phase(parn,model,stdparn):
     """
@@ -48,6 +50,7 @@ def phase(parn,model,stdparn):
 
 
 # In[1]:
+
 
 def run_retrieval(meas,model,subp=range(15),force_liq=False,force_ice=False):
     """ 
