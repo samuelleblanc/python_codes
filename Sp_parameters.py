@@ -5,6 +5,7 @@
 
 # In[1]:
 
+
 from __future__ import division
 import numpy as np
 import math
@@ -17,6 +18,7 @@ warnings.simplefilter('ignore', np.RankWarning)
 # Prepare the different functions require to run the class Sp
 
 # In[1]:
+
 
 def closestindex(a,x):
     " Get the index from a of the closest value from x "
@@ -232,6 +234,7 @@ def param(sp,wvlin,iws=None):
 
 # In[ ]:
 
+
 def binned_statistic(x, values, func, nbins, range):
     '''The usage is approximately the same as the scipy one''' 
     from scipy.sparse import csr_matrix
@@ -245,6 +248,7 @@ def binned_statistic(x, values, func, nbins, range):
 
 
 # In[ ]:
+
 
 def ext_prof(alt,aod,binsize=100,use_deriv=True,verbose=False):
     """
@@ -293,6 +297,7 @@ def ext_prof(alt,aod,binsize=100,use_deriv=True,verbose=False):
 
 # In[3]:
 
+
 def startprogress(title):
     """
     Creates a progress bar 40 chars long on the console
@@ -331,6 +336,7 @@ def endprogress():
 # Create a class for handling the luts
 
 # In[4]:
+
 
 class lut:
     """
@@ -399,12 +405,8 @@ class lut:
 
 # Create a new class for spectra that returns easy plotting, normalization, parameters, etc.
 
-# In[ ]:
-
-
-
-
 # In[1]:
+
 
 class Sp:
     """
@@ -479,8 +481,11 @@ class Sp:
                 else:
                     self.good = s['good']
             else:
-                if verbose: print 'No indexed good values, choosing all times that are greater than 0'
-                self.good = np.where(self.utc>0.0)[0]
+                if verbose: print 'No indexed good values, choosing all times that are greater than 0 and that are not parked'
+                try:
+                    self.good = np.where((self.utc>0.0)&(s['Md']==8))[0]
+                except:
+                    self.good = np.where(self.utc>0.0)[0]
             if 'Alt' in s:
                 self.alt = s['Alt'][self.iset]
             if 'Lat' in s:
@@ -977,6 +982,7 @@ class Sp:
 
 # In[1]:
 
+
 def plt_zenrad(meas,good_only=False):
     """
     Purpose:
@@ -1018,6 +1024,7 @@ def plt_zenrad(meas,good_only=False):
 
 
 # In[2]:
+
 
 def plt_norm_zenrad(meas,good_only=False):
     """
@@ -1062,6 +1069,7 @@ def plt_norm_zenrad(meas,good_only=False):
 
 # In[3]:
 
+
 def curtain_zenrad(meas,utc=True):
     """
     Purpose:
@@ -1097,6 +1105,7 @@ def curtain_zenrad(meas,utc=True):
 
 # In[5]:
 
+
 def curtain_norm_zenrad(meas, utc=True):
     """
     Purpose:
@@ -1131,6 +1140,7 @@ def curtain_norm_zenrad(meas, utc=True):
 
 
 # In[ ]:
+
 
 def plot_zen_cld_retrieval(meas):
     """
@@ -1188,6 +1198,7 @@ def plot_zen_cld_retrieval(meas):
 
 # In[ ]:
 
+
 def plot_map_cld_retrieval(meas):
     """
     Purpose:
@@ -1241,6 +1252,7 @@ def plot_map_cld_retrieval(meas):
 
 # In[ ]:
 
+
 def plot_hist_cld_retrieval(meas):
     """
     Purpose:
@@ -1293,6 +1305,7 @@ def plot_hist_cld_retrieval(meas):
 
 
 # In[ ]:
+
 
 def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
     """
@@ -1385,6 +1398,7 @@ def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
 
 
 # In[ ]:
+
 
 def plot_sp_movie(meas,fp,fps=10,gif=True):
     """
