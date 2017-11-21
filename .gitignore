@@ -50,3 +50,4 @@ flight_planning/
 flight_planning/*
 /flight_planning/
 flight_planning\
+jupyter_notebook_config.json
