@@ -483,7 +483,8 @@ class Sp:
             else:
                 if verbose: print 'No indexed good values, choosing all times that are greater than 0 and that are not parked'
                 try:
-                    self.good = np.where((self.utc>0.0)&(s['Md']==8))[0]
+                    self.good = np.where((self.utc>0.0)&(s['Md'][self.iset][:,0]==8))[0]
+                    if verbose: print 'good length:',len(self.good),'/',len(self.utc)
                 except:
                     self.good = np.where(self.utc>0.0)[0]
             if 'Alt' in s:
@@ -760,6 +761,7 @@ class Sp:
             self.refsp = ref
         self.tau = tau_hires
         self.ref = ref_hires  
+        
     
     def norm_par(self,pcoef=None,std=False,vartitle=None):
         """ 
@@ -983,7 +985,7 @@ class Sp:
 # In[1]:
 
 
-def plt_zenrad(meas,good_only=False):
+def plt_zenrad(meas,good_only=True):
     """
     Purpose:
         Plot each zzenith radiance spectra on the same scale. 
@@ -992,7 +994,7 @@ def plt_zenrad(meas,good_only=False):
     Output: 
         matplotlib fig value
     Keywords:
-        good_only: (default False) if set to True, only plots the spectra defined as 'good'
+        good_only: (default True) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
@@ -1009,8 +1011,8 @@ def plt_zenrad(meas,good_only=False):
         if good_only:
             if i in meas.good:
                 plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
-            else:
-                plt.plot(meas.wvl,meas.sp[i,:]/1000.0,c='grey',alpha=0.1)
+            #else:
+            #    plt.plot(meas.wvl,meas.sp[i,:]/1000.0,c='grey',alpha=0.1)
         else:
             plt.plot(meas.wvl,meas.sp[i,:]/1000.0)
     plt.xlabel('Wavelength [nm]')
@@ -1026,7 +1028,7 @@ def plt_zenrad(meas,good_only=False):
 # In[2]:
 
 
-def plt_norm_zenrad(meas,good_only=False):
+def plt_norm_zenrad(meas,good_only=True):
     """
     Purpose:
         Plot each normalized zenith radiance spectra on the same scale. 
@@ -1035,7 +1037,7 @@ def plt_norm_zenrad(meas,good_only=False):
     Output: 
         matplotlib fig value
     Keywords:
-        good_only: (default False) if set to True, only plots the spectra defined as 'good'
+        good_only: (default True) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
@@ -1052,8 +1054,8 @@ def plt_norm_zenrad(meas,good_only=False):
         if good_only:
             if i in meas.good:
                 plt.plot(meas.wvl,meas.norm[i,:])
-            else:
-                plt.plot(meas.wvl,meas.norm[i,:],c='grey',alpha=0.1)
+            #else:
+            #    plt.plot(meas.wvl,meas.norm[i,:],c='grey',alpha=0.1)
         else:
             plt.plot(meas.wvl,meas.norm[i,:])
     plt.xlabel('Wavelength [nm]')
@@ -1070,7 +1072,7 @@ def plt_norm_zenrad(meas,good_only=False):
 # In[3]:
 
 
-def curtain_zenrad(meas,utc=True):
+def curtain_zenrad(meas,utc=True,good_only=True):
     """
     Purpose:
      Create a figure of a curtain containing each zenith radiance spectra on the same color scale along the time axis in y. 
@@ -1081,20 +1083,24 @@ def curtain_zenrad(meas,utc=True):
     Keywords:
         utc: (default true) if set plots the curtain as a function of UTC time. 
              If false, plots as a function of measurements number
+        good_only: (default True) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
     Modification History:
         Writtten: Samuel LeBlanc, 2015-10-27, NASA Ames, CA
+        Modified: Samuel LeBlanc, 2017-11-21, NASA Ames Research Center
+                  - added the good_only keyword
     """
     import matplotlib.pyplot as plt
     from mpltools import color
     fig,ax = plt.subplots(1,1,figsize=(8,14))
+    i = meas.good if good_only else np.where(meas.utc)[0]
     if utc:
-        pco = ax.pcolorfast(meas.wvl,meas.utc,meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+        pco = ax.pcolorfast(meas.wvl,meas.utc[i],meas.sp[i[:-1],:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
         ax.set_ylabel('UTC [h]')
     else:
-        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
+        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc[i])[0],meas.sp[i[:-1],:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
         ax.set_ylabel('Measurement number')
     cba = plt.colorbar(pco)
     cba.set_label('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
@@ -1103,10 +1109,10 @@ def curtain_zenrad(meas,utc=True):
     return fig
 
 
-# In[5]:
+# In[4]:
 
 
-def curtain_norm_zenrad(meas, utc=True):
+def curtain_norm_zenrad(meas, utc=True,good_only=True):
     """
     Purpose:
      Create a figure of a curtain containing each *Normalized* zenith radiance spectra on the same color scale along the time axis in y. 
@@ -1117,6 +1123,7 @@ def curtain_norm_zenrad(meas, utc=True):
     Keywords:
          utc: (default true) if set plots the curtain as a function of UTC time. 
              If false, plots as a function of measurements number
+         good_only: (default True) if set to True, only plots the spectra defined as 'good'
     Dependencies:
         - matplotlib
         - mpltools for color
@@ -1126,17 +1133,25 @@ def curtain_norm_zenrad(meas, utc=True):
     import matplotlib.pyplot as plt
     from mpltools import color
     fig,ax = plt.subplots(1,1,figsize=(8,14))
+    i = meas.good if good_only else np.where(meas.utc)[0]
     if utc:
-        pco = ax.pcolorfast(meas.wvl,meas.utc,meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
+        pco = ax.pcolorfast(meas.wvl,meas.utc[i],meas.norm[i[:-1],:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
         ax.set_ylabel('UTC [h]')
     else:
-        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
+        pco = ax.pcolorfast(meas.wvl,np.where(meas.utc[i])[0],meas.norm[i[:-1],:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
         ax.set_ylabel('Measurement number')
     cba = plt.colorbar(pco)
     cba.set_label('Normalized Radiance')
     ax.set_xlabel('Wavelength [nm]')
     ax.set_title('All radiance spectra [Normalized]')
     return fig
+
+
+# In[5]:
+
+
+plt_curtain_zenrad = curtain_zenrad
+plt_curtain_norm_zenrad = curtain_norm_zenrad
 
 
 # In[ ]:
@@ -1527,4 +1542,93 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
         print 'Movie file writing to {}.mp4'.format(fpp)
         animation.write_videofile(fpp+'.mp4', fps=fps)    
     return
+
+
+# In[6]:
+
+
+def plot_greys(fig=None,ax=None):
+    " Plotting of greyed out wavelength regions that indicates the different wavelength regions where the parameters are defined. "
+    import matplotlib.pyplot as plt
+    if not ax: ax = plt.gca()
+    cl = '#DDDDDD'
+    ax.axvspan(1000,1077,color=cl) #eta1
+    ax.axvspan(1192,1194,color=cl) #eta2
+    ax.axvspan(1492,1494,color=cl) #eta3
+    ax.axvspan(1197,1199,color=cl); plt.axvspan(1235,1237,color=cl);  #eta4
+    ax.axvspan(1248,1270,color=cl) #eta5
+    ax.axvspan(1565,1644,color=cl) #eta6
+    ax.axvspan(1000,1050,color=cl) #eta7
+    ax.axvspan(1493,1600,color=cl) #eta8
+    ax.axvspan(1000,1077,color=cl) #eta9
+    ax.axvspan(1200,1300,color=cl) #eta10
+    ax.axvspan(530 ,610 ,color=cl) #eta11
+    ax.axvspan(1039,1041,color=cl) #eta12
+    ax.axvspan(999 ,1001,color=cl); plt.axvspan(1064,1066,color=cl);  #eta13
+    ax.axvspan(599 ,601 ,color=cl); plt.axvspan(869 ,871 ,color=cl);  #eta14
+    ax.axvspan(1565,1634,color=cl); #eta15
+
+
+# In[7]:
+
+
+def plt_lut_zenrad(lut,range_variable='tau',phase=0,zout=0,norm=False,other_index=1,lims=None,cmapname='gist_ncar',fig=None):
+    """
+    Purpose:
+        Plot each modeled zenith radiance spectra on the same scale. 
+    Input:
+        lut : Sp_parameters.Sp object with params already run, but with the LUT
+    Output: 
+        matplotlib fig value
+    Keywords:
+        range_variable: (default 'tau') give the name (as a string) of the axis by which to plot, other axis set to other_index
+        norm: (default False) if True, then plots the normed version of the radiance figures
+        phase: (default 0,liquid) select which phase to plot
+        zout: (default 0), index of the zout to return
+        other_index: (default 1) index of the other axis
+        lims: (default entire range) simple 2 element list or tuple for value of the limits to plot
+        cmapname: (default gist_ncar) the naem of the cmap to use
+        fig: figure object, if not supplied creates its own figure
+    Dependencies:
+        - matplotlib
+        - mpltools for color
+    Modification History:
+        Writtten: Samuel LeBlanc, 2016-10-19, NASA Ames, CA
+                added good_only keyword
+    """
+    import matplotlib.pyplot as plt
+    from mpltools import color
+    if not fig:
+        fig = plt.figure()
+    
+    axis = lut[range_variable]
+    lx = len(axis)
+    if not lims:
+        lims = [axis.min(),axis.max()]
+    lxx = len(np.where((axis>=lims[0])&(axis<=lims[1]))[0])
+    if norm:
+        ssp = lut.norm[phase,:,zout,:,:]
+    else:
+        ssp = lut.sp[phase,:,zout,:,:]
+        if np.nanmax(ssp)>50:
+            ssp = ssp/1000.0
+    ix = np.where(np.array(ssp.shape)==lx)[0][0]
+    sspn = np.rollaxis(ssp,ix,0)[:,:,other_index]
+
+    color.cycle_cmap(lxx,cmap=plt.cm.get_cmap(cmapname),ax=plt.gca())
+    for i in range(lx):
+        if (axis[i]>=lims[0])&(axis[i]<=lims[1]):
+            plt.plot(lut.wvl,sspn[i,:])
+    
+    plt.xlabel('Wavelength [nm]')
+    if norm:
+        plt.ylabel('Normalized radiance')
+    else:
+        plt.ylabel('Radiance [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
+    plt.title('Modeled Radiance spectra')
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap(cmapname))
+    scalarmap.set_array(axis[np.where((axis>=lims[0])&(axis<=lims[1]))[0]])
+    cba = plt.colorbar(scalarmap)
+    cba.set_label(range_variable)
+    return fig
 

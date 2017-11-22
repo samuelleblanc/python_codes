@@ -68,7 +68,7 @@ s=h5.loadmat(fp+'model/v3_ORACLES_lut.mat')
 print s.keys()
 
 
-# In[4]:
+# In[117]:
 
 
 s['rad'].shape
@@ -114,6 +114,13 @@ lut.params(liq_only=True,ice_only=False)
 lut.param_hires(start_ref=2,end_ref=30,start_tau=0.1,end_tau=60)
 
 
+# In[162]:
+
+
+lut.sp_hires()
+lut.norm = lut.normsp(lut.sp,iws=lut.isubwvl)
+
+
 # ## Load the starzen measurement file and run through the parameters
 
 # In[10]:
@@ -132,62 +139,148 @@ print 'Measured radiance Shape: ', sm.rad.shape
 m.keys()
 
 
-# In[20]:
+# In[88]:
 
 
-len(m['Md']),len(m['t'])
+reload(Sp)
 
 
-# In[22]:
+# In[73]:
 
 
 meas = Sp.Sp(m)
 meas.params()
 
 
-# In[25]:
+# # Now plot the measurements and luts
+
+# ## Plot all measurements
+
+# In[85]:
+
+
+pz = Sp.plt_zenrad(meas,good_only=True)
+
+
+# In[86]:
+
+
+pn = Sp.plt_norm_zenrad(meas,good_only=True)
+
+
+# In[87]:
+
+
+pc = Sp.curtain_zenrad(meas)
+
+
+# In[90]:
+
+
+pcn = Sp.curtain_zenrad(meas,utc=False)
+
+
+# In[89]:
+
+
+pnc = Sp.plt_curtain_norm_zenrad(meas)
+
+
+# In[91]:
+
+
+pncn = Sp.plt_curtain_norm_zenrad(meas,utc=False)
+
+
+# ## Now plot the measurements for only the selected sample airmass
+
+# In[95]:
 
 
 airmass = 1./np.cos(s['sza']*np.pi/180.0)
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
-idx = Sp.find_closest(airmass,meas.airmass)
+idx = Sp.find_closest(airmass,meas.airmass)[:,0]
 
 
-# In[31]:
+# In[96]:
 
 
+len(idx)
+
+
+# In[97]:
+
+
+idx.shape
+
+
+# In[99]:
+
+
+#Create new 'good' filter
+meas.good = np.where((idx==isza) & (meas.utc>0.0) &(m['Md'][meas.iset][:,0]==8))[0]
 len(meas.good)
 
 
-# In[36]:
+# In[103]:
 
 
-meas.iset
+p = Sp.plt_zenrad(meas)
+plt.ylim(-0.01,0.2)
+plt.grid()
 
 
-# In[34]:
+# In[104]:
 
 
-len(meas.iset)
+p = Sp.plt_norm_zenrad(meas)
+plt.grid()
 
 
-# In[37]:
+# ## Now plot a few LUT spectra
+
+# In[200]:
 
 
-len(meas.utc)
+pl = Sp.plt_lut_zenrad(lut,range_variable='tau',norm=False,lims=[0,60],cmapname='gist_earth')
 
 
-# In[38]:
+# In[190]:
 
 
-len(s['Md'])
+pl = Sp.plt_lut_zenrad(lut,range_variable='tau',norm=True,lims=[0,60])
 
 
-# In[30]:
+# In[191]:
 
 
-plt.figure()
-plt.plot(meas.good)
+pl = Sp.plt_lut_zenrad(lut,range_variable='ref',norm=False,other_index=10,lims=[2,30])
+
+
+# In[192]:
+
+
+pl = Sp.plt_lut_zenrad(lut,range_variable='ref',norm=True,other_index=10,lims=[2,30])
+
+
+# ## Plot the lut on top of the measurements
+
+# In[203]:
+
+
+p = Sp.plt_zenrad(meas)
+p = Sp.plt_lut_zenrad(lut,range_variable='tau',norm=False,other_index=2,lims=[2,35],cmapname='gist_earth',fig=p)
+plt.ylim(-0.01,0.2)
+plt.grid()
+
+
+# In[207]:
+
+
+p = Sp.plt_norm_zenrad(meas)
+p = Sp.plt_lut_zenrad(lut,range_variable='tau',norm=True,other_index=2,lims=[2,35],cmapname='spring',fig=p)
+plt.title('Model and measured radiances')
+plt.grid()
 
 
 # #### Plotting functions defined

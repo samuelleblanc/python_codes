@@ -8,37 +8,40 @@
 
 # # Load the defaults and imports
 
-# In[1]:
+# In[2]:
+
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+import os
+matplotlib.rc_file(os.path.join(os.getcwd(),'file.rc'))
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import Sp_parameters as Sp
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
-
-
-# In[2]:
-
 from linfit import linfit
+from path_utils import getpath
 
 
 # In[3]:
+
 
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[4]:
 
-fp ='C:/Users/sleblan2/Research/ORACLES/'
+
+fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
+fp
 
 
 # # load the files
 
-# In[165]:
+# In[5]:
+
 
 days = ['20170809', '20170812','20170813',
         '20170815','20170817','20170818','20170819','20170821',
@@ -46,6 +49,7 @@ days = ['20170809', '20170812','20170813',
 
 
 # In[5]:
+
 
 days = ['20170813','20170817']
 days = ['20170818','20170819']
@@ -58,15 +62,18 @@ days = ['20170807']
 
 # In[6]:
 
+
 vv = 'R0'
 
 
 # In[7]:
 
+
 vi = ''
 
 
-# In[166]:
+# In[8]:
+
 
 outaod_RA = []
 outaod_head_RA = []
@@ -93,10 +100,12 @@ for i,d in enumerate(days):
 
 # In[167]:
 
+
 len(outaod_RA)
 
 
 # In[168]:
+
 
 len(days)
 
@@ -104,6 +113,7 @@ len(days)
 # ## Check the files for integrity and header info
 
 # In[11]:
+
 
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
@@ -116,6 +126,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 
 # In[12]:
 
+
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
 for i,d in enumerate(days):
     try:
@@ -126,37 +137,44 @@ for i,d in enumerate(days):
 
 # In[12]:
 
+
 outaod_head_RA[0]
 
 
 # In[14]:
+
 
 outgas_head_RA[0]
 
 
 # ## Check the variables in header
 
-# In[169]:
+# In[10]:
+
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[170]:
+# In[11]:
+
 
 nm
 
 
-# In[15]:
+# In[12]:
+
 
 wl = nm[6:-1]
 
 
-# In[16]:
+# In[13]:
+
 
 wl = wl[0:24]
 
 
 # In[14]:
+
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -166,6 +184,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
 
 # In[17]:
 
+
 for a in wl:
     print a
 
@@ -173,6 +192,7 @@ for a in wl:
 # # Plot the files
 
 # In[20]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -207,7 +227,8 @@ for i,d in enumerate(days):
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[21]:
+# In[14]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -238,10 +259,12 @@ for i,d in enumerate(days):
 
 # In[22]:
 
+
 wl[0:16]
 
 
 # In[23]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -272,6 +295,7 @@ for i,d in enumerate(days):
 
 
 # In[24]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -305,10 +329,12 @@ for i,d in enumerate(days):
 
 # In[25]:
 
+
 nm[30:46]
 
 
 # In[26]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -342,10 +368,12 @@ for i,d in enumerate(days):
 
 # In[27]:
 
+
 nm[46:]
 
 
 # In[28]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -379,15 +407,18 @@ for i,d in enumerate(days):
 
 # In[29]:
 
+
 outaod_RA[i][unc][ii]
 
 
 # In[30]:
 
+
 nm[4]
 
 
 # In[28]:
+
 
 plt.figure()
 ii = np.where((outaod_RA[0][nm[4]]==0))[0]
@@ -398,15 +429,18 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # In[18]:
 
+
 wv = [float(v[3:]) for v in wl]
 
 
 # In[19]:
 
+
 wv
 
 
 # In[33]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(9,5))
@@ -443,25 +477,30 @@ for i,d in enumerate(days):
 
 # In[80]:
 
+
 outaod_RA
 
 
 # In[33]:
+
 
 ax[0].set_ylim(0,15)
 
 
 # In[81]:
 
+
 fig.show()
 
 
 # In[20]:
 
+
 nm
 
 
 # In[83]:
+
 
 plt.figure()
 plt.plot(outaod_RA[0]['Start_UTC'],outaod_RA[0]['qual_flag'],'b.',label='Quality flag')
@@ -479,15 +518,18 @@ plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,tr
 
 # In[21]:
 
+
 days
 
 
 # In[41]:
 
+
 days[15]
 
 
 # In[34]:
+
 
 for i,d in enumerate(days):
     plt.figure()
@@ -513,6 +555,7 @@ for i,d in enumerate(days):
 
 # In[22]:
 
+
 def calc_angs(time,w,aod,flag):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
     ang = np.zeros_like(time)
@@ -530,15 +573,18 @@ def calc_angs(time,w,aod,flag):
 
 # In[23]:
 
+
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
 # In[24]:
 
+
 wls = np.array(wv)/1000.0
 
 
 # In[25]:
+
 
 aodrr, angarr = [],[]
 for i,d in enumerate(days):
@@ -553,6 +599,7 @@ for i,d in enumerate(days):
 
 
 # In[39]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
@@ -584,6 +631,7 @@ for i,d in enumerate(days):
 
 # In[171]:
 
+
 ar = {}
 for n in nm:
     ar[n] = np.array([])
@@ -591,10 +639,12 @@ for n in nm:
 
 # In[172]:
 
+
 ar['days'] = np.array([])
 
 
 # In[173]:
+
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -604,10 +654,12 @@ for i,d in enumerate(days):
 
 # In[174]:
 
+
 ar['GPS_Alt'].shape
 
 
 # In[175]:
+
 
 ar.keys()
 
@@ -616,55 +668,66 @@ ar.keys()
 
 # In[176]:
 
+
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
 # In[177]:
+
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
 # In[178]:
 
+
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
 # In[179]:
+
 
 ar['fl_alt_22'] = (ar['GPS_Alt']<=2200) & (ar['GPS_Alt']>=800)
 
 
 # In[180]:
 
+
 ar['fl_QA'] = ar['qual_flag']==0
 
 
 # In[181]:
+
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
 # In[182]:
 
+
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
 # In[183]:
+
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
 # In[184]:
 
+
 ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
 
 
 # In[187]:
 
+
 ar['fl_routine'] = (ar['days']==1.0)|(ar['days']==3.0)|(ar['days']==8.0)|(ar['days']==10.0)|(ar['days']==11.0)
 
 
 # In[194]:
+
 
 ar['flr'] = ar['fl_routine'] & ar['fl_QA'] & ar['fl_alt']
 
@@ -673,10 +736,12 @@ ar['flr'] = ar['fl_routine'] & ar['fl_QA'] & ar['fl_alt']
 
 # In[189]:
 
+
 import hdf5storage as hs
 
 
 # In[195]:
+
 
 hs.savemat(fp+'/aod_ict_2017/{vv}/all_aod_ict_{vv}_2017.mat'.format(vv=vv),ar)
 
@@ -685,10 +750,12 @@ hs.savemat(fp+'/aod_ict_2017/{vv}/all_aod_ict_{vv}_2017.mat'.format(vv=vv),ar)
 
 # In[40]:
 
+
 import hdf5storage as hs
 
 
 # In[41]:
+
 
 ar = hs.loadmat(fp+'/aod_ict_2017/all_aod_ict_2017.mat')
 
@@ -697,10 +764,12 @@ ar = hs.loadmat(fp+'/aod_ict_2017/all_aod_ict_2017.mat')
 
 # In[78]:
 
+
 from plotting_utils import prelim
 
 
 # In[198]:
+
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
@@ -725,21 +794,25 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,
 
 # In[200]:
 
+
 np.nanmean(ar['AOD0501'][ar['flr']])
 
 
 # In[85]:
+
 
 from plotting_utils import make_boxplot
 
 
 # In[192]:
 
+
 lim = np.linspace(-15,7,12)
 pos = np.array([(l+lim[i+1])/2.0 for i,l in enumerate(lim[0:-1])])
 
 
 # In[193]:
+
 
 plt.figure()
 plt.plot(ar['Longitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,markersize=0.4,label='All data')
@@ -757,6 +830,7 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_longitude.png'.format(vv=vv),dpi=600,
 
 
 # In[205]:
+
 
 lima = np.linspace(-15,0,11)
 posa = np.array([(l+lima[i+1])/2.0 for i,l in enumerate(lima[0:-1])])
@@ -784,6 +858,7 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_latitude.png'.format(vv=vv),dpi=600,t
 
 # In[155]:
 
+
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
 plt.hist(ar['AOD0501'][ar['fl1']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
@@ -803,10 +878,12 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram_nox.png'.format(vv=vv),dpi=
 
 # In[45]:
 
+
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
 # In[46]:
+
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
@@ -826,6 +903,7 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,
 
 # In[47]:
 
+
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='grey',cumulative=True)
 plt.xlabel('AOD at 501 nm')
@@ -836,15 +914,18 @@ plt.savefig(fp+'aod_ict/{vv}_AOD_histogram_cum.png'.format(vv=vv),dpi=600,transp
 
 # In[48]:
 
+
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
 # In[49]:
 
+
 np.nanmedian(ar['AOD0501'][ar['fl']])
 
 
 # In[50]:
+
 
 np.nanstd(ar['AOD0501'][ar['fl']])
 
@@ -853,10 +934,12 @@ np.nanstd(ar['AOD0501'][ar['fl']])
 
 # In[156]:
 
+
 ar.keys()
 
 
 # In[52]:
+
 
 plt.figure()
 plt.hist(ar['amass_aer'][ar['fl']],bins=50,range=(1.0,15.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='600-1800 m')
@@ -879,6 +962,7 @@ plt.savefig(fp+'aod_ict/{vv}/{vv}_Airmass_histogram.png'.format(vv=vv),dpi=600,t
 
 # In[117]:
 
+
 ar_1 = hs.loadmat(fp+'/aod_ict/R2/all_aod_ict_R2.mat')
 
 
@@ -886,15 +970,18 @@ ar_1 = hs.loadmat(fp+'/aod_ict/R2/all_aod_ict_R2.mat')
 
 # In[144]:
 
+
 len(ar['AOD0501'][ar['fl']]), len(ar_1['AOD0501'][ar_1['fl']])
 
 
 # In[145]:
 
+
 np.nanmean(ar['AOD0501'][ar['fl']]),np.nanmean(ar_1['AOD0501'][ar_1['fl']])
 
 
 # In[152]:
+
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=True,edgecolor='None',color='b',label='2017')
@@ -922,6 +1009,7 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_normed_histogram_2017_vs_2016.png'.fo
 
 # In[153]:
 
+
 ar.keys()
 
 
@@ -929,11 +1017,13 @@ ar.keys()
 
 # In[133]:
 
+
 lim2 = np.linspace(-15,15,16)
 pos2 = np.array([(l+lim2[i+1])/2.0 for i,l in enumerate(lim2[0:-1])])
 
 
 # In[142]:
+
 
 plt.figure()
 plt.plot(ar['Longitude'][ar['fl']],ar['AOD0501'][ar['fl']],'.',color='lightsteelblue',alpha=0.5,
@@ -957,6 +1047,7 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_longitude_2016_vs_2017.png'.format(vv
 
 
 # In[210]:
+
 
 lima = np.linspace(-15,0,13)
 posa = np.array([(l+lima[i+1])/2.0 for i,l in enumerate(lima[0:-1])])
@@ -993,15 +1084,18 @@ plt.savefig(fp+'aod_ict_2017/{vv}/{vv}_AOD_latitude_2016_vs_2017.png'.format(vv=
 
 # In[161]:
 
+
 i
 
 
 # In[162]:
 
+
 np.nanmean(outaod_RA[i]['AOD0501'][fl])
 
 
 # In[163]:
+
 
 for i,d in enumerate(days):
     plt.figure()
@@ -1032,11 +1126,13 @@ for i,d in enumerate(days):
 
 # In[63]:
 
+
 ar1 = ar
 ar0 = hs.loadmat(fp+'/aod_ict/all_aod_ict_R0.mat')
 
 
 # In[64]:
+
 
 ar1['fl_alt_6k'] = ar1['GPS_Alt'] > 5700.0
 ar1['fl_up'] = ar1['fl_QA']&ar1['fl_alt_6k']
@@ -1044,16 +1140,19 @@ ar1['fl_up'] = ar1['fl_QA']&ar1['fl_alt_6k']
 
 # In[65]:
 
+
 ar0['fl_alt_6k'] = ar0['GPS_Alt'] > 5700.0
 ar0['fl_up'] = ar0['fl_QA']&ar0['fl_alt_6k']
 
 
 # In[66]:
 
+
 ar0.keys()
 
 
 # In[104]:
+
 
 fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
 ax = ax.ravel()
@@ -1076,6 +1175,7 @@ plt.savefig(fp+'aod_ict/{vv}/AOD_airmass_R0_vs_R1.png'.format(vv=vv),dpi=600,tra
 
 # In[91]:
 
+
 plt.figure()
 plt.hist(ar0['AOD0501'][ar0['fl_QA']],bins=40,label='R0',range=(-0.04,1.2),alpha=0.5,edgecolor='None')
 plt.hist(ar1['AOD0501'][ar1['fl_QA']],bins=40,label='R1',range=(-0.04,1.2),alpha=0.5,edgecolor='None')
@@ -1085,6 +1185,7 @@ plt.ylabel('AOd 501 nm')
 # # make plots of the gases
 
 # In[ ]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -1119,10 +1220,12 @@ for i,d in enumerate(days):
 
 # In[32]:
 
+
 outgas_RA[0].dtype.names
 
 
 # In[36]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(7,sharex=True,figsize=(9,5))
@@ -1155,9 +1258,4 @@ for i,d in enumerate(days):
     ax[6].set_ylabel('qual_flag')
     
     ax[6].set_xlabel('UTC [h]')
-
-
-# In[ ]:
-
-
 
