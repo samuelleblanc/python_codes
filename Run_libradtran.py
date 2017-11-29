@@ -50,6 +50,7 @@
 
 # In[182]:
 
+
 def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly_below=False):
     """
     Purpose:
@@ -140,6 +141,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
 
 
 # In[204]:
+
 
 def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False,expand_hg=False):
     """
@@ -239,6 +241,7 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
 
 # In[184]:
 
+
 def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False,expand_hg=False):
     """
     Purpose:
@@ -316,6 +319,7 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
 
 # In[45]:
+
 
 def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
                              verbose=False,append_directly_below=False,wvl_range=None):
@@ -417,6 +421,7 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
 
 # In[ ]:
 
+
 def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False,wvl_range=None):
     """
     Purpose:
@@ -511,6 +516,7 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
 
 # In[185]:
 
+
 def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     """
     Purpose:
@@ -570,6 +576,7 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
 
 
 # In[ ]:
+
 
 def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     """
@@ -645,6 +652,7 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
 
 
 # In[1]:
+
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                     verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None,solver='disort'):
@@ -996,6 +1004,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
 
 # In[178]:
 
+
 def merge_dicts(*dict_args):
     """
     Given any number of dicts, shallow copy and merge into a new dict,
@@ -1008,6 +1017,7 @@ def merge_dicts(*dict_args):
 
 
 # In[1]:
+
 
 def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar',cloudtype='wc'):
     """
@@ -1139,6 +1149,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 
 # In[3]:
+
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
                     wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False):
@@ -1384,6 +1395,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
 
 # In[43]:
 
+
 def read_libradtran(fp,zout=[0,3,100],num_rad=0):
     """
     Purpose:
@@ -1486,6 +1498,7 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
 
 
 # In[47]:
+
 
 def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
     """
@@ -1616,6 +1629,7 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
 
 # In[ ]:
 
+
 def combine_wvl(dat1,dat2):
     """
     Program to combine the output of read_libradtran along the wavelength dimension
@@ -1641,6 +1655,7 @@ def combine_wvl(dat1,dat2):
 
 
 # In[ ]:
+
 
 def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
              phase=['wc','ic'],fmt='lut_sza{sza:02d}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',
@@ -1751,6 +1766,7 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
 
 # In[4]:
 
+
 def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={},
                           tau=[None],ref=[None],sza=[None],cloud_pmom_file=None,
                           fmt='lut_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',use_json=True):
@@ -1788,6 +1804,7 @@ def print_version_details(filename,vv,geo={},aero={},cloud={},source={},albedo={
 
 # In[3]:
 
+
 def writeDict(dict_in, dict_name, filename):
     with open(filename, "a") as f:
         f.write("{}\n".format(dict_name))
@@ -1796,6 +1813,7 @@ def writeDict(dict_in, dict_name, filename):
 
 
 # In[ ]:
+
 
 def read_all_aac():
     """
@@ -1806,6 +1824,7 @@ def read_all_aac():
 
 # In[102]:
 
+
 def run_from_ipython():
     try:
         __IPYTHON__
@@ -1815,6 +1834,7 @@ def run_from_ipython():
 
 
 # In[ ]:
+
 
 if __name__=='__main__':
     import numpy as np
@@ -1831,17 +1851,20 @@ if __name__=='__main__':
 
 # In[49]:
 
+
 if __name__=='__main__':
     write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
 
 
 # In[57]:
 
+
 if __name__=='__main__':
     write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
 
 
 # In[109]:
+
 
 if __name__=='__main__':
     write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
@@ -1850,6 +1873,7 @@ if __name__=='__main__':
 
 # In[44]:
 
+
 if __name__=='__main__':
     import Run_libradtran
     reload(Run_libradtran)
@@ -1857,11 +1881,13 @@ if __name__=='__main__':
 
 # In[92]:
 
+
 if __name__=='__main__':
     mie = make_pmom_inputs()
 
 
 # In[93]:
+
 
 if __name__=='__main__':
     geo = {'zout':[0,3,100],
@@ -1907,11 +1933,13 @@ if __name__=='__main__':
 
 # In[94]:
 
+
 if __name__=='__main__':
     write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
 
 
 # In[39]:
+
 
 if __name__=='__main__':
     fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
@@ -1923,11 +1951,13 @@ if __name__=='__main__':
 
 # In[82]:
 
+
 if __name__=='__main__':
     d
 
 
 # In[83]:
+
 
 if __name__=='__main__':
     dat = np.array(d)
