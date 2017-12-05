@@ -1244,6 +1244,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     stdfac_dict = RL.merge_dicts({'ext':0.0,'ssa':0.0,'asym':0.0,
                                   'COD':0.0,'ref':0.0},stdfac_dict)
     std_label = ''
+    if aero_clear:
+        std_label = '_clear'
     for k in stdfac_dict.keys():
         if stdfac_dict[k] != 0.0:
             if stdfac_dict[k]>0.0: 
@@ -1287,6 +1289,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
         print 'Getting albedo files: '+fpa
         alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
+        print 'done loading albedo files'
         alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
@@ -1297,8 +1300,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 geo['lat'],geo['lon'] = lat,lon
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
-                aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])
-                aero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])
+                aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]) # is in AOD units, not ext, but since it is for 1 km, does not matter
+                print 'ext:',stdfac_dict['ext'],aero['ext'][9],stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,9])/1000.0
+                aero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])/1000.0 #convert  per Mm to per km
                 aero['ext'][aero['ext']<0.0] = 0.0
                 if aero_clear:
                     aero['ext'] = aero['ext']*0.0
@@ -1480,8 +1484,11 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
                   'zout':zout,
                   'direct_down':dat[:,:,1].squeeze(),
                   'diffuse_down':dat[:,:,2].squeeze(),
-                  'diffuse_up':dat[:,:,3].squeeze(),
-                  'int_tot':dat[:,:,4].squeeze()}
+                  'diffuse_up':dat[:,:,3].squeeze()}
+        try:
+             output['int_tot'] = dat[:,:,4].squeeze()
+        except:
+            output['int_tot'] = np.NaN
     if num_rad:
         output['rad'] = dat[:,:,10].squeeze()
         output['rad_avg'] = dat[:,:,9].squeeze()
