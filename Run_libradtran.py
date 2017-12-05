@@ -1249,7 +1249,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             if stdfac_dict[k]>0.0: 
                 n='p' 
             else: n='m'
-            std_label = std_label+'_'+k+n
+            std_label = std_label+'_'+k+nstdfac_dict
     
     for mmm in ['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
