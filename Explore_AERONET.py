@@ -44,7 +44,8 @@
 
 # # Import the required python modules and set paths
 
-# In[32]:
+# In[8]:
+
 
 import scipy.io as sio
 import numpy as np
@@ -53,22 +54,26 @@ import matplotlib as mpl
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[33]:
+# In[9]:
+
 
 import load_utils as lu
 
 
 # In[34]:
 
+
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other\\'
 
 
 # In[35]:
 
+
 fp2 = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other_2017\\'
 
 
-# In[36]:
+# In[10]:
+
 
 def nat_sort(l):
     n = max([len(j) for j in l])+1
@@ -81,20 +86,24 @@ def nat_sort(l):
 
 # In[5]:
 
+
 a = lu.load_aeronet(fp+'150708_150708_Mount_Chacaltaya.lev20')
 
 
 # In[6]:
+
 
 a.keys()
 
 
 # In[80]:
 
+
 len(a['Timehhmmss'])
 
 
 # In[29]:
+
 
 nm = [float(k[4:]) for k in a.keys() if k.startswith('AOT_')]
 nm.sort()
@@ -102,30 +111,36 @@ nm.sort()
 
 # In[31]:
 
+
 a['wl'] = nm
 
 
 # In[38]:
+
 
 aods = [k for k in a.keys() if k.startswith('AOT_')]
 
 
 # In[40]:
 
+
 aods.sort()
 
 
 # In[43]:
+
 
 aods.sort(key=lambda x: '{0:0>8}'.format(x).lower())
 
 
 # In[44]:
 
+
 aods
 
 
 # In[86]:
+
 
 aod = []
 for i in xrange(len(a['Timehhmmss'])):
@@ -138,20 +153,24 @@ a['aod'] = np.array(aod)
 
 # In[14]:
 
+
 reload(lu)
 
 
 # In[15]:
+
 
 b = lu.load_aeronet(fp+'20160801_20161031_Mauna_Loa.lev15',version=3)
 
 
 # In[16]:
 
+
 b.keys()
 
 
 # In[35]:
+
 
 nm = [float(k[4:-2]) for k in b.keys() if (k.startswith('AOD_')&k.endswith('nm'))]
 nm.sort()
@@ -159,30 +178,36 @@ nm.sort()
 
 # In[36]:
 
+
 nm
 
 
 # In[37]:
+
 
 b['wl'] = nm
 
 
 # In[49]:
 
+
 baods = [k for k in b.keys() if (k.startswith('AOD_')&k.endswith('nm'))]
 
 
 # In[64]:
+
 
 nat_sort(baods)
 
 
 # In[78]:
 
+
 baods
 
 
 # In[88]:
+
 
 baod = []
 for i in xrange(len(b['Timehhmmss'])):
@@ -193,6 +218,7 @@ b['aod'] = np.array(baod)
 
 # In[91]:
 
+
 b['aod'].shape
 
 
@@ -200,30 +226,36 @@ b['aod'].shape
 
 # In[44]:
 
+
 c = lu.load_aeronet(fp2+'170801_170930_Sao_Tome.lev10',version=2)
 
 
 # In[45]:
+
 
 c.keys()
 
 
 # In[46]:
 
+
 from datetime import datetime, timedelta
 
 
 # In[47]:
+
 
 list(c['Julian_Day'])
 
 
 # In[48]:
 
+
 dt = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(c['Julian_Day'])]
 
 
 # In[49]:
+
 
 plt.figure()
 plt.plot(dt,c['AOT_500'],'.')
@@ -234,24 +266,22 @@ plt.grid()
 
 # In[50]:
 
+
 d = lu.load_aeronet(fp2+'170801_170930_Ascension_Island.lev15',version=2)
 
 
 # In[51]:
+
 
 d['dt'] = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(d['Julian_Day'])]
 
 
 # In[53]:
 
+
 plt.figure()
 plt.plot(d['dt'],d['AOT_500'],'.')
 plt.grid()
-
-
-# In[ ]:
-
-
 
 
 # # Plot out the AOD spectra for each point
@@ -259,6 +289,7 @@ plt.grid()
 # ## Plot out the Mount_Chacaltaya aeronet
 
 # In[169]:
+
 
 fig,ax = plt.subplots(1)
 s_m = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar, norm=plt.normalize(vmin=min(a['Julian_Day']),vmax=max(a['Julian_Day'])))
@@ -278,6 +309,7 @@ plt.savefig(fp+'AERONET_Chacaltaya_high_alt_AOD_log_sept_2016.png',dpi=600,trans
 
 
 # In[170]:
+
 
 fig,ax = plt.subplots(1)
 s_m = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar, norm=plt.normalize(vmin=min(a['Julian_Day']),vmax=max(a['Julian_Day'])))
@@ -310,6 +342,7 @@ plt.savefig(fp+'AERONET_Chacaltaya_high_alt_AOD_log_sept_2016.png',dpi=600,trans
 
 # In[166]:
 
+
 fig,ax = plt.subplots(1)
 s_m = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar, norm=plt.normalize(vmin=min(b['Day_of_Year']),vmax=max(b['Day_of_Year'])))
 s_m.set_array([])
@@ -327,6 +360,7 @@ plt.savefig(fp+'AERONET_MLO_high_alt_AOD_sept_2016.png',dpi=600,transparent=True
 
 
 # In[165]:
+
 
 fig,ax = plt.subplots(1)
 s_m = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar, norm=plt.normalize(vmin=min(b['Day_of_Year']),vmax=max(b['Day_of_Year'])))
@@ -358,16 +392,161 @@ plt.savefig(fp+'AERONET_MLO_high_alt_AOD_log_sept_2016.png',dpi=600,transparent=
 
 # In[162]:
 
+
 np.array(b['wl'])[im],np.nanmean(b['aod'][:,im],axis=0),np.nanmedian(b['aod'][:,im],axis=0)
 
 
 # In[172]:
 
+
 plt.figure()
 plt.plot(b['Day_of_Year'],b['aod'][:,7],'x')
 
 
-# In[ ]:
+# # Test out the aeronet aerosol properties in sao tome for ORACLES 2017
+
+# In[67]:
 
 
+from json_tricks import dump, dumps, load, loads, strip_comments
+
+
+# In[4]:
+
+
+ff = '/mnt/c/Users/sleblanc/Research/ORACLES/aero_file_v2.txt'
+
+
+# In[5]:
+
+
+n = load(ff)
+
+
+# In[6]:
+
+
+n.keys()
+
+
+# In[12]:
+
+
+n['asy'].shape
+
+
+# In[13]:
+
+
+plt.figure()
+plt.plot(n['wvl_arr'],n['asy'][0,:])
+
+
+# In[20]:
+
+
+aero_asy = [0.702247,0.580717,0.520858,0.504244]
+aero_wvl = [440.0,674.0,870.0,1020.0]
+
+
+# In[33]:
+
+
+new_asy = [ 0.75  ,  0.71,  0.69,  0.645,  0.58,
+         0.52,  0.512,  0.51,  0.49 ,  0.45,
+         0.427843  ,  0.377843  ]
+
+
+# In[68]:
+
+
+plt.figure()
+plt.plot(n['wvl_arr'],n['asy'][0,:],label='lut_v3_aero')
+plt.plot(aero_wvl,aero_asy,label='Sao Tome Aug 18th, 2017')
+plt.plot(n['wvl_arr'],new_asy,label='new lut_v4_aero')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Asymmetry parameter')
+plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_asy_v4.png',dpi=600,transparent=True)
+
+
+# In[41]:
+
+
+aero_ssa = [0.869100,0.863700,0.849200,0.840400]
+aero_ssa2 = [0.899500,0.889300,0.865900,0.843400]
+
+
+# In[63]:
+
+
+new_ssa = [ 0.885  ,  0.88,  0.878 ,  0.875,  0.87 ,
+        0.851,  0.841,  0.838 ,  0.82,  0.79110621,
+        0.761106  ,  0.721106  ]
+
+
+# In[69]:
+
+
+plt.figure()
+plt.plot(n['wvl_arr'],n['ssa'][0,:],'x-',label='lut_v3_aero')
+plt.plot(aero_wvl,aero_ssa,'x-',label='Sao Tome Aug 18th, 2017')
+plt.plot(aero_wvl,aero_ssa2,'x-',label='Sao Tome Aug 13th, 2017')
+plt.plot(n['wvl_arr'],new_ssa,'x-',label='new lut_v4_aero')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('SSA')
+plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_ssa_v4.png',dpi=600,transparent=True)
+
+
+# In[71]:
+
+
+import numpy as np
+
+
+# In[72]:
+
+
+aero_ext = np.array([0.703200,0.357900,0.227200,0.164300])/3.0
+
+
+# In[74]:
+
+
+new_ext = n['ext'][0,:]*1.4
+
+
+# In[76]:
+
+
+plt.figure()
+plt.plot(n['wvl_arr'],n['ext'][0,:],'x-',label='lut_v3_aero')
+plt.plot(aero_wvl,aero_ext,'x-',label='Sao Tome Aug 18th, 2017')
+#plt.plot(aero_wvl,aero_ssa2,'x-',label='Sao Tome Aug 13th, 2017')
+plt.plot(n['wvl_arr'],new_ext,'x-',label='new lut_v4_aero')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Extinction')
+plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_ext_v4.png',dpi=600,transparent=True)
+
+
+# In[78]:
+
+
+n['asy'][0,:] = new_asy
+n['ssa'][0,:] = new_ssa
+n['ext'][0,:] = new_ext
+
+
+# In[79]:
+
+
+help(dump)
+
+
+# In[80]:
+
+
+dump(n,'/mnt/c/Users/sleblanc/Research/ORACLES/aero_file_v4.txt')
 
