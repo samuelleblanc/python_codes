@@ -218,6 +218,118 @@ it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,
 it = it.flatten()
 
 
+# ## Load the 4STAR dirty clean correction file
+
+# In[394]:
+
+
+s_dirty = fmat+'20160920_AOD_merge_marks.mat'
+
+
+# In[395]:
+
+
+dm = sio.loadmat(s_dirty)
+
+
+# In[396]:
+
+
+dm.keys()
+
+
+# In[397]:
+
+
+dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
+
+
+# ### Create a full wavelength tau correction from polyfit
+
+# In[416]:
+
+
+import Sun_utils as su
+from scipy import polyval
+from write_utils import nearest_neighbor
+
+
+# In[400]:
+
+
+dm['dAODs'].shape
+
+
+# Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
+
+# In[449]:
+
+
+daod = []
+for i,iv in enumerate(dm['wl_nm'].flatten()):
+    da = nearest_neighbor(dm['dAODs'][:,i],dm['utc'],s['utc'],dist=1.0/3600)
+    daod.append(da)
+    break
+daod = np.array(daod)
+daod.shape
+
+
+# In[450]:
+
+
+plt.figure()
+plt.plot(da)
+
+
+# In[432]:
+
+
+dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=4) for i in xrange(len(s['utc']))]    
+np.shape(dm['polyaod'])
+
+
+# In[434]:
+
+
+dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
+
+
+# In[444]:
+
+
+np.shape(dm['tau'])
+
+
+# In[414]:
+
+
+s['tau_aero'].shape
+
+
+# In[435]:
+
+
+aod = s['tau_aero']-np.array(dm['tau'])
+
+
+# In[436]:
+
+
+aod.shape
+
+
+# ### Plot to ensure proper correction
+
+# In[447]:
+
+
+plt.figure()
+#plt.plot(dm['utc'],dm['dAODs'][:,4],'k.')
+plt.plot(s['utc'],daod[4,:],'r.')
+plt.plot(s['utc'],np.array(dm['tau'])[:,400],'b.')
+plt.plot(s['utc'],aod[:,400],'g.')
+
+
 # # Plot the geographical region and add context
 
 # In[93]:
@@ -446,10 +558,16 @@ def smoothb(y, box_pts):
     return y_smooth
 
 
-# In[393]:
+# In[452]:
 
 
-fig = plt.figure(figsize=(12,8))
+help(ax.pcolorfast)
+
+
+# In[453]:
+
+
+fig = plt.figure(figsize=(11,7))
 plt.title('{} profile at {}h'.format(dd,profile[0]))
 fig.subplots_adjust(wspace=0.1)
 ax = plt.subplot2grid((4,5),(0,0),colspan=3,rowspan=3)
@@ -515,6 +633,98 @@ plt.setp(ax.get_xticklabels(), visible=True)
 ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(dd=dd,t0=profile[0],t1=profile[1]))
 
 plt.savefig(fp+'plot/AOD_Alt_profile_log_angstrom_{}.png'.format(dd),dpi=600,transparent=True)
+
+
+# ## Redo but with the dirty corrected data
+
+# In[441]:
+
+
+plt.figure()
+plt.plot(s['utc'],aod[:,400])
+
+
+# In[437]:
+
+
+polylogaod = np.array([su.logaod_polyfit(s['w'].flatten()[iw_archive]*1000.0,aod[i,iw_archive],polynum=4) for i in np.where(it)[0]])
+
+
+# In[438]:
+
+
+angs = su.angstrom_from_logpoly(polylogaod,[380.0,515.0,865.0,1250.0],polynum=4)
+
+
+# In[440]:
+
+
+fig = plt.figure(figsize=(12,8))
+plt.title('{} profile at {}h'.format(dd,profile[0]))
+fig.subplots_adjust(wspace=0.1)
+ax = plt.subplot2grid((4,5),(0,0),colspan=3,rowspan=3)
+cb = ax.pcolorfast(s['w'].flatten()*1000.0,s['Alt'][it].flatten(),aod[it,:][:-1,:-1],
+                   cmap='gist_ncar',vmin=0,vmax=tau_max)
+ax.set_ylabel('Altitude [m]')
+ax.set_ylim([900,6700])
+ax.set_xscale('log')
+
+ax2 = plt.subplot2grid((4,5),(0,3),sharey=ax,rowspan=3)
+
+ax2.plot(aod[it,i380],s['Alt'][it],'.-',color='purple',label='380 nm')
+ax2.plot(aod[it,i515],s['Alt'][it],'g.-',label='515 nm')
+ax2.plot(aod[it,i865],s['Alt'][it],'r.-',label='865 nm')
+ax2.plot(aod[it,i1250],s['Alt'][it],'.-',color='grey',label='1250 nm')
+
+plt.setp(ax2.get_yticklabels(), visible=False)
+ax2.set_xticks([0.0,0.3,0.6,0.9])
+ax2.set_xlim([0.0,tau_max*0.85])
+ax2.set_xlabel('AOD')
+ax2.set_ylim([900,6700])
+ax2.grid()
+leg = ax2.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+    
+axa = plt.subplot2grid((4,5),(0,4),sharey=ax,rowspan=3)
+plt.plot(smoothb(angs[:,0],10),s['Alt'][it],'.-',color='purple',label='380 nm')
+plt.plot(smoothb(angs[:,1],10),s['Alt'][it],'g.-',label='515 nm')
+plt.plot(smoothb(angs[:,2],10),s['Alt'][it],'r.-',label='865 nm')
+#plt.plot(smoothb(s['angs'][:,3],10),s['Alt'][it],'.-',color='grey',label='1250 nm')
+plt.setp(axa.get_yticklabels(), visible=False)
+axa.set_xticks([0.8,1.2,1.6,2.0])
+axa.set_xlim([0.6,2.0])
+axa.set_xlabel('Angstrom')
+axa.set_ylim([900,6700])
+axa.grid()
+
+axc = plt.colorbar(cb,extend='max')
+axc.set_label('Aerosol Optical Thickness')
+
+ax3 = plt.subplot2grid((4,5),(3,0),sharex=ax,colspan=3)
+for i in iit:
+    p =ax3.plot(s['w'].flatten()*1000.0,aod[i,:].flatten(),label='Alt: {:4.0f} m'.format(s['Alt'][i][0]))
+    p =ax3.plot(s['w'].flatten()[iw_archive]*1000.0,aod[i,iw_archive].flatten(),'x',color=p[0].get_color())
+    ax.axhline(s['Alt'][i][0],ls='--',color=p[0].get_color(),lw=2)
+ax.set_xlim([350,1650])
+ax3.set_ylim([0.00,tau_max])
+ax.set_xscale('log')
+ax3.set_xscale('log')
+ax.set_xticks([350,400,500,600,700,850,1000,1200,1600])
+ax.set_xticklabels([350,400,500,600,700,850,1000,1200,1600])
+ax3.grid()
+leg = ax3.legend(frameon=False,loc=2,numpoints=1,bbox_to_anchor=(1.0,0.94),handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+ax3.set_xlabel('Wavelength [nm]')
+ax3.set_ylabel('AOD')
+plt.setp(ax.get_xticklabels(), visible=True)
+
+ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(dd=dd,t0=profile[0],t1=profile[1]))
+
+#plt.savefig(fp+'plot/AOD_Alt_profile_log_angstrom_dirty_corrected{}.png'.format(dd),dpi=600,transparent=True)
 
 
 # ## Vertical profile of extinction
