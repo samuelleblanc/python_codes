@@ -82,15 +82,15 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[6]:
+# In[17]:
 
 
 vv = 'v4'
-mu = np.arange(1.05,4.0,0.15)
+mu = np.arange(1.02,3.4,0.15)
 mu.shape
 
 
-# In[7]:
+# In[18]:
 
 
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
