@@ -129,15 +129,19 @@ pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
 # In[ ]:
 
 
-aero = load_from_json(fp+'aero_save.txt')
+aero = load_from_json(fp+'aero_file_v4.txt')
 
 
 # In[70]:
 
 
-geo = {'lat':-22.979,
-       'lon':14.645,
-       'doy':245,
+#geo = {'lat':-22.979,
+#       'lon':14.645,
+#       'doy':245,
+#       'zout':[0.2,1.5,100.0]}
+geo = {'lat':-0.576265,
+       'lon': 6.639029,
+       'doy':225,
        'zout':[0.2,1.5,100.0]}
 #aero = {'z_arr':[2.0,5.0],
 #        'ext':np.array([[0.6,0.4,0.10,0.04],[0.0,0.0,0.0,0.0]]),
@@ -155,7 +159,7 @@ source = {'wvl_range':[350,1750],
           'integrate_values':False,
           'run_fuliou':False,
           'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
-          'atm_file':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/atmmod/afglmw.dat',
+          'atm_file':'/u/sleblan2/ORACLES/atmos_20170815.dat',
           'zenith':True}
 albedo = {'create_albedo_file':False,
           'sea_surface_albedo':True,
