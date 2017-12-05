@@ -47,7 +47,7 @@
 
 # # Prepare the python environment
 
-# In[66]:
+# In[2]:
 
 
 import numpy as np
@@ -57,7 +57,7 @@ import Run_libradtran as RL
 reload(RL)
 
 
-# In[ ]:
+# In[3]:
 
 
 from load_utils import load_from_json
@@ -82,15 +82,15 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[84]:
+# In[6]:
 
 
 vv = 'v4'
-mu = np.arange(1.05,4.0,0.2)
+mu = np.arange(1.05,4.0,0.15)
 mu.shape
 
 
-# In[139]:
+# In[7]:
 
 
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
