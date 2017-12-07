@@ -472,6 +472,7 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         
     if not wvl_range:
         wvl_range = [min(wvl),max(wvl)]
+    if verbose: print '... wvl_range:',wvl_range[0],wvl_range[1]
         
     try:
         output = file(output_file,'w')
