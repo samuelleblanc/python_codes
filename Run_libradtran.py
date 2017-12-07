@@ -883,7 +883,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 base.write('output_process integrate\n')
         else:
             base.write('output_process per_nm\n')
-        base.write('data_files_path \t %s\n' % source['dat_path'])
+        base.write('data_files_path %s\n' % source['dat_path'])
     elif not include_base:
         if source['integrate_values']:
             if source['run_fuliou']:
@@ -892,11 +892,11 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 output.write('output_process integrate\n')
         else:
             output.write('output_process per_nm\n')
-        output.write('data_files_path \t %s\n' % source['dat_path'])
-    output.write('source \t %s \n' % source['source'])
+        output.write('data_files_path %s\n' % source['dat_path'])
+    output.write('source %s \n' % source['source'])
     
     if source.get('wvl_filename'):
-        output.write('wavelength\t%s\n' % source['wvl_filename'])
+        output.write('wavelength %s\n' % source['wvl_filename'])
     else:
         if source['wvl_range'][0]>source['wvl_range'][1]:
             print 'wvl_range was set inverse, inversing'
@@ -904,18 +904,18 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         if source['wvl_range'][0]<250:
             print 'wvl_range starting too low, setting to 250 nm'
             source['wvl_range'][0] = 250.0
-        output.write('wavelength\t%f\t%f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+        output.write('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
         
     if source.get('slit_file'):
-        output.write('slit_function_file\t%s\n'%source['slit_file'])
+        output.write('slit_function_file %s\n'%source['slit_file'])
         
     if source.get('atm_file'):
-        output.write('atmosphere_file\t%s\n'%source['atm_file'])
+        output.write('atmosphere_file %s\n'%source['atm_file'])
         
     if source['zenith']:
-        output.write('umu\t-1.0\n')
-        output.write('phi\t130.0\n')
-        output.write('phi0\t130.0\n')
+        output.write('umu -1.0\n')
+        output.write('phi 130.0\n')
+        output.write('phi0 130.0\n')
     
     
     
@@ -923,25 +923,25 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     if albedo['create_albedo_file']:
         albedo['albedo_file'] = output_file+'_alb'
         write_albedo_file(albedo['albedo_file'],source['alb_wvl'],source['alb'])
-        output.write('albedo_file \t%s\n' % albedo['albedo_file'])
+        output.write('albedo_file %s\n' % albedo['albedo_file'])
     elif albedo.get('albedo_file'):
-        output.write('albedo_file \t%s\n' % albedo['albedo_file'])
+        output.write('albedo_file %s\n' % albedo['albedo_file'])
     elif albedo.get('sea_surface_albedo'):
-        output.write('brdf_cam u10\t%i\n' % albedo['wind_speed'])
+        output.write('brdf_cam u10 %i\n' % albedo['wind_speed'])
     else:
-        output.write('albedo\t%f\n' % albedo['albedo'])
+        output.write('albedo %f\n' % albedo['albedo'])
     
     if verbose: print '..write out the geo values'
     output.write('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
     if geo.get('lat'):
-        output.write("latitude\t%s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
-        output.write("longitude\t%s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
+        output.write("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
+        output.write("longitude %s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
     if geo.get('sza'):
-        output.write('sza\t%f\n' % geo['sza'])
+        output.write('sza %f\n' % geo['sza'])
     if geo.get('doy'):
-        output.write('day_of_year\t%i\n' % geo['doy'])
+        output.write('day_of_year %i\n' % geo['doy'])
     if geo.get('year'):
-        output.write('time\t%04i\t%02i\t%02i\t%02i\t%02i\t%02i\n' 
+        output.write('time %04i %02i %02i %02i %02i %02i\n' 
                      %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
         
     if 'ext' in aero:
@@ -962,7 +962,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 aero['file_name'] = output_file+'_aero'
             write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],
                                         aero['asy'],aero['wvl_arr'],verbose=verbose,expand_hg=aero['expand_hg'])
-        output.write('aerosol_file explicit \t%s\n' % aero['file_name'])
+        output.write('aerosol_file explicit %s\n' % aero['file_name'])
     
     if 'tau' in cloud:
         if verbose: print '..write out the cloud properties'
@@ -971,12 +971,12 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 cloud['file_name'] = output_file+'_cloud'
         if cloud['phase']=='ic':
             if verbose: print '..Ice cloud'
-            output.write('ic_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+            output.write('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
             output.write('ic_properties baum_v36 interpolate\n')
         elif cloud['phase']=='wc':
             if verbose: print '..Liquid water cloud'
-            output.write('wc_file %s \t %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
-            output.write('wc_properties mie \t %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
+            output.write('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+            output.write('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
         else:
             raise ValueError('phase value in cloud dict not recognised')
         if cloud['write_moments_file']:
@@ -1070,19 +1070,19 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
             if deltascale:
                 mie = sio.loadmat(fp_rtm+'mie_hi_delta.mat')
                 rho = np.array([1.0])
-                pmom = {'wvl':np.append(mie['wvl'],mie_long.variables['wavelen'].data[:]),
+                pmom = {'wvl':np.append(mie['wvl'],mie_long.variables['wavelen'].data[1:]),
                         'ref':mie['ref'],
-                        'ntheta':np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[:,:,0],0,1)),axis=1),
+                        'ntheta':np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[1:,:,0],0,1)),axis=1),
                         'rho':mie['rho'],
-                        'nmom':np.concatenate((mie['nmom_delta'],np.swapaxes(mie_long.variables['nmom'].data[:,:,0],0,1)),axis=1),
-                        'ssa':np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data[:,:],0,1)),axis=1),
-                        'ext':np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data[:,:],0,1)),axis=1),
-                        'nim':np.append(mie['nim'],mie_long.variables['refim'].data[:]),
-                        'nre':np.append(mie['nre'],mie_long.variables['refre'].data[:]),
+                        'nmom':np.concatenate((mie['nmom_delta'],np.swapaxes(mie_long.variables['nmom'].data[1:,:,0],0,1)),axis=1),
+                        'ssa':np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data[1:,:],0,1)),axis=1),
+                        'ext':np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data[1:,:],0,1)),axis=1),
+                        'nim':np.append(mie['nim'],mie_long.variables['refim'].data[1:]),
+                        'nre':np.append(mie['nre'],mie_long.variables['refre'].data[1:]),
                         'pmom':np.concatenate((np.concatenate((mie['pmom_delta'],np.zeros((30,754,351))),axis=2),
-                                               np.swapaxes(mie_long.variables['pmom'].data[:,:,0,:652],0,1)),axis=1),
-                        'phase':np.concatenate((mie['phase'],np.swapaxes(mie_long.variables['phase'].data[:,:,0,:398],0,1)),axis=1),
-                        'theta':np.concatenate((mie['theta'],np.swapaxes(mie_long.variables['theta'].data[:,:,0,:398],0,1)),axis=1)}
+                                               np.swapaxes(mie_long.variables['pmom'].data[1:,:,0,:652],0,1)),axis=1),
+                        'phase':np.concatenate((mie['phase'],np.swapaxes(mie_long.variables['phase'].data[1:,:,0,:398],0,1)),axis=1),
+                        'theta':np.concatenate((mie['theta'],np.swapaxes(mie_long.variables['theta'].data[1:,:,0,:398],0,1)),axis=1)}
                 pmom['file_name'] = [fp_rtm+'mie_hi_delta.mat',fp_rtm+'wc.sol.long.mie.cdf']
             else:
                 mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
