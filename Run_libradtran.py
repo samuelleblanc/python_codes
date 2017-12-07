@@ -985,7 +985,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 output.write('disort_intcor moments\n') 
             if not cloud.get('link_to_mom_file'):
                 write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
-                                         verbose=verbose,moms_dict=cloud.get('moms_dict'))
+                                         verbose=verbose,moms_dict=cloud.get('moms_dict'),wvl_range=source['wvl_range'])
             if cloud['cloud_below']:
                 if not cloud.get('link_to_mom_file'):
                     write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
