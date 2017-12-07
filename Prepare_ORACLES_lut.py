@@ -170,7 +170,8 @@ albedo = {'create_albedo_file':False,
 
 
 RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
-                         aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
+                         aero=aero,cloud=cloud,source=source,albedo=albedo,
+                         tau=tau,ref=ref,sza=sza,cloud_pmom_file=fp_rtmdat+'mie_hi_delta.mat')
 
 
 # In[71]:
@@ -233,7 +234,7 @@ for s in sza:
                 source['wvl_range'] = [400.,981.]
                 source['slit_file'] = f_slit_vis
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
+                                   verbose=True,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
                 source['wvl_range'] = [981.,1700.]
@@ -242,6 +243,8 @@ for s in sza:
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
             print s,t,r
+        break
+    break
 
 
 # In[ ]:
