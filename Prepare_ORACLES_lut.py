@@ -123,7 +123,7 @@ print(tau.shape)
 # In[ ]:
 
 
-pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
+pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=True)
 
 
 # In[ ]:

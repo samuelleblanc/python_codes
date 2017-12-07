@@ -706,7 +706,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             write_moments_file: (default False) if True, writes out moments into an ascii file instead 
                                 of reading directly from the netcdf file. 
                                 Requires the moments to be put in the cloud dict and the nmom.
-            moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. 
+            moms_dict: is the moment dict structure returned from the mie_hi.out idl.readsav. or now the mie_hi_delta.mat
                        To be used when building the moments file
             link_to_mom_file: if True then no moments file is written out, but referenced via file_name saved to cloud dict
             file_name: file name and paths of moments file for cloud defined. 
@@ -811,6 +811,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added the cloud_below keyword to the cloud options.
         Modified: Samuel LeBlanc, NASA Ames, CA, 2016-09-22
                 - added expansion of henyey greenstein legendre moments for aerosol explict files
+        Modified: Samuel LeBlanc, Santa Cruz, CA, 2017-12-06
+                - modified use of mie_hi.out for mie_hi_delta.mat with new delta-scaling legendre functions
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts
@@ -1019,7 +1021,7 @@ def merge_dicts(*dict_args):
 # In[1]:
 
 
-def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar',cloudtype='wc'):
+def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='solar',cloudtype='wc',deltascale=True):
     """
     Purpose:
     
@@ -1030,6 +1032,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
         fp_rtm: path to the files to load
         source: either solar or thermal (default is solar)
         cloudtype: either 'wc' for water cloud or 'ic' for ice cloud 
+        deltascale: (default True) if true, uses the mie_hi_delta.mat instead of mie_hi.out
     
     Dependencies:
 
@@ -1038,7 +1041,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
     
     Required files:
    
-        mie_hi.out
+        mie_hi.out or mie_hi_delta.mat
         wc.sol.long.mie.cdf
         wc.sol.short.mie.cdf        
         ic.pmom.ghm.baum.mat
@@ -1055,46 +1058,71 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
                     - fixed bugs with Claudia Emde's full pmom netcdf files. Added longer wavelengths to be saved.
         Modified: Samuel LeBlanc, 2017-02-15, Santa Cruz, CA
                     - added ic file from calculations of pmom from Create_ic_phase.py file
+        Modified: Samuel LeBlanc, 2017-12-06, Santa Cruz, CA
+                    - added new mie_hi_delta.mat function, for using delta scaled legendre polynomials
     """
     import numpy as np
     import scipy.io as sio
     
     if cloudtype=='wc':
         if source=='solar':
-            mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
             mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
-            try:
-                rho = np.swapaxes(mie.variables['rho'].data,0,1)
-            except ValueError:
-                rho = mie.variables['rho'].data
-            mie_short = {'wvl':mie.variables['wavelen'].data,
-                         'ref':mie.variables['reff'].data,
-                         'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
-                         'rho':rho,
-                         'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
-                         'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
-                         'ext':np.swapaxes(mie.variables['ext'].data,0,1),
-                         'nim':mie.variables['refim'].data,
-                         'nre':mie.variables['refre'].data,
-                         'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
-                         'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
-                         'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
-            pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
-                    'ref':mie_short['ref'],
-                    'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
-                    'rho':mie_short['rho'],
-                    'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
-                    'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
-                    'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
-                    'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
-                    'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
-                    'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
-                                                                             np.zeros((25,72,2500))),axis=2)),axis=1),
-                    'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
-                    'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
-            pmom['file_name'] = [fp_rtm+'wc_allpmom.sol.mie.cdf',fp_rtm+'wc.sol.long.mie.cdf']
+            if deltascale:
+                mie = sio.loadmat(fp_rtm+'mie_hi_delta.mat')
+                rho = np.array([1.0])
+                pmom = {'wvl':np.append(mie['wvl'],mie_long.variables['wavelen'].data[:]),
+                        'ref':mie['ref'],
+                        'ntheta':np.concatenate((mie['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[:,:,0],0,1)),axis=1),
+                        'rho':mie['rho'],
+                        'nmom':np.concatenate((mie['nmom_delta'],np.swapaxes(mie_long.variables['nmom'].data[:,:,0],0,1)),axis=1),
+                        'ssa':np.concatenate((mie['ssa'],np.swapaxes(mie_long.variables['ssa'].data[:,:],0,1)),axis=1),
+                        'ext':np.concatenate((mie['ext'],np.swapaxes(mie_long.variables['ext'].data[:,:],0,1)),axis=1),
+                        'nim':np.append(mie['nim'],mie_long.variables['refim'].data[:]),
+                        'nre':np.append(mie['nre'],mie_long.variables['refre'].data[:]),
+                        'pmom':np.concatenate((np.concatenate((mie['pmom_delta'],np.zeros((30,754,351))),axis=2),
+                                               np.swapaxes(mie_long.variables['pmom'].data[:,:,0,:652],0,1)),axis=1),
+                        'phase':np.concatenate((mie['phase'],np.swapaxes(mie_long.variables['phase'].data[:,:,0,:398],0,1)),axis=1),
+                        'theta':np.concatenate((mie['theta'],np.swapaxes(mie_long.variables['theta'].data[:,:,0,:398],0,1)),axis=1)}
+                pmom['file_name'] = [fp_rtm+'mie_hi_delta.mat',fp_rtm+'wc.sol.long.mie.cdf']
+            else:
+                mie = sio.netcdf_file(fp_rtm+'wc_allpmom.sol.mie.cdf','r')
+                try:
+                    rho = np.swapaxes(mie.variables['rho'].data,0,1)
+                except ValueError:
+                    rho = mie.variables['rho'].data
+                mie_short = {'wvl':mie.variables['wavelen'].data,
+                             'ref':mie.variables['reff'].data,
+                             'ntheta':np.swapaxes(mie.variables['ntheta'].data[:,:,0],0,1),
+                             'rho':rho,
+                             'nmom':np.swapaxes(mie.variables['nmom'].data,0,1),
+                             'ssa':np.swapaxes(mie.variables['ssa'].data,0,1),
+                             'ext':np.swapaxes(mie.variables['ext'].data,0,1),
+                             'nim':mie.variables['refim'].data,
+                             'nre':mie.variables['refre'].data,
+                             'pmom':np.swapaxes(mie.variables['pmom'].data[:,:,0,:],0,1),
+                             'phase':np.swapaxes(mie.variables['phase'].data[:,:,0,:],0,1),
+                             'theta': np.swapaxes(mie.variables['theta'].data[:,:,0,:],0,1)}
+                pmom = {'wvl':np.append(mie_short['wvl'],mie_long.variables['wavelen'].data[7:]),
+                        'ref':mie_short['ref'],
+                        'ntheta':np.concatenate((mie_short['ntheta'],np.swapaxes(mie_long.variables['ntheta'].data[7:,:-5,0],0,1)),axis=1),
+                        'rho':mie_short['rho'],
+                        'nmom':np.concatenate((mie_short['nmom'],np.swapaxes(mie_long.variables['nmom'].data[7:,:-5,0],0,1)),axis=1),
+                        'ssa':np.concatenate((mie_short['ssa'],np.swapaxes(mie_long.variables['ssa'].data[7:,:-5],0,1)),axis=1),
+                        'ext':np.concatenate((mie_short['ext'],np.swapaxes(mie_long.variables['ext'].data[7:,:-5],0,1)),axis=1),
+                        'nim':np.append(mie_short['nim'],mie_long.variables['refim'].data[7:]),
+                        'nre':np.append(mie_short['nre'],mie_long.variables['refre'].data[7:]),
+                        'pmom':np.concatenate((mie_short['pmom'],np.concatenate((np.swapaxes(mie_long.variables['pmom'].data[7:,:-5,0,:],0,1),
+                                                                                 np.zeros((25,72,2500))),axis=2)),axis=1),
+                        'phase':np.concatenate((mie_short['phase'],np.swapaxes(mie_long.variables['phase'].data[7:,:-5,0,:],0,1)),axis=1),
+                        'theta':np.concatenate((mie_short['theta'],np.swapaxes(mie_long.variables['theta'].data[7:,:-5,0,:],0,1)),axis=1)}
+                pmom['file_name'] = [fp_rtm+'wc_allpmom.sol.mie.cdf',fp_rtm+'wc.sol.long.mie.cdf']
         elif source=='solar_sub':
-            mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
+            if deltascale:
+                mie = sio.loadmat(fp_rtm+'mie_hi_delta.mat')
+                mie['pmom'] = mie['pmom_delta']
+                mie['nmom'] = mie['nmom_delta']
+            else:
+                mie = sio.idl.readsav(fp_rtm+'mie_hi.out')
             mie_long = sio.netcdf_file(fp_rtm+'wc.sol.long.mie.cdf','r')
             pmom = mie
             pmom['wvl'] = np.append(mie['wvl'],mie_long.variables['wavelen'].data)
