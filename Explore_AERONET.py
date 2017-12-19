@@ -44,7 +44,7 @@
 
 # # Import the required python modules and set paths
 
-# In[8]:
+# In[1]:
 
 
 import scipy.io as sio
@@ -52,27 +52,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 get_ipython().magic(u'matplotlib notebook')
+import path
 
 
-# In[9]:
+# In[6]:
 
 
 import load_utils as lu
+from path_utils import getpath
 
 
-# In[34]:
+# In[7]:
+
+
+fp = getpath('ORACLES')
+
+
+# In[3]:
 
 
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other\\'
 
 
-# In[35]:
+# In[4]:
 
 
 fp2 = 'C:\\Users\\sleblan2\\Research\\ORACLES\\data_other_2017\\'
 
 
-# In[10]:
+# In[5]:
 
 
 def nat_sort(l):
@@ -405,31 +413,31 @@ plt.plot(b['Day_of_Year'],b['aod'][:,7],'x')
 
 # # Test out the aeronet aerosol properties in sao tome for ORACLES 2017
 
-# In[67]:
+# In[11]:
 
 
 from json_tricks import dump, dumps, load, loads, strip_comments
 
 
-# In[4]:
+# In[12]:
 
 
 ff = '/mnt/c/Users/sleblanc/Research/ORACLES/aero_file_v2.txt'
 
 
-# In[5]:
+# In[13]:
 
 
 n = load(ff)
 
 
-# In[6]:
+# In[14]:
 
 
 n.keys()
 
 
-# In[12]:
+# In[15]:
 
 
 n['asy'].shape
@@ -442,14 +450,14 @@ plt.figure()
 plt.plot(n['wvl_arr'],n['asy'][0,:])
 
 
-# In[20]:
+# In[22]:
 
 
 aero_asy = [0.702247,0.580717,0.520858,0.504244]
 aero_wvl = [440.0,674.0,870.0,1020.0]
 
 
-# In[33]:
+# In[21]:
 
 
 new_asy = [ 0.75  ,  0.71,  0.69,  0.645,  0.58,
@@ -457,7 +465,7 @@ new_asy = [ 0.75  ,  0.71,  0.69,  0.645,  0.58,
          0.427843  ,  0.377843  ]
 
 
-# In[68]:
+# In[87]:
 
 
 plt.figure()
@@ -470,14 +478,29 @@ plt.ylabel('Asymmetry parameter')
 plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_asy_v4.png',dpi=600,transparent=True)
 
 
-# In[41]:
+# In[89]:
+
+
+plt.figure()
+plt.plot(n['wvl_arr'],n['asy'][0,:],'x-',label='2016')
+plt.plot(aero_wvl,aero_asy,'x-',label='Sao Tome Aug 18th, 2017')
+plt.plot(n['wvl_arr'],new_asy,'x-',label='2017')
+plt.gca().set_xscale('log')
+plt.legend(frameon=False)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Asymmetry parameter')
+plt.grid()
+plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_asy_v4_yr.png',dpi=600,transparent=True)
+
+
+# In[20]:
 
 
 aero_ssa = [0.869100,0.863700,0.849200,0.840400]
 aero_ssa2 = [0.899500,0.889300,0.865900,0.843400]
 
 
-# In[63]:
+# In[19]:
 
 
 new_ssa = [ 0.885  ,  0.88,  0.878 ,  0.875,  0.87 ,
@@ -505,13 +528,13 @@ plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_ssa_v4.png',dpi=600,tra
 import numpy as np
 
 
-# In[72]:
+# In[17]:
 
 
 aero_ext = np.array([0.703200,0.357900,0.227200,0.164300])/3.0
 
 
-# In[74]:
+# In[18]:
 
 
 new_ext = n['ext'][0,:]*1.4
@@ -529,6 +552,55 @@ plt.legend()
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('Extinction')
 plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_ext_v4.png',dpi=600,transparent=True)
+
+
+# In[9]:
+
+
+ssa_4star = [0.820466265,0.803721687,0.757131325,0.733398795]
+ssa_4star_std = [0.031832575,0.032310169,0.040917537,0.046946279]
+wvl_4star = [440.0,675.0,870.0,995.0]
+
+
+# In[37]:
+
+
+fig,ax = plt.subplots(3,sharex=True,figsize=(7,5))
+ax = ax.ravel()
+
+
+ax[0].plot(n['wvl_arr'],n['asy'][0,:],'x-',label='2016')
+ax[0].plot(aero_wvl,aero_asy,'x-',label='Sao Tome Aug 18th, 2017')
+ax[0].plot(n['wvl_arr'],new_asy,'x-',label='2017')
+ax[0].set_xscale('log')
+
+#ax[0].set_xlabel('Wavelength [nm]')
+ax[0].set_ylabel('Asymmetry\nparameter')
+ax[0].grid()
+ax[0].set_title('Optical properties of aerosol above cloud')
+
+ax[1].plot(n['wvl_arr'],n['ssa'][0,:],'x-')
+ax[1].plot(aero_wvl,aero_ssa,'x-')
+ax[1].plot(n['wvl_arr'],new_ssa,'x-')
+ax[1].errorbar(wvl_4star,np.array(ssa_4star)+0.03,yerr=(np.array(ssa_4star_std)+0.02),label='4STAR SSA from 2016')
+#ax[0].set_xlabel('Wavelength [nm]')
+ax[1].set_ylabel('Single Scattering\nAlbedo')
+ax[1].grid()
+ax[1].legend(frameon=False)
+
+ax[2].plot(n['wvl_arr'],n['ext'][0,:],'x-',label='2016')
+ax[2].plot(aero_wvl,aero_ext,'x-',label='Sao Tome 2017-08-18')
+ax[2].plot(n['wvl_arr'],new_ext,'x-',label='2017')
+ax[2].set_ylabel('Extinction\nCoefficient [km$^{{-1}}$]')
+ax[2].grid()
+ax[2].legend(frameon=False)
+ax[2].set_xlabel('Wavelength [nm]')
+ax[2].set_xlim(250,5000)
+ax[2].set_xticks([320,400,500,600,750,1000,1240,1600,2500,4000])
+ax[2].set_xticklabels([320,400,500,600,750,1000,1240,1600,2500,4000])
+
+
+plt.savefig('/mnt/c/Users/sleblanc/Research/ORACLES/aero_v4_yr.png',dpi=600,transparent=True)
 
 
 # In[78]:
