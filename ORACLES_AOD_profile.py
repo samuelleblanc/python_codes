@@ -448,14 +448,15 @@ w_archive = [354.9,380.0,451.7,470.2,500.7,520,530.3,532.0,550.3,605.5,619.7,660
 iw_archive = [np.argmin(abs(s['w']*1000.0-i)) for i in w_archive]
 
 
-# In[162]:
+# In[462]:
 
 
 fig = plt.figure(figsize=(11,8))
 plt.title('{} profile at {}h'.format(dd,profile[0]))
 ax = plt.subplot2grid((4,4),(0,0),colspan=3,rowspan=3)
-cb = ax.pcolorfast(s['w'].flatten()*1000.0,s['Alt'][it].flatten(),s['tau_aero'][it,:][:-1,:-1],
+cb = ax.pcolor(s['w'].flatten()*1000.0,s['Alt'][it].flatten(),s['tau_aero'][it,:][:-1,:-1],
                    cmap='gist_ncar',vmin=0,vmax=tau_max)
+plt.xscale('log')
 ax.set_ylabel('Altitude [m]')
 ax.set_ylim([900,6700])
 ax.set_xscale('log')
@@ -465,6 +466,7 @@ ax2 = plt.subplot2grid((4,4),(0,3),sharey=ax,rowspan=3)
 ax2.plot(s['tau_aero'][it,i380],s['Alt'][it],'.-',color='purple',label='380 nm')
 ax2.plot(s['tau_aero'][it,i515],s['Alt'][it],'g.-',label='515 nm')
 ax2.plot(s['tau_aero'][it,i865],s['Alt'][it],'r.-',label='865 nm')
+ax2.plot(s['tau_aero'][it,i1250],s['Alt'][it],'.-',color='grey',label='1250 nm')
 
 plt.setp(ax2.get_yticklabels(), visible=False)
 ax2.set_xticks([0.0,0.3,0.6,0.9])
@@ -484,9 +486,10 @@ for i in iit:
     p =ax3.plot(s['w'].flatten()[iw_archive]*1000.0,s['tau_aero'][i,iw_archive].flatten(),'x',color=p[0].get_color())
     ax.axhline(s['Alt'][i][0],ls='--',color=p[0].get_color(),lw=2)
 ax.set_xlim([350,1650])
-ax3.set_ylim([0.00,tau_max])
+ax3.set_ylim([0.03,tau_max*1.05])
 ax.set_xscale('log')
 ax3.set_xscale('log')
+ax3.set_yscale('log')
 ax.set_xticks([350,400,500,600,750,900,1000,1200,1600])
 ax.set_xticklabels([350,400,500,600,750,900,1000,1200,1600])
 ax3.grid()
@@ -496,8 +499,70 @@ for line,text in zip(leg.get_lines(), leg.get_texts()):
     line.set_linewidth(5.0)
 ax3.set_xlabel('Wavelength [nm]')
 ax3.set_ylabel('AOD')
+ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(dd=dd,t0=profile[0],t1=profile[1]))
 plt.setp(ax.get_xticklabels(), visible=True)
-plt.savefig(fp+'plot/AOD_Alt_profile_log_{}.png'.format(dd),dpi=600,transparent=True)
+plt.savefig(fp+'plot/AOD_Alt_profile_loglog_{}.png'.format(dd),dpi=600,transparent=True)
+
+
+# In[465]:
+
+
+fig = plt.figure(figsize=(11,8))
+plt.title('{} profile at {}h'.format(dd,profile[0]))
+ax = plt.subplot2grid((4,4),(0,0),colspan=3,rowspan=3)
+cb = ax.pcolor(s['w'].flatten()*1000.0,s['Alt'][it].flatten(),s['tau_aero'][it,:][:-1,:-1],
+                   cmap='gist_ncar',vmin=0,vmax=tau_max)
+plt.xscale('log')
+ax.set_ylabel('Altitude [m]')
+ax.set_ylim([900,6700])
+ax.set_xscale('log')
+
+ax2 = plt.subplot2grid((4,4),(0,3),sharey=ax,rowspan=3)
+
+i532 = np.argmin(abs(s['w']*1000.0-532.0))
+i355 = np.argmin(abs(s['w']*1000.0-355.0))
+i1064 = np.argmin(abs(s['w']*1000.0-1064.0))
+
+ax2.plot(s['tau_aero'][it,i355],s['Alt'][it],'.-',color='purple',label='355 nm')
+ax2.plot(s['tau_aero'][it,i532],s['Alt'][it],'g.-',label='535 nm')
+ax2.plot(s['tau_aero'][it,i865],s['Alt'][it],'r.-',label='865 nm')
+ax2.plot(s['tau_aero'][it,i1064],s['Alt'][it],'.-',color='y',label='1064 nm')
+ax2.plot(s['tau_aero'][it,i1250],s['Alt'][it],'.-',color='grey',label='1250 nm')
+
+plt.setp(ax2.get_yticklabels(), visible=False)
+ax2.set_xticks([0.0,0.3,0.6,0.9])
+ax2.set_xlim([0.0,tau_max])
+ax2.set_xlabel('AOD')
+ax2.set_ylim([900,6700])
+leg = ax2.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+axc = plt.colorbar(cb,extend='max')
+axc.set_label('Aerosol Optical Thickness')
+
+ax3 = plt.subplot2grid((4,4),(3,0),sharex=ax,colspan=3)
+for i in iit:
+    p =ax3.plot(s['w'].flatten()*1000.0,s['tau_aero'][i,:].flatten(),label='Alt: {:4.0f} m'.format(s['Alt'][i][0]))
+    p =ax3.plot(s['w'].flatten()[iw_archive]*1000.0,s['tau_aero'][i,iw_archive].flatten(),'x',color=p[0].get_color())
+    ax.axhline(s['Alt'][i][0],ls='--',color=p[0].get_color(),lw=2)
+ax.set_xlim([350,1650])
+ax3.set_ylim([0.03,tau_max*1.05])
+ax.set_xscale('log')
+ax3.set_xscale('log')
+ax3.set_yscale('log')
+ax.set_xticks([350,400,500,600,750,900,1000,1200,1600])
+ax.set_xticklabels([350,400,500,600,750,900,1000,1200,1600])
+ax3.grid()
+leg = ax3.legend(frameon=False,loc=2,numpoints=1,bbox_to_anchor=(1.0,0.94),handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+ax3.set_xlabel('Wavelength [nm]')
+ax3.set_ylabel('AOD')
+ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(dd=dd,t0=profile[0],t1=profile[1]))
+plt.setp(ax.get_xticklabels(), visible=True)
+plt.savefig(fp+'plot/AOD_Alt_profile_loglog_hsrlwvl_{}.png'.format(dd),dpi=600,transparent=True)
 
 
 # ### Add the angstrom exponent vertical dependence
@@ -556,12 +621,6 @@ def smoothb(y, box_pts):
     box = np.ones(box_pts)/box_pts
     y_smooth = np.convolve(y, box, mode='same')
     return y_smooth
-
-
-# In[452]:
-
-
-help(ax.pcolorfast)
 
 
 # In[453]:
@@ -784,4 +843,98 @@ ax2.set_xlabel('Extinction @ 515 nm')
 #ax3.set_ylabel('AOT')
 #plt.setp(ax.get_xticklabels(), visible=False)
 plt.savefig(fp+'plot\\Ext_Alt_profile_{dd}.png'.format(dd=dd),dpi=600,transparent=True)
+
+
+# # Now load the HSRL data and plot that
+
+# In[467]:
+
+
+import hdf5storage as hs
+
+
+# In[468]:
+
+
+import load_utils as lu
+
+
+# In[469]:
+
+
+fp
+
+
+# In[472]:
+
+
+hsrl = lu.load_hdf(fp+'data_other/HSRL2_ER2_20160920_R4.h5')
+
+
+# In[473]:
+
+
+val = (('AOTcum_355',11),('AOTcum_532',24),('ext_1064',7),('Alt',36),('Lat',106),('Lon',107),('GPS_alt',105),('time',108))
+
+
+# In[477]:
+
+
+hsrl,hsrl_head = lu.load_hdf(fp+'data_other/HSRL2_ER2_20160920_R4.h5',values=val)
+
+
+# In[479]:
+
+
+hsrl['time']
+
+
+# In[517]:
+
+
+ih = np.argmin(abs(hsrl['time']-11.95))
+
+
+# In[484]:
+
+
+ih
+
+
+# In[497]:
+
+
+hsrl['Alt']
+
+
+# ## Now plot the vertical HSRL AOT profile corresponding to 4STAR's measurement
+
+# In[495]:
+
+
+plt.figure()
+plt.plot(hsrl['Alt'])
+
+
+# In[519]:
+
+
+plt.figure(figsize=(4,8))
+plt.plot(hsrl['AOTcum_355'][ih,:],hsrl['Alt'].flatten(),'.-',color='purple',label='HSRL2 355 nm')
+plt.plot(hsrl['AOTcum_532'][ih,:],hsrl['Alt'].flatten(),'.-',color='g',label='HSRL2 532 nm')
+
+plt.plot(s['tau_aero'][it,i355]-0.065,s['Alt'][it],'.-',color='violet',label='4STAR 355 nm')
+plt.plot(s['tau_aero'][it,i532]-0.045,s['Alt'][it],'.-',color='lightgreen',label='4STAR 532 nm')
+
+plt.ylim([900,6700])
+plt.xlim([0,tau_max])
+plt.xlabel('AOD')
+plt.ylabel('Altitude [m]')
+leg = plt.legend(frameon=False,loc=1,numpoints=1,handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+plt.title('AOD profile from HSRL2 and 4STAR\n on {} at 11.87 UTC'.format(dd))
+
+plt.savefig(fp+'plot/AOD_Alt_profile_vs_HSRL_{}.png'.format(dd),dpi=600,transparent=True)
 
