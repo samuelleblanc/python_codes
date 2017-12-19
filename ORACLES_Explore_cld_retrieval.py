@@ -45,6 +45,7 @@
 
 # In[1]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -60,12 +61,14 @@ import Sp_parameters as Sp
 
 # In[2]:
 
+
 # set the basic directory path
 fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
 fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 
 # In[3]:
+
 
 vr = 'R1'
 
@@ -74,17 +77,20 @@ vr = 'R1'
 
 # In[4]:
 
+
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
 # In[5]:
 
+
 rts = []
 sps = []
 
 
 # In[6]:
+
 
 for daystr in dds:
     print daystr
@@ -99,30 +105,36 @@ for daystr in dds:
 
 # In[7]:
 
+
 from load_utils import mat2py_time,toutc
 
 
 # In[8]:
+
 
 p = sio.netcdf_file(fp+'..//data_other//oracles.cloud.timings.nc','r')
 
 
 # In[9]:
 
+
 p.variables
 
 
 # In[10]:
+
 
 p.variables['timevec_20160914'].data
 
 
 # In[11]:
 
+
 t_0914 = mat2py_time(p.variables['timevec_20160914'].data)
 
 
 # In[28]:
+
 
 plt.figure()
 plt.plot(t_0914,p.variables['cloud_time_20160914'].data,'x')
@@ -132,10 +144,12 @@ plt.plot(t_0914,p.variables['cloud_time_20160914'].data,'x')
 
 # In[11]:
 
+
 rt.keys()
 
 
 # In[13]:
+
 
 plt.figure()
 plt.plot(rt['utc'],rt['tau'])
@@ -143,10 +157,12 @@ plt.plot(rt['utc'],rt['tau'])
 
 # In[14]:
 
+
 rt = rts[9]
 
 
 # In[15]:
+
 
 plt.figure()
 plt.plot(rts[9]['utc'],rts[9]['tau'],'.')
@@ -155,26 +171,31 @@ plt.plot(rts[9]['utc'],rts[9]['utc'],'r+')
 
 # In[16]:
 
+
 plt.figure()
 plt.plot(rts[9]['tau'],rts[9]['ref'],'.')
 
 
 # In[12]:
 
+
 igood = rts[9]['tau']>0
 
 
 # In[13]:
+
 
 igood[0:10]
 
 
 # In[14]:
 
+
 sp = sps[9]
 
 
 # In[15]:
+
 
 i=68
 i_vis = [1061,1062,1064]
@@ -188,10 +209,12 @@ plt.plot(sp.wvl[i_nir],sp.norm[i,i_nir],'g+')
 
 # In[16]:
 
+
 np.nanmean(sp.norm[i,iw])
 
 
 # In[17]:
+
 
 np.nanmean(sp.norm[i,ii])
 
@@ -199,6 +222,7 @@ np.nanmean(sp.norm[i,ii])
 # ## Plot some of the sza for each day to ensure good fitting of lut
 
 # In[70]:
+
 
 plt.figure()
 plt.plot(sps[7].utc,sps[7].sza,'x-')
@@ -210,11 +234,13 @@ plt.plot(sps[7].utc,sps[7].sza,'x-')
 
 # In[12]:
 
+
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
 # In[13]:
+
 
 for i,daystr in enumerate(dds):
     nvis = np.nanmean(sps[i].norm[:,i_vis],axis=1)
@@ -228,10 +254,12 @@ for i,daystr in enumerate(dds):
 
 # In[14]:
 
+
 fl_alt = rt['alt']<1000.0
 
 
 # In[15]:
+
 
 for i,daystr in enumerate(dds):
     rts[i]['fl_alt'] = rts[i]['alt'][:,0]<1000.0
@@ -242,10 +270,12 @@ for i,daystr in enumerate(dds):
 
 # In[16]:
 
+
 from write_utils import nearest_neighbor
 
 
 # In[17]:
+
 
 for i,daystr in enumerate(dds):
     try:
@@ -263,6 +293,7 @@ for i,daystr in enumerate(dds):
 
 # In[18]:
 
+
 for i,daystr in enumerate(dds):
     rts[i]['fl_ki'] = rts[i]['ki']<0.6
     print daystr,rts[i]['utc'].shape,rts[i]['utc'][rts[i]['fl_ki']].shape,        float(rts[i]['utc'][rts[i]['fl_ki']].shape[0])/ float(rts[i]['utc'].shape[0])*100.0
@@ -271,6 +302,7 @@ for i,daystr in enumerate(dds):
 # ## Combine the filters
 
 # In[19]:
+
 
 tot=0
 tot_fl=0
@@ -283,6 +315,7 @@ for i,daystr in enumerate(dds):
 
 # In[20]:
 
+
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 
@@ -290,10 +323,12 @@ print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 # In[21]:
 
+
 from Sp_parameters import smooth
 
 
 # In[98]:
+
 
 for i,daystr in enumerate(dds):
     plt.figure()
@@ -320,6 +355,7 @@ for i,daystr in enumerate(dds):
 
 # In[22]:
 
+
 for i,daystr in enumerate(dds):
     try:
         rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
@@ -336,6 +372,7 @@ for i,daystr in enumerate(dds):
 
 # In[23]:
 
+
 rt.keys()
 
 
@@ -343,10 +380,12 @@ rt.keys()
 
 # In[24]:
 
+
 import write_utils as wu
 
 
 # In[46]:
+
 
 hdict = {'PI':'Jens Redemann',
      'Institution':'NASA Ames Research Center',
@@ -372,6 +411,7 @@ order = ['LAT','LON','COD','REF']
 
 # In[47]:
 
+
 for i,daystr in enumerate(dds):
     d_dict = {'Start_UTC':{'data':rts[i]['utc'][rts[i]['fl']]*3600.0,'unit':'seconds from midnight UTC','long_description':'time keeping'},
               'utc':{'data':rts[i]['utc'][rts[i]['fl']],'unit':'seconds from midnight UTC','long_description':'time keeping'},
@@ -389,10 +429,12 @@ for i,daystr in enumerate(dds):
 
 # In[48]:
 
+
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
 # In[49]:
+
 
 def dict_keys_to_unicode(d):
     out = dict()
@@ -412,6 +454,7 @@ for n in rtss.keys():
 
 # In[50]:
 
+
 hs.savemat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr),rtss)
 
 
@@ -419,10 +462,12 @@ hs.savemat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr),rtss)
 
 # In[23]:
 
+
 rtss = hs.loadmat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr))
 
 
 # In[34]:
+
 
 if not 'rts' in locals():
     rts = []
@@ -439,15 +484,18 @@ elif not rts:
 
 # In[51]:
 
+
 vv = 'R1'
 
 
 # In[52]:
 
+
 from load_utils import load_ict
 
 
 # In[53]:
+
 
 out_RA = []
 out_head_RA = []
@@ -460,20 +508,24 @@ for d in dds:
 
 # In[54]:
 
+
 out_head_RA[0]
 
 
 # In[55]:
+
 
 nm = out_RA[0].dtype.names
 
 
 # In[56]:
 
+
 nm
 
 
 # In[87]:
+
 
 for i,d in enumerate(dds):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -543,6 +595,7 @@ for i,d in enumerate(dds):
 
 # In[88]:
 
+
 ar = {}
 for n in rts[0].keys():
     ar[n] = np.array([])
@@ -550,10 +603,12 @@ for n in rts[0].keys():
 
 # In[89]:
 
+
 ar['days'] = np.array([])
 
 
 # In[90]:
+
 
 for i,d in enumerate(dds):
     ar['days'] = np.append(ar['days'],np.zeros_like(rts[i]['utc'])+i)
@@ -565,10 +620,12 @@ for i,d in enumerate(dds):
 
 # In[91]:
 
+
 import hdf5storage as hs
 
 
 # In[92]:
+
 
 hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr),ar)
 
@@ -576,6 +633,7 @@ hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr),ar)
 # ## Optionally load the all ict file
 
 # In[7]:
+
 
 if not 'ar' in locals():
     ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr))
@@ -585,26 +643,31 @@ if not 'ar' in locals():
 
 # In[93]:
 
+
 import plotting_utils as pu
 
 
 # In[94]:
+
 
 from map_interactive import build_basemap
 
 
 # In[95]:
 
+
 rts[i]['tau_fl']
 
 
 # In[96]:
+
 
 for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
 
 
 # In[97]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -622,6 +685,7 @@ plt.savefig(fp+'..//zen_ict/v3/{}_COD_map.png'.format(vr),transparent=True,dpi=6
 
 
 # In[98]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -642,6 +706,7 @@ plt.savefig(fp+'..//zen_ict/v3/{}_REF_map.png'.format(vr),transparent=True,dpi=6
 
 # In[99]:
 
+
 plt.figure()
 plt.plot(ar['lat_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lat_fl'],ar['tau_fl'],bins=40,normed=True)
@@ -655,6 +720,7 @@ plt.savefig(fp+'..//zen_ict/v3/{}_COD_hist_lat.png'.format(vr),transparent=True,
 
 # In[8]:
 
+
 plt.figure()
 plt.plot(ar['lon_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lon_fl'],ar['tau_fl'],bins=40,normed=True)
@@ -667,6 +733,7 @@ plt.savefig(fp+'..//zen_ict/v3/COD_hist_lon.png',transparent=True,dpi=600)
 
 
 # In[57]:
+
 
 plt.figure()
 plt.plot(ar['lon_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
@@ -682,6 +749,7 @@ plt.savefig(fp+'..//zen_ict/v3/ref_hist_lon.png',transparent=True,dpi=600)
 
 # In[58]:
 
+
 plt.figure()
 plt.plot(ar['lat_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lat_fl'],ar['ref_fl'],bins=40,normed=True,cmap=plt.cm.gist_earth)
@@ -696,6 +764,7 @@ plt.savefig(fp+'..//zen_ict/v3/ref_hist_lat.png',transparent=True,dpi=600)
 
 # In[9]:
 
+
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
 plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='All points')
@@ -709,16 +778,19 @@ plt.savefig(fp+'..//zen_ict/v3/cod_hist.png',transparent=True,dpi=600)
 
 # In[10]:
 
+
 ar.keys()
 
 
 # In[11]:
+
 
 aam = ar['utc_fl']<12.0
 apm = ar['utc_fl']>12.0
 
 
 # In[12]:
+
 
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.3,normed=True,label='filtered')
@@ -735,6 +807,7 @@ plt.savefig(fp+'..//zen_ict/v3/cod_hist_pm_am.png',transparent=True,dpi=600)
 
 # In[94]:
 
+
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=False,label='filtered')
 plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,70),label='All points')
@@ -746,15 +819,18 @@ plt.savefig(fp+'..//zen_ict/v3/cod_hist_all.png',transparent=True,dpi=600)
 
 # In[103]:
 
+
 np.nanmean(ar['tau_fl'])
 
 
 # In[104]:
 
+
 np.nanmean(ar['ref_fl'])
 
 
 # In[102]:
+
 
 fig = plt.figure()
 plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
@@ -769,6 +845,7 @@ plt.savefig(fp+'..//zen_ict/v3/{}_ref_hist.png'.format(vr),transparent=True,dpi=
 
 # In[101]:
 
+
 fig = plt.figure()
 plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=False,label='filtered')
 plt.hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,30),label='all points')
@@ -780,10 +857,12 @@ plt.savefig(fp+'..//zen_ict/v3/{}_ref_hist_all.png'.format(vr),transparent=True,
 
 # In[132]:
 
+
 reload(pu)
 
 
 # In[100]:
+
 
 fig,ax = plt.subplots(2,1)
 ax = ax.ravel()
@@ -818,20 +897,24 @@ plt.savefig(fp+'..//zen_ict/v3/{}_ref_cod_hist.png'.format(vr),transparent=True,
 
 # In[37]:
 
+
 fp
 
 
 # In[38]:
+
 
 c = hs.loadmat(fp+'../rtm/ORACLES_CRE_{}.mat'.format('v2'))
 
 
 # In[39]:
 
+
 c.keys()
 
 
 # In[40]:
+
 
 c['star_aero_C']
 
@@ -840,10 +923,12 @@ c['star_aero_C']
 
 # In[41]:
 
+
 import plotting_utils as pu
 
 
 # In[42]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-1000,0],xlim=[-0.5,1.5])
@@ -858,6 +943,7 @@ plt.savefig(fp+'../plot/ORACLES_surface_CRE_4STAR.png',transparent=True,dpi=600)
 
 # In[43]:
 
+
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-1000,0],xlim=[-0.5,1.5])
 ax1.set_ylabel('Cloud Radiative Effect [W/m$^2$]')
@@ -871,6 +957,7 @@ plt.savefig(fp+'../plot/ORACLES_CRE_toa_4STAR.png',transparent=True,dpi=600)
 
 # In[48]:
 
+
 print 'Surface CRE'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,0]),np.nanmean(c['star_noaero_C'][:,0]))
 print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),np.nanmedian(c['star_noaero_C'][:,0]))
@@ -879,6 +966,7 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nan
 
 # In[49]:
 
+
 print 'TOA CRE'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,2]),np.nanmean(c['star_noaero_C'][:,2]))
 print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,2]),np.nanmedian(c['star_noaero_C'][:,2]))
@@ -886,6 +974,7 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,2]),np.nan
 
 
 # In[50]:
+
 
 plt.figure()
 plt.hist(c['star_aero_CRE']['up'][:,2]/c['star_aero_CRE']['dn'][:,2],normed=False,edgecolor='None',color='g',
@@ -902,11 +991,13 @@ plt.savefig(fp+'../plot/ORACLES_albedo_toa_4STAR.png',transparent=True,dpi=600)
 
 # In[62]:
 
+
 star_aero_rC = np.zeros_like(c['star_aero_C'])
 star_noaero_rC = np.zeros_like(c['star_aero_C'])
 
 
 # In[88]:
+
 
 star_aero_rC[:,0] = c['star_aero_C'][:,0]/c['star_aero_CRE']['dn'][:,2]*100.0
 star_aero_rC[:,1] = c['star_aero_C'][:,1]/c['star_aero_CRE']['dn'][:,2]*100.0
@@ -918,6 +1009,7 @@ star_noaero_rC[:,2] = c['star_noaero_C'][:,2]/c['star_noaero_CRE']['dn'][:,2]*10
 
 # In[91]:
 
+
 star_aero_rC_abc = np.zeros_like(c['star_aero_C'])
 star_noaero_rC_abc = np.zeros_like(c['star_aero_C'])
 
@@ -926,6 +1018,7 @@ star_noaero_rC_abc[:,0] = c['star_noaero_C'][:,0]/c['star_noaero_CRE']['dn'][:,1
 
 
 # In[89]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
@@ -940,6 +1033,7 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_surface_4STAR.png',transparent=True,dpi=600
 
 # In[90]:
 
+
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
 ax1.set_ylabel('relative Cloud Radiative Effect [\%]')
@@ -952,6 +1046,7 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_above_cloud_for_surface_4STAR.png',transpar
 
 
 # In[84]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,0],xlim=[-0.5,1.5])
@@ -966,6 +1061,7 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_toa_4STAR.png',transparent=True,dpi=600)
 
 # In[85]:
 
+
 print 'Surface rCRE'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(star_aero_rC[:,0]),np.nanmean(star_noaero_rC[:,0]))
 print 'median aero: {}, no aero: {}'.format(np.nanmedian(star_aero_rC[:,0]),np.nanmedian(star_noaero_rC[:,0]))
@@ -973,6 +1069,7 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,0]),np.nanstd(
 
 
 # In[86]:
+
 
 print 'TOA rCRE'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(star_aero_rC[:,2]),np.nanmean(star_noaero_rC[:,2]))
@@ -984,10 +1081,12 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,2]),np.nanstd(
 
 # In[68]:
 
+
 c.keys()
 
 
 # In[69]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,20],xlim=[-0.5,1.5])
@@ -1004,6 +1103,7 @@ plt.savefig(fp+'../plot/ORACLES_DARE_surface_4STAR.png',transparent=True,dpi=600
 
 # In[70]:
 
+
 print 'Surface DARE'
 print 'mean clouds: {}, no clouds: {}'.format(np.nanmean(DAREs),np.nanmean(DAREs_clear))
 print 'median clouds: {}, no clouds: {}'.format(np.nanmedian(DAREs),np.nanmedian(DAREs_clear))
@@ -1011,6 +1111,7 @@ print 'std clouds: {}, no clouds: {}'.format(np.nanstd(DAREs),np.nanstd(DAREs_cl
 
 
 # In[71]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-50,100],xlim=[-0.5,1.5])
@@ -1027,6 +1128,7 @@ plt.savefig(fp+'../plot/ORACLES_DARE_toa_4STAR.png',transparent=True,dpi=600)
 
 # In[72]:
 
+
 print 'TOA DARE'
 print 'mean clouds: {}, no clouds: {}'.format(np.nanmean(DAREt),np.nanmean(DAREt_clear))
 print 'median clouds: {}, no clouds: {}'.format(np.nanmedian(DAREt),np.nanmedian(DAREt_clear))
@@ -1037,10 +1139,12 @@ print 'std clouds: {}, no clouds: {}'.format(np.nanstd(DAREt),np.nanstd(DAREt_cl
 
 # In[73]:
 
+
 tau_500 = 0.3689
 
 
 # In[74]:
+
 
 rfes = DAREs/c['star_aero_CRE']['dn'][:,2]*100.0/tau_500
 rfes_clear = DAREs_clear/c['star_aero_CRE']['dn'][:,2]*100.0/tau_500
@@ -1049,6 +1153,7 @@ rfet_clear = DAREt_clear/c['star_aero_CRE']['dn'][:,2]*100.0/tau_500
 
 
 # In[75]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-30,5],xlim=[-0.5,1.5])
@@ -1063,6 +1168,7 @@ plt.savefig(fp+'../plot/ORACLES_rDAREe_surface_4STAR.png',transparent=True,dpi=6
 
 # In[76]:
 
+
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-25,25],xlim=[-0.5,1.5])
 ax1.set_ylabel('relative DARE efficiency [\%/$\\tau_{{500nm}}$]')
@@ -1076,6 +1182,7 @@ plt.savefig(fp+'../plot/ORACLES_rDAREe_TOA_4STAR.png',transparent=True,dpi=600)
 
 # In[77]:
 
+
 print 'Surface rDAREe'
 print 'mean clouds: {}, no clouds: {}'.format(np.nanmean(rfes),np.nanmean(rfes_clear))
 print 'median clouds: {}, no clouds: {}'.format(np.nanmedian(rfes),np.nanmedian(rfes_clear))
@@ -1083,6 +1190,7 @@ print 'std clouds: {}, no clouds: {}'.format(np.nanstd(rfes),np.nanstd(rfes_clea
 
 
 # In[78]:
+
 
 print 'TOA rDAREe'
 print 'mean clouds: {}, no clouds: {}'.format(np.nanmean(rfet),np.nanmean(rfet_clear))
@@ -1093,6 +1201,7 @@ print 'std clouds: {}, no clouds: {}'.format(np.nanstd(rfet),np.nanstd(rfet_clea
 # ## Calculate the impact of aerosol on CRE
 
 # In[138]:
+
 
 fig = plt.figure(figsize=(5,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-5,15],xlim=[-0.5,1.5])
@@ -1108,11 +1217,13 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_4STAR.png',transparent=True,dp
 
 # In[139]:
 
+
 print 'difference in relative CRE due to aerosol'
 print 'mean, surface: {}, toa: {}'.format(np.nanmean(star_aero_rC[:,0]-star_noaero_rC[:,0]),np.nanmean(star_aero_rC[:,2]-star_noaero_rC[:,2]))
 
 
 # In[127]:
+
 
 fig = plt.figure(figsize=(7,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-5,15],xlim=[-0.5,2.5])
@@ -1129,25 +1240,30 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_abc_4STAR.png',transparent=Tru
 
 # In[98]:
 
+
 c.keys()
 
 
 # In[101]:
+
 
 c['star_aero_C'].shape
 
 
 # In[107]:
 
+
 ar.keys()
 
 
 # In[108]:
 
+
 ar['tau_fl'].shape
 
 
 # In[112]:
+
 
 plt.figure()
 plt.hist(np.exp(-1.0*0.36*np.cos(ar['sza'][ar['fl'].astype(bool)]*np.pi/180.0))*100.0,edgecolor='None')
@@ -1158,16 +1274,19 @@ plt.xlabel('Expected reduction due to aerosol optical depth')
 
 # In[115]:
 
+
 plt.figure()
 plt.hist( np.cos(ar['sza'][ar['fl'].astype(bool)]*np.pi/180.0) )
 
 
 # In[117]:
 
+
 np.cos(4*np.pi/180)
 
 
 # In[118]:
+
 
 1.0/np.cos(45.0*np.pi/180.0)
 
@@ -1176,16 +1295,19 @@ np.cos(4*np.pi/180)
 
 # In[119]:
 
+
 aero_tau_ratio = np.exp(-1.0*0.36*np.cos(ar['sza'][ar['fl'].astype(bool)]*np.pi/180.0))
 
 
 # In[123]:
+
 
 plt.figure()
 plt.hist(aero_tau_ratio)
 
 
 # In[120]:
+
 
 print 'Surface CRE'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,0]),np.nanmean(c['star_noaero_C'][:,0]))
@@ -1195,6 +1317,7 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nan
 
 # In[122]:
 
+
 print 'Surface CRE corrected for ratio'
 print 'mean aero: {}, no aero: {}'.format(np.nanmean(c['star_aero_C'][:,0]),np.nanmean(c['star_noaero_C'][:,0]*aero_tau_ratio))
 print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),np.nanmedian(c['star_noaero_C'][:,0]*aero_tau_ratio))
@@ -1203,15 +1326,12 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nan
 
 # In[125]:
 
+
 -571.2/-610.3
 
 
 # In[134]:
 
+
 np.exp(-0.1)
-
-
-# In[ ]:
-
-
 

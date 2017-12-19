@@ -76,6 +76,7 @@
 
 # In[3]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -98,23 +99,21 @@ import cPickle as pickle
 #mpld3.enable_notbeook()
 
 
-# In[ ]:
-
-
-
-
 # In[4]:
+
 
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[3]:
 
+
 import IPython
 IPython.InteractiveShell.cache_size = 0
 
 
 # In[5]:
+
 
 # set the basic directory path
 fp='C:/Users/sleblan2/Research/SEAC4RS/'
@@ -126,6 +125,7 @@ fp='C:/Users/sleblan2/Research/SEAC4RS/'
 
 # In[6]:
 
+
 # load the idl save file containing the modeled radiances
 vv = 'v2'
 s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
@@ -133,10 +133,12 @@ s=sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20
 
 # In[6]:
 
+
 s.keys()
 
 
 # In[7]:
+
 
 s['sza']
 
@@ -145,20 +147,24 @@ s['sza']
 
 # In[8]:
 
+
 s['sp_irrdn'].shape
 
 
 # In[9]:
+
 
 s['z']
 
 
 # In[13]:
 
+
 s['sp_irrdn'][0,400,1,0,0], s['sp_irrdn'][0,400,1,10,10]
 
 
 # In[18]:
+
 
 # sum to get the refenrence downweling irradiance value
 np.sum(s['sp_irrdn'][0,250:,1,0,0]*s['zenlambda'][250:]/1000.0)
@@ -167,6 +173,7 @@ np.sum(s['sp_irrdn'][0,250:,1,0,0]*s['zenlambda'][250:]/1000.0)
 # ### explore lut and build it up
 
 # In[174]:
+
 
 #print s.keys()
 print 'sp', s.sp.shape
@@ -178,6 +185,7 @@ s.wv = np.sort(s.zenlambda)
 
 # In[175]:
 
+
 # load a second file, with different sza for irradiance calculations
 vv = 'v4'
 s2 = sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
@@ -185,10 +193,12 @@ s2 = sio.idl.readsav(fp+'model\\sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1
 
 # In[177]:
 
+
 s2['sza']
 
 
 # In[176]:
+
 
 if 'Sp' in locals():
     reload(Sp)
@@ -199,6 +209,7 @@ if 'lut' in locals():
 
 # In[178]:
 
+
 lut = Sp.Sp(s,irrad=True)
 lut.params()
 lut.param_hires()
@@ -206,10 +217,12 @@ lut.param_hires()
 
 # In[179]:
 
+
 lut.sp_hires()
 
 
 # In[180]:
+
 
 print lut.tau.shape
 print lut.ref.shape
@@ -222,6 +235,7 @@ print lut.par.shape
 
 # In[181]:
 
+
 #redo the same with the second s2
 luti = Sp.Sp(s2,irrad=True)
 luti.params()
@@ -230,6 +244,7 @@ luti.sp_hires()
 
 
 # In[20]:
+
 
 fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax3 = ax3.ravel()
@@ -266,6 +281,7 @@ plt.show()
 
 # In[21]:
 
+
 fig4,ax4 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax4 = ax4.ravel()
 
@@ -301,6 +317,7 @@ plt.show()
 
 # In[22]:
 
+
 fig5,ax5 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax5 = ax5.ravel()
 
@@ -333,6 +350,7 @@ plt.show()
 
 
 # In[23]:
+
 
 fig6,ax6 = plt.subplots(4,4,sharex=True,figsize=(15,8))
 ax6 = ax6.ravel()
@@ -369,16 +387,19 @@ plt.show()
 
 # In[17]:
 
+
 import load_utils
 reload(load_utils)
 
 
 # In[18]:
 
+
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
 
 # In[16]:
+
 
 plt.figure()
 plt.plot(dc8['TIME_UTC'],dc8['G_ALT'])
@@ -390,11 +411,13 @@ plt.savefig(fp+'plots/20130913_DC8_alt.png',dpi=600,transparent=True)
 
 # In[24]:
 
+
 print dc8['TIME_UTC'][12000]/3600.0
 print dc8['G_ALT'][12000]
 
 
 # In[10]:
+
 
 plt.figure()
 plt.plot(dc8['TIME_UTC'],dc8['W'])
@@ -408,6 +431,7 @@ plt.savefig(fp+'plots/20130913_DC8_W.png',dpi=600,transparent=True)
 
 # In[10]:
 
+
 # load the matlab file containing the measured TCAP radiances
 mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
 mea.keys()
@@ -417,6 +441,7 @@ mea.keys()
 
 # In[11]:
 
+
 print mea['t']
 tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
@@ -424,15 +449,18 @@ mea['utc'] = toutc(tt)
 
 # In[12]:
 
+
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
 # In[13]:
 
+
 mea['w'][0][1068]
 
 
 # In[36]:
+
 
 plt.figure()
 plt.plot(mea['w'][0])
@@ -443,6 +471,7 @@ plt.title('4STAR wavelength registration')
 
 # In[16]:
 
+
 plt.figure()
 plt.plot(mea['utc'],abs(mea['rad'][:,1024]-mea['rad'][:,1068]))
 plt.xlabel('UTC [Hours]')
@@ -450,6 +479,7 @@ plt.ylabel('difference in radiance at 1024 nm')
 
 
 # In[17]:
+
 
 plt.figure()
 plt.plot(mea['utc'],mea['rad'][:,400]/1000.)
@@ -459,10 +489,12 @@ plt.ylabel('Radiance at 400 nm [Wm$^{-2}$nm$^{-1}$sr$^{-1}$]')
 
 # In[29]:
 
+
 mea['rad'].shape
 
 
 # In[163]:
+
 
 plt.figure()
 plt.plot(mea['w'][0],mea['rad'][600,:],'+')
@@ -475,6 +507,7 @@ for i,w in enumerate(mea['w'][0]):
 
 # In[14]:
 
+
 ivis = range(1055,1069)
 inir = range(1004,1037)
 mean_vis = np.nanmean(mea['rad'][600,ivis])
@@ -484,15 +517,18 @@ s_ratio_vis_nir = mean_vis/mean_nir
 
 # In[15]:
 
+
 print s_ratio_vis_nir
 
 
 # In[32]:
 
+
 iw_nir = range(1045,1556)
 
 
 # In[33]:
+
 
 ss = mea['rad'][600,:]
 ss[iw_nir] = ss[iw_nir]/s_ratio_vis_nir
@@ -500,11 +536,13 @@ ss[iw_nir] = ss[iw_nir]/s_ratio_vis_nir
 
 # In[168]:
 
+
 plt.figure()
 plt.plot(mea['w'][0],ss)
 
 
 # In[16]:
+
 
 reload(Sp)
 if 'meas' in locals():
@@ -517,12 +555,14 @@ meas.params()
 
 # In[191]:
 
+
 meas.sp.shape
 
 
 # ### Plot the 4STAR zenith radiances
 
 # In[15]:
+
 
 fig = plt.figure()
 color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -538,6 +578,7 @@ cba.set_label('UTC [h]')
 
 
 # In[21]:
+
 
 fig = plt.figure()
 n=100
@@ -557,15 +598,18 @@ plt.savefig(fp+'plots/20130913_zenrad_spotcheck.png',dpi=600,transparent=True)
 
 # In[28]:
 
+
 isubwvl = np.where((meas.wvl>315.0)&(meas.wvl<940.0))[0]
 
 
 # In[29]:
 
+
 meas.sp.shape
 
 
 # In[111]:
+
 
 fig = plt.figure()
 color.cycle_cmap(len(meas.utc),cmap=plt.cm.gist_ncar,ax=plt.gca())
@@ -579,6 +623,7 @@ plt.title('All normalized radiance spectra')
 
 # In[23]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
 cba = plt.colorbar(pco)
@@ -590,6 +635,7 @@ plt.savefig(fp+'plots/20130913_curtain_zenrad_num.png',dpi=600,transparent=True)
 
 
 # In[24]:
+
 
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(meas.wvl,meas.utc,meas.sp[:-1,:-1]/1000.0,cmap='gist_ncar',vmin=0,vmax=0.8)
@@ -603,6 +649,7 @@ plt.savefig(fp+'plots/20130913_curtain_zenrad_utc.png',dpi=600,transparent=True)
 
 # In[127]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(meas.wvl,np.where(meas.utc)[0],meas.norm[:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1)
 plt.colorbar(pco)
@@ -615,11 +662,13 @@ plt.title('All normalized radiance spectra')
 
 # In[71]:
 
+
 plt.figure()
 plt.plot(meas.norm[647,:])
 
 
 # In[30]:
+
 
 iww = range(0,981)+       [984,987,991,994,998,1001,1005,1008,1012,1015,
         1019,1022,1026,1029,1032,1036,1039,1043,1046,1050,1053,
@@ -627,6 +676,7 @@ iww = range(0,981)+       [984,987,991,994,998,1001,1005,1008,1012,1015,
 
 
 # In[106]:
+
 
 plt.figure()
 plt.plot(meas.wvl[iww],meas.norm[647,iww],'k',lw=2)
@@ -638,6 +688,7 @@ plt.savefig(fp+'plots/20130913_norm_rad_example_0.png',dpi=600,transparent=True)
 
 
 # In[107]:
+
 
 def plot_greys(fig=None,ax=None):
     " Plotting of grey regions that indicates the different wavelenght regions where the parameters are defined. "
@@ -661,6 +712,7 @@ def plot_greys(fig=None,ax=None):
 
 # In[111]:
 
+
 def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=False):
     """ Make multiple lines on the subplot ax of the spectra s, for the case defined by names with the cmap
       for one particular phase (iphase), range of refs (irefs) and at one itau. Returns the axis handles for the thin and thick ref """
@@ -683,30 +735,36 @@ def plot_line_gradients(ax,s,names,cmap,iphase,irefs,itau,iwvls,pos,normalize=Fa
 
 # In[31]:
 
+
 lut.norm.shape
 
 
 # In[32]:
+
 
 lut.sp.shape
 
 
 # In[33]:
 
+
 norm_sp = lut.normsp(lut.sp)
 
 
 # In[34]:
+
 
 norm_sp.shape
 
 
 # In[35]:
 
+
 lut.norm=norm_sp
 
 
 # In[37]:
+
 
 def get_iref_itau(ref,tau):
     'simple program to find the iref and itau in lut'
@@ -716,6 +774,7 @@ def get_iref_itau(ref,tau):
 
 
 # In[137]:
+
 
 plt.figure()
 plt.plot(meas.wvl[iww],meas.norm[647,iww],'k',lw=2)
@@ -743,10 +802,12 @@ plt.plot(lut.wvl[iww],lut.norm[1,iww,0,iref,itau],'b')
 
 # In[186]:
 
+
 from Sp_parameters import smooth
 
 
 # In[187]:
+
 
 import run_kisq_retrieval as rk
 reload(rk)
@@ -754,11 +815,13 @@ reload(rk)
 
 # In[188]:
 
+
 subp = [1,2,4,5,6,10,11,13]
 #subp = [2,3,5,6,7,11,12,14]
 
 
 # In[192]:
+
 
 print max(meas.good)
 print type(mea['good'])
@@ -768,16 +831,19 @@ print type(mea['good'][0])
 
 # In[193]:
 
+
 (meas.tau,meas.ref,meas.phase,meas.ki) = rk.run_retrieval(meas,lut)
 
 
 # In[194]:
+
 
 print meas.utc.shape
 print len(meas.good), max(meas.good)
 
 
 # In[299]:
+
 
 plt.figure()
 plt.plot(meas.tau,'x')
@@ -788,12 +854,14 @@ plt.plot(meas.tau[meas.good],'o')
 
 # In[302]:
 
+
 plt.figure()
 plt.plot(meas.ref,'x')
 plt.plot(smooth(meas.ref,20),'b-')
 
 
 # In[303]:
+
 
 fig,ax = plt.subplots(4,sharex=True)
 ax[0].set_title('Retrieval results time trace')
@@ -817,6 +885,7 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_lut{}.png'.format(vv),dpi=
 
 
 # In[136]:
+
 
 from Sp_parameters import smooth
 fig,ax = plt.subplots(4,sharex=True)
@@ -844,11 +913,13 @@ plt.savefig(fp+'plots\\SEAC4RS_20130913_retri_results_v4.png',dpi=600)
 
 # In[304]:
 
+
 meas.tau[meas.good] = smooth(meas.tau[meas.good],20)
 meas.ref[meas.good] = smooth(meas.ref[meas.good],20)
 
 
 # In[305]:
+
 
 import load_utils as lm
 if 'lm' in locals():
@@ -859,6 +930,7 @@ from load_utils import load_ict
 # ## Load the ER2 nav files
 
 # In[19]:
+
 
 nasdat_er2_file = fp+'er2/20130913/seac4rs-nasdat_er2_20130913_r0.ict'
 er2 = load_ict(nasdat_er2_file)
@@ -871,6 +943,7 @@ print np.min(er2['Solar_Zenith_Angle'])
 
 # In[463]:
 
+
 ssfr_er2_file = fp+'er2/20130913/SEAC4RS-SSFR_ER2_20130913_R0.ict'
 ssfr_er2 = load_ict(ssfr_er2_file)
 print len(ssfr_er2['UTC'])
@@ -878,12 +951,14 @@ print len(ssfr_er2['UTC'])
 
 # In[473]:
 
+
 is9 = np.argmin(abs(ssfr_er2['UTC']-19.2))
 print ssfr_er2['UP1600'][is9], ssfr_er2['DN1600'][is9]
 ssfr_er2['UP1600'][is9]/ssfr_er2['DN1600'][is9]
 
 
 # In[141]:
+
 
 plt.figure()
 feet2meter=0.3048
@@ -898,12 +973,14 @@ plt.savefig(fp+'plots\\20130913_er2_alt.png',dpi=600,transparent=True)
 
 # In[7]:
 
+
 print er2['Start_UTC'][12000]
 print er2['GPS_Altitude'][12000]
 print er2['Pressure_Altitude'][12000]
 
 
 # In[145]:
+
 
 plt.figure()
 feet2meter=0.3048
@@ -920,6 +997,7 @@ plt.savefig(fp+'plots\\20130913_er2_roll_pitch.png',dpi=600,transparent=True)
 
 # In[47]:
 
+
 if False:
     # old ssfr file
     ssfr_idl_file = fp+'er2/20130913/20130913_calibspcs.out'
@@ -931,6 +1009,7 @@ ssfr_idl = sio.idl.readsav(ssfr_idl_file)
 
 # In[48]:
 
+
 print ssfr_idl.keys()
 print np.shape(ssfr_idl['zspectra'])
 print ssfr_idl['tmhrs'].shape
@@ -938,21 +1017,25 @@ print ssfr_idl['tmhrs'].shape
 
 # In[49]:
 
+
 ssfr_idl['status']
 
 
 # In[50]:
+
 
 ssfr_idl['comment']
 
 
 # In[51]:
 
+
 ssfr_idl['zspectra'][ssfr_idl['zspectra']==-999]=np.nan
 ssfr_idl['nspectra'][ssfr_idl['nspectra']<0]=np.nan
 
 
 # In[63]:
+
 
 class object():
     pass
@@ -981,10 +1064,12 @@ else:
 
 # In[64]:
 
+
 print ssfr_idl['zspectra'].shape, ssfr_idl['nspectra'].shape
 
 
 # In[178]:
+
 
 plt.figure()
 plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,150])
@@ -993,6 +1078,7 @@ plt.ylabel('Nadir irradiance at {:3.0f} nm'.format(ssfr_idl['nadlambda'][150]))
 
 
 # In[41]:
+
 
 plt.figure()
 plt.plot(ssfr.utc,ssfr.Rvis,'r',label='Reflectance in Vis')
@@ -1004,6 +1090,7 @@ plt.legend(frameon=False)
 
 # In[62]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(ssfr_idl['zenlambda'],ssfr.utc[:,0],ssfr_idl['zspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=2.5)
 plt.colorbar(pco)
@@ -1013,6 +1100,7 @@ plt.title('Zenith Irradiance spectra')
 
 
 # In[72]:
+
 
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(ssfr_idl['nadlambda'],ssfr.utc[:,0],ssfr_idl['nspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=2.5)
@@ -1024,6 +1112,7 @@ plt.title('Nadir Irradiance spectra')
 
 # In[68]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(8,14))
 pco = ax.pcolorfast(ssfr_idl['zenlambda'],ssfr.utc[:,0],ssfr_idl['nspectra'][:-1,:-1]/ssfr_idl['zspectra'][:-1,:-1],cmap='gist_ncar',vmin=0,vmax=1.0)
 plt.colorbar(pco)
@@ -1034,12 +1123,14 @@ plt.title('Reflectance spectra')
 
 # In[51]:
 
+
 if False:
     print i500, i1650
     i1600 = np.argmin(abs(ssfr_idl['zenlambda']-1600.0))
 
 
 # In[59]:
+
 
 if False:
     iu = np.argmin(abs(ssfr_idl['tmhrs']-18.5))
@@ -1048,6 +1139,7 @@ if False:
 
 
 # In[51]:
+
 
 if False:
     print ssfr_er2['UP500'][iu2], ssfr_idl['zspectra'][iu,i500], ssfr_er2['UP500'][iu2]/ssfr_idl['zspectra'][iu,i500]
@@ -1061,6 +1153,7 @@ if False:
 
 # In[52]:
 
+
 if False:
     print ssfr_er2['UP1600'][iu2], ssfr_idl['zspectra'][iu,i1600], ssfr_er2['UP1600'][iu2]/ssfr_idl['zspectra'][iu,i1600]
     print ssfr_er2['DN1600'][iu2+200], ssfr_idl['nspectra'][iu+200,i1600], ssfr_er2['DN1600'][iu2+200]/ssfr_idl['nspectra'][iu+200,i1600]
@@ -1073,11 +1166,13 @@ if False:
 
 # In[53]:
 
+
 if False:
     print rup500/rdn500
 
 
 # In[54]:
+
 
 if False:
     ssfr.Rvis = ssfr.Rvis*rup500/rdn500
@@ -1085,6 +1180,7 @@ if False:
 
 
 # In[55]:
+
 
 if False:
     print np.nanmin(ssfr.Rvis), np.nanmax(ssfr.Rvis)
@@ -1095,6 +1191,7 @@ if False:
 
 # In[65]:
 
+
 from scipy import interpolate
 sza_fx = interpolate.interp1d(er2['Start_UTC'],er2['Solar_Zenith_Angle'],bounds_error=False)
 ssfr.sza = sza_fx(ssfr.utc)[:,0]
@@ -1104,6 +1201,7 @@ print ssfr.utc[3000], ssfr.sza[3000]
 
 # In[180]:
 
+
 fig = plt.figure()
 plt.plot(ssfr.utc,ssfr.sza)
 plt.title('SZA for SSFR on ER2')
@@ -1112,6 +1210,7 @@ plt.ylabel('SZA [$^{\circ}$]')
 
 
 # In[181]:
+
 
 fig = plt.figure()
 fig.add_subplot(1,2,1)
@@ -1130,6 +1229,7 @@ plt.xlim([17.8,19.2])
 
 # In[182]:
 
+
 fig = plt.figure()
 plt.plot(ssfr.utc,ssfr_idl['zspectra'][:,i500],label='Zenith 500 nm')
 plt.plot(ssfr.utc,ssfr_idl['nspectra'][:,i500],'r', label='Nadir 500 nm')
@@ -1145,25 +1245,30 @@ plt.ylabel('Irradiance or reflectance')
 
 # In[66]:
 
+
 luti.sp_hires(doirrad=True)
 
 
 # In[67]:
+
 
 luti.reflect.shape
 
 
 # In[68]:
 
+
 luti.ref
 
 
 # In[69]:
 
+
 luti.sza
 
 
 # In[53]:
+
 
 #figref = plt.figure(15,16)
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
@@ -1201,6 +1306,7 @@ plt.savefig(fp+'plots/Spectral_reflectance_model_ice_{}.png'.format(vv),dpi=600,
 
 
 # In[52]:
+
 
 figref,axref = plt.subplots(10,3,sharex=True,figsize=(15,16))
 axref = axref.ravel()
@@ -1240,6 +1346,7 @@ plt.show()
 
 # In[70]:
 
+
 w500 = np.argmin(abs(luti.wvl-500.0))
 w750 = np.argmin(abs(luti.wvl-742.0))
 w1700 = np.argmin(abs(luti.wvl-1700.0))
@@ -1249,10 +1356,12 @@ w1250 = np.argmin(abs(luti.wvl-1250.0))
 
 # In[71]:
 
+
 luti.reflect.shape
 
 
 # In[56]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1276,6 +1385,7 @@ plt.savefig(fp+'plots/Reflectance_lut_ice_{}.png'.format(vv),dpi=600,transparent
 
 
 # In[78]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1303,6 +1413,7 @@ plt.savefig(fp+'plots/Reflectance_lut_ice_{}_1650nm.png'.format(vv),dpi=600,tran
 
 # In[113]:
 
+
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
 refs = [1,5,10,15,20,25,30,35,40,50,60]
@@ -1329,6 +1440,7 @@ plt.savefig(fp+'plots/Reflectance_lut_ice_{}_1250nm.png'.format(vv),dpi=600,tran
 
 # In[72]:
 
+
 i750 = np.argmin(abs(ssfr_idl['zenlambda']-742.0))
 i1700 = np.argmin(abs(ssfr_idl['zenlambda']-1700.0))
 i500 = np.argmin(abs(ssfr_idl['zenlambda']-500.0))
@@ -1336,6 +1448,7 @@ i1250 = np.argmin(abs(ssfr_idl['zenlambda']-1250.0))
 
 
 # In[192]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1365,10 +1478,12 @@ plt.savefig(fp+'plots/Reflectance_lut_ice_{}_750nm_1700nm.png'.format(vv),dpi=60
 
 # In[73]:
 
+
 ssfr.i = (ssfr.utc>17.8)&(ssfr.utc<19.2)
 
 
 # In[74]:
+
 
 ssfr_reflect = ssfr_idl['nspectra']*0.0
 for ii in np.where(ssfr.i[:,0])[0]:
@@ -1376,6 +1491,7 @@ for ii in np.where(ssfr.i[:,0])[0]:
 
 
 # In[194]:
+
 
 plt.figure()
 for ii in np.where(ssfr.i[:,0])[0]:
@@ -1388,6 +1504,7 @@ plt.xlim([300,2150])
 
 
 # In[52]:
+
 
 fig, ax = plt.subplots(2,1,sharex=True)
 ax = ax.ravel()
@@ -1407,21 +1524,25 @@ ax[1].set_xlim([300,2150])
 
 # In[75]:
 
+
 from scipy import interpolate
 fip = interpolate.interp1d(luti.reflect[1,w750,1,-1,:],luti.tau,bounds_error=False)
 
 
 # In[76]:
 
+
 ssfrtau = fip(ssfr_reflect[ssfr.i[:,0],i750])
 
 
 # In[77]:
 
+
 ssfrtau
 
 
 # In[198]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfrtau)
@@ -1432,6 +1553,7 @@ plt.title('SSFR calculated COD when assuming a r$_{eff}$ at 60 $\\mu$m')
 
 # In[56]:
 
+
 plt.figure()
 plt.hist(ssfrtau,range=[0,50],bins=50)
 plt.xlabel('COD')
@@ -1440,6 +1562,7 @@ plt.title('SSFR histogram of COD')
 
 
 # In[199]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rvis[ssfr.i[:,0]]*ssfr.sza[ssfr.i[:,0]]/luti.sza,'b',label='Vis reflectance')
@@ -1451,6 +1574,7 @@ plt.legend(frameon=False)
 
 
 # In[59]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.sza[ssfr.i[:,0]]/luti.sza,label='SZA')
@@ -1464,10 +1588,12 @@ plt.legend(frameon=False)
 
 # In[78]:
 
+
 luti.sza
 
 
 # In[200]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1496,10 +1622,12 @@ plt.title('COD and ref grid with respect to reflectances - not corrected')
 
 # In[79]:
 
+
 wavenum = 10000000.0/ssfr_idl['zenlambda']
 
 
 # In[62]:
+
 
 iii = np.where(ssfr.i[:,0])[0][1000]
 plt.figure()
@@ -1508,6 +1636,7 @@ plt.plot(ssfr_idl['zenlambda'],wavenum**4.0*25e-20+0.48,'k-')
 
 
 # In[63]:
+
 
 iii = np.where(ssfr.i[:,0])[0][1000]
 plt.figure()
@@ -1518,6 +1647,7 @@ plt.plot(ssfr_idl['zenlambda'],wavenum**4.0*25e-20+0.48,'k-')
 # ### Estimate the value of the slope in the visible, and find relationships
 
 # In[80]:
+
 
 def sl_vis(wvl,sp,wv_norm=852.0,wv_min=450.0,wv_max=600.0):
     'get the slope in vis, nomalized at 852 nm, the slope between wv_min (default 450 nm) and wv_max (default 600 nm)'
@@ -1531,12 +1661,14 @@ def sl_vis(wvl,sp,wv_norm=852.0,wv_min=450.0,wv_max=600.0):
 
 # In[81]:
 
+
 wmin = np.argmin(abs(ssfr_idl['zenlambda']-450.0))
 wmax = np.argmin(abs(ssfr_idl['zenlambda']-600.0))
 wnorm = np.argmin(abs(ssfr_idl['zenlambda']-852.0))
 
 
 # In[82]:
+
 
 slope = ssfr.utc*0.0
 base = ssfr.utc*0.0
@@ -1546,11 +1678,13 @@ for ii in np.where(ssfr.i[:,0])[0]:
 
 # In[205]:
 
+
 plt.figure()
 plt.plot(slope)
 
 
 # In[137]:
+
 
 plt.figure()
 plt.plot(w[wmin:wmax],ssfr_reflect[iii,wmin:wmax]/ssfr_reflect[iii,wnorm])
@@ -1560,17 +1694,20 @@ plt.plot(w[wmin:wmax],fit[1]+fit[0]*w[wmin:wmax],'k-')
 
 # In[83]:
 
+
 ntau = len(luti.tau)
 nref = len(luti.ref)
 
 
 # In[84]:
 
+
 lut_slope = np.zeros((ntau,nref))
 lut_base = np.zeros((ntau,nref))
 
 
 # In[85]:
+
 
 for t in xrange(ntau):
     for r in xrange(nref):
@@ -1579,12 +1716,14 @@ for t in xrange(ntau):
 
 # In[86]:
 
+
 lut_slope.shape
 
 
 # ### Calculate the expected slope in the visible with modeled irradiance
 
 # In[210]:
+
 
 plt.figure()
 plt.plot(luti.tau,lut_slope)
@@ -1596,16 +1735,19 @@ plt.plot(luti.tau,lut_slope)
 
 # In[87]:
 
+
 ft = interpolate.interp1d(luti.tau,lut_slope[:,10],bounds_error=False)
 ssfr_slope = ft(ssfrtau)
 
 
 # In[88]:
 
+
 ratio_increase = slope[ssfr.i[:,0]][:,0]/ssfr_slope
 
 
 # In[213]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr_slope,label='Expected slope related to COD')
@@ -1622,6 +1764,7 @@ plt.title('Increase in expected slope')
 
 # In[214]:
 
+
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rnir[ssfr.i[:,0]],label='Original')
 Rnir_corr = 1.0-(1.0-ssfr.Rnir[ssfr.i[:,0]])/ratio_increase
@@ -1635,6 +1778,7 @@ plt.title('comparing the effect of correcting for 3D effects')
 # #### Applying the slope ratio correction, and looking at the result in terms of tau vs. ref grid
 
 # In[215]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1664,6 +1808,7 @@ plt.savefig(fp+'plots/Reflectance_lut_ice_{}_750nm_1650nm_corr.png'.format(vv),d
 
 # In[216]:
 
+
 fig, ax = plt.subplots(3,1,sharex=True)
 ax = ax.ravel()
 iis = [500,1000,1200]
@@ -1684,10 +1829,12 @@ ax[n].set_xlabel('Wavelength [nm]')
 
 # In[89]:
 
+
 from scipy.optimize import curve_fit
 
 
 # In[90]:
+
 
 def ray3d(w,*a):
     al = np.array(a)
@@ -1697,6 +1844,7 @@ def ray3d(w,*a):
 
 # In[91]:
 
+
 def slope(w,*a):
     al = np.array(a)
     aa = al.ravel()
@@ -1705,21 +1853,25 @@ def slope(w,*a):
 
 # In[92]:
 
+
 iw, = np.where(((luti.wvl>420.0)&(luti.wvl<743.0))|((luti.wvl>780.0)&(luti.wvl<882.0))) #|((lut.wvl>990.0)&(lut.wvl<1070.0)))
 
 
 # In[93]:
+
 
 ps,pc = curve_fit(ray3d,luti.wvl[iw],(measrefl-luti.reflect[1,:,1,-1,itau])[iw],p0=[150])
 
 
 # In[94]:
 
+
 from scipy import interpolate
 from linfit import linfit
 
 
 # In[98]:
+
 
 fig, ax = plt.subplots(3,1,sharex=True)
 ax = ax.ravel()
@@ -1749,15 +1901,18 @@ ax[n].set_xlabel('Wavelength [nm]')
 
 # In[95]:
 
+
 ssfrtau.shape
 
 
 # In[96]:
 
+
 np.where(ssfr.i[:,0])[0].shape
 
 
 # In[99]:
+
 
 slo = []
 for nnn,i in enumerate(np.where(ssfr.i[:,0])[0]):
@@ -1771,6 +1926,7 @@ slop = np.array(slo)
 
 # In[234]:
 
+
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],slop[:,0],'+')
 plt.xlabel('UTC [h]')
@@ -1779,10 +1935,12 @@ plt.ylabel('Slope of difference in reflectance in Vis')
 
 # In[100]:
 
+
 sl_rate = slop[:,0]/np.nanmax(slop[:,0])
 
 
 # In[236]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],sl_rate,'+')
@@ -1790,11 +1948,13 @@ plt.plot(ssfr.utc[ssfr.i[:,0]],sl_rate,'+')
 
 # In[101]:
 
+
 Rnir_corr = 1.0-(1.0-ssfr.Rnir[ssfr.i[:,0]])/ratio_increase
 Rnir_corr2 = 1.0-(1.0-ssfr.Rnir[ssfr.i[:,0]])/sl_rate
 
 
 # In[238]:
+
 
 plt.figure()
 plt.plot(ssfr.utc[ssfr.i[:,0]],ssfr.Rnir[ssfr.i[:,0]],label='Original')
@@ -1807,6 +1967,7 @@ plt.title('comparing the effect of correcting for 3D effects')
 
 
 # In[103]:
+
 
 plt.figure()
 taus = [1,2,3,4,6,8,10,15,20,30,50,100]
@@ -1833,12 +1994,14 @@ plt.scatter(ssfr_reflect[ssfr.i[:,0],i750],
 
 # In[104]:
 
+
 ssfr.Rnir[ssfr.i[:,0]] = Rnir_corr2
 
 
 # ### Now run the retrieval on reflectance from SSFR measurements based on the ER2 platorm
 
 # In[105]:
+
 
 import run_2wvl_retrieval as rw
 if 'rw' in locals():
@@ -1847,16 +2010,19 @@ if 'rw' in locals():
 
 # In[106]:
 
+
 (ssfr.tau,ssfr.ref,ssfr.ki) = rw.run_2wvl_retrieval(ssfr,luti,wvls=[500.0,1650.0])
 
 
 # In[107]:
+
 
 ssfr.tau[ssfr.ref==60] = np.nan
 ssfr.ref[ssfr.ref==60] = np.nan
 
 
 # In[244]:
+
 
 figsr,axsr = plt.subplots(3,1,sharex=True)
 axsr[0].plot(ssfr.utc,ssfr.tau[:,1])
@@ -1873,6 +2039,7 @@ axsr[2].set_xlim([18.0,19.2])
 
 # In[94]:
 
+
 plt.figure()
 plt.hist(ssfr.ref[ssfr.i[:,0],1],range=[0,60])
 plt.xlabel('r$_{eff}$ [$\\mu$m]')
@@ -1883,6 +2050,7 @@ plt.title('SSFR from ER2 efective radius')
 
 # In[420]:
 
+
 cpl_layer_file = fp+'er2\\20130913\\layers_13965_13sep13.txt'
 import load_utils as lm
 reload(lm)
@@ -1892,10 +2060,12 @@ cpl_layers = load_cpl_layers(cpl_layer_file)
 
 # In[109]:
 
+
 cpl_layers.dtype
 
 
 # In[58]:
+
 
 fig,ax = plt.subplots(1,1)
 ax2 = ax.twinx()
@@ -1914,6 +2084,7 @@ plt.savefig(fp+'plots/20130913_cpl_layers.png',dpi=600,transparent=True)
 
 # In[69]:
 
+
 fig,ax = plt.subplots(1,1)
 ax2 = ax.twinx()
 ax2.set_yticks([0,1000,2000,3000])
@@ -1931,6 +2102,7 @@ plt.savefig(fp+'plots/20130913_cpl_layers_zoom.png',dpi=600,transparent=True)
 
 
 # In[48]:
+
 
 fig,ax = plt.subplots(1,1)
 ax2 = ax.twinx()
@@ -1952,6 +2124,7 @@ plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath.png',dpi=600,transpare
 
 
 # In[191]:
+
 
 fig,ax = plt.subplots(1,1)
 #ax2 = ax.twinx()
@@ -1975,6 +2148,7 @@ plt.savefig(fp+'plots/20130913_cpl_layers_zoom_flightpath_grey.png',dpi=600,tran
 
 # In[110]:
 
+
 ia = abs(cpl_layers['utc']-19.03).argmin()
 print cpl_layers['top'][ia,0]
 print cpl_layers['bot'][ia,:]
@@ -1983,6 +2157,7 @@ print cpl_layers['bot'][ia,:]
 # ## Get the data from MODIS to compare
 
 # In[6]:
+
 
 from mpl_toolkits.basemap import Basemap,cm
 myd06_file = fp+'modis\\20130913\\MYD06_L2.A2013256.1910.006.2014267222159.hdf'
@@ -1993,6 +2168,7 @@ print os.path.isfile(myd06_file)
 
 # In[7]:
 
+
 import load_utils as lm
 reload(lm)
 if 'modis' in locals():
@@ -2002,12 +2178,14 @@ if 'modis' in locals():
 
 # In[8]:
 
+
 modis,modis_dicts = lm.load_modis(myd03_file,myd06_file)
 
 
 # Now plot the resulting imagery
 
 # In[9]:
+
 
 #set up a easy plotting function
 def seac_map(ax=plt.gca()):
@@ -2024,6 +2202,7 @@ def seac_map(ax=plt.gca()):
 
 
 # In[99]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
@@ -2053,6 +2232,7 @@ plt.show()
 
 
 # In[23]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
@@ -2089,6 +2269,7 @@ plt.show()
 
 
 # In[22]:
+
 
 figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
@@ -2136,6 +2317,7 @@ plt.show()
 
 # In[29]:
 
+
 figm2,axm2 = plt.subplots(1,2,figsize=(13,10))
 m1 = seac_map(axm2[0])
 xt,yt = m1(-95.3831,29.7628)
@@ -2181,6 +2363,7 @@ plt.savefig(fp+'plots/modis_dc8_tau_ref_comp_rect.png',dpi=600,transparent=True,
 
 # In[21]:
 
+
 if 'lm' in locals():
     reload(lm)
 from load_utils import load_emas, load_hdf
@@ -2188,22 +2371,26 @@ from load_utils import load_emas, load_hdf
 
 # In[22]:
 
+
 emas_file = fp+'er2/20130913/EMASL2_13965_13_20130913_1905_1918_V00.hdf'
 print os.path.isfile(emas_file)
 
 
 # In[23]:
 
+
 emas,emas_dicts = load_hdf(emas_file)
 
 
 # In[24]:
+
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas,emas_dicts = load_hdf(emas_file,values=emas_values)
 
 
 # In[18]:
+
 
 plt.figure()
 plt.plot(emas['tau'])
@@ -2217,6 +2404,7 @@ plt.plot(emas['tau'])
 
 # In[25]:
 
+
 emas_file_v1_10 = fp+'emas/20130913/EMASL2_13965_10_20130913_1815_1828_V01.hdf'
 emas_file_v1_11 = fp+'emas/20130913/EMASL2_13965_11_20130913_1832_1845_V01.hdf'
 emas_file_v1_12 = fp+'emas/20130913/EMASL2_13965_12_20130913_1848_1901_V01.hdf'
@@ -2227,22 +2415,26 @@ print os.path.isfile(emas_file_v1)
 
 # In[26]:
 
+
 print fp
 print emas_file_v1
 
 
 # In[27]:
 
+
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1)
 
 
 # In[28]:
+
 
 emas_values = (('lat',0),('lon',1),('tau',15),('ref',23),('phase',58),('layer',59),('qa',68))
 emas_v1,emas_dicts_v1 = load_hdf(emas_file_v1, values=emas_values)
 
 
 # In[29]:
+
 
 emas_v1_10,emas_dicts_v1_10 = load_hdf(emas_file_v1_10, values=emas_values, verbose=False)
 emas_v1_11,emas_dicts_v1_11 = load_hdf(emas_file_v1_11, values=emas_values, verbose=False)
@@ -2252,15 +2444,18 @@ emas_v1_14,emas_dicts_v1_14 = load_hdf(emas_file_v1_14, values=emas_values, verb
 
 # In[70]:
 
+
 emas_dicts_v1['tau']
 
 
 # In[125]:
 
+
 emas_dicts_v1_12['lat']
 
 
 # In[34]:
+
 
 from map_utils import map_ind
 dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
@@ -2269,6 +2464,7 @@ dc8_ind = map_ind(emas['lon'],emas['lat'],mea['Lon'],mea['Lat'],meas_good=mea['g
 # Create different good filters for each different time slice
 
 # In[35]:
+
 
 mea['good_10'] = np.where((mea['utc']>18.15) & (mea['utc']<18.50) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
 mea['good_11'] = np.where((mea['utc']>18.50) & (mea['utc']<18.85) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))[0]
@@ -2279,10 +2475,12 @@ mea['good_14'] = np.where((mea['utc']>19.25) & (mea['utc']<19.60) & (mea['Str'].
 
 # In[36]:
 
+
 mea['good_13']
 
 
 # In[37]:
+
 
 print mea['Lat'][mea['good_13']].min(), mea['Lat'][mea['good_13']].max()
 print mea['Lon'][mea['good_13']].min(), mea['Lon'][mea['good_13']].max()
@@ -2290,17 +2488,20 @@ print mea['Lon'][mea['good_13']].min(), mea['Lon'][mea['good_13']].max()
 
 # In[38]:
 
+
 print emas_v1['lat'].min(), emas_v1['lat'].max()
 print emas_v1['lon'].min(), emas_v1['lon'].max()
 
 
 # In[39]:
 
+
 import map_utils as mu
 reload(mu)
 
 
 # In[40]:
+
 
 dc8_ind_10 = mu.map_ind(emas_v1_10['lon'],emas_v1_10['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_10'])
 dc8_ind_11 = mu.map_ind(emas_v1_11['lon'],emas_v1_11['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good_11'])
@@ -2311,6 +2512,7 @@ dc8_ind_14 = mu.map_ind(emas_v1_14['lon'],emas_v1_14['lat'],mea['Lon'],mea['Lat'
 
 # In[41]:
 
+
 print np.shape(dc8_ind)
 print dc8_ind_10.shape
 print dc8_ind_11.shape
@@ -2319,6 +2521,7 @@ print dc8_ind_14.shape
 
 
 # In[42]:
+
 
 print dc8_ind[0,-1],dc8_ind[1,-1]
 print emas['lon'][388,715],emas['lat'][388,715]
@@ -2329,12 +2532,14 @@ sdist= lambda lon1,lat1,lon2,lat2:1000.0 * 3958.75 * np.arccos(np.cos(np.radians
 
 # In[43]:
 
+
 print '%20.17f' % sdist(emas['lon'][388,715],emas['lat'][388,715],emas['lon'][385,714],emas['lat'][385,714])
 
 
 # ### Now combine all eMAS results
 
 # In[44]:
+
 
 emas_full = dict()
 emas_full['lon'] = np.concatenate([emas_v1_10['lon'][dc8_ind_10[0,:],dc8_ind_10[1,:]],
@@ -2361,12 +2566,14 @@ emas_full['ref'] = np.concatenate([emas_v1_10['ref'][dc8_ind_10[0,:],dc8_ind_10[
 
 # In[45]:
 
+
 emas_v1_11['lon'].shape,emas_v1_12['lon'].shape
 
 
 # #### Combine the data to form a UTC variable for eMAS
 
 # In[46]:
+
 
 emas_10_utc_range = [18.26333332,18.442777778] #[18:15:48,18:26:34]
 emas_11_utc_range = [18.53611111,18.755833333] #[18:32:10,18:45:21]
@@ -2377,6 +2584,7 @@ emas_14_utc_range = [19.36027778,19.570555554] #[19:21:37,19:34:14]
 
 # In[47]:
 
+
 emas_utc_10 = np.linspace(emas_10_utc_range[0],emas_10_utc_range[1],emas_v1_10['lon'].shape[0])
 emas_utc_11 = np.linspace(emas_11_utc_range[0],emas_11_utc_range[1],emas_v1_11['lon'].shape[0])
 emas_utc_12 = np.linspace(emas_12_utc_range[0],emas_12_utc_range[1],emas_v1_12['lon'].shape[0])
@@ -2385,6 +2593,7 @@ emas_utc_14 = np.linspace(emas_14_utc_range[0],emas_14_utc_range[1],emas_v1_14['
 
 
 # In[48]:
+
 
 emas_full['utc'] = np.concatenate([emas_utc_10[dc8_ind_10[0,:]],
                                    emas_utc_11[dc8_ind_11[0,:]],
@@ -2397,6 +2606,7 @@ emas_full['utc'] = np.concatenate([emas_utc_10[dc8_ind_10[0,:]],
 
 # In[49]:
 
+
 from map_utils import map_ind
 dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_good=mea['good'][0])
 
@@ -2404,6 +2614,7 @@ dc8_ind_modis = map_ind(modis['lon'],modis['lat'],mea['Lon'],mea['Lat'],meas_goo
 # ## Load APR-2 HDF files for DC8 radar images
 
 # In[5]:
+
 
 fa = fp+'dc8/20130913//SEAC4RS-APR2_DC8_20130913/SEAC4RS-APR2_DC8_20130913'
 fe = '_R23.h4'
@@ -2413,10 +2624,12 @@ aprfiles = [fa+s+fe for s in files]
 
 # In[6]:
 
+
 aprfiles
 
 
 # In[8]:
+
 
 import load_utils
 reload(load_utils)
@@ -2424,11 +2637,13 @@ reload(load_utils)
 
 # In[9]:
 
+
 from load_utils import load_apr
 apr = load_apr(aprfiles)
 
 
 # In[10]:
+
 
 levels = np.arange(0,7000,30)
 plt.figure()
@@ -2438,6 +2653,7 @@ plt.colorbar(csz)
 
 # In[11]:
 
+
 apr['utcz'] = apr['lonz']*0.0
 for i in xrange(len(apr['utc'])):
     apr['utcz'][:,i] = apr['utc'][i]
@@ -2445,10 +2661,12 @@ for i in xrange(len(apr['utc'])):
 
 # In[12]:
 
+
 levels = np.arange(0,7000,30)
 
 
 # In[14]:
+
 
 plt.figure()
 csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.Greys)
@@ -2458,6 +2676,7 @@ plt.ylabel('Altitude [m]')
 
 
 # In[16]:
+
 
 plt.figure()
 csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
@@ -2470,11 +2689,13 @@ plt.title('APR-2 reflectivity 2013-09-13')
 
 # In[132]:
 
+
 apr_t = [18.1827,18.3147,18.4175,18.4416,18.4749,18.499,18.5524,18.6285,18.6405,18.6633,18.6886,18.7327,
          18.9308,19.0749,19.1495,19.1655,19.1793,19.1976,19.2137,19.271,19.4728,19.4888,19.536,19.5851,19.6085,19.6151,19.7116,19.738,19.7753,19.8368]
 
 
 # In[45]:
+
 
 plt.figure()
 csz = plt.contourf(apr['utcz'],apr['altflt'],apr['dbz'],levels,cmap=plt.cm.jet)
@@ -2487,6 +2708,7 @@ plt.ylabel('Altitude [m]')
 
 # In[46]:
 
+
 plt.figure()
 plt.plot(apr['lonz'][11,:],apr['latz'][11,:])
 color.cycle_cmap(len(apr_t),cmap=plt.cm.jet,ax=plt.gca())
@@ -2497,6 +2719,7 @@ for t in apr_t:
 
 
 # In[52]:
+
 
 plt.figure()
 plt.plot(dc8['G_LONG'],dc8['G_LAT'],'b-')
@@ -2512,6 +2735,7 @@ plt.ylabel('Latitude [$^{\circ}$]')
 
 # In[133]:
 
+
 def t2str(t):
     'Simple function to transform decimal time to string of time HH:MM'
     hh = int(t)
@@ -2521,10 +2745,12 @@ def t2str(t):
 
 # In[134]:
 
+
 apr_t[:-6]
 
 
 # In[135]:
+
 
 for t in apr_t[:-6]:
     print t2str(t)
@@ -2532,10 +2758,12 @@ for t in apr_t[:-6]:
 
 # In[136]:
 
+
 it = np.abs(apr['utc']-19.1).argmin()
 
 
 # In[136]:
+
 
 plt.figure()
 plt.plot(apr['dbz'][:,it],apr['altflt'][:,it])
@@ -2547,6 +2775,7 @@ plt.title('APR2 Zenith radar reflectivity at: %f2.2',apr['utc'][it])
 
 # In[163]:
 
+
 plt.figure
 plt.plot(apr['dbz'][:,0],apr['altflt'][:,0],'+')
 plt.ylim([6000,8000])
@@ -2554,16 +2783,19 @@ plt.ylim([6000,8000])
 
 # In[137]:
 
+
 inoisezone = apr['dbz'][:,2000].argmax()
 inoisezone
 
 
 # In[138]:
 
+
 apr['dbz'][:,]
 
 
 # In[172]:
+
 
 plt.figure
 plt.plot(apr['dbz'][:,1000],apr['altflt'][:,1000],'+')
@@ -2572,10 +2804,12 @@ plt.ylim([6000,10000])
 
 # In[139]:
 
+
 apr['altflt'][:,0]
 
 
 # In[213]:
+
 
 plt.figure
 plt.plot(apr['dbz'][11,:,0],apr['altz'][11,:,0]+apr['alt'][11,0])
@@ -2584,6 +2818,7 @@ plt.ylim([0,20000])
 
 
 # In[116]:
+
 
 fig,ax = plt.subplots(1,1)
 ax2 = ax.twinx()
@@ -2605,6 +2840,7 @@ ax.legend(frameon=False)
 
 # In[140]:
 
+
 it = np.abs(apr['utc']-19.19).argmin()
 inoisezone = apr['dbz'][:,it].argmax()
 i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
@@ -2612,16 +2848,19 @@ i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
 
 # In[141]:
 
+
 print 0.19*60
 print 0.10*60
 
 
 # In[142]:
 
+
 apr['utc'][it]
 
 
 # In[152]:
+
 
 plt.figure
 plt.plot(smooth(apr['dbz'][i,it],10),apr['altflt'][i,it],'k')
@@ -2633,6 +2872,7 @@ plt.ylabel('Altitude [m]')
 
 # In[268]:
 
+
 plt.figure()
 for j in xrange(20):
     plt.plot(apr['dbz'][i,it+j],apr['altflt'][i,it+j],label='%f.2'%apr['utc'][it+j])
@@ -2643,17 +2883,20 @@ plt.legend(frameon=False)
 
 # In[15]:
 
+
 prb_file = fp+'dc8/20130913/SEAC4RS_20130913_Reff.txt'
 probes = np.genfromtxt(prb_file,skip_header=2)
 
 
 # In[16]:
 
+
 print probes[:,1]
 print probes[:,2]
 
 
 # In[17]:
+
 
 print probes.shape
 print probes[:,7]
@@ -2665,10 +2908,12 @@ plt.hist(probes[:,7])
 
 # In[409]:
 
+
 twoDS = load_ict(fp+'dc8/20130913/seac4rs-2DS_DC8_20130913_R0.ict')
 
 
 # In[61]:
+
 
 plt.figure
 plt.plot(twoDS['Start_UTC'],twoDS['effectiveD']/2.0)
@@ -2681,6 +2926,7 @@ plt.title('2DS effective radius from 2013-09-13')
 
 # In[62]:
 
+
 plt.figure
 plt.plot(twoDS['effectiveD'][1:]/2.0,dc8['G_ALT'])
 plt.xlim([0,100])
@@ -2690,12 +2936,14 @@ plt.ylabel('Altitude [m]')
 
 # In[410]:
 
+
 # filter the data and only show a part
 twoDS['effectiveD'][twoDS['effectiveD']<0] = np.nan
 fl = np.where((twoDS['Start_UTC'] > 18.025) & (twoDS['Start_UTC'] < 19.45) & (twoDS['effectiveD'] > 28.0))
 
 
 # In[100]:
+
 
 plt.figure
 plt.plot(twoDS['effectiveD'][fl]/2.0,dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
@@ -2705,6 +2953,7 @@ plt.ylabel('Altitude [m]')
 
 
 # In[102]:
+
 
 plt.figure
 plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
@@ -2717,15 +2966,18 @@ plt.ylabel('Altitude [m]')
 
 # In[411]:
 
+
 ccn,ccnhead = load_ict(fp+'dc8/20130913/SEAC4RS-CCN_DC8_20130913_R0.ict',return_header=True)
 
 
 # In[129]:
 
+
 ccnhead
 
 
 # In[412]:
+
 
 ccn['Number_Concentration'][ccn['Number_Concentration']==-8888]=np.nan
 ccn['Number_Concentration_STP'][ccn['Number_Concentration_STP']==-8888]=np.nan
@@ -2733,6 +2985,7 @@ ccn['Supersaturation'][ccn['Supersaturation']==-999]=np.nan
 
 
 # In[686]:
+
 
 fig,ax = plt.subplots(3,1,sharex=True)
 ax[0].plot(ccn['UTC_mid'],ccn['Number_Concentration'])
@@ -2748,6 +3001,7 @@ ax[2].set_ylabel('[\%]')
 
 
 # In[687]:
+
 
 fig,ax = plt.subplots(3,1,sharex=True)
 ax[0].plot(ccn['UTC_mid'],ccn['Number_Concentration'])
@@ -2767,11 +3021,13 @@ ax[2].set_ylabel('[\%]')
 
 # In[688]:
 
+
 plt.plot(ccn['UTC_mid'],np.log(ccn['Number_Concentration']))
 plt.xlim([18,19.5])
 
 
 # In[413]:
+
 
 from Sp_parameters import find_closest
 id = find_closest(dc8['TIME_UTC'],ccn['UTC_mid'])
@@ -2779,10 +3035,12 @@ id = find_closest(dc8['TIME_UTC'],ccn['UTC_mid'])
 
 # In[414]:
 
+
 ccn_good = np.where((ccn['UTC_mid']>18.0)&(ccn['UTC_mid']<19.5)& (np.isfinite(ccn['Number_Concentration'])))[0]
 
 
 # In[154]:
+
 
 plt.figure()
 plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'b.')
@@ -2795,6 +3053,7 @@ plt.title('CCN number concentration from DC8')
 
 # In[153]:
 
+
 rsp,rsp_header = load_ict(fp+'er2/20130913/SEAC4RS-RSP-ICECLD_ER2_20130913_R2.ict',return_header=True)
 print rsp['Phase']
 rsp_good = np.where((rsp['UTC']>17.8) & (rsp['UTC']<19.2) & (rsp['Phase']==0) & (rsp['COT']>0) & (rsp['R_eff159']>0))
@@ -2804,10 +3063,12 @@ print len(rsp_good[0])
 
 # In[154]:
 
+
 rsp_header
 
 
 # In[155]:
+
 
 plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff159'][rsp_good[0]],label='1.59 micron')
 plt.plot(rsp['UTC'][rsp_good[0]],rsp['R_eff225'][rsp_good[0]],label='2.25 micron')
@@ -2820,10 +3081,12 @@ plt.savefig(fp+'plots/20130913_RSP_reff.png',dpi=600,transparent=True)
 
 # In[156]:
 
+
 print rsp_good[0][-1]
 
 
 # In[157]:
+
 
 # get the distance between two points for RSP
 from map_utils import spherical_dist
@@ -2837,20 +3100,24 @@ print spherical_dist(np.array((rsp['Lat'][rsp_good[0][-1]],rsp['Lon'][rsp_good[0
 
 # In[158]:
 
+
 goes,goes_header = lm.load_ict(fp+'dc8/20130913/SEAC4RS-GOES13-FLTTRACK_DC8_20130913_R0.ict',return_header=True)
 
 
 # In[159]:
+
 
 goes_header
 
 
 # In[160]:
 
+
 goes_utc = goes['PLANGMT']/3600.
 
 
 # In[161]:
+
 
 fig,ax = plt.subplots(2,sharex=True)
 ax = ax.ravel()
@@ -2864,6 +3131,7 @@ ax[1].set_xlabel('UTC [h]')
 
 # In[175]:
 
+
 fig,ax = plt.subplots(2)
 ax = ax.ravel()
 ax[0].hist(goes['TAUMEAN'],range=[0,100],bins=25)
@@ -2876,6 +3144,7 @@ ax[1].set_ylabel('Number of occurences')
 
 # In[162]:
 
+
 goes_good, = np.where((goes_utc>17.8) & (goes_utc<19.2) & np.isfinite(goes['TAUMEAN'])& np.isfinite(goes['DeffMEAN']))
 
 
@@ -2884,6 +3153,7 @@ goes_good, = np.where((goes_utc>17.8) & (goes_utc<19.2) & np.isfinite(goes['TAUM
 # ## Calculate the histogram for each comparisons
 
 # In[163]:
+
 
 from Sp_parameters import nanmasked
 modis_tau,im = nanmasked(modis['tau'][dc8_ind_modis[0,:],dc8_ind_modis[1,:]])
@@ -2907,6 +3177,7 @@ goes_ref,igs = nanmasked((goes['DeffMEAN']/2.0)[goes_good])
 
 # In[164]:
 
+
 emas_utc_full = emas_full['utc'][ief]
 rsp_utc = rsp['UTC'][rsp_good[0]][irs]
 ssfr_utc = ssfr.utc[ssfr.good[0]][iss]
@@ -2914,6 +3185,7 @@ goes_utc = goes_utc[goes_good][igs]
 
 
 # In[165]:
+
 
 star_g = np.where((meas.utc>19.0)&(meas.utc<19.2)&np.isfinite(meas.tau))
 print '4STAR',meas.tau[star_g[0][0]], meas.ref[star_g[0][0]]
@@ -2928,6 +3200,7 @@ print 'GOES',goes['TAUMEAN'][goes_good[0]],(goes['DeffMEAN']/2.0)[goes_good[0]]
 
 
 # In[166]:
+
 
 def plot_median_mean(x,lbl=False,color='k'):
     "plot the vertical median and mean over a histogram, if lbl set to true, sets the labels of the lines,default color='k'"
@@ -2966,6 +3239,7 @@ def plot_median_mean(x,lbl=False,color='k'):
 
 # In[34]:
 
+
 cld_base = 13610.0
 cld_top = 16489.0
 er2_hgt = 19018.0
@@ -2978,6 +3252,7 @@ r_4STAR = (cld_base - dc8_hgt)*np.tan(0.0349)
 
 # In[35]:
 
+
 print r_eMAS
 print r_RSP
 print r_SSFR
@@ -2987,6 +3262,7 @@ print r_4STAR
 # ## Save the output of the retrievals and the other retrievals
 
 # In[169]:
+
 
 import datetime
 m_dict = {'time_created':str(datetime.datetime.today()),
@@ -3000,10 +3276,12 @@ m_dict = {'time_created':str(datetime.datetime.today()),
 
 # In[170]:
 
+
 star_utc = meas.utc[meas.good][ist]
 
 
 # In[260]:
+
 
 hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
@@ -3012,20 +3290,24 @@ hs.savemat(fp+'20130913_retrieval_output.mat',m_dict)
 
 # In[7]:
 
+
 m_dict = hs.loadmat(fp+'20130913_retrieval_output.mat')
 
 
 # In[8]:
+
 
 m_dict.keys()
 
 
 # In[9]:
 
+
 m_dict['rsp']
 
 
 # In[10]:
+
 
 if not 'emas_tau_full' in vars():
     print 'not defined, loading from file'
@@ -3042,20 +3324,24 @@ if not 'emas_tau_full' in vars():
 
 # In[10]:
 
+
 print modis_tau.shape,goes_utc.shape,star_utc.shape
 
 
 # In[11]:
+
 
 print emas_tau_full.shape, ssfr_tau.shape,rsp_tau.shape,goes_tau.shape,star_tau.shape
 
 
 # In[12]:
 
+
 print goes_tau.shape, goes_utc.shape
 
 
 # In[13]:
+
 
 plt.figure()
 plt.plot(star_utc,smooth(modis_tau,6),'m>',label='MODIS',markeredgecolor='none')
@@ -3071,6 +3357,7 @@ plt.ylabel('$\\tau$')
 
 
 # In[14]:
+
 
 plt.figure()
 plt.plot(star_utc,smooth(modis_ref,6),'m>',label='MODIS',markeredgecolor='none')
@@ -3091,21 +3378,25 @@ plt.ylabel('r$_{eff}$ [$\\mu$m]')
 
 # In[15]:
 
+
 if not 'stats' in vars():
     stats = pickle.load(open(fp+'20130913_stats_output.p',"rb"))
 
 
 # In[16]:
 
+
 stats.keys()
 
 
 # In[17]:
 
+
 stats['ssfr_tau'].keys()
 
 
 # In[166]:
+
 
 print len(stats['ssfr_tau']['std'])
 print len(star_utc)
@@ -3120,10 +3411,12 @@ print er2_utc.min(),er2_utc.max()
 
 # In[80]:
 
+
 from scipy import interpolate
 
 
 # In[125]:
+
 
 # Do the tau
 modis_tau_stdfx = interpolate.interp1d(er2_utc,stats['modis_tau']['std'],bounds_error=False)
@@ -3151,6 +3444,7 @@ star_tau_std[np.isnan(star_tau_std)] = np.mean(stats['star_tau']['std'])
 
 
 # In[126]:
+
 
 # Do the ref
 modis_ref_stdfx = interpolate.interp1d(er2_utc,stats['modis_ref']['std'],bounds_error=False)
@@ -3181,6 +3475,7 @@ star_ref_std[np.isnan(star_ref_std)] = np.mean(stats['star_ref']['std'])
 # 
 
 # In[93]:
+
 
 plt.figure(figsize=(9,7))
 ax1 = plt.subplot(211)
@@ -3228,10 +3523,12 @@ plt.savefig(fp+'plots/20130911_retrieved_horz_var.png',dpi=600,transparent=True)
 
 # In[134]:
 
+
 import matplotlib.patches as mpatches
 
 
 # In[422]:
+
 
 plt.figure(figsize=(9,7))
 ax1 = plt.subplot(211)
@@ -3296,6 +3593,7 @@ plt.savefig(fp+'plots/20130911_retrieved_horz_var_shade.png',dpi=600,transparent
 
 # In[138]:
 
+
 fig,ax = plt.subplots(1,figsize=(9,6))
 
 import matplotlib.transforms as mtransforms
@@ -3347,6 +3645,7 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_v5_fill.png',dpi=600,transparent=True
 
 
 # In[139]:
+
 
 fig,ax = plt.subplots(1,figsize=(9,6))
 import matplotlib.transforms as mtransforms
@@ -3402,6 +3701,7 @@ plt.savefig(fp+'plots/hist_modis_4star_ref_v5_fill.png',dpi=600,transparent=True
 
 # In[132]:
 
+
 fig,(ax1,ax2) = plt.subplots(2,figsize=(9,6))
 
 import matplotlib.transforms as mtransforms
@@ -3451,16 +3751,19 @@ plt.savefig(fp+'plots/hist_modis_4star_tau_ref.png',dpi=600,transparent=True)
 
 # In[1]:
 
+
 from plotting_utils import plot_vert_hist
 
 
 # In[2]:
+
 
 import plotting_utils
 reload(plotting_utils)
 
 
 # In[359]:
+
 
 fig = plt.figure(figsize=(7,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,40],xlim=[-0.5,5.5])
@@ -3490,6 +3793,7 @@ plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 # In[11]:
 
+
 [np.nanmean(smooth(modis_tau,6)),
               np.nanmean(smooth(emas_tau_full,60)),
               np.nanmean(smooth(ssfr_tau[(ssfr_tau>5)&(ssfr_tau<30)],2)),
@@ -3500,10 +3804,12 @@ plt.savefig(fp+'plots/vert_hist_tau_v5.png',dpi=600,transparent=True)
 
 # In[12]:
 
+
 modis_tau.shape,emas_tau_full.shape
 
 
 # In[13]:
+
 
 fig = plt.figure(figsize=(7,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,5.5])
@@ -3533,6 +3839,7 @@ plt.savefig(fp+'plots/vert_hist_tau_v5_light2.png',dpi=600,transparent=True)
 
 # In[360]:
 
+
 fig = plt.figure(figsize=(8,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,80],xlim=[-0.5,6.5])
 ax1.set_ylabel('r$_{eff}$ [$\\mu$m]')
@@ -3561,6 +3868,7 @@ plt.savefig(fp+'plots/vert_hist_ref_v5.png',dpi=600,transparent=True)
 
 
 # In[18]:
+
 
 fig = plt.figure(figsize=(8,3))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[0,60],xlim=[-0.5,6.5])
@@ -3592,6 +3900,7 @@ plt.savefig(fp+'plots/vert_hist_ref_v5_light2.png',dpi=600,transparent=True)
 # ### Plot a combined bean plot for tau and ref
 
 # In[29]:
+
 
 fig = plt.figure(figsize=(8,3.5))
 tmi,tma = 0,50
@@ -3651,10 +3960,12 @@ plt.savefig(fp+'plots/vert_hist_ref_tau_v5_light.png',dpi=600,transparent=True)
 
 # In[173]:
 
+
 ids = find_closest(er2['Start_UTC'],ssfr.utc)
 
 
 # In[270]:
+
 
 plt.figure()
 plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70),'c.',label='RSP')
@@ -3669,6 +3980,7 @@ plt.ylabel('r$_{eff}$ [$\\mu$m]')
 
 # In[149]:
 
+
 plt.figure()
 plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'b.')
 plt.plot(dc8['G_LAT'][id[ccn_good]],smooth(ccn['Number_Concentration'][ccn_good],5,nan=False),'r.')
@@ -3677,6 +3989,7 @@ plt.ylabel('Number Concentration [\#/cm$^{3}$]')
 
 
 # In[150]:
+
 
 plt.figure()
 plt.plot(rsp['Lat'][rsp_good],smooth(rsp_ref,70)*smooth(rsp_tau,70)*2/3/10,'c.',label='RSP')
@@ -3691,10 +4004,12 @@ plt.ylabel('IWP [g/m$^{2}$]')
 
 # In[174]:
 
+
 id_w_up = np.where(dc8['W'][id[ccn_good]]>0.0)[0]
 
 
 # In[152]:
+
 
 plt.figure()
 plt.plot(dc8['G_LAT'][id[ccn_good]],dc8['W'][id[ccn_good]],'b.')
@@ -3709,6 +4024,7 @@ plt.xlabel('Latitude')
 
 # In[175]:
 
+
 id_ccn_rsp = find_closest(dc8['G_LAT'][id[ccn_good]],rsp['Lat'][rsp_good])
 id_ccn_ssfr = find_closest(dc8['G_LAT'][id[ccn_good]],er2['Latitude'][ids[ssfr.good[0][iss]]])
 id_ccn_emas = find_closest(dc8['G_LAT'][id[ccn_good]],emas_full['lat'][ief])
@@ -3718,6 +4034,7 @@ id_ccn_modis = find_closest(dc8['G_LAT'][id[ccn_good]],modis['lat'][dc8_ind_modi
 
 
 # In[176]:
+
 
 id_ccn_up_rsp = find_closest(dc8['G_LAT'][id[ccn_good[id_w_up]]],rsp['Lat'][rsp_good])
 id_ccn_up_ssfr = find_closest(dc8['G_LAT'][id[ccn_good[id_w_up]]],er2['Latitude'][ids[ssfr.good[0][iss]]])
@@ -3729,6 +4046,7 @@ id_ccn_up_modis = find_closest(dc8['G_LAT'][id[ccn_good[id_w_up]]],modis['lat'][
 
 # In[177]:
 
+
 iu_rsp = ccn_good[id_w_up[id_ccn_up_rsp]]
 iu_ssfr = ccn_good[id_w_up[id_ccn_up_ssfr]]
 iu_emas = ccn_good[id_w_up[id_ccn_up_emas]]
@@ -3739,10 +4057,12 @@ iu_modis = ccn_good[id_w_up[id_ccn_up_modis]]
 
 # In[178]:
 
+
 import plotting_utils as pu
 
 
 # In[236]:
+
 
 plt.figure()
 plt.plot(np.log(ccn['Number_Concentration'][ccn_good][id_ccn_rsp]),np.log(smooth(rsp_ref,70)),'c.',label='RSP')
@@ -3775,6 +4095,7 @@ plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_v5.png',dpi=600,transparent=T
 
 
 # In[237]:
+
 
 plt.figure()
 plt.plot(np.log(ccn['Number_Concentration'][iu_rsp]),np.log(smooth(rsp_ref,70)),'c.',label='RSP')
@@ -3810,6 +4131,7 @@ plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_up_v5.png',dpi=600,transparen
 
 # In[181]:
 
+
 plt.figure()
 plt.plot(smooth(star_ref,40),smooth(modis_ref,6),'mo')
 #plt.plot(smooth(star_ref,40),smooth(emas_ref_v1,60),'ko')
@@ -3821,10 +4143,12 @@ plt.plot(smooth(star_ref,40),smooth(modis_ref,6),'mo')
 
 # In[179]:
 
+
 from scipy import interpolate
 
 
 # In[180]:
+
 
 idc8_lat = np.argsort(dc8['G_LAT'][id[ccn_good]])
 dc8_sort = np.sort(dc8['G_LAT'][id[ccn_good]])
@@ -3833,11 +4157,13 @@ ccn_sort = ccn['Number_Concentration'][ccn_good][idc8_lat]
 
 # In[181]:
 
+
 dc8_sort_nonunique,inonunique = np.unique(dc8_sort,return_index=True)
 ccn_sort_nonunique = ccn_sort[inonunique]
 
 
 # In[186]:
+
 
 plt.figure()
 plt.plot(dc8_sort,ccn_sort)
@@ -3845,6 +4171,7 @@ plt.plot(dc8['G_LAT'][id[ccn_good]],ccn['Number_Concentration'][ccn_good],'.')
 
 
 # In[182]:
+
 
 f_ccn = interpolate.InterpolatedUnivariateSpline(dc8_sort_nonunique,ccn_sort_nonunique,k=1)
 ccn_ref_rsp = f_ccn(rsp['Lat'][rsp_good])
@@ -3857,6 +4184,7 @@ ccn_ref_modis = f_ccn(modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]])
 
 # In[183]:
 
+
 i_extrap_rsp = np.where((rsp['Lat'][rsp_good] > np.max(dc8_sort_nonunique)) | (rsp['Lat'][rsp_good] < np.min(dc8_sort_nonunique)))
 i_extrap_ssfr = np.where((er2['Latitude'][ids[ssfr.good[0][iss]]] > np.max(dc8_sort_nonunique)) | (er2['Latitude'][ids[ssfr.good[0][iss]]] < np.min(dc8_sort_nonunique)))
 i_extrap_emas = np.where((emas_full['lat'][ief] > np.max(dc8_sort_nonunique)) | (emas_full['lat'][ief] < np.min(dc8_sort_nonunique)))
@@ -3867,6 +4195,7 @@ i_extrap_modis = np.where((modis['lat'][dc8_ind_modis[0,im],dc8_ind_modis[1,im]]
 
 # In[184]:
 
+
 ccn_ref_rsp[i_extrap_rsp] = np.nan
 ccn_ref_ssfr[i_extrap_ssfr] = np.nan
 ccn_ref_emas[i_extrap_emas] = np.nan
@@ -3876,6 +4205,7 @@ ccn_ref_modis[i_extrap_modis] = np.nan
 
 
 # In[241]:
+
 
 plt.figure()
 plt.plot(rsp['Lat'][rsp_good],ccn_ref_rsp,'c.',label='CCN interp to RSP')
@@ -3892,6 +4222,7 @@ plt.ylabel('Number concentration [\#/cm$^{3}$] \underline{or} $r_{eff}$ [$\mu$m]
 
 
 # In[242]:
+
 
 plt.figure()
 plt.plot(np.log(ccn_ref_rsp),np.log(smooth(rsp_ref,70)),'c.',label='RSP')
@@ -3929,6 +4260,7 @@ plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_interp_v5.png',dpi=600,transp
 
 # In[304]:
 
+
 plt.figure(figsize=(8,4))
 label = ['MODIS','eMAS','SSFR','RSP','GOES','4STAR']
 aci = [0.08,0.03,0.009,0.08,0.014,0.10]
@@ -3956,10 +4288,12 @@ plt.savefig(fp+'plots/20130913_ACI_bar_v5.png',dpi=600,transparent=True)
 
 # In[310]:
 
+
 import matplotlib.colors as mclr
 
 
 # In[321]:
+
 
 print cl
 mclr.ColorConverter().to_rgba_array(cl)*256
@@ -3971,6 +4305,7 @@ mclr.ColorConverter().to_rgba_array(cl)*256
 
 # In[243]:
 
+
 idc8_good = np.where((dc8['TIME_UTC']>18.0)&(dc8['TIME_UTC']<19.5))[0]
 idc8_sort_lat = np.argsort(dc8['G_LAT'][idc8_good])
 dc8_lat_sort = dc8['G_LAT'][idc8_good[idc8_sort_lat]]
@@ -3980,6 +4315,7 @@ dc8_w_sort_nounique = dc8_w_sort[idc8_lat_nonunique]
 
 
 # In[244]:
+
 
 f_w_dc8 = interpolate.InterpolatedUnivariateSpline(dc8_lat_nonunique,smooth(dc8_w_sort_nounique,2))
 dc8_w_rsp = f_w_dc8(rsp['Lat'][rsp_good])
@@ -3992,6 +4328,7 @@ dc8_w_goes = f_w_dc8(goes['PLANLAT'][goes_good[igs]])
 
 # In[245]:
 
+
 dc8_w_rsp[dc8_w_rsp>20] = np.nan
 dc8_w_ssfr[dc8_w_ssfr>20] = np.nan
 dc8_w_emas[dc8_w_emas>20] = np.nan
@@ -4001,6 +4338,7 @@ dc8_w_goes[dc8_w_goes>20] = np.nan
 
 
 # In[246]:
+
 
 plt.figure()
 plt.plot(dc8['G_LAT'][id],dc8['W'][id],'r.')
@@ -4016,6 +4354,7 @@ plt.xlim([20.9,22.3])
 
 # In[247]:
 
+
 iup_rsp = dc8_w_rsp>0
 iup_ssfr = dc8_w_ssfr>0
 iup_emas = dc8_w_emas>0
@@ -4025,6 +4364,7 @@ iup_modis = dc8_w_modis>0
 
 
 # In[251]:
+
 
 plt.figure()
 plt.plot(np.log(ccn_ref_rsp[iup_rsp]),np.log(smooth(rsp_ref,70)[iup_rsp]),'c.',label='RSP')
@@ -4062,10 +4402,12 @@ plt.savefig(fp+'plots/20130913_log_reff_vs_log_ccn_interp_up_v5.png',dpi=600,tra
 
 # In[252]:
 
+
 from Sp_parameters import deriv
 
 
 # In[256]:
+
 
 ccn_rsp_dif = smooth(deriv(np.log(smooth(rsp_ref,70)),np.log(ccn_ref_rsp)),5)
 ccn_ssfr_dif = smooth(deriv(np.log(smooth(ssfr_ref,2)),np.log(ccn_ref_ssfr[:,0])),5)
@@ -4077,10 +4419,12 @@ ccn_goes_dif = smooth(deriv(np.log(smooth(goes_ref,2)),np.log(ccn_ref_goes)),5)
 
 # In[257]:
 
+
 np.nanmean(ccn_rsp_dif)
 
 
 # In[263]:
+
 
 plt.figure()
 plt.plot(rsp['Lat'][rsp_good],ccn_rsp_dif,'c.')
@@ -4099,6 +4443,7 @@ plt.ylabel('CCN differential')
 
 # In[262]:
 
+
 plt.figure()
 plt.hist(ccn_rsp_dif,bins=50, histtype='stepfilled', normed=True, color='c',alpha=0.6,range=[-20,20])
 plt.hist(ccn_ssfr_dif,bins=50, histtype='stepfilled', normed=True, color='g',alpha=0.6,range=(-20,20))
@@ -4111,6 +4456,7 @@ plt.ylabel('normalized occurences')
 
 
 # In[261]:
+
 
 fig = plt.figure(figsize=(7,4))
 ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-2,2],xlim=[-0.5,5.5])
@@ -4130,10 +4476,12 @@ plt.savefig(fp+'plots/vert_hist_ACI_r_v5.png',dpi=600,transparent=True)
 
 # In[415]:
 
+
 meas.good.shape
 
 
 # In[416]:
+
 
 it = np.abs(apr['utc']-19.19).argmin()
 inoisezone = apr['dbz'][:,it].argmax()
@@ -4141,6 +4489,7 @@ i=range(inoisezone-15)+range(inoisezone+15,len(apr['altflt'][:,0]))
 
 
 # In[417]:
+
 
 plt.figure
 plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
@@ -4160,6 +4509,7 @@ plt.title('Vertical profile of Effective radius')
 
 
 # In[159]:
+
 
 plt.figure
 plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
@@ -4182,15 +4532,18 @@ plt.savefig(fp+'plots/ref_profile_seac4rs_radar.png',dpi=600,transparent=True)
 
 # In[431]:
 
+
 tt = np.array([18.5948,18.7082,18.8377,18.9911])
 
 
 # In[443]:
 
+
 ie,ir,iss,im,ist,ic,ig,iap = [],[],[],[],[],[],[],[]
 
 
 # In[446]:
+
 
 for i,t in enumerate(tt):
     ie.append(np.argmin(abs(emas_utc_full-t)))
@@ -4205,25 +4558,30 @@ for i,t in enumerate(tt):
 
 # In[447]:
 
+
 apr.keys()
 
 
 # In[448]:
+
 
 apr['dbz'].shape
 
 
 # In[449]:
 
+
 apr['altflt'].shape
 
 
 # In[450]:
 
+
 apr['utc'].shape
 
 
 # In[481]:
+
 
 plt.figure()
 for i,t in enumerate(tt):
@@ -4245,6 +4603,7 @@ for i,t in enumerate(tt):
 
 # In[ ]:
 
+
 plt.figure
 plt.plot(smooth(twoDS['effectiveD'][fl]/2.0,10),dc8['G_ALT'][fl],label='Cloud Probes (2DS)')
 plt.plot(emas_ref,cpl_layers['top'][dc8_ind[0,ie1],0],'k+',label='eMAS')
@@ -4265,10 +4624,12 @@ plt.title('Vertical profile of Effective radius')
 
 # In[73]:
 
+
 emas_v1.keys()
 
 
 # In[148]:
+
 
 plt.figure();
 plt.plot(emas_v1['lon'][dc8_ind[0,:],dc8_ind[1,:]],emas_tau_v1,label='V01')
@@ -4279,6 +4640,7 @@ plt.plot(emas['lon'][dc8_ind[0,:],dc8_ind[1,:]], emas_tau,label='V00')
 # ### eMAS version comparison: 1:1 relationship
 
 # In[75]:
+
 
 plt.figure()
 plt.plot(emas_tau_v1,emas_tau,'+',label=r'eMAS $\tau$')
@@ -4295,11 +4657,13 @@ plt.savefig(fp+'plots/emas_v00_compare_v01_tau.png',dpi=600,transparent=True)
 
 # In[76]:
 
+
 print emas_tau_v1, emas_tau
 print linfit(emas_tau_v1,emas_tau)
 
 
 # In[77]:
+
 
 plt.figure()
 plt.hist(emas_tau_v1-emas_tau,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS tau difference',range=(-5,5))
@@ -4311,6 +4675,7 @@ np.max(emas_tau_v1-emas_tau)
 
 
 # In[78]:
+
 
 plt.figure()
 plt.plot(emas_ref_v1,emas_ref,'+',label='eMAS $r_{ef}$')
@@ -4324,6 +4689,7 @@ plt.savefig(fp+'plots/emas_v00_compare_v01_ref.png',dpi=600,transparent=True)
 
 # In[79]:
 
+
 plt.figure()
 plt.hist(emas_ref_v1-emas_ref,bins=30, histtype='stepfilled', normed=True, color='m',alpha=0.6, label='eMAS Ref difference',range=(-5,5))
 plt.xlabel('r$_{ef}$ difference [$\mu$m]')
@@ -4336,15 +4702,18 @@ np.max(emas_ref_v1-emas_ref)
 
 # In[361]:
 
+
 print np.nanmean(modis_ref)
 
 
 # In[362]:
 
+
 print np.shape(modis_tau)
 
 
 # In[367]:
+
 
 class object():
     pass
@@ -4352,11 +4721,13 @@ class object():
 
 # In[369]:
 
+
 emas_tau = emas_tau_full
 emas_ref = emas_ref_full
 
 
 # In[380]:
+
 
 means = object()
 means.tau = object()
@@ -4378,6 +4749,7 @@ means.ref.goes = np.nanmean(goes_ref)
 
 # In[370]:
 
+
 median = object()
 median.tau = object()
 median.ref = object()
@@ -4398,6 +4770,7 @@ median.ref.goes = np.nanmedian(goes_ref)
 
 # In[371]:
 
+
 sttaumod = np.nanstd(modis_tau)
 strefmod = np.nanstd(modis_ref)
 sttauemas = np.nanstd(emas_tau)
@@ -4414,10 +4787,12 @@ strefgoes = np.nanstd(goes_ref)
 
 # In[372]:
 
+
 print luti
 
 
 # In[373]:
+
 
 print luti.sp_irrdn.shape
 print luti.tausp.shape
@@ -4429,10 +4804,12 @@ print luti.wvl.shape
 
 # In[374]:
 
+
 luti.sp_irrdn[1,:,0,4,0]
 
 
 # In[375]:
+
 
 from scipy import interpolate
 #fx = interpolate.RectBivariateSpline(ref[refranges[ph]],tau,sp[ph,w,z,refranges[ph],:],kx=1,ky=1)
@@ -4440,6 +4817,7 @@ from scipy import interpolate
 
 
 # In[376]:
+
 
 def interpirr(re,ta):
     "interpolate over irradiance to get the spectrum at ta and re"
@@ -4452,6 +4830,7 @@ def interpirr(re,ta):
 
 
 # In[377]:
+
 
 def interpirr_up(re,ta):
     "interpolate over irradiance to get the spectrum at ta and re"
@@ -4466,6 +4845,7 @@ def interpirr_up(re,ta):
 # Use the mean and median of each tau and ref to interpolate to the proper irradiance values from the models
 
 # In[381]:
+
 
 sp_modis = interpirr(means.ref.modis,means.tau.modis)
 sp_emas = interpirr(means.ref.emas,means.tau.emas)
@@ -4483,6 +4863,7 @@ sp_goes_no = interpirr(means.ref.goes,means.tau.goes*0.0)
 
 # In[382]:
 
+
 spm_modis = interpirr(median.ref.modis,median.tau.modis)
 spm_emas = interpirr(median.ref.emas,median.tau.emas)
 spm_ssfr = interpirr(median.ref.ssfr,median.tau.ssfr)
@@ -4499,6 +4880,7 @@ spm_goes_no = interpirr(median.ref.goes,median.tau.goes*0.0)
 
 # In[383]:
 
+
 sp_modisp = interpirr(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
 sp_emasp = interpirr(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
 sp_ssfrp = interpirr(means.ref.ssfr+sttaussfr,means.tau.ssfr+sttaussfr)
@@ -4508,6 +4890,7 @@ sp_goesp = interpirr(means.ref.goes+sttaugoes,means.tau.goes+sttaugoes)
 
 
 # In[384]:
+
 
 spm_modisp = interpirr(median.ref.modis+sttaumod,median.tau.modis+sttaumod)
 spm_emasp = interpirr(median.ref.emas+sttauemas,median.tau.emas+sttauemas)
@@ -4519,6 +4902,7 @@ spm_goesp = interpirr(median.ref.goes+sttaugoes,median.tau.goes+sttaugoes)
 
 # In[385]:
 
+
 sp_modisp_up = interpirr_up(means.ref.modis+sttaumod,means.tau.modis+sttaumod)
 sp_emasp_up = interpirr_up(means.ref.emas+sttauemas,means.tau.emas+sttauemas)
 sp_ssfrp_up = interpirr_up(means.ref.ssfr+sttaussfr,means.tau.ssfr+sttaussfr)
@@ -4529,6 +4913,7 @@ sp_goesp_up = interpirr_up(means.ref.goes+sttaugoes,means.tau.goes+sttaugoes)
 
 # In[386]:
 
+
 spm_modisp_up = interpirr_up(median.ref.modis+sttaumod,median.tau.modis+sttaumod)
 spm_emasp_up = interpirr_up(median.ref.emas+sttauemas,median.tau.emas+sttauemas)
 spm_ssfrp_up = interpirr_up(median.ref.ssfr+sttaussfr,median.tau.ssfr+sttaussfr)
@@ -4538,6 +4923,7 @@ spm_goesp_up = interpirr_up(median.ref.goes+sttaugoes,median.tau.goes+sttaugoes)
 
 
 # In[387]:
+
 
 sp_modis_up = interpirr_up(means.ref.modis,means.tau.modis)
 sp_emas_up = interpirr_up(means.ref.emas,means.tau.emas)
@@ -4554,6 +4940,7 @@ sp_goes_no_up = interpirr_up(means.ref.goes,means.tau.goes*0.0)
 
 
 # In[388]:
+
 
 spm_modis_up = interpirr_up(median.ref.modis,median.tau.modis)
 spm_emas_up = interpirr_up(median.ref.emas,median.tau.emas)
@@ -4573,6 +4960,7 @@ spm_goes_no_up = interpirr_up(median.ref.goes,median.tau.goes*0.0)
 
 # In[389]:
 
+
 print list(enumerate(luti.refsp))
 print list(enumerate(luti.tausp))
 print luti.sp_irrdn.shape
@@ -4580,10 +4968,12 @@ print luti.sp_irrdn.shape
 
 # In[390]:
 
+
 print means.tau.goes, means.ref.goes
 
 
 # In[342]:
+
 
 plt.figure()
 plt.plot(luti.wvl,luti.sp_irrdn[1,:,0,13,13]*10.0,'m',label='modis')
@@ -4601,12 +4991,14 @@ plt.title('Model equivalent downwelling irradiance')
 
 # In[343]:
 
+
 print sp_rsp
 
 
 # Load the SSFR from the DC8
 
 # In[391]:
+
 
 ssfr_dc8 = sio.idl.readsav(fp+'dc8/20130913/20130913_calibspcs.out')
 print ssfr_dc8.keys()
@@ -4621,6 +5013,7 @@ up = np.nanmean(ssfr_dc8['nspectra'][iutc189:iutc191,:],axis=0)
 
 
 # In[392]:
+
 
 dn9_1 = np.nanmean(ssfr_dc8['zspectra'][iutc189:iutc191,:],axis=0)
 up9_1 = np.nanmean(ssfr_dc8['nspectra'][iutc189:iutc191,:],axis=0)
@@ -4648,6 +5041,7 @@ upm5_2 = np.nanmedian(ssfr_dc8['nspectra'][iutc185:iutc192,:],axis=0)
 
 
 # In[415]:
+
 
 fig,ax = plt.subplots(2,sharex=True)
 ax = ax.ravel()
@@ -4689,16 +5083,19 @@ ax[1].grid()
 
 # In[393]:
 
+
 dn = dn9_2
 up = up9_2
 
 
 # In[417]:
 
+
 dnstd = np.nanstd(ssfr_dc8['zspectra'][iutc191:iutc192,:],axis=0)
 
 
 # In[388]:
+
 
 plt.figure()
 plt.plot(ssfr_dc8['zenlambda'],dnstd)
@@ -4709,11 +5106,13 @@ plt.title('SSFR from DC8 standard deviation of downwelling irradiance')
 
 # In[451]:
 
+
 dn_no = interpirr(5.0,0)
 up_no = interpirr_up(5.0,0)
 
 
 # In[452]:
+
 
 sp_no_fx = interpolate.interp1d(luti.wvl,dn_no,bounds_error=False)
 dn_nos = sp_no_fx(ssfr_dc8['zenlambda'])
@@ -4723,15 +5122,18 @@ up_nos = sp_upno_fx(ssfr_dc8['zenlambda'])
 
 # In[459]:
 
+
 print np.nansum(((dn-up)-(dn_nos-up_nos))*ssfr_dc8['zenlambda']/1000.0)
 
 
 # In[447]:
 
+
 ww = ssfr_dc8['zenlambda']
 
 
 # In[456]:
+
 
 plt.figure()
 plt.plot(ww,dn,'r')
@@ -4742,10 +5144,12 @@ plt.plot(ww,up_nos,'k')
 
 # In[446]:
 
+
 dn.shape,up.shape,dn_nos.shape,ssfr_dc8['zenlambda'].shape
 
 
 # In[418]:
+
 
 plt.figure()
 plt.plot(luti.wvl,luti.sp_irrdn[1,:,0,4,0],label='Model liq')
@@ -4764,10 +5168,12 @@ plt.title('Comparing Model Irradiance and measured irradiance')
 
 # In[455]:
 
+
 ssfr_dc8_ict = load_ict(fp+'dc8/20130913/SEAC4RS-SSFR_DC8_20130913_R0.ict')
 
 
 # In[456]:
+
 
 iutc185tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-18.5))
 iutc192tt = np.nanargmin(abs(ssfr_dc8_ict['UTC']-19.2))
@@ -4777,11 +5183,13 @@ ssfr_dc8_ict_good = np.where((ssfr_dc8_ict['UTC']>19.0) & (ssfr_dc8_ict['UTC']<1
 
 # In[462]:
 
+
 print ssfr_dc8_ict['UP1600'][iutc192tt],
 ssfr_dc8_ict['DN1600'][iutc192tt], ssfr_dc8_ict['UP1600'][iutc192tt]/ssfr_dc8_ict['DN1600'][iutc192tt]
 
 
 # In[460]:
+
 
 s500 = np.nanmean(ssfr_dc8_ict['DN500'][ssfr_dc8_ict_good[0]])
 print s500
@@ -4798,6 +5206,7 @@ plt.title('SSFR Irradiance from DC8 at 500 nm')
 
 # In[461]:
 
+
 idc500 = np.nanargmin(abs(ssfr_dc8['zenlambda']-500.0))
 r500 = s500/dn[idc500]
 print r500
@@ -4807,6 +5216,7 @@ ssp = fssp(luti.wvl)
 
 # In[462]:
 
+
 fssps = interpolate.interp1d(ssfr_dc8['zenlambda'],(dn+dnstd)*r500,bounds_error=False)
 ssps = fssps(luti.wvl)
 fspup = interpolate.interp1d(ssfr_dc8['zenlambda'],up*r500,bounds_error=False)
@@ -4815,6 +5225,7 @@ sspup = fspup(luti.wvl)
 
 # In[464]:
 
+
 plt.figure()
 plt.plot(luti.wvl,dn_no*sspup/ssp)
 plt.xlabel('Wavelength [nm]')
@@ -4822,6 +5233,7 @@ plt.ylabel('Corrected Irradiance [W/m$^{2}$ nm]')
 
 
 # In[465]:
+
 
 plt.figure()
 plt.plot(luti.wvl[250:],ssp[250:])
@@ -4832,6 +5244,7 @@ plt.title('Corrected measured irradiance, interpolated to model wavelengths')
 
 
 # In[470]:
+
 
 plt.figure()
 plt.plot(luti.wvl,sspup,'k',label='Upwelling with clouds')
@@ -4851,6 +5264,7 @@ print 'SSFR forcing, std measurement based: %f W/m^2' % np.nansum(((ssps[250:]-s
 
 # In[471]:
 
+
 plt.figure()
 plt.plot(luti.wvl,(sp_modis-sp_modis_up)-(sp_modis_no-sp_modis_no_up),c='m',label='Modis')
 plt.plot(luti.wvl,(sp_emas-sp_emas_up)-(sp_emas_no-sp_emas_no_up),c='k',label='eMAS')
@@ -4867,6 +5281,7 @@ plt.savefig(fp+'plots/sp_rad_effect_v5.png',dpi=600,transparent=True)
 
 
 # In[472]:
+
 
 plt.figure()
 plt.plot(luti.wvl,(spm_modis-spm_modis_up)-(spm_modis_no-spm_modis_no_up),c='m',label='Modis')
@@ -4885,6 +5300,7 @@ plt.savefig(fp+'plots/sp_rad_effect_median_v5.png',dpi=600,transparent=True)
 
 # In[395]:
 
+
 radeff_modis = np.sum(((sp_modis[250:]-sp_modis_up[250:])-(sp_modis_no[250:]-sp_modis_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeff_emas = np.sum(((sp_emas[250:]-sp_emas_up[250:])-(sp_emas_no[250:]-sp_emas_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeff_ssfr = np.sum(((sp_ssfr[250:]-sp_ssfr_up[250:])-(sp_ssfr_no[250:]-sp_ssfr_no_up[250:]))*luti.wvl[250:]/1000.0)
@@ -4895,6 +5311,7 @@ radeff_star = np.sum(((sp_star[250:]-sp_star_up[250:])-(sp_star_no[250:]-sp_star
 
 # In[396]:
 
+
 radeff_modisp = np.sum(((sp_modisp-sp_modisp_up)-(sp_modis_no-sp_modis_no_up))*luti.wvl/1000.0)
 radeff_emasp = np.sum(((sp_emasp-sp_emasp_up)-(sp_emas_no-sp_emas_no_up))*luti.wvl/1000.0)
 radeff_ssfrp = np.sum(((sp_ssfrp-sp_ssfrp_up)-(sp_ssfr_no-sp_ssfr_no_up))*luti.wvl/1000.0)
@@ -4904,6 +5321,7 @@ radeff_starp = np.sum(((sp_starp-sp_starp_up)-(sp_star_no-sp_star_no_up))*luti.w
 
 
 # In[397]:
+
 
 print 'Cloud radiative effet base on mean values'
 print 'Modis: ',radeff_modis, ' +/- ', radeff_modisp-radeff_modis
@@ -4916,6 +5334,7 @@ print '4star: ', radeff_star, ' +/- ', radeff_starp-radeff_star
 
 # In[398]:
 
+
 radeffm_modis = np.sum(((spm_modis[250:]-spm_modis_up[250:])-(spm_modis_no[250:]-spm_modis_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeffm_emas = np.sum(((spm_emas[250:]-spm_emas_up[250:])-(spm_emas_no[250:]-spm_emas_no_up[250:]))*luti.wvl[250:]/1000.0)
 radeffm_ssfr = np.sum(((spm_ssfr[250:]-spm_ssfr_up[250:])-(spm_ssfr_no[250:]-spm_ssfr_no_up[250:]))*luti.wvl[250:]/1000.0)
@@ -4925,6 +5344,7 @@ radeffm_star = np.sum(((spm_star[250:]-spm_star_up[250:])-(spm_star_no[250:]-spm
 
 
 # In[399]:
+
 
 radeffm_modisp = np.sum(((spm_modisp-spm_modisp_up)-(spm_modis_no-spm_modis_no_up))*luti.wvl/1000.0)
 radeffm_emasp = np.sum(((spm_emasp-spm_emasp_up)-(spm_emas_no-spm_emas_no_up))*luti.wvl/1000.0)
@@ -4936,6 +5356,7 @@ radeffm_starp = np.sum(((spm_starp-spm_starp_up)-(spm_star_no-spm_star_no_up))*l
 
 # In[400]:
 
+
 print 'Cloud radiative effet base on median values'
 print 'Modis: ',radeffm_modis, ' +/- ', radeffm_modisp-radeffm_modis
 print 'eMAS: ',radeffm_emas, ' +/- ', radeffm_emasp-radeffm_emas
@@ -4946,6 +5367,7 @@ print '4star: ', radeffm_star, ' +/- ', radeffm_starp-radeffm_star
 
 
 # In[369]:
+
 
 #plt.figure(figsize=(13,10))
 f0,a0 = plt.subplots(2,1,sharex=True)
@@ -4979,6 +5401,7 @@ plt.savefig(fp+'plots/sp_compare_mod_meas_v5.png',dpi=600,transparent=True)
 
 # In[ ]:
 
+
 s_dict = {''}
 
 
@@ -4986,15 +5409,18 @@ s_dict = {''}
 
 # In[41]:
 
+
 import load_utils as lm
 
 
 # In[42]:
 
+
 goes_files = os.listdir(fp+'dc8/20130913/goes/')
 
 
 # In[43]:
+
 
 g_data = []
 g_dict = []
@@ -5010,16 +5436,19 @@ for f in goes_files:
 
 # In[44]:
 
+
 g_data[0]['lat'][200,100]
 g_data[0]['lon'][200,100]
 
 
 # In[47]:
 
+
 mu.spherical_dist([g_data[0]['lat'][200,100],g_data[0]['lon'][200,100]],[g_data[0]['lat'][200,101],g_data[0]['lon'][200,101]])
 
 
 # In[48]:
+
 
 mu.spherical_dist([g_data[0]['lat'][200,100],g_data[0]['lon'][200,100]],[g_data[0]['lat'][201,100],g_data[0]['lon'][201,100]])
 
@@ -5027,6 +5456,7 @@ mu.spherical_dist([g_data[0]['lat'][200,100],g_data[0]['lon'][200,100]],[g_data[
 # Make a map for each iteration of goes imagery
 
 # In[190]:
+
 
 def make_map(ax=ax):
     from mpl_toolkits.basemap import Basemap
@@ -5044,6 +5474,7 @@ def make_map(ax=ax):
 
 # In[289]:
 
+
 for i,dat in enumerate(g_data):
     fig,ax = plt.subplots(1)
     m = make_map(ax=ax)
@@ -5054,6 +5485,7 @@ for i,dat in enumerate(g_data):
 
 # In[49]:
 
+
 print g_data[1]['lat'][258,135], g_data[1]['lon'][258,135]
 
 
@@ -5061,11 +5493,13 @@ print g_data[1]['lat'][258,135], g_data[1]['lon'][258,135]
 
 # In[50]:
 
+
 from plotting_utils import circles
 from map_utils import radius_m2deg, spherical_dist
 
 
 # In[192]:
+
 
 plt.figure()
 clevels = range(0,50,2)
@@ -5093,10 +5527,12 @@ plt.savefig(fp+'plots/emas_FOV.png',dpi=600,transparent=True)
 
 # In[50]:
 
+
 r_eMAS,r_RSP
 
 
 # In[52]:
+
 
 vg = [[g_data[1]['lon'][257,135],g_data[1]['lat'][257,135]],
       [g_data[1]['lon'][257,136],g_data[1]['lat'][257,136]],
@@ -5107,11 +5543,13 @@ vg = [[g_data[1]['lon'][257,135],g_data[1]['lat'][257,135]],
 
 # In[55]:
 
+
 ier2 = np.where((er2['Start_UTC']>19.08) & (er2['Start_UTC']<19.3))[0]
 idc8 = np.where((dc8['TIME_UTC']>19.08) & (dc8['TIME_UTC']<19.3))[0]
 
 
 # In[246]:
+
 
 clevels = range(0,50,2)
 
@@ -5196,6 +5634,7 @@ plt.savefig(fp+'plots/emas_FOV_comp.png',dpi=600,transparent=True)
 
 # In[58]:
 
+
 import map_utils
 reload(map_utils)
 from map_utils import stats_within_radius
@@ -5203,11 +5642,13 @@ from map_utils import stats_within_radius
 
 # In[59]:
 
+
 r_GOES = np.sqrt(spherical_dist([vg[0][1],vg[0][0]],[vg[1][1],vg[1][0]])*
                  spherical_dist([vg[2][1],vg[2][0]],[vg[1][1],vg[1][0]])/np.pi)*1000.0
 
 
 # In[88]:
+
 
 out_ssfrtau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_SSFR)
 out_ssfrref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_SSFR)
@@ -5215,11 +5656,13 @@ out_ssfrref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][i
 
 # In[89]:
 
+
 out_rspref = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_RSP)
 out_rsptau = stats_within_radius(er2['Latitude'][ier2[::10]],er2['Longitude'][ier2[::10]],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_RSP)
 
 
 # In[90]:
+
 
 out_starref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_4STAR)
 out_startau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_4STAR)
@@ -5227,12 +5670,14 @@ out_startau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1
 
 # In[91]:
 
+
 r_MODIS = 500.0
 out_modisref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_MODIS)
 out_modistau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_MODIS)
 
 
 # In[92]:
+
 
 out_goesref = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['ref'],r_GOES)
 out_goestau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1['lat'],emas_v1['lon'],emas_v1['tau'],r_GOES)
@@ -5244,11 +5689,13 @@ out_goestau = stats_within_radius(dc8['G_LAT'][idc8],dc8['G_LONG'][idc8],emas_v1
 
 # In[56]:
 
+
 ier2_10 = np.where((er2['Start_UTC']>emas_10_utc_range[0]) & (er2['Start_UTC']<emas_10_utc_range[1]))[0]
 idc8_10 = np.where((dc8['TIME_UTC']>emas_10_utc_range[0]) & (dc8['TIME_UTC']<emas_10_utc_range[1]))[0]
 
 
 # In[94]:
+
 
 out_ssfrtau_10 = stats_within_radius(er2['Latitude'][ier2_10[::10]],er2['Longitude'][ier2_10[::10]],emas_v1_10['lat'],emas_v1_10['lon'],emas_v1_10['tau'],r_SSFR)
 out_ssfrref_10 = stats_within_radius(er2['Latitude'][ier2_10[::10]],er2['Longitude'][ier2_10[::10]],emas_v1_10['lat'],emas_v1_10['lon'],emas_v1_10['ref'],r_SSFR)
@@ -5264,11 +5711,13 @@ out_goestau_10 = stats_within_radius(dc8['G_LAT'][idc8_10],dc8['G_LONG'][idc8_10
 
 # In[57]:
 
+
 ier2_11 = np.where((er2['Start_UTC']>emas_11_utc_range[0]) & (er2['Start_UTC']<emas_11_utc_range[1]))[0]
 idc8_11 = np.where((dc8['TIME_UTC']>emas_11_utc_range[0]) & (dc8['TIME_UTC']<emas_11_utc_range[1]))[0]
 
 
 # In[95]:
+
 
 out_ssfrtau_11 = stats_within_radius(er2['Latitude'][ier2_11[::10]],er2['Longitude'][ier2_11[::10]],emas_v1_11['lat'],emas_v1_11['lon'],emas_v1_11['tau'],r_SSFR)
 out_ssfrref_11 = stats_within_radius(er2['Latitude'][ier2_11[::10]],er2['Longitude'][ier2_11[::10]],emas_v1_11['lat'],emas_v1_11['lon'],emas_v1_11['ref'],r_SSFR)
@@ -5284,11 +5733,13 @@ out_goestau_11 = stats_within_radius(dc8['G_LAT'][idc8_11],dc8['G_LONG'][idc8_11
 
 # In[58]:
 
+
 ier2_12 = np.where((er2['Start_UTC']>emas_12_utc_range[0]) & (er2['Start_UTC']<emas_12_utc_range[1]))[0]
 idc8_12 = np.where((dc8['TIME_UTC']>emas_12_utc_range[0]) & (dc8['TIME_UTC']<emas_12_utc_range[1]))[0]
 
 
 # In[96]:
+
 
 out_ssfrtau_12 = stats_within_radius(er2['Latitude'][ier2_12[::10]],er2['Longitude'][ier2_12[::10]],emas_v1_12['lat'],emas_v1_12['lon'],emas_v1_12['tau'],r_SSFR)
 out_ssfrref_12 = stats_within_radius(er2['Latitude'][ier2_12[::10]],er2['Longitude'][ier2_12[::10]],emas_v1_12['lat'],emas_v1_12['lon'],emas_v1_12['ref'],r_SSFR)
@@ -5304,11 +5755,13 @@ out_goestau_12 = stats_within_radius(dc8['G_LAT'][idc8_12],dc8['G_LONG'][idc8_12
 
 # In[59]:
 
+
 ier2_14 = np.where((er2['Start_UTC']>emas_14_utc_range[0]) & (er2['Start_UTC']<emas_14_utc_range[1]))[0]
 idc8_14 = np.where((dc8['TIME_UTC']>emas_14_utc_range[0]) & (dc8['TIME_UTC']<emas_14_utc_range[1]))[0]
 
 
 # In[97]:
+
 
 out_ssfrtau_14 = stats_within_radius(er2['Latitude'][ier2_14[::10]],er2['Longitude'][ier2_14[::10]],emas_v1_14['lat'],emas_v1_14['lon'],emas_v1_14['tau'],r_SSFR)
 out_ssfrref_14 = stats_within_radius(er2['Latitude'][ier2_14[::10]],er2['Longitude'][ier2_14[::10]],emas_v1_14['lat'],emas_v1_14['lon'],emas_v1_14['ref'],r_SSFR)
@@ -5324,6 +5777,7 @@ out_goestau_14 = stats_within_radius(dc8['G_LAT'][idc8_14],dc8['G_LONG'][idc8_14
 
 # In[60]:
 
+
 er2_lat = np.concatenate([er2['Latitude'][ier2_10[::10]],er2['Latitude'][ier2_11[::10]],er2['Latitude'][ier2_12[::10]],
                           er2['Latitude'][ier2[::10]],er2['Latitude'][ier2_14[::10]]])
 er2_lon = np.concatenate([er2['Longitude'][ier2_10[::10]],er2['Longitude'][ier2_11[::10]],er2['Longitude'][ier2_12[::10]],
@@ -5333,6 +5787,7 @@ er2_utc = np.concatenate([er2['Start_UTC'][ier2_10[::10]],er2['Start_UTC'][ier2_
 
 
 # In[61]:
+
 
 dc8_lat = np.concatenate([dc8['G_LAT'][idc8_10],dc8['G_LAT'][idc8_11],dc8['G_LAT'][idc8_12],
                           dc8['G_LAT'][idc8],dc8['G_LAT'][idc8_14]])
@@ -5344,10 +5799,12 @@ dc8_utc = np.concatenate([dc8['TIME_UTC'][idc8_10],dc8['TIME_UTC'][idc8_11],dc8[
 
 # In[100]:
 
+
 out_ssfrref_10.keys()
 
 
 # In[101]:
+
 
 type(out_ssfrref_10['std'])
 
@@ -5355,6 +5812,7 @@ type(out_ssfrref_10['std'])
 # ### Concatenate results and save for later use
 
 # In[102]:
+
 
 def concat_stats(stat_arr):
     'Simple function to concatenate the various stats'
@@ -5369,6 +5827,7 @@ def concat_stats(stat_arr):
 
 
 # In[103]:
+
 
 st_ssfr_ref = concat_stats([out_ssfrref_10,out_ssfrref_11,out_ssfrref_12,out_ssfrref,out_ssfrref_14])
 st_ssfr_ref = concat_stats([out_ssfrref_10,out_ssfrref_11,out_ssfrref_12,out_ssfrref,out_ssfrref_14])
@@ -5387,6 +5846,7 @@ st_goes_tau = concat_stats([out_goestau_10,out_goestau_11,out_goestau_12,out_goe
 
 # In[63]:
 
+
 dict_outt = {'ssfr_ref':stats['ssfr_ref'],'rsp_ref':stats['rsp_ref'],'star_ref':stats['star_ref'],
              'modis_ref':stats['modis_ref'],'goes_ref':stats['goes_ref'],
              'ssfr_tau':stats['ssfr_tau'],'rsp_tau':stats['rsp_tau'],'star_tau':stats['star_tau'],
@@ -5396,6 +5856,7 @@ dict_outt = {'ssfr_ref':stats['ssfr_ref'],'rsp_ref':stats['rsp_ref'],'star_ref':
 
 # In[62]:
 
+
 dict_outt = {'ssfr_ref':st_ssfr_ref,'rsp_ref':st_rsp_ref,'star_ref':st_star_ref,'modis_ref':st_modis_ref,'goes_ref':st_goes_ref,
              'ssfr_tau':st_ssfr_tau,'rsp_tau':st_rsp_tau,'star_tau':st_star_tau,'modis_tau':st_modis_tau,'goes_tau':st_goes_tau,
              'er2_lat':er2_lat,'er2_lon':er2_lon,'er2_utc':er2_utc,'dc8_lat':dc8_lat,'dc8_lon':dc8_lon,'dc8_utc':dc8_utc}
@@ -5403,10 +5864,12 @@ dict_outt = {'ssfr_ref':st_ssfr_ref,'rsp_ref':st_rsp_ref,'star_ref':st_star_ref,
 
 # In[105]:
 
+
 dict_outt['goes_tau'].items()[0][0]
 
 
 # In[307]:
+
 
 dict_out = {'er2_lat':er2_lat,'er2_lon':er2_lon,'er2_utc':er2_utc,
             'dc8_lat':dc8_lat,'dc8_lon':dc8_lon,'dc8_utc':dc8_utc,
@@ -5425,10 +5888,12 @@ dict_out = {'er2_lat':er2_lat,'er2_lon':er2_lon,'er2_utc':er2_utc,
 
 # In[107]:
 
+
 dict_out['goes_tau'][0].items()[0][0]
 
 
 # In[64]:
+
 
 def dict_keys_to_unicode(d):
     out = dict()
@@ -5438,6 +5903,7 @@ def dict_keys_to_unicode(d):
 
 
 # In[65]:
+
 
 for n in dict_outt.keys():
     if type(dict_outt[n]) is list:
@@ -5451,10 +5917,12 @@ for n in dict_outt.keys():
 
 # In[66]:
 
+
 dict_outt.keys()
 
 
 # In[67]:
+
 
 import sys
 sys.getsizeof(dict_outt)
@@ -5462,15 +5930,18 @@ sys.getsizeof(dict_outt)
 
 # In[68]:
 
+
 import cPickle as pickle
 
 
 # In[69]:
 
+
 pickle.dump(dict_outt,open(fp+'20130913_stats_output.p',"wb"))
 
 
 # In[ ]:
+
 
 hs.savemat(fp+'20130913_stats_output.mat',dict_outt)
 
@@ -5478,6 +5949,7 @@ hs.savemat(fp+'20130913_stats_output.mat',dict_outt)
 # ### Make a plot of the statistics results
 
 # In[263]:
+
 
 plt.figure()
 plt.plot(out_ssfrtau['std'],'g',label='SSFR')
@@ -5492,6 +5964,7 @@ plt.legend(frameon=False)
 
 
 # In[157]:
+
 
 fig = plt.figure(figsize=(10,5))
 ax = fig.add_subplot(122)
@@ -5551,6 +6024,7 @@ plt.savefig(fp+'plots/emas_tau_variations.png',dpi=600,transparent=True)
 
 # In[124]:
 
+
 print 'SSFR tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_ssfrtau['std']), np.median(out_ssfrtau['std']), np.nanmax(out_ssfrtau['std']), np.nanmin(out_ssfrtau['std']))
 print 'RSP tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_rsptau['std']), np.median(out_rsptau['std']),np.nanmax(out_rsptau['std']), np.nanmin(out_rsptau['std']))
 print 'MODIS tau: %.2f, %.2f, max, min:%.2f, %.2f ' % (np.nanmean(out_modistau['std']), np.median(out_modistau['std']),np.nanmax(out_modistau['std']), np.nanmin(out_modistau['std']))
@@ -5559,6 +6033,7 @@ print '4STAR tau: %.2f , %.2f, max, min:%.2f, %.2f' % (np.nanmean(out_startau['s
 
 # In[125]:
 
+
 print 'SSFR ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_ssfrref['std']),np.median(out_ssfrref['std']),np.nanmax(out_ssfrref['std']),np.nanmin(out_ssfrref['std']))
 print 'RSP ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_rspref['std']),np.median(out_rspref['std']),np.nanmax(out_rspref['std']),np.nanmin(out_rspref['std']))
 print 'MODIS ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_modisref['std']),np.median(out_modisref['std']),np.nanmax(out_modisref['std']),np.nanmin(out_modisref['std']))
@@ -5566,6 +6041,7 @@ print '4STAR ref: %.2f, %.2f, max, min: %.2f,%.2f' % (np.nanmean(out_starref['st
 
 
 # In[114]:
+
 
 fig = plt.figure(figsize=(9,5))
 ax = fig.add_subplot(122)
@@ -5612,6 +6088,7 @@ plt.savefig(fp+'plots/emas_ref_variations.png',dpi=600,transparent=True)
 # ### Compile the tau and ref figures together to make one figure representing the standard deviation of horizontal variation
 
 # In[269]:
+
 
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(222)
@@ -5715,6 +6192,7 @@ plt.savefig(fp+'plots/emas_horiz_variations.png',dpi=600,transparent=True)
 
 
 # In[115]:
+
 
 plt.hist(out_ssfrtau['std'],bins=30, histtype='stepfilled', normed=True,color='g',label='SSFR',alpha=0.6)
 plt.hist(out_rsptau['std'][~isnan(out_rsptau['std'])],bins=30, histtype='stepfilled', normed=True,color='c',label='RSP',alpha=0.6)

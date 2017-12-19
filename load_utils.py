@@ -3,6 +3,7 @@
 
 # In[ ]:
 
+
 def __init__():
     """
        Collection of codes to load and analyze various data
@@ -19,6 +20,7 @@ def __init__():
 
 
 # In[1]:
+
 
 def load_modis(geofile,datfile):
     """
@@ -135,6 +137,7 @@ def load_modis(geofile,datfile):
 
 # In[1]:
 
+
 def load_ict(fname,return_header=False,make_nan=True):
     """
     Simple ict file loader
@@ -185,6 +188,7 @@ def load_ict(fname,return_header=False,make_nan=True):
 
 # In[ ]:
 
+
 def modis_qa(qa_array):
     """
     modis qa data parser.
@@ -198,6 +202,7 @@ def modis_qa(qa_array):
 
 
 # In[ ]:
+
 
 def mat2py_time(matlab_datenum):
     "convert a matlab datenum to a python datetime object. Works on numpy arrays of datenum"
@@ -214,6 +219,7 @@ def mat2py_time(matlab_datenum):
 
 # In[1]:
 
+
 def toutc(pydatetime):
     "Convert python datetime to utc fractional hours"
     utc_fx = lambda x: float(x.hour)+float(x.minute)/60.0+float(x.second)/3600.0+float(x.microsecond)/3600000000.0
@@ -228,6 +234,7 @@ def toutc(pydatetime):
 
 
 # In[ ]:
+
 
 def load_emas(datfile):
     """
@@ -333,6 +340,7 @@ def load_emas(datfile):
 
 
 # In[ ]:
+
 
 def load_hdf(datfile,values=None,verbose=True,all_values=False):
     """
@@ -464,6 +472,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
 
 # In[1]:
 
+
 def load_cpl_layers(datfile,values=None):
     """
     Name:
@@ -556,6 +565,7 @@ def load_cpl_layers(datfile,values=None):
 
 
 # In[1]:
+
 
 def load_apr(datfiles):
     """
@@ -697,6 +707,7 @@ def load_apr(datfiles):
 
 # In[1]:
 
+
 def load_amsr(datfile,lonlatfile):
     """
     Name:
@@ -766,6 +777,7 @@ def load_amsr(datfile,lonlatfile):
 
 
 # In[ ]:
+
 
 def load_hdf_sd(FILE_NAME):
     """
@@ -850,6 +862,7 @@ def load_hdf_sd(FILE_NAME):
 
 # In[ ]:
 
+
 def remove_field_name(a, name):
     names = list(a.dtype.names)
     if name in names:
@@ -859,6 +872,7 @@ def remove_field_name(a, name):
 
 
 # In[ ]:
+
 
 def load_netcdf(datfile,values=None,verbose=True):
     """
@@ -943,6 +957,7 @@ def load_netcdf(datfile,values=None,verbose=True):
 
 # In[ ]:
 
+
 def load_aeronet(f,verbose=True,version=2):
     """
     Name:
@@ -1025,6 +1040,7 @@ def load_aeronet(f,verbose=True,version=2):
 
 # In[ ]:
 
+
 def load_multi_aeronet(dir_path,verbose=True):
     """
     Name:
@@ -1098,6 +1114,7 @@ def load_multi_aeronet(dir_path,verbose=True):
 
 
 # In[ ]:
+
 
 def aeronet_subset(aero,doy=None,utc=None,julian=None,window=24.0):
     """
@@ -1188,6 +1205,7 @@ def aeronet_subset(aero,doy=None,utc=None,julian=None,window=24.0):
 
 # In[ ]:
 
+
 def recarray_to_dict(ra):
     'simple function to convert numpy recarray to a dict with numpy arrays. Useful for modifying the output from genfromtxt'
     import numpy as np
@@ -1199,6 +1217,7 @@ def recarray_to_dict(ra):
 
 # In[ ]:
 
+
 def save_to_json(f,d):
     'Function to save dictionary with numpy elements (d) to a text file (f) define by the JSON typing'
     from json_tricks.np import dumps
@@ -1207,6 +1226,7 @@ def save_to_json(f,d):
 
 
 # In[ ]:
+
 
 def load_from_json(f):
     'Function to load JSON file and translate to dictionary with numpy elements from text file(f) define by the JSON typing'
@@ -1217,6 +1237,7 @@ def load_from_json(f):
 
 
 # In[ ]:
+
 
 def deep_convert_dict(layer):
     """
@@ -1245,6 +1266,7 @@ def deep_convert_dict(layer):
 
 # In[4]:
 
+
 if __name__ == "__main__":
     import os
     import numpy as np
@@ -1268,6 +1290,7 @@ if __name__ == "__main__":
 # Testing the metadata dictionary
 
 # In[ ]:
+
 
 if __name__ == "__main__":
 
