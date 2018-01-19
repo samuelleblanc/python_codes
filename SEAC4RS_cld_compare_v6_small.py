@@ -362,32 +362,32 @@ twoDS_h
 
 # ## Load the HVPS data for effective radius (second in situ method)
 
-# In[22]:
+# In[17]:
 
 
 hvps,hvps_h = load_ict(fp+'dc8/20130913/SEAC4RS-HVPS_DC8_20130913_R0.ict',return_header=True)
 
 
-# In[23]:
+# In[22]:
 
 
 hvps_h
 
 
-# In[24]:
+# In[23]:
 
 
 hvpsd = {key: hvps[key] for key in hvps.dtype.names}
 
 
-# In[25]:
+# In[24]:
 
 
 hvpsd['dr_m'] = np.array([75,225,375,525,675,825,975,1125,1275,1425,1575,1725,1875,2025,2175,2325,2475,2625,2775,2925,3075,3375,3675,3975,4275,4575,4875,5175,5475,5775,6075,6375,6675,6975,7275,7575,8375,9075,9825,10575,11325,12075,12875,12825,13575,14325,15075,16575,18075,19575,21075,22575,24075,25575,27075,28575,30075,33075,33075,36075,39075,42075,45075])
 hvpsd['dr_p'] = np.array([225,375,525,675,825,975,1125,1275,1425,1575,1725,1875,2025,2175,2325,2475,2625,2775,2925,3075,3375,3675,3975,4275,4575,4875,5175,5475,5775,6075,6375,6675,6975,7275,7575,8375,9075,9825,10575,11325,12075,12875,12825,13575,14325,15075,16575,18075,19575,21075,22575,24075,25575,27075,28575,30075,33075,33075,36075,39075,42075,45075,50075])
 
 
-# In[36]:
+# In[25]:
 
 
 hvpsd['effD'] = np.zeros_like(hvps['Start_UTC'])
@@ -397,13 +397,13 @@ hvpsd['mean_r'] = (hvpsd['dr_p']+hvpsd['dr_m'])/2.0
 
 # ## Load the FCDP data
 
-# In[ ]:
+# In[26]:
 
 
 fcdp_in,fcdp_header = load_ict(fp+'dc8/20130913/Seac4rs-FCDP_DC8_20130913_R0.ict',return_header=True)
 
 
-# In[ ]:
+# In[27]:
 
 
 fcdp_header
@@ -411,20 +411,20 @@ fcdp_header
 
 # ### Now from the FCDP distributions, calculate the effectve radius
 
-# In[ ]:
+# In[28]:
 
 
 fcdp = {key: fcdp_in[key] for key in fcdp_in.dtype.names}
 
 
-# In[ ]:
+# In[29]:
 
 
 fcdp['dr_m'] = np.array([0.0,1.0,3.2,9.4,12.0,15.6,17.7,19.8,22.4,25.8,28.8,30.9,32.7,34.4,36.4,38.7,41.3,42.9,44.7,47.1,50.0])
 fcdp['dr_p'] = np.array([1.0,3.2,9.4,12.0,15.6,17.7,19.8,22.4,25.8,28.8,30.9,32.7,34.4,36.4,38.7,41.3,42.9,44.7,47.1,50.0,100.0])
 
 
-# In[ ]:
+# In[30]:
 
 
 fcdp['effD'] = np.zeros_like(fcdp['Start_UTC'])
@@ -432,13 +432,13 @@ fcdp['dr'] = fcdp['dr_p']-fcdp['dr_m']
 fcdp['mean_r'] = (fcdp['dr_p']+fcdp['dr_m'])/2.0
 
 
-# In[ ]:
+# In[31]:
 
 
 fcdp['bin_names'] = np.sort([k for k in fcdp.keys() if 'nbin' in k])
 
 
-# In[ ]:
+# In[32]:
 
 
 fcdp['n_r'] = []
@@ -447,13 +447,13 @@ for n in fcdp['bin_names']:
 fcdp['n_r'] = np.array(fcdp['n_r'])
 
 
-# In[ ]:
+# In[33]:
 
 
 fcdp['n_r'].shape
 
 
-# In[ ]:
+# In[34]:
 
 
 for i in xrange(len(fcdp['Start_UTC'])):
@@ -467,13 +467,13 @@ for i in xrange(len(fcdp['Start_UTC'])):
 
 # ## Load the DC8 nav data
 
-# In[28]:
+# In[35]:
 
 
 dc8,dc8_header = load_ict(fp+'dc8/20130913/SEAC4RS-MMS-1HZ_DC8_20130913_R0.ict',return_header=True)
 
 
-# In[29]:
+# In[36]:
 
 
 dc8_header
@@ -533,7 +533,7 @@ plt.savefig(fp+'plots/20130911_retrieved_horz_var_{vv}.png'.format(vv=vv),dpi=60
 
 # ## Plot the scatter plot of tau and reff
 
-# In[30]:
+# In[37]:
 
 
 def smooth(x,window_len=11,window='hanning'):
@@ -594,31 +594,31 @@ def smooth(x,window_len=11,window='hanning'):
     return y
 
 
-# In[31]:
+# In[38]:
 
 
 star_tau.shape
 
 
-# In[33]:
+# In[39]:
 
 
 modis_tau.shape
 
 
-# In[34]:
+# In[40]:
 
 
 ssfr_tau.shape
 
 
-# In[35]:
+# In[41]:
 
 
 rsp_tau.shape
 
 
-# In[ ]:
+# In[42]:
 
 
 ax1.errorbar(star_utc,smooth(modis_tau,6),yerr=modis_tau_std*2.0,color='m')
@@ -628,7 +628,7 @@ ax1.errorbar(goes_utc,smooth(goes_tau,2),yerr=goes_tau_std*2.0,color='b')
 ax1.errorbar(star_utc,smooth(star_tau,40),yerr=star_tau_std*2.0,color='r')
 
 
-# In[18]:
+# In[ ]:
 
 
 fig = plt.figure()
@@ -637,19 +637,19 @@ plt.plot(smooth(star_tau,40),smooth(modis_tau,6))
 
 # ## Plot the vertical profile for 4 different times
 
-# In[36]:
+# In[43]:
 
 
 tt = np.array([18.5948,18.7082,18.8377,18.9911])
 
 
-# In[37]:
+# In[44]:
 
 
 ie,ir,iss,im,ist,ic,ig,iap = [],[],[],[],[],[],[],[]
 
 
-# In[39]:
+# In[45]:
 
 
 for i,t in enumerate(tt):
@@ -663,13 +663,13 @@ for i,t in enumerate(tt):
    # iap.append(np.argmin(abs(apr['utc']-t)))
 
 
-# In[40]:
+# In[46]:
 
 
 iie,iir,iiss,iim,iist,iic,iig,iiap = [],[],[],[],[],[],[],[]
 
 
-# In[41]:
+# In[47]:
 
 
 # get the ranges in values
@@ -773,7 +773,7 @@ def color_box(bp, color):
     return
 
 
-# In[66]:
+# In[48]:
 
 
 fig = plt.figure()
@@ -801,7 +801,7 @@ ax.set_ylabel('Altitude [km]')
 ax.set_xlabel('Effective Radius [$\\mu$m]')
 
 
-# In[73]:
+# In[ ]:
 
 
 def plot_vert_cloud_probes(ax):
@@ -826,13 +826,13 @@ def plot_vert_cloud_probes(ax):
 
 # ### Now plot at each time point, use averages for remote sensing
 
-# In[49]:
+# In[ ]:
 
 
 iie[0]
 
 
-# In[50]:
+# In[ ]:
 
 
 emas_r,rsp_r,ssfr_r = np.zeros_like(tt),np.zeros_like(tt),np.zeros_like(tt)
@@ -846,7 +846,7 @@ for i,t in enumerate(tt):
     goes_r[i] = np.nanmean(goes_ref[iig[i][1]:iig[i][0]])
 
 
-# In[51]:
+# In[ ]:
 
 
 for i,t in enumerate(tt):
@@ -1199,4 +1199,104 @@ ncc_set
 
 plt.figure()
 plt.plot(apr_dbz[:,iiap[0][1]:iiap[0][0]][:,30],apr['altflt'][:,iap[0]],'.')
+
+
+# ## Scatter plot the cloud properties
+
+# ### Match the timing an space for each cloud prop
+
+# In[52]:
+
+
+from write_utils import nearest_neighbor
+
+
+# In[51]:
+
+
+print 'name', 'utc', 'tau', 'ref'
+print 'emas',len(emas_utc_full), len(emas_tau_full), len(emas_ref_full)
+print 'rsp', len(rsp_utc), len(rsp_tau), len(rsp_ref)
+print 'ssfr', len(ssfr_utc), len(ssfr_tau), len(ssfr_ref)
+print '4star', len(star_utc), len(star_tau), len(star_ref)
+print 'goes', len(goes_utc), len(goes_tau), len(goes_ref)
+print 'modis', 0.0, len(modis_tau), len(modis_ref)
+
+
+# In[74]:
+
+
+dt = 5.0 # number of seconds to allow
+
+
+# In[76]:
+
+
+emas_t_star = nearest_neighbor(emas_utc_full,emas_tau_full,star_utc,dist=dt/3600.0)
+emas_r_star = nearest_neighbor(emas_utc_full,emas_ref_full,star_utc,dist=dt/3600.0)
+print 'emas',len(emas_t_star),len(emas_r_star), np.nanmax(emas_t_star), np.nanmax(emas_r_star)
+
+
+# In[77]:
+
+
+rsp_t_star = nearest_neighbor(rsp_utc,rsp_tau,star_utc,dist=dt/3600.0)
+rsp_r_star = nearest_neighbor(rsp_utc,rsp_ref,star_utc,dist=dt/3600.0)
+rsp_ts_star = nearest_neighbor(rsp_utc,rsp_tau_std,star_utc,dist=dt/3600.0)
+rsp_rs_star = nearest_neighbor(rsp_utc,rsp_ref_std,star_utc,dist=dt/3600.0)
+print 'rsp',len(rsp_t_star),len(rsp_r_star), np.nanmax(rsp_t_star), np.nanmax(rsp_r_star),np.nanmean(rsp_ts_star),np.nanmean(rsp_rs_star)
+
+
+# In[65]:
+
+
+ssfr_utc = ssfr_utc.flatten()
+
+
+# In[78]:
+
+
+ssfr_t_star = nearest_neighbor(ssfr_utc,ssfr_tau,star_utc,dist=dt/3600.0)
+ssfr_r_star = nearest_neighbor(ssfr_utc,ssfr_ref,star_utc,dist=dt/3600.0)
+ssfr_ts_star = nearest_neighbor(ssfr_utc,ssfr_tau_std.flatten(),star_utc,dist=dt/3600.0)
+ssfr_rs_star = nearest_neighbor(ssfr_utc,ssfr_ref_std.flatten(),star_utc,dist=dt/3600.0)
+print 'ssfr',len(ssfr_t_star),len(ssfr_r_star), np.nanmax(ssfr_t_star), np.nanmax(ssfr_r_star),            np.nanmean(ssfr_ts_star),np.nanmean(ssfr_rs_star)
+
+
+# In[79]:
+
+
+goes_t_star = nearest_neighbor(goes_utc,goes_tau,star_utc,dist=dt/3600.0)
+goes_r_star = nearest_neighbor(goes_utc,goes_ref,star_utc,dist=dt/3600.0)
+goes_ts_star = nearest_neighbor(goes_utc,goes_tau_std.flatten(),star_utc,dist=dt/3600.0)
+goes_rs_star = nearest_neighbor(goes_utc,goes_ref_std.flatten(),star_utc,dist=dt/3600.0)
+print 'goes',len(goes_t_star),len(goes_r_star), np.nanmax(goes_t_star), np.nanmax(goes_r_star),            np.nanmean(goes_ts_star),np.nanmean(goes_rs_star)
+
+
+# ### Plot the scatter plot, with std within FOV as error bars
+
+# In[87]:
+
+
+from plotting_utils import plot_lin
+
+
+# In[88]:
+
+
+help(plot_lin)
+
+
+# In[5]:
+
+
+plt.figure()
+
+plt.errorbar(emas_t_star,star_tau,xerr=star_tau_std,yerr=0.2,label='eMAS',linestyle='None')
+plt.errorbar(rsp_t_star,star_tau,xerr=star_tau_std,yerr=rsp_ts_star,label='RSP',linestyle='None')
+plt.errorbar(ssfr_t_star,star_tau,xerr=star_tau_std,yerr=ssfr_ts_star,label='SSFR',linestyle='None')
+plt.errorbar(modis_tau,star_tau,xerr=star_tau_std,yerr=modis_tau_std,label='MODIS',linestyle='None')
+plt.errorbar(goes_t_star,star_tau,xerr=star_tau_std,yerr=goes_ts_star,label='GOES',linestyle='None')
+
+plt.legend(frameon=False,loc=4,numpoints=1)
 
