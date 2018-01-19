@@ -3,6 +3,7 @@
 
 # In[ ]:
 
+
 def __init__():
     """
        Collection of codes to run some typical plotting utilities
@@ -15,6 +16,7 @@ def __init__():
 
 
 # In[ ]:
+
 
 def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     """
@@ -95,6 +97,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
 
 # In[5]:
 
+
 def plot_color_maps(reverse=False):
     """
     Simple plotting function to run through and plot each color map
@@ -125,6 +128,7 @@ def plot_color_maps(reverse=False):
 
 
 # In[1]:
+
 
 def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyhist=True,loc=2,bins=30,alpha=0.5):
     """
@@ -192,6 +196,7 @@ def plot_vert_hist(fig,ax1,y,pos,ylim,color='grey',label=None,legend=False,onlyh
 
 # In[ ]:
 
+
 def data2figpoints(x,dx,fig,ax1):
     "function to tranform data locations to relative figure coordinates (in fractions of total figure"
     flen = fig.transFigure.transform([1,1])
@@ -208,6 +213,7 @@ def data2figpoints(x,dx,fig,ax1):
 
 
 # In[1]:
+
 
 def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None,*args,**kwargs):
     """
@@ -288,6 +294,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
 
 # In[ ]:
 
+
 def lin(p,x):
     """ 
     Simple function that returns a linear expression:
@@ -297,6 +304,7 @@ def lin(p,x):
 
 
 # In[ ]:
+
 
 def confidence_envelope(xn,p,p_err,ci=95,size=1000):
     """
@@ -327,6 +335,7 @@ def confidence_envelope(xn,p,p_err,ci=95,size=1000):
 
 
 # In[ ]:
+
 
 def plotmatfig(filename,fignr=None):
     """
@@ -449,6 +458,7 @@ def plotmatfig(filename,fignr=None):
 
 # In[ ]:
 
+
 def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
     """
     Purpose:
@@ -543,6 +553,7 @@ def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
 
 # In[1]:
 
+
 def color_box(bp, color):
     'Coloring of all the elements of a box plot'
     import matplotlib.pyplot as plt
@@ -558,6 +569,7 @@ def color_box(bp, color):
 
 # In[ ]:
 
+
 def subset_bins(vals,val_lim,lims):
     'create the subsetted bins of values'
     bins = []
@@ -568,6 +580,7 @@ def subset_bins(vals,val_lim,lims):
 
 
 # In[1]:
+
 
 def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False):
     """Compile the functions to make a box plot
@@ -626,6 +639,7 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
 
 
 # In[ ]:
+
 
 def prelim(ax=None):
     'Stamp prelim in center of the plot'

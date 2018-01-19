@@ -41,6 +41,7 @@
 
 # In[2]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -53,11 +54,13 @@ from mpl_toolkits.basemap import Basemap
 
 # In[3]:
 
+
 import Run_libradtran as RL
 reload(RL)
 
 
 # In[4]:
+
 
 fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
 
@@ -68,20 +71,24 @@ fp = 'C:\Users\sleblan2\Research\Calipso\meloe/'
 
 # In[5]:
 
+
 input_DJF = sio.loadmat(fp+'Input_to_DARF_DJF.mat',mat_dtype=True)['data_input_darf']
 
 
 # In[6]:
+
 
 input_DJF.dtype.names
 
 
 # In[7]:
 
+
 DARE_DJF = sio.loadmat(fp+'DARF/DJF_DARF.mat')
 
 
 # In[8]:
+
 
 DARE_DJF.keys()
 
@@ -90,10 +97,12 @@ DARE_DJF.keys()
 
 # In[146]:
 
+
 input_SON = sio.loadmat(fp+'Input_to_DARF_SON.mat',mat_dtype=True)['data_input_darf']
 
 
 # In[147]:
+
 
 DARE_SON = sio.loadmat(fp+'DARF/SON_DARF.mat')
 
@@ -101,6 +110,7 @@ DARE_SON = sio.loadmat(fp+'DARF/SON_DARF.mat')
 # ## Load the JJA
 
 # In[179]:
+
 
 input_JJA = sio.loadmat(fp+'Input_to_DARF_JJA.mat',mat_dtype=True)['data_input_darf']
 DARE_JJA = sio.loadmat(fp+'DARF/JJA_DARF.mat')
@@ -110,6 +120,7 @@ DARE_JJA = sio.loadmat(fp+'DARF/JJA_DARF.mat')
 
 # In[180]:
 
+
 input_MAM = sio.loadmat(fp+'Input_to_DARF_MAM.mat',mat_dtype=True)['data_input_darf']
 DARE_MAM = sio.loadmat(fp+'DARF/MAM_DARF.mat')
 
@@ -118,35 +129,42 @@ DARE_MAM = sio.loadmat(fp+'DARF/MAM_DARF.mat')
 
 # In[10]:
 
+
 DARE_DJF['lon'].shape,input_DJF['MODIS_lon'][0,0].shape
 
 
 # In[221]:
+
 
 DARE_DJF['lon'][1,0]-DARE_DJF['lon'][0,0]
 
 
 # In[222]:
 
+
 DARE_DJF['lat'][1,0]-DARE_DJF['lat'][0,0]
 
 
 # In[14]:
+
 
 input_DJF['MODIS_COD_mean'][0,0].shape
 
 
 # In[19]:
 
+
 DARE_DJF['SW_DARF'].shape
 
 
 # In[23]:
 
+
 DARE_DJF['zout']
 
 
 # In[86]:
+
 
 def contour_it(x,y,z):
     from scipy.interpolate import griddata
@@ -162,6 +180,7 @@ def contour_it(x,y,z):
 # ## Plots the DARE for DJF
 
 # In[136]:
+
 
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
@@ -213,20 +232,24 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_all_aero_DJF.png',transparent=True,dpi=600
 
 # In[89]:
 
+
 input_DJF.dtype.names
 
 
 # In[96]:
+
 
 input_DJF['MOC_wavelengths'][0,0][0,8]
 
 
 # In[126]:
 
+
 ii95 = input_DJF['MOC_ssa_mean'][0,0][:,:,8]>0.95
 
 
 # In[137]:
+
 
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
@@ -278,10 +301,12 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.95_DJF.png',transparent=True,dpi=600)
 
 # In[133]:
 
+
 ii80 = input_DJF['MOC_ssa_mean'][0,0][:,:,8]<0.8
 
 
 # In[138]:
+
 
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
@@ -333,6 +358,7 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.80_DJF.png',transparent=True,dpi=600)
 
 # In[145]:
 
+
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
 sc = ax1.scatter(input_DJF['MODIS_COD_mean'][0,0][ii80].flatten(),input_DJF['MODIS_effrad_mean'][0,0][ii80].flatten(),
@@ -383,10 +409,12 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.80_DJF_sub.png',transparent=True,dpi=
 
 # In[139]:
 
+
 ii90 = (input_DJF['MOC_ssa_mean'][0,0][:,:,8]>0.8) & (input_DJF['MOC_ssa_mean'][0,0][:,:,8]<0.95)
 
 
 # In[142]:
+
 
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
@@ -438,10 +466,12 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.90_DJF.png',transparent=True,dpi=600)
 
 # In[143]:
 
+
 ii99 = input_DJF['MOC_ssa_mean'][0,0][:,:,8]>0.99
 
 
 # In[144]:
+
 
 plt.figure(figsize=(11,13))
 ax1 = plt.subplot(311)
@@ -495,6 +525,7 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.99_DJF.png',transparent=True,dpi=600)
 
 # In[219]:
 
+
 def plot_dare(ii99,ss):
     plt.figure(figsize=(11,13))
     ax1 = plt.subplot(311)
@@ -544,12 +575,14 @@ def plot_dare(ii99,ss):
 
 # In[220]:
 
+
 ii99 = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.0
 plot_dare(ii99,'All aerosol')
 plt.savefig(fp+'plots/DARE_vs_cod_ref_all_aero_SON.png',transparent=True,dpi=600)
 
 
 # In[152]:
+
 
 ii99 = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.99
 plot_dare(ii99,'SSA $>$ 0.99')
@@ -558,12 +591,14 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.99_SON.png',transparent=True,dpi=600)
 
 # In[153]:
 
+
 ii99 = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.95
 plot_dare(ii99,'SSA $>$ 0.95')
 plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.95_SON.png',transparent=True,dpi=600)
 
 
 # In[154]:
+
 
 ii90 = (input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.80) & (input_SON['MOC_ssa_mean'][0,0][:,:,8]<0.95)
 plot_dare(ii90,'0.80 $<$ SSA $<$ 0.95')
@@ -572,12 +607,14 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.90_SON.png',transparent=True,dpi=600)
 
 # In[158]:
 
+
 ii80 = input_SON['MOC_ssa_mean'][0,0][:,:,8]<0.90
 plot_dare(ii80,'SSA $<$ 0.90')
 plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.9_SON.png',transparent=True,dpi=600)
 
 
 # In[160]:
+
 
 iii = (input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.90) & (input_SON['MOC_ssa_mean'][0,0][:,:,8]<0.93)
 plot_dare(iii,'0.90 $<$ SSA $<$ 0.93')
@@ -587,6 +624,7 @@ plt.savefig(fp+'plots/DARE_vs_cod_ref_ssa0.9_0.95_SON.png',transparent=True,dpi=
 # ## Redo these plots but with effective DARE
 
 # In[201]:
+
 
 def plot_dare_eff(ii99,ss):
     plt.figure(figsize=(11,13))
@@ -637,12 +675,14 @@ def plot_dare_eff(ii99,ss):
 
 # In[202]:
 
+
 iii = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.95
 plot_dare_eff(iii,'SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.95_SON.png',transparent=True,dpi=600)
 
 
 # In[203]:
+
 
 iii = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.99
 plot_dare_eff(iii,'SSA $>$ 0.99')
@@ -651,6 +691,7 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.99_SON.png',transparent=True,dpi=6
 
 # In[204]:
 
+
 iii = (input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.90) & (input_SON['MOC_ssa_mean'][0,0][:,:,8]<0.95)
 plot_dare_eff(iii,'0.90 $>$ SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.90_0.95_SON.png',transparent=True,dpi=600)
@@ -658,12 +699,14 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.90_0.95_SON.png',transparent=True,
 
 # In[205]:
 
+
 iii = input_SON['MOC_ssa_mean'][0,0][:,:,8]<0.90
 plot_dare_eff(iii,'SSA $<$ 0.90')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa_0.90_SON.png',transparent=True,dpi=600)
 
 
 # In[206]:
+
 
 iii = input_SON['MOC_ssa_mean'][0,0][:,:,8]>0.0
 plot_dare_eff(iii,'All aerosol')
@@ -673,6 +716,7 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_all_aero_SON.png',transparent=True,dpi=
 # ## Redo plots for effective DARE for JJA
 
 # In[207]:
+
 
 def plot_dare_eff_JJA(ii99,ss):
     plt.figure(figsize=(11,13))
@@ -723,12 +767,14 @@ def plot_dare_eff_JJA(ii99,ss):
 
 # In[208]:
 
+
 iii = input_JJA['MOC_ssa_mean'][0,0][:,:,8]>0.95
 plot_dare_eff_JJA(iii,'SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.95_JJA.png',transparent=True,dpi=600)
 
 
 # In[209]:
+
 
 iii = input_JJA['MOC_ssa_mean'][0,0][:,:,8]>0.99
 plot_dare_eff_JJA(iii,'SSA $>$ 0.99')
@@ -737,6 +783,7 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.99_JJA.png',transparent=True,dpi=6
 
 # In[210]:
 
+
 iii = (input_JJA['MOC_ssa_mean'][0,0][:,:,8]>0.90) & (input_JJA['MOC_ssa_mean'][0,0][:,:,8]<0.95)
 plot_dare_eff_JJA(iii,'0.90 $>$ SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.90_0.95_JJA.png',transparent=True,dpi=600)
@@ -744,12 +791,14 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.90_0.95_JJA.png',transparent=True,
 
 # In[211]:
 
+
 iii = input_JJA['MOC_ssa_mean'][0,0][:,:,8]<0.90
 plot_dare_eff_JJA(iii,'SSA $<$ 0.90')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa_0.90_JJA.png',transparent=True,dpi=600)
 
 
 # In[212]:
+
 
 iii = input_JJA['MOC_ssa_mean'][0,0][:,:,8]>0.0
 plot_dare_eff_JJA(iii,'All aerosol')
@@ -759,6 +808,7 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_all_aero_JJA.png',transparent=True,dpi=
 # ## Redo plots for effective DARE for MAM
 
 # In[213]:
+
 
 def plot_dare_eff_MAM(ii99,ss):
     plt.figure(figsize=(11,13))
@@ -809,12 +859,14 @@ def plot_dare_eff_MAM(ii99,ss):
 
 # In[214]:
 
+
 iii = input_MAM['MOC_ssa_mean'][0,0][:,:,8]>0.95
 plot_dare_eff_MAM(iii,'SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.95_MAM.png',transparent=True,dpi=600)
 
 
 # In[215]:
+
 
 iii = input_MAM['MOC_ssa_mean'][0,0][:,:,8]>0.99
 plot_dare_eff_MAM(iii,'SSA $>$ 0.99')
@@ -823,12 +875,14 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.99_MAM.png',transparent=True,dpi=6
 
 # In[216]:
 
+
 iii = (input_MAM['MOC_ssa_mean'][0,0][:,:,8]>0.90) & (input_MAM['MOC_ssa_mean'][0,0][:,:,8]<0.95)
 plot_dare_eff_MAM(iii,'0.90 $>$ SSA $>$ 0.95')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa0.90_0.95_MAM.png',transparent=True,dpi=600)
 
 
 # In[217]:
+
 
 iii = input_MAM['MOC_ssa_mean'][0,0][:,:,8]<0.90
 plot_dare_eff_MAM(iii,'SSA $<$ 0.90')
@@ -837,12 +891,8 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa_0.90_MAM.png',transparent=True,dpi=
 
 # In[218]:
 
+
 iii = input_MAM['MOC_ssa_mean'][0,0][:,:,8]>0.0
 plot_dare_eff_MAM(iii,'All aerosol')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_all_aero_MAM.png',transparent=True,dpi=600)
-
-
-# In[ ]:
-
-
 

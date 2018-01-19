@@ -8,41 +8,45 @@
 
 # # Load the defaults and imports
 
-# In[1]:
+# In[6]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+import os
+matplotlib.rc_file(os.path.join(os.getcwd(),'file.rc'))
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import Sp_parameters as Sp
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
-
-
-# In[2]:
-
-
-from linfit import linfit
-
-
-# In[3]:
-
-
-get_ipython().magic(u'matplotlib notebook')
+from path_utils import getpath
 
 
 # In[4]:
 
 
-fp ='C:/Users/sleblan2/Research/ORACLES/'
+from linfit import linfit
+
+
+# In[17]:
+
+
+get_ipython().magic(u'matplotlib notebook')
+
+
+# In[7]:
+
+
+#fp ='C:/Users/sleblan2/Research/ORACLES/'
+fp = getpath('ORACLES')
+fp
 
 
 # # load the files
 
-# In[5]:
+# In[67]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -735,13 +739,13 @@ hs.savemat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv),ar)
 
 # ## Optionally load the file
 
-# In[1]:
+# In[8]:
 
 
 import hdf5storage as hs
 
 
-# In[8]:
+# In[9]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_ict.mat')
@@ -1003,4 +1007,218 @@ for i,d in enumerate(days):
     ax[6].set_ylabel('qual_flag')
     
     ax[6].set_xlabel('UTC [h]')
+
+
+# # Create autocorrelation figures
+
+# In[13]:
+
+
+def autocorr(x):
+    result = np.correlate(x, x, mode='full')
+    return result[result.size/2:]
+
+
+# In[14]:
+
+
+ar.keys()
+
+
+# In[30]:
+
+
+cc = autocorr(np.append(ar['AOD0501'][ar['fl']],np.nan))
+
+
+# In[31]:
+
+
+plt.figure()
+plt.plot(cc,'-o')
+
+
+# In[19]:
+
+
+len(cc)
+
+
+# In[20]:
+
+
+len(ar['AOD0501'][ar['fl']])
+
+
+# In[21]:
+
+
+def autocorrelation (x) :
+    """
+    Compute the autocorrelation of the signal, based on the properties of the
+    power spectral density of the signal.
+    """
+    xp = x-np.mean(x)
+    f = np.fft.fft(xp)
+    p = np.array([np.real(v)**2+np.imag(v)**2 for v in f])
+    pi = np.fft.ifft(p)
+    return np.real(pi)[:x.size/2]/np.sum(xp**2)
+
+
+# In[28]:
+
+
+cco = autocorrelation(np.append(ar['AOD0501'][ar['fl']],np.nan))
+
+
+# In[29]:
+
+
+plt.figure()
+plt.plot(cco)
+
+
+# In[24]:
+
+
+ar.keys()
+
+
+# In[92]:
+
+
+plt.figure()
+plt.hist2d(ar['Longitude'][ar['fl']],ar['Latitude'][ar['fl']],data=ar['AOD0501'][ar['fl']],bins=[35,25])
+
+
+# In[93]:
+
+
+import scipy.stats as sta
+
+
+# In[102]:
+
+
+[m,mx,my,k] = sta.binned_statistic_2d(ar['Longitude'][ar['fl']],ar['Latitude'][ar['fl']],ar['AOD0501'][ar['fl']],bins=[35,25],statistic='mean')
+[sm,smx,smy,sk] = sta.binned_statistic_2d(ar['Longitude'][ar['fl']],ar['Latitude'][ar['fl']],ar['AOD0501'][ar['fl']],bins=[35,25],statistic=np.std)
+
+
+# In[103]:
+
+
+m,sm
+
+
+# ## Retry using pandas to create autocorrelation with proper time
+
+# In[32]:
+
+
+import pandas as pd
+
+
+# In[33]:
+
+
+ar.keys()
+
+
+# In[66]:
+
+
+ar['days'][0:10]
+
+
+# In[117]:
+
+
+def fracH2HMS(h):
+    ho = int(h)
+    mo = int((h-int(h))*60)
+    so = min([max([(((h-int(h))*60)-int((h-int(h))*60))*60.0, 0.0]),59.9])
+    return '{:02.0f}:{:02.0f}:{:02.3f}'.format(ho,mo,so)
+    
+
+
+# In[109]:
+
+
+fracH2HMS(7.92833333)
+
+
+# In[118]:
+
+
+pd.to_datetime('20170811'+' '+fracH2HMS(h),utc=True)
+
+
+# In[119]:
+
+
+to = []
+for i,t in enumerate(ar['Start_UTC']):
+    to.append(days[int(ar['days'][i])]+ ' '+ fracH2HMS(t))
+
+
+# In[120]:
+
+
+to[-40:]
+
+
+# In[121]:
+
+
+rg = pd.to_datetime(to,utc=True)
+
+
+# In[124]:
+
+
+ts = pd.Series(ar['AOD0501'][ar['fl']],index=rg[ar['fl']])
+
+
+# In[126]:
+
+
+help(ts.autocorr)
+
+
+# In[128]:
+
+
+plt.figure()
+plt.plot(ts.autocorr(),'.')
+
+
+# In[135]:
+
+
+plt.figure()
+ts.plot()
+
+
+# In[141]:
+
+
+ts.autocorr(lag=3)
+
+
+# In[144]:
+
+
+import statsmodels.tsa.api as smt
+
+
+# In[157]:
+
+
+f = smt.graphics.plot_acf(ts,lags=36000)
+
+
+# In[ ]:
+
+
+f = smt.graphics.plot_pacf(ts,lags=3600)
 

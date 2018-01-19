@@ -3,6 +3,7 @@
 
 # In[1]:
 
+
 def __init__():
     """
     Name:  
@@ -35,6 +36,7 @@ def __init__():
 
 
 # In[366]:
+
 
 def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],default_format='.3f',file_comment=''):
     """
@@ -257,6 +259,7 @@ REVISION: {rev}
 
 # In[265]:
 
+
 def merge_dicts(*dict_args):
     """
     Given any number of dicts, shallow copy and merge into a new dict,
@@ -269,6 +272,7 @@ def merge_dicts(*dict_args):
 
 
 # In[282]:
+
 
 def ict_tester():
     """
@@ -305,6 +309,7 @@ def ict_tester():
 
 
 # In[369]:
+
 
 def prep_data_for_ict(data_dict,Start_UTC=None,End_UTC=None,
                       in_var_name='utc',out_var_name='Start_UTC', in_input=True,time_interval=1.0):
@@ -402,6 +407,7 @@ def prep_data_for_ict(data_dict,Start_UTC=None,End_UTC=None,
 
 # In[330]:
 
+
 def nearest_neighbor(X,Y,Xnew,dist=1):
     """
     Purpose:
@@ -444,6 +450,7 @@ def nearest_neighbor(X,Y,Xnew,dist=1):
 
 
 # In[365]:
+
 
 def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],plot_together2=[],indep_var_name='Start_UTC'):
     """
@@ -520,6 +527,7 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
 
 # In[1]:
 
+
 def dict_keys_to_unicode(d):
     'Change the dict keys to be unicode'
     out = dict()
@@ -531,6 +539,7 @@ def dict_keys_to_unicode(d):
 
 
 # In[ ]:
+
 
 def iterate_dict_unicode(dt):
     'Iterate through a dict object/objects to change all dict to unicode keys'
