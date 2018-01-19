@@ -96,7 +96,7 @@ mmm = 'JJA'
 # In[8]:
 
 
-fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
+fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=vv)
 print 'in %s months, getting mat file: %s' % (mmm,fpm)
 
 
@@ -192,7 +192,7 @@ make_base = True
 
 
 if dowrite: 
-    ff = 'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=version,lbl=std_label)
+    ff = 'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=vv,lbl=std_label)
     file_list = file(fp_out+ff,'w')
     print 'Starting list file: '+fp_out+ff
 
