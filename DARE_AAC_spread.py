@@ -37,7 +37,7 @@
 
 # # Import the required modules and file paths
 
-# In[4]:
+# In[21]:
 
 
 import numpy as np
@@ -87,59 +87,65 @@ dowrite = in_.get('dowrite',True)
 
 # # Load the input files and create the subsets
 
-# In[7]:
+# In[22]:
 
 
 mmm = 'JJA'
 
 
-# In[8]:
+# In[31]:
 
 
 fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=vv)
 print 'in %s months, getting mat file: %s' % (mmm,fpm)
 
 
-# In[ ]:
+# In[32]:
 
 
 input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
 
 
-# In[10]:
+# In[70]:
 
 
 geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
 geo['month'] = 7
 doy = 225
+aero = {'z_arr':[3.0,4.0]}
+cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
+source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
+albedo = {'create_albedo_file':False}
+albedo['sea_surface_albedo'] = True
 
 
-# In[11]:
+# In[34]:
 
 
 geo['lat'],geo['lon'] = -7.0,-10.0
 
 
-# In[19]:
+# In[63]:
 
 
-ilat = range(18,26)
-ilon = range(37,40)
+ia1,ia2,io1,io2 = 16,25,35,39
+ilat = np.arange(18,26)
+ilon = np.arange(37,40)
 
 
-# In[ ]:
+# In[66]:
 
 
-cod = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
-ext = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])
-ssa = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
-asy = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+cod = input_mmm['MODIS_COD_mean'][0,0][ia1:ia2,io1:io2]
+ext = np.abs(input_mmm['MOC_ext_mean'][0,0][ia1:ia2,io1:io2,:])
+ssa = input_mmm['MOC_ssa_mean'][0,0][ia1:ia2,io1:io2,:]
+asy = input_mmm['MOC_asym_mean'][0,0][ia1:ia2,io1:io2,:]
 
 
-# In[ ]:
+# In[84]:
 
 
-cloud['ref'] = np.nanmean(input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon])
+cloud['ref'] = np.nanmean(input_mmm['MODIS_effrad_mean'][0,0][ia1:ia2,io1:io2])
 
 
 # # Prepare the inputs
@@ -152,16 +158,6 @@ pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
 max_nmom=20
 pmom_solar['max_nmoms'] = max_nmom
 pmom_thermal['max_nmoms'] = max_nmom
-
-
-# In[ ]:
-
-
-aero = {'z_arr':[3.0,4.0]}
-cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
-source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
-albedo = {'create_albedo_file':False}
-albedo['sea_surface_albedo'] = True
 
 
 # # Start the writing out
