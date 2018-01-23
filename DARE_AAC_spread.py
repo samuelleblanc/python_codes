@@ -87,6 +87,12 @@ dowrite = in_.get('dowrite',True)
 
 # # Load the input files and create the subsets
 
+# In[ ]:
+
+
+dowrite = True
+
+
 # In[22]:
 
 
@@ -193,7 +199,7 @@ if dowrite:
     print 'Starting list file: '+fp_out+ff
 
 
-# In[ ]:
+# In[217]:
 
 
 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
@@ -228,6 +234,7 @@ for icod,c in enumerate(cod):
 
                 if aero['wvl_arr'].max()<100000.0:
                     aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
+                if not len(aero['ext'])==len(aero['wvl_arr']):
                     aero['ext'] = np.append(aero['ext'],e[-1])
                     aero['ssa'] = np.append(aero['ssa'],s[-1])
                     aero['asy'] = np.append(aero['asy'],a[-1])
