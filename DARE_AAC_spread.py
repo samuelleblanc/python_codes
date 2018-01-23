@@ -133,13 +133,13 @@ ilat = np.arange(18,26)
 ilon = np.arange(37,40)
 
 
-# In[66]:
+# In[203]:
 
 
-cod = input_mmm['MODIS_COD_mean'][0,0][ia1:ia2,io1:io2]
-ext = np.abs(input_mmm['MOC_ext_mean'][0,0][ia1:ia2,io1:io2,:])
-ssa = input_mmm['MOC_ssa_mean'][0,0][ia1:ia2,io1:io2,:]
-asy = input_mmm['MOC_asym_mean'][0,0][ia1:ia2,io1:io2,:]
+cod = input_mmm['MODIS_COD_mean'][0,0][ia1:ia2,io1:io2].flatten(order='F')
+ext = np.append(np.abs(input_mmm['MOC_ext_mean'][0,0][ia1:ia2,io1:io2,:]).reshape([36,30],order='F'),np.zeros([1,30]),axis=0)
+ssa = input_mmm['MOC_ssa_mean'][0,0][ia1:ia2,io1:io2,:].reshape([36,30],order='F')
+asy = input_mmm['MOC_asym_mean'][0,0][ia1:ia2,io1:io2,:].reshape([36,30],order='F')
 
 
 # In[84]:
@@ -166,8 +166,8 @@ pmom_thermal['max_nmoms'] = max_nmom
 
 
 change_fp_output = True
-if aero_clear:
-    std_label = '_clear'
+#if aero_clear:
+#    std_label = '_clear'
 
 
 # In[ ]:
@@ -256,7 +256,7 @@ for icod,c in enumerate(cod):
                     cloud['moms_dict'] = pmom_solar
                     cloud['file_name'] = cloud_file_name_sol
                     file_out_sol = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.inp' % (icod,iext,issa,iasy,mmm,HH)
-                    if not list_only:
+                    if dowrite:
                         RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
                     if make_base:
@@ -272,12 +272,12 @@ for icod,c in enumerate(cod):
                     cloud['file_name'] = cloud_file_name_thm
                     file_out_thm = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.inp' % (icod,iext,issa,iasy,mmm,HH)
 
-                    if not list_only:
+                    if dowrite:
                         RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                                        make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
-                    file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
+                        file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
-                    file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
+                        file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
                     if not cloud['link_to_mom_file']:
                         cloud['link_to_mom_file'] = True
