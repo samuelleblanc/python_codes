@@ -260,11 +260,8 @@ for icod,c in enumerate(cod):
                         make_base = False
                     #build the thermal input file
                     source['source'] = 'thermal'
-                    if wvl_file_thm:
-                        source['wvl_filename'] = wvl_file_thm
-                    else:
-                        source['wvl_range'] = [4000,50000-1]
-                        source['wvl_filename'] = None
+                    source['wvl_range'] = [4000,50000-1]
+                    source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_thermal
                     cloud['file_name'] = cloud_file_name_thm
                     file_out_thm = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.inp' % (icod,iext,issa,iasy,mmm,HH)
