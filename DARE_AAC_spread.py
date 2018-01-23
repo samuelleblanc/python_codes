@@ -248,11 +248,8 @@ for icod,c in enumerate(cod):
                     geo['hour'] = HH
                     #build the solar input file
                     source['source'] = 'solar'
-                    if wvl_file_sol:
-                        source['wvl_filename'] = wvl_file_sol
-                    else:
-                        source['wvl_range'] = [250,5600]
-                        source['wvl_filename'] = None
+                    source['wvl_range'] = [250,5600]
+                    source['wvl_filename'] = None
                     cloud['moms_dict'] = pmom_solar
                     cloud['file_name'] = cloud_file_name_sol
                     file_out_sol = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.inp' % (icod,iext,issa,iasy,mmm,HH)
