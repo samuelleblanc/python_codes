@@ -46,6 +46,8 @@ import Run_libradtran as RL
 import load_utils as lm
 import os
 from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
+import signal
 
 
 # In[20]:
@@ -331,7 +333,23 @@ for icod,c in enumerate(codd):
 if dowrite: file_list.close()
 
 
+# In[ ]:
+
+
+pbar = tqdm(total=len(b))
+
+
 # # Functions for use in this program
+
+# In[ ]:
+
+
+def worker_init():
+    # ignore the SIGINI in sub process, just print a log
+    def sig_int(signal_num, frame):
+        print 'signal: %s' % signal_num
+    signal.signal(signal.SIGINT, sig_int)
+
 
 # In[ ]:
 
@@ -372,6 +390,7 @@ def print_input_aac_24h(d):
 
         if not aero['link_to_mom_file']:
             aero['link_to_mom_file'] = True
+        pbar.update(1)
 
 
 # In[ ]:
@@ -416,6 +435,7 @@ def read_input_aac_24h(d):
     output['SW_irr_up_avg'] = np.mean(output['SW_irr_up_utc'],axis=1)
     output['LW_irr_dn_avg'] = np.mean(output['LW_irr_dn_utc'],axis=1)
     output['LW_irr_up_avg'] = np.mean(output['LW_irr_up_utc'],axis=1)
+    pbar.update(1)
 
     return output        
 
@@ -427,7 +447,7 @@ def read_input_aac_24h(d):
 
 if dowrite:
     print 'Now preparing the pool of workers and making them print the files'
-    p = Pool(cpu_count())
+    p = Pool(cpu_count(),worker_init)
     results = p.map(print_input_aac_24h,b)
     p.close()
 
@@ -437,7 +457,7 @@ if dowrite:
 
 if doread:
     print 'Now preparing the pool of workers and making them read all the files'
-    p = Pool(cpu_count())
+    p = Pool(cpu_count(),worker_init)
     results = p.map(read_input_aac_24h,b)
     p.close()
     
