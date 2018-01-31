@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[6]:
+# In[159]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -24,19 +24,19 @@ from Sp_parameters import smooth
 from path_utils import getpath
 
 
-# In[4]:
+# In[160]:
 
 
 from linfit import linfit
 
 
-# In[17]:
+# In[161]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[7]:
+# In[162]:
 
 
 #fp ='C:/Users/sleblan2/Research/ORACLES/'
@@ -46,7 +46,7 @@ fp
 
 # # load the files
 
-# In[67]:
+# In[163]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -78,19 +78,19 @@ days = ['20160902','20160904','20160906','20160908']
 days = ['20160831']
 
 
-# In[6]:
+# In[164]:
 
 
 vv = 'R2'
 
 
-# In[7]:
+# In[165]:
 
 
 vi = 'v7'
 
 
-# In[8]:
+# In[166]:
 
 
 outaod_RA = []
@@ -116,13 +116,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[9]:
+# In[167]:
 
 
 len(outaod_RA)
 
 
-# In[10]:
+# In[168]:
 
 
 len(days)
@@ -153,13 +153,13 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[9]:
+# In[169]:
 
 
 outaod_head_RA[0]
 
 
-# In[41]:
+# In[170]:
 
 
 outgas_head_RA[0]
@@ -167,25 +167,25 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[11]:
+# In[171]:
 
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[12]:
+# In[172]:
 
 
 nm
 
 
-# In[12]:
+# In[173]:
 
 
 wl = nm[6:-1]
 
 
-# In[13]:
+# In[174]:
 
 
 wl = wl[0:24]
@@ -200,7 +200,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[14]:
+# In[175]:
 
 
 for a in wl:
@@ -275,7 +275,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_high_alt_AOD_{vi}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[22]:
+# In[176]:
 
 
 wl[0:16]
@@ -345,7 +345,7 @@ for i,d in enumerate(days):
 
 # ## Plot the AOD with the uncertainty
 
-# In[20]:
+# In[177]:
 
 
 nm[30:46]
@@ -384,7 +384,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_AOD_uncert_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[22]:
+# In[178]:
 
 
 nm[46:]
@@ -423,13 +423,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_AOD_uncert_{vi}_{}_nir.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[30]:
+# In[179]:
 
 
 outaod_RA[i][unc][ii]
 
 
-# In[31]:
+# In[180]:
 
 
 nm[4]
@@ -445,13 +445,13 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[21]:
+# In[181]:
 
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[25]:
+# In[182]:
 
 
 wv
@@ -534,7 +534,7 @@ plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,tr
 
 # ### Special plotting of AOD per altitude and latitude
 
-# In[55]:
+# In[183]:
 
 
 days
@@ -568,7 +568,7 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[24]:
+# In[184]:
 
 
 def calc_angs(time,w,aod,flag):
@@ -586,13 +586,13 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[25]:
+# In[185]:
 
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[26]:
+# In[186]:
 
 
 wls = np.array(wv)/1000.0
@@ -644,7 +644,7 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[13]:
+# In[187]:
 
 
 ar = {}
@@ -652,28 +652,30 @@ for n in nm:
     ar[n] = np.array([])
 
 
-# In[14]:
+# In[188]:
 
 
+ar['idays'] = np.array([])
 ar['days'] = np.array([])
 
 
-# In[15]:
+# In[195]:
 
 
 for i,d in enumerate(days):
-    ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
+    ar['idays'] = np.append(ar['idays'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
+    ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+float(d))
     for n in nm:
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[16]:
+# In[196]:
 
 
 ar['GPS_Alt'].shape
 
 
-# In[17]:
+# In[197]:
 
 
 ar.keys()
@@ -681,43 +683,43 @@ ar.keys()
 
 # ## filter for low altitudes
 
-# In[18]:
+# In[198]:
 
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[19]:
+# In[199]:
 
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[20]:
+# In[200]:
 
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[21]:
+# In[201]:
 
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[22]:
+# In[202]:
 
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[23]:
+# In[203]:
 
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[24]:
+# In[204]:
 
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
@@ -725,13 +727,13 @@ ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 # ## save to file
 
-# In[25]:
+# In[205]:
 
 
 import hdf5storage as hs
 
 
-# In[26]:
+# In[206]:
 
 
 hs.savemat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv),ar)
