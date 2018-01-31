@@ -241,6 +241,7 @@ else:
 
 print 'Running through the permutations'
 b = []
+first_time = True
 for icod,c in enumerate(codd):
     if i>0: icod = i
     dd = {}
@@ -265,14 +266,14 @@ for icod,c in enumerate(codd):
     dd['cod'],dd['ref'],dd['zbot'],dd['ztop'] = copy(cloud['tau']),copy(cloud['ref']),copy(cloud['zbot']),copy(cloud['ztop'])
     
     for iext,e in enumerate(ext):
+        # set the aerosol values
+        aero['ext'] = e
+        aero['ext'][aero['ext']<0.0] = 0.0
+        if np.isnan(aero['ext']).all():
+            print 'skipping cod:%i, ext:%i' % (icod,iext)
+            continue
         for issa,s in enumerate(ssa):
             for iasy,a in enumerate(asy):
-                # set the aerosol values
-                aero['ext'] = e
-                aero['ext'][aero['ext']<0.0] = 0.0
-                if np.isnan(aero['ext']).all():
-                    print 'skipping cod:%i, ext:%i, ssa:%i, asy:%i' % (icod,iext,issa,iasy)
-                    continue
                 aero['ssa'] = s
                 aero['asy'] = a
 
@@ -325,12 +326,18 @@ for icod,c in enumerate(codd):
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
                         file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                        if first_time:
+                            cloud['link_to_mom_file'],cloud['file_name'] = True,cloud_file_name_sol
+                            RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
+                                               make_base=True,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
+                            first_time = False
+        
 
                 #print mmm,icod,iext,issa,iasy
                 dd['geo'],dd['source'],dd['albedo'],dd['fp_base_file'] = deepcopy(geo),deepcopy(source),deepcopy(albedo),fp_base_file
                 dd['fsol'],dd['fthm'],dd['fsol_o'],dd['fthm_o'] = fsol[:],fthm[:],fsol_o[:],fthm_o[:]
                 dd['icod'],dd['iext'],dd['issa'],dd['iasy'],dd['mmm'] = copy(icod),copy(iext),copy(issa),copy(iasy),copy(mmm)
-                b.append(dd)
+                b.append(deepcopy(dd))
 if dowrite: file_list.close()
 
 
@@ -367,7 +374,7 @@ def print_input_aac_24h(d):
     aero['link_to_mom_file'] = False
     make_base = True
     
-    print 'fname: {fsol}, iext: {iext}, issa: {issa}, iasy: {iasy}'.format(**d)
+    #print 'fname: {fsol[0]}, iext: {iext}, issa: {issa}, iasy: {iasy}'.format(**d)
     
     for HH in xrange(24):
         geo['hour'] = HH
@@ -378,9 +385,8 @@ def print_input_aac_24h(d):
         file_out_sol = d['fsol'][HH]
         cloud['file_name'] = d['cld_f_sol']
         RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                           make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
-        if make_base:
-            make_base = False
+                           make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
+        
         #build the thermal input file
         source['source'] = 'thermal'
         source['wvl_range'] = [4000,50000-1]
@@ -444,15 +450,6 @@ def read_input_aac_24h(d):
 
 
 # # Core of the reading/writing routines, calling pool of workers
-
-# In[ ]:
-
-
-print len(b)
-print b[0]
-import time
-time.sleep(10)
-
 
 # In[ ]:
 
