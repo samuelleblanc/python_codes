@@ -338,7 +338,8 @@ if dowrite: file_list.close()
 
 def print_input_aac_24h(d):
     'function to print out the 24hour files (sol and thm) from an input dict'
-    cloud = {'tau':d['cod'],'ref':d['ref'],'zbot':d['zbot'],'ztop':d['ztop'],'link_to_mom_file':d['link_to_mom_file']}
+    cloud = {'tau':d['cod'],'ref':d['ref'],'zbot':d['zbot'],'ztop':d['ztop'],
+             'link_to_mom_file':True,'phase':'wc','write_moments_file':True}
     geo = d['geo']
     source = d['source']
     albedo = d['albedo']
@@ -354,6 +355,7 @@ def print_input_aac_24h(d):
         source['wvl_range'] = [250,5600]
         source['wvl_filename'] = None
         file_out_sol = d['fsol'][HH]
+        cloud['file_name'] = d['cld_f_sol']
         RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                            make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
         if make_base:
@@ -363,6 +365,7 @@ def print_input_aac_24h(d):
         source['wvl_range'] = [4000,50000-1]
         source['wvl_filename'] = None
         file_out_thm = d['fthm'][HH]
+        cloud['file_name'] = d['cld_f_thm']
         
         RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
                            make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
