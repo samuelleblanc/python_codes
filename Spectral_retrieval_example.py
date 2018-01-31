@@ -51,7 +51,7 @@
 
 # # Initial Imports and default folders
 
-# In[5]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -81,7 +81,7 @@ from path_utils import getpath
 #fp_in = 'C:/Users/sleblan2/Research/SEAC4RS/'
 
 
-# In[34]:
+# In[2]:
 
 
 fp = getpath('cloud_retrieval',make_path=True,verbose=True)
@@ -92,32 +92,32 @@ fp_in = getpath('SEAC4RS',make_path=True,verbose=True)
 
 # ## Load the modeled radiance and irradiance data and run the parameters
 
-# In[35]:
+# In[3]:
 
 
 vv = 'v2'
 s = sio.idl.readsav(fp_in+'model/sp_'+vv+'_20130913_4STAR.out')#fp+'model/sp_v1.1_20130913_4STAR.out')
 
 
-# In[36]:
+# In[4]:
 
 
 s.keys()
 
 
-# In[37]:
+# In[5]:
 
 
 s['sp'].shape
 
 
-# In[38]:
+# In[6]:
 
 
 np.any(np.isfinite(s['sp'][1,:,1,:,:]))
 
 
-# In[39]:
+# In[7]:
 
 
 # create custom key for sorting via wavelength
@@ -125,7 +125,7 @@ iwvls = np.argsort(s.zenlambda)
 s.wv = np.sort(s.zenlambda)
 
 
-# In[40]:
+# In[8]:
 
 
 lut = Sp.Sp(s,irrad=True)
@@ -133,13 +133,13 @@ lut.params()
 lut.param_hires()
 
 
-# In[41]:
+# In[9]:
 
 
 lut.sp_hires()
 
 
-# In[42]:
+# In[10]:
 
 
 lut.sp_hires(doirrad=True)
@@ -147,19 +147,19 @@ lut.sp_hires(doirrad=True)
 
 # ## Load the measured 4STAR data
 
-# In[44]:
+# In[11]:
 
 
 import os
 
 
-# In[45]:
+# In[12]:
 
 
 os.path.isfile(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
 
 
-# In[46]:
+# In[13]:
 
 
 # load the matlab file containing the measured TCAP radiances
@@ -167,7 +167,7 @@ mea = sio.loadmat(fp+'../4STAR/SEAC4RS/20130913/20130913starzen_3.mat')
 mea.keys()
 
 
-# In[47]:
+# In[14]:
 
 
 print mea['t']
@@ -175,19 +175,19 @@ tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 
-# In[48]:
+# In[15]:
 
 
 mea['good'] = np.where((mea['utc']>18.5) & (mea['utc']<19.75) & (mea['Str'].flatten()!=0) & (mea['sat_time'].flatten()==0))
 
 
-# In[58]:
+# In[16]:
 
 
 meas = Sp.Sp(mea)
 
 
-# In[59]:
+# In[17]:
 
 
 meas.sp
@@ -197,19 +197,19 @@ meas.sp
 
 # ## First plot the spectra of reflected light and transmitted light
 
-# In[49]:
+# In[18]:
 
 
 lut.sp.shape
 
 
-# In[50]:
+# In[19]:
 
 
 lut.ref
 
 
-# In[51]:
+# In[20]:
 
 
 lut.tau
@@ -343,6 +343,111 @@ ax2.set_xlim([0,60])
 
 plt.legend(frameon=False)
 plt.savefig(fp+'plots/Refl_Trans_cod.png',transparent=True,dpi=600)
+
+
+# In[34]:
+
+
+i440 = np.argmin(abs(lut.wvl-440.0))
+i500 = np.argmin(abs(lut.wvl-500.0))
+i675 = np.argmin(abs(lut.wvl-675.0))
+i870 = np.argmin(abs(lut.wvl-870.0))
+i1020 = np.argmin(abs(lut.wvl-1020.0))
+i1240 = np.argmin(abs(lut.wvl-1240.0))
+i1650 = np.argmin(abs(lut.wvl-1650.0))
+
+t1,t2 = 7,22 
+r1,r2 = 8,8
+
+fig = plt.figure()
+ax1 = plt.subplot(311)
+
+ax1.plot(lut.tau,lut.sp[1,i440,0,r1,:]/max(lut.sp[1,i440,0,r1,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i440]))
+ax1.plot(lut.tau,lut.sp[1,i500,0,r1,:]/max(lut.sp[1,i500,0,r1,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i500]))
+ax1.plot(lut.tau,lut.sp[1,i675,0,r2,:]/max(lut.sp[1,i675,0,r2,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i675]))
+ax1.plot(lut.tau,lut.sp[1,i870,0,r1,:]/max(lut.sp[1,i870,0,r1,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i870]))
+ax1.plot(lut.tau,lut.sp[1,i1020,0,r2,:]/max(lut.sp[1,i1020,0,r2,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1020]))
+ax1.plot(lut.tau,lut.sp[1,i1240,0,r2,:]/max(lut.sp[1,i1240,0,r2,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1240]))
+ax1.plot(lut.tau,lut.sp[1,i1650,0,r2,:]/max(lut.sp[1,i1650,0,r2,:]),lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1650]))
+
+ax1.set_ylim(0.00001,1.0)
+ax1.set_yscale('log')
+ax1.grid()
+plt.legend(frameon=False,ncol=2,loc=3)
+
+#plt.legend(frameon=False)
+
+ax1.set_title('Transmitted Radiance (zenith)',fontsize=16)
+ax1.set_ylabel('Normalized Radiance')
+
+ax2 = plt.subplot(312,sharex=ax1)
+ax2.plot(lut.tau,lut.sp[1,i440,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i440]))
+ax2.plot(lut.tau,lut.sp[1,i500,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i500]))
+ax2.plot(lut.tau,lut.sp[1,i675,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i675]))
+ax2.plot(lut.tau,lut.sp[1,i870,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i870]))
+ax2.plot(lut.tau,lut.sp[1,i1020,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1020]))
+ax2.plot(lut.tau,lut.sp[1,i1240,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1240]))
+ax2.plot(lut.tau,lut.sp[1,i1650,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1650]))
+
+#ax2.text(30,0.8*ax2.get_ybound()[1],'Transmitted Radiance (zenith)',fontsize=16,horizontalalignment='center')
+ax2.set_ylabel('Radiance [[W/m$^{2}$/nm/sr]')
+ax2.set_xlabel('Cloud optical depth')
+ax2.set_xlim([0,60])
+
+ax2.grid()
+
+ax3 = plt.subplot(313,sharex=ax1)
+ax3.plot(lut.tau,lut.sp[1,i440,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i440]))
+ax3.plot(lut.tau,lut.sp[1,i500,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i500]))
+ax3.plot(lut.tau,lut.sp[1,i675,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i675]))
+ax3.plot(lut.tau,lut.sp[1,i870,0,r1,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i870]))
+ax3.plot(lut.tau,lut.sp[1,i1020,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1020]))
+ax3.plot(lut.tau,lut.sp[1,i1240,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1240]))
+ax3.plot(lut.tau,lut.sp[1,i1650,0,r2,:],lw=3,
+          label='{wvl:.0f} nm'.format(wvl=lut.wvl[i1650]))
+
+#ax2.text(30,0.8*ax2.get_ybound()[1],'Transmitted Radiance (zenith)',fontsize=16,horizontalalignment='center')
+ax3.set_ylabel('Radiance [[W/m$^{2}$/nm/sr]')
+ax3.set_xlabel('Cloud optical depth')
+ax3.set_xlim([0,60])
+
+ax3.set_ylim(0.0001,0.4)
+ax3.set_yscale('log')
+ax3.grid()
+
+plt.savefig(fp+'plots/Trans_cod_various.png',transparent=True,dpi=600)
+
+
+# In[37]:
+
+
+print max(lut.sp[1,i440,0,r1,:]), max(lut.sp[1,i500,0,r1,:]), max(lut.sp[1,i675,0,r1,:]), max(lut.sp[1,i870,0,r1,:]), max(lut.sp[1,i1020,0,r1,:]), max(lut.sp[1,i1240,0,r1,:]), max(lut.sp[1,i1650,0,r1,:]), 
+
+
+# In[38]:
+
+
+print min(lut.sp[1,i440,0,r1,:]), min(lut.sp[1,i500,0,r1,:]), min(lut.sp[1,i675,0,r1,:]), min(lut.sp[1,i870,0,r1,:]), min(lut.sp[1,i1020,0,r1,:]), min(lut.sp[1,i1240,0,r1,:]), min(lut.sp[1,i1650,0,r1,:]), 
 
 
 # ## Now plot the lut of reflected and transmitted light
