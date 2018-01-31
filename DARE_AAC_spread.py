@@ -52,6 +52,7 @@ from multiprocessing import Pool, cpu_count
 
 
 std_label = 'v4_spread'
+verbose = False
 
 
 # In[21]:
@@ -227,7 +228,7 @@ aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 
 
 if i>0:
-    codd = cod[i]
+    codd = [cod[i]]
 else:
     codd = cod
 
@@ -330,43 +331,6 @@ for icod,c in enumerate(codd):
 if dowrite: file_list.close()
 
 
-# In[ ]:
-
-
-if dowrite:
-    print 'Now preparing the pool of workers and making them print the files'
-    p = Pool(cpu_count())
-    results = p.map(print_input_aac_24h,b)
-    p.close()
-
-
-# In[ ]:
-
-
-if doread:
-    print 'Now preparing the pool of workers and making them read all the files'
-    p = Pool(cpu_count())
-    results = p.map(read_input_aac_24h,b)
-    p.close()
-    
-    nm_list = {'SW_irr_dn_avg':'SW_irr_dn_avg','SW_irr_up_avg':'SW_irr_up_avg',
-               'LW_irr_dn_avg':'LW_irr_dn_avg','LW_irr_up_avg':'LW_irr_up_avg'
-               'ssa':'ssa','asy':'asy','ext':'ext'}
-    saves = {}
-    for a in nm_list.keys():
-        saves[a] = np.array([results[i][nm_list[a]] for i in xrange(len(b))])
-    
-    saves['geo'] = geo
-    saves['source'] = source
-    saves['albedo'] = albedo
-    saves['cloud'] = cloud
-    
-    fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
-    
-    print 'Saving read file: '+fp_save
-    sio.savemat(fp_save,saves)
-
-
 # # Functions for use in this program
 
 # In[ ]:
@@ -451,4 +415,43 @@ def read_input_aac_24h(d):
     output['LW_irr_up_avg'] = np.mean(output['LW_irr_up_utc'],axis=1)
 
     return output        
+
+
+# # Core of the reading/writing routines, calling pool of workers
+
+# In[ ]:
+
+
+if dowrite:
+    print 'Now preparing the pool of workers and making them print the files'
+    p = Pool(cpu_count())
+    results = p.map(print_input_aac_24h,b)
+    p.close()
+
+
+# In[ ]:
+
+
+if doread:
+    print 'Now preparing the pool of workers and making them read all the files'
+    p = Pool(cpu_count())
+    results = p.map(read_input_aac_24h,b)
+    p.close()
+    
+    nm_list = {'SW_irr_dn_avg':'SW_irr_dn_avg','SW_irr_up_avg':'SW_irr_up_avg',
+               'LW_irr_dn_avg':'LW_irr_dn_avg','LW_irr_up_avg':'LW_irr_up_avg',
+               'ssa':'ssa','asy':'asy','ext':'ext'}
+    saves = {}
+    for a in nm_list.keys():
+        saves[a] = np.array([results[i][nm_list[a]] for i in xrange(len(b))])
+    
+    saves['geo'] = geo
+    saves['source'] = source
+    saves['albedo'] = albedo
+    saves['cloud'] = cloud
+    
+    fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
+    
+    print 'Saving read file: '+fp_save
+    sio.savemat(fp_save,saves)
 
