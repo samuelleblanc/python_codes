@@ -48,6 +48,7 @@ import os
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 import signal
+from copy import copy,deepcopy
 
 
 # In[20]:
@@ -253,15 +254,15 @@ for icod,c in enumerate(codd):
     cloud_file_name_sol = fp_out2+'AAC_input_cod%02i_%s_sol.inp_cloud' % (icod,mmm)
     cloud_file_name_thm = fp_out2+'AAC_input_cod%02i_%s_thm.inp_cloud' % (icod,mmm)
     
-    dd['cld_f_sol'] = cloud_file_name_sol
-    dd['cld_f_thm'] = cloud_file_name_thm
+    dd['cld_f_sol'] = copy(cloud_file_name_sol)
+    dd['cld_f_thm'] = copy(cloud_file_name_thm)
 
     if dowrite:
         RL.write_cloud_file_moments(cloud_file_name_sol,cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
                                     verbose=verbose,moms_dict=pmom_solar,wvl_range=[250,5600])
         RL.write_cloud_file_moments(cloud_file_name_thm,cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
                                     verbose=verbose,moms_dict=pmom_thermal,wvl_range=[4000,50000-1])
-    dd['cod'],dd['ref'],dd['zbot'],dd['ztop'] = cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop']
+    dd['cod'],dd['ref'],dd['zbot'],dd['ztop'] = copy(cloud['tau']),copy(cloud['ref']),copy(cloud['zbot']),copy(cloud['ztop'])
     
     for iext,e in enumerate(ext):
         for issa,s in enumerate(ssa):
@@ -293,7 +294,7 @@ for icod,c in enumerate(codd):
                     aero['asy'] = np.append(aero['asy'],a[-1])
                 
                 aero['file_name'] = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_sol.inp_aero' % (icod,iext,issa,iasy,mmm)
-                dd['aero'] = aero
+                dd['aero'] = deepcopy(aero)
                 
                 fsol = []
                 fthm = []
@@ -326,9 +327,9 @@ for icod,c in enumerate(codd):
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
 
                 #print mmm,icod,iext,issa,iasy
-                dd['geo'],dd['source'],dd['albedo'],dd['fp_base_file'] = geo,source,albedo,fp_base_file
-                dd['fsol'],dd['fthm'],dd['fsol_o'],dd['fthm_o'] = fsol,fthm,fsol_o,fthm_o
-                dd['icod'],dd['iext'],dd['issa'],dd['iasy'],dd['mmm'] = icod,iext,issa,iasy,mmm
+                dd['geo'],dd['source'],dd['albedo'],dd['fp_base_file'] = deepcopy(geo),deepcopy(source),deepcopy(albedo),fp_base_file
+                dd['fsol'],dd['fthm'],dd['fsol_o'],dd['fthm_o'] = fsol[:],fthm[:],fsol_o[:],fthm_o[:]
+                dd['icod'],dd['iext'],dd['issa'],dd['iasy'],dd['mmm'] = copy(icod),copy(iext),copy(issa),copy(iasy),copy(mmm)
                 b.append(dd)
 if dowrite: file_list.close()
 
@@ -365,6 +366,8 @@ def print_input_aac_24h(d):
     aero = d['aero']
     aero['link_to_mom_file'] = False
     make_base = True
+    
+    print 'fname: {fsol}, iext: {iext}, issa: {issa}, iasy: {iasy}'.format(**d)
     
     for HH in xrange(24):
         geo['hour'] = HH
@@ -441,6 +444,15 @@ def read_input_aac_24h(d):
 
 
 # # Core of the reading/writing routines, calling pool of workers
+
+# In[ ]:
+
+
+print len(b)
+print b[0]
+import time
+time.sleep(10)
+
 
 # In[ ]:
 
