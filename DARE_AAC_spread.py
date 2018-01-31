@@ -265,6 +265,9 @@ for icod,c in enumerate(codd):
                                     verbose=verbose,moms_dict=pmom_thermal,wvl_range=[4000,50000-1])
     dd['cod'],dd['ref'],dd['zbot'],dd['ztop'] = copy(cloud['tau']),copy(cloud['ref']),copy(cloud['zbot']),copy(cloud['ztop'])
     
+    if aero['wvl_arr'].max()<100000.0:
+        aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
+    
     for iext,e in enumerate(ext):
         # set the aerosol values
         aero['ext'] = e
@@ -272,26 +275,25 @@ for icod,c in enumerate(codd):
         if np.isnan(aero['ext']).all():
             print 'skipping cod:%i, ext:%i' % (icod,iext)
             continue
+        if not len(aero['ext'])==len(aero['wvl_arr']):
+            aero['ext'] = np.append(aero['ext'],e[-1])
         for issa,s in enumerate(ssa):
+            aero['ssa'] = s
+            try: aero['ssa'][aero['ssa']<0.0] = 0.0
+            except: pass
+            try: aero['ssa'][aero['ssa']>1.0] = 1.0
+            except: pass
+            if not len(aero['ssa'])==len(aero['wvl_arr']):
+                aero['ssa'] = np.append(aero['ssa'],a[-1])
             for iasy,a in enumerate(asy):
-                aero['ssa'] = s
                 aero['asy'] = a
 
                 #sanitize inputs after adding subtracting standard deviations
-                try: aero['ssa'][aero['ssa']<0.0] = 0.0
-                except: pass
-                try: aero['ssa'][aero['ssa']>1.0] = 1.0
-                except: pass
                 try: aero['asy'][aero['asy']<0.0] = 0.0
                 except: pass
                 try: aero['asy'][aero['asy']>1.0] = 1.0
                 except: pass
-
-                if aero['wvl_arr'].max()<100000.0:
-                    aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
-                if not len(aero['ext'])==len(aero['wvl_arr']):
-                    aero['ext'] = np.append(aero['ext'],e[-1])
-                    aero['ssa'] = np.append(aero['ssa'],s[-1])
+                if not len(aero['asy'])==len(aero['wvl_arr']):
                     aero['asy'] = np.append(aero['asy'],a[-1])
                 
                 aero['file_name'] = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_sol.inp_aero' % (icod,iext,issa,iasy,mmm)
@@ -372,7 +374,6 @@ def print_input_aac_24h(d):
     fp_base_file = d['fp_base_file']
     aero = d['aero']
     aero['link_to_mom_file'] = False
-    make_base = True
     
     #print 'fname: {fsol[0]}, iext: {iext}, issa: {issa}, iasy: {iasy}'.format(**d)
     
