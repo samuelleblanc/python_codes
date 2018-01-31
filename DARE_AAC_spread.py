@@ -37,7 +37,7 @@
 
 # # Import the required modules and file paths
 
-# In[21]:
+# In[3]:
 
 
 import numpy as np
@@ -45,53 +45,71 @@ import scipy.io as sio
 import Run_libradtran as RL
 import load_utils as lm
 import os
+from multiprocessing import Pool, cpu_count
 
 
-# In[5]:
+# In[20]:
 
 
-fp = '/u/sleblan2/meloe_AAC/v4_spread/'
+std_label = 'v4_spread'
+
+
+# In[21]:
+
+
+fp = '/u/sleblan2/meloe_AAC/' + std_label + '/'
 fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
-fp_out = '/nobackup/sleblan2/AAC_DARF/input/v4_spread/'
+fp_out = '/nobackup/sleblan2/AAC_DARF/input/' + std_label + '/'
 fp_pmom = '/nobackup/sleblan2/AAC_DARF/rtm/'
 fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
 wvl_thm = '/nobackup/sleblan2/AAC_DARF/rtm/wvl.thm.dat'
 vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
 
 
+# ## Check if reading or writing and input arguments
+
 # In[6]:
-
-
-std_label = 'v4_spread'
-
-
-# ## Check if reading or writing
-
-# In[ ]:
 
 
 import argparse
 long_description = """    Prepare or read the AAC DARE calculations, with the spread for all values.
       - defaults to prepare AAC files """
 parser = argparse.ArgumentParser(description=long_description)
-parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
-                    action='store_true')
-parser.add_argument('-dowrite','--dowrite',help='if set, will write the input and list files for fuliou',
-                    action='store_true')
+parser.add_argument('-r','--doread',help='if set, will only read the output, not produce them',
+                    action='store_true',default=False)
+parser.add_argument('-w','--dowrite',help='if set, will write the input and list files for fuliou',
+                    action='store_true',default=True)
+parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
 #parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
+parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',True)
-#i = in_.get('index',0)
+i = in_.get('index',0)
+tmp = in_.get('tmp_folder',False)
+
+
+# In[22]:
+
+
+if i>0:
+    std_label = std_label+'_{:02.0f}'.format(i)
+
+
+# In[23]:
+
+
+if tmp:
+    fp_out = '/tmp/AAC_DARF/input/' + std_label + '/'
+
+
+# In[24]:
+
+
+print 'Running on folders: {}'.format(fp_out)
 
 
 # # Load the input files and create the subsets
-
-# In[ ]:
-
-
-dowrite = True
-
 
 # In[22]:
 
@@ -208,8 +226,40 @@ aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 # In[ ]:
 
 
+if i>0:
+    codd = cod[i]
+else:
+    codd = cod
+
+
+# In[ ]:
+
+
 print 'Running through the permutations'
-for icod,c in enumerate(cod):
+b = []
+for icod,c in enumerate(codd):
+    if i>0: icod = i
+    dd = {}
+    # set the cloud values
+    cloud['tau'] = c
+    try: cloud['tau'][cloud['tau']<0.0] = 0.0
+    except: pass
+    try: cloud['ref'][cloud['ref']<2.0] = 2.0
+    except: pass
+    
+    cloud_file_name_sol = fp_out2+'AAC_input_cod%02i_%s_sol.inp_cloud' % (icod,mmm)
+    cloud_file_name_thm = fp_out2+'AAC_input_cod%02i_%s_thm.inp_cloud' % (icod,mmm)
+    
+    dd['cld_f_sol'] = cloud_file_name_sol
+    dd['cld_f_thm'] = cloud_file_name_thm
+
+    if dowrite:
+        RL.write_cloud_file_moments(cloud_file_name_sol,cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                    verbose=verbose,moms_dict=pmom_solar,wvl_range=[250,5600])
+        RL.write_cloud_file_moments(cloud_file_name_thm,cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                    verbose=verbose,moms_dict=pmom_thermal,wvl_range=[4000,50000-1])
+    dd['cod'],dd['ref'],dd['zbot'],dd['ztop'] = cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop']
+    
     for iext,e in enumerate(ext):
         for issa,s in enumerate(ssa):
             for iasy,a in enumerate(asy):
@@ -238,52 +288,167 @@ for icod,c in enumerate(cod):
                     aero['ext'] = np.append(aero['ext'],e[-1])
                     aero['ssa'] = np.append(aero['ssa'],s[-1])
                     aero['asy'] = np.append(aero['asy'],a[-1])
-                # set the cloud values
-                cloud['tau'] = c
-                try: cloud['tau'][cloud['tau']<0.0] = 0.0
-                except: pass
-                try: cloud['ref'][cloud['ref']<2.0] = 2.0
-                except: pass
-
-                cloud['link_to_mom_file'] = False
-                aero['link_to_mom_file'] = False
-                cloud_file_name_sol = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_sol.inp_cloud' % (icod,iext,issa,iasy,mmm)
-                cloud_file_name_thm = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_thm.inp_cloud' % (icod,iext,issa,iasy,mmm)
+                
                 aero['file_name'] = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_sol.inp_aero' % (icod,iext,issa,iasy,mmm)
-
+                dd['aero'] = aero
+                
+                fsol = []
+                fthm = []
+                
+                fsol_o = []
+                fthm_o = []
+                
                 for HH in xrange(24):
                     geo['hour'] = HH
                     #build the solar input file
                     source['source'] = 'solar'
                     source['wvl_range'] = [250,5600]
                     source['wvl_filename'] = None
-                    cloud['moms_dict'] = pmom_solar
-                    cloud['file_name'] = cloud_file_name_sol
                     file_out_sol = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.inp' % (icod,iext,issa,iasy,mmm,HH)
-                    if dowrite:
-                        RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
-                    if make_base:
-                        make_base = False
+                    fsol.append(file_out_sol)
+                    fsol_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                    
                     #build the thermal input file
                     source['source'] = 'thermal'
                     source['wvl_range'] = [4000,50000-1]
                     source['wvl_filename'] = None
-                    cloud['moms_dict'] = pmom_thermal
-                    cloud['file_name'] = cloud_file_name_thm
                     file_out_thm = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.inp' % (icod,iext,issa,iasy,mmm,HH)
-
+                    fthm.append(file_out_thm)
+                    fthm_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                    
                     if dowrite:
-                        RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
                         file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
                         file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
                                     +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
-                    if not cloud['link_to_mom_file']:
-                        cloud['link_to_mom_file'] = True
-                    if not aero['link_to_mom_file']:
-                        aero['link_to_mom_file'] = True
-                    print mmm,icod,iext,issa,iasy,HH
-file_list.close()
+
+                #print mmm,icod,iext,issa,iasy
+                dd['geo'],dd['source'],dd['albedo'],dd['fp_base_file'] = geo,source,albedo,fp_base_file
+                dd['fsol'],dd['fthm'],dd['fsol_o'],dd['fthm_o'] = fsol,fthm,fsol_o,fthm_o
+                dd['icod'],dd['iext'],dd['issa'],dd['iasy'],dd['mmm'] = icod,iext,issa,iasy,mmm
+                b.append(dd)
+if dowrite: file_list.close()
+
+
+# In[ ]:
+
+
+if dowrite:
+    print 'Now preparing the pool of workers and making them print the files'
+    p = Pool(cpu_count())
+    results = p.map(print_input_aac_24h,b)
+    p.close()
+
+
+# In[ ]:
+
+
+if doread:
+    print 'Now preparing the pool of workers and making them read all the files'
+    p = Pool(cpu_count())
+    results = p.map(read_input_aac_24h,b)
+    p.close()
+    
+    nm_list = {'SW_irr_dn_avg':'SW_irr_dn_avg','SW_irr_up_avg':'SW_irr_up_avg',
+               'LW_irr_dn_avg':'LW_irr_dn_avg','LW_irr_up_avg':'LW_irr_up_avg'
+               'ssa':'ssa','asy':'asy','ext':'ext'}
+    saves = {}
+    for a in nm_list.keys():
+        saves[a] = np.array([results[i][nm_list[a]] for i in xrange(len(b))])
+    
+    saves['geo'] = geo
+    saves['source'] = source
+    saves['albedo'] = albedo
+    saves['cloud'] = cloud
+    
+    fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
+    
+    print 'Saving read file: '+fp_save
+    sio.savemat(fp_save,saves)
+
+
+# # Functions for use in this program
+
+# In[ ]:
+
+
+def print_input_aac_24h(d):
+    'function to print out the 24hour files (sol and thm) from an input dict'
+    cloud = {'tau':d['cod'],'ref':d['ref'],'zbot':d['zbot'],'ztop':d['ztop'],'link_to_mom_file':d['link_to_mom_file']}
+    geo = d['geo']
+    source = d['source']
+    albedo = d['albedo']
+    fp_base_file = d['fp_base_file']
+    aero = d['aero']
+    aero['link_to_mom_file'] = False
+    make_base = True
+    
+    for HH in xrange(24):
+        geo['hour'] = HH
+        #build the solar input file
+        source['source'] = 'solar'
+        source['wvl_range'] = [250,5600]
+        source['wvl_filename'] = None
+        file_out_sol = d['fsol'][HH]
+        RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
+                           make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
+        if make_base:
+            make_base = False
+        #build the thermal input file
+        source['source'] = 'thermal'
+        source['wvl_range'] = [4000,50000-1]
+        source['wvl_filename'] = None
+        file_out_thm = d['fthm'][HH]
+        
+        RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
+                           make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
+
+        if not aero['link_to_mom_file']:
+            aero['link_to_mom_file'] = True
+
+
+# In[ ]:
+
+
+def read_input_aac_24h(d):
+    'function to read out the 24hour files (sol and thm) from an input dict'
+
+    zout=[0,3,100]
+    output = {'zout':zout,'ext':d['aero']['ext'],'asy':d['aero']['asy'],'ssa':d['aero']['ssa']}
+    output['SW_irr_dn_utc'] = np.zeros((nz,24))
+    output['SW_irr_up_utc'] = np.zeros((nz,24))
+    output['LW_irr_dn_utc'] = np.zeros((nz,24))
+    output['LW_irr_up_utc'] = np.zeros((nz,24))  
+    
+    for HH in xrange(24):
+        geo['hour'] = HH
+        file_out_sol = d['fsol_o'][HH]
+        file_out_thm = d['fthm_o'][HH]
+        try:
+            sol = RL.read_libradtran(file_out_sol,zout=zout)
+            thm = RL.read_libradtran(file_out_thm,zout=zout)
+        except IOError:
+            print 'File not found skip: cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i' %(d['icod'],d['iext'],d['issa'],d['iasy'],d['mmm'],HH)
+            if HH==0:
+                print file_out_sol
+            continue
+        except ValueError:
+            print 'Problem with file: cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i' %(d['icod'],d['iext'],d['issa'],d['iasy'],d['mmm'],HH)
+            output['SW_irr_dn_utc'][:,HH] = np.nan
+            output['SW_irr_up_utc'][:,HH] = np.nan
+            output['LW_irr_dn_utc'][:,HH] = np.nan
+            output['LW_irr_up_utc'][:,HH] = np.nan
+            continue
+        output['SW_irr_dn_utc'][:,HH] = sol['direct_down']+sol['diffuse_down']
+        output['SW_irr_up_utc'][:,HH] = sol['diffuse_up']
+
+        output['LW_irr_dn_utc'][:,HH] = thm['direct_down']+thm['diffuse_down']
+        output['LW_irr_up_utc'][:,HH] = thm['diffuse_up']
+
+    output['SW_irr_dn_avg'] = np.mean(output['SW_irr_dn_utc'],axis=1)
+    output['SW_irr_up_avg'] = np.mean(output['SW_irr_up_utc'],axis=1)
+    output['LW_irr_dn_avg'] = np.mean(output['LW_irr_dn_utc'],axis=1)
+    output['LW_irr_up_avg'] = np.mean(output['LW_irr_up_utc'],axis=1)
+
+    return output        
 
