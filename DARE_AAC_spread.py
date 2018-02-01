@@ -49,6 +49,7 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 import signal
 from copy import copy,deepcopy
+import os
 
 
 # In[20]:
@@ -83,6 +84,8 @@ parser.add_argument('-r','--doread',help='if set, will only read the output, not
                     action='store_true',default=False)
 parser.add_argument('-w','--dowrite',help='if set, will write the input and list files for fuliou',
                     action='store_true',default=True)
+parser.add_argument('-s','--shortread',help='if set, will only read the available files outputted in the fp_output file pat',
+                    action='store_true',default=False)
 parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
 #parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
 parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
@@ -91,6 +94,7 @@ doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',True)
 i = in_.get('index',0)
 tmp = in_.get('tmp_folder',False)
+shortread = in_.get('shortread',False)
 
 
 # In[22]:
@@ -410,6 +414,7 @@ def read_input_aac_24h(d):
     'function to read out the 24hour files (sol and thm) from an input dict'
 
     zout=[0,3,100]
+    nz = len(zout)
     output = {'zout':zout,'ext':d['aero']['ext'],'asy':d['aero']['asy'],'ssa':d['aero']['ssa']}
     output['SW_irr_dn_utc'] = np.zeros((nz,24))
     output['SW_irr_up_utc'] = np.zeros((nz,24))
@@ -466,9 +471,14 @@ if dowrite:
 
 
 if doread:
+    il = len(b)
+    if shortread:
+        ll = os.listdir(fp_output)
+        il = len(ll)
+    
     print 'Now preparing the pool of workers and making them read all the files'
     p = Pool(cpu_count(),worker_init)
-    results = p.map(read_input_aac_24h,b)
+    results = p.map(read_input_aac_24h,b[0:il])
     p.close()
     
     nm_list = {'SW_irr_dn_avg':'SW_irr_dn_avg','SW_irr_up_avg':'SW_irr_up_avg',
@@ -485,6 +495,9 @@ if doread:
     
     fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
     
-    print 'Saving read file: '+fp_save
-    sio.savemat(fp_save,saves)
+    try:
+        print 'Saving read file: '+fp_save
+        sio.savemat(fp_save,saves)
+    except:
+        import pdb; pdb.set_trace()
 
