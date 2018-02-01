@@ -483,7 +483,7 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
     output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
     for iw,wv in enumerate(wvl):
-        if wv<wvl_range[0]-5.0 or wv>wvl_range[1]+5.0:
+        if (wv<wvl_range[0]-10.0 or wv>wvl_range[1]+10.0) and wvl_range[1]<10000.0:
             continue
         try:
             if len(moments.shape)>1:

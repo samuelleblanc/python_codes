@@ -284,7 +284,7 @@ for icod,c in enumerate(codd):
             try: aero['ssa'][aero['ssa']>1.0] = 1.0
             except: pass
             if not len(aero['ssa'])==len(aero['wvl_arr']):
-                aero['ssa'] = np.append(aero['ssa'],a[-1])
+                aero['ssa'] = np.append(aero['ssa'],s[-1])
             for iasy,a in enumerate(asy):
                 aero['asy'] = a
 
