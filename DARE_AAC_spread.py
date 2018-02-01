@@ -83,7 +83,7 @@ parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('-r','--doread',help='if set, will only read the output, not produce them',
                     action='store_true',default=False)
 parser.add_argument('-w','--dowrite',help='if set, will write the input and list files for fuliou',
-                    action='store_true',default=True)
+                    action='store_true',default=False)
 parser.add_argument('-s','--shortread',help='if set, will only read the available files outputted in the fp_output file pat',
                     action='store_true',default=False)
 parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
@@ -91,7 +91,7 @@ parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the wo
 parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
-dowrite = in_.get('dowrite',True)
+dowrite = in_.get('dowrite',False)
 i = in_.get('index',0)
 tmp = in_.get('tmp_folder',False)
 shortread = in_.get('shortread',False)
@@ -198,8 +198,6 @@ pmom_thermal['max_nmoms'] = max_nmom
 
 
 change_fp_output = True
-#if aero_clear:
-#    std_label = '_clear'
 
 
 # In[ ]:
@@ -207,11 +205,11 @@ change_fp_output = True
 
 fp_out2 = fp_out+mmm+std_label+'/'
 if not os.path.exists(fp_out2):
-    os.mkdir(fp_out2)
+    os.makedirs(fp_out2)
 if change_fp_output:
     fp_output = fp_out2.replace('input','output')
     if not os.path.exists(fp_output):
-        os.mkdir(fp_output)
+        os.makedirs(fp_output)
 fp_base_file = fp_out2+'base.inp'
 make_base = True
 
@@ -317,7 +315,7 @@ for icod,c in enumerate(codd):
                     source['wvl_filename'] = None
                     file_out_sol = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.inp' % (icod,iext,issa,iasy,mmm,HH)
                     fsol.append(file_out_sol)
-                    fsol_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                    fsol_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out' % (icod,iext,issa,iasy,mmm,HH))
                     
                     #build the thermal input file
                     source['source'] = 'thermal'
@@ -325,7 +323,7 @@ for icod,c in enumerate(codd):
                     source['wvl_filename'] = None
                     file_out_thm = fp_out2+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.inp' % (icod,iext,issa,iasy,mmm,HH)
                     fthm.append(file_out_thm)
-                    fthm_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                    fthm_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out' % (icod,iext,issa,iasy,mmm,HH))
                     
                     if dowrite:
                         file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
@@ -486,18 +484,16 @@ if doread:
                'ssa':'ssa','asy':'asy','ext':'ext'}
     saves = {}
     for a in nm_list.keys():
-        saves[a] = np.array([results[i][nm_list[a]] for i in xrange(len(b))])
-    
+        saves[a] = np.array([results[n][nm_list[a]] for n in xrange(il)])
+
     saves['geo'] = geo
     saves['source'] = source
+    saves['source']['wvl_filename'] = []
     saves['albedo'] = albedo
     saves['cloud'] = cloud
     
     fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
     
-    try:
-        print 'Saving read file: '+fp_save
-        sio.savemat(fp_save,saves)
-    except:
-        import pdb; pdb.set_trace()
+    print 'Saving read file: '+fp_save
+    sio.savemat(fp_save,saves)
 
