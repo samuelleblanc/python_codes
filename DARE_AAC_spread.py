@@ -50,6 +50,13 @@ from tqdm import tqdm
 import signal
 from copy import copy,deepcopy
 import os
+import warnings
+
+
+# In[ ]:
+
+
+warnings.simplefilter('ignore')
 
 
 # In[20]:
@@ -89,7 +96,7 @@ parser.add_argument('-s','--shortread',help='if set, will only read the availabl
 parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
 #parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
 parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
-parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',defualt=False)
+parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',False)
@@ -282,7 +289,8 @@ for icod,c in enumerate(codd):
         aero['ext'] = e
         aero['ext'][aero['ext']<0.0] = 0.0
         if np.isnan(aero['ext']).all():
-            print 'skipping cod:%i, ext:%i' % (icod,iext)
+            if verbose:
+                print 'skipping cod:%i, ext:%i' % (icod,iext)
             continue
         if not len(aero['ext'])==len(aero['wvl_arr']):
             aero['ext'] = np.append(aero['ext'],e[-1])
