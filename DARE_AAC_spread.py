@@ -89,12 +89,14 @@ parser.add_argument('-s','--shortread',help='if set, will only read the availabl
 parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
 #parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
 parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
+parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',defualt=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',False)
 i = in_.get('index',0)
 tmp = in_.get('tmp_folder',False)
 shortread = in_.get('shortread',False)
+verbose = in_.get('verbose',False)
 
 
 # In[22]:
@@ -114,7 +116,8 @@ if tmp:
 # In[24]:
 
 
-print 'Running on folders: {}'.format(fp_out)
+if verbose: 
+    print 'Running on folders: {}'.format(fp_out)
 
 
 # # Load the input files and create the subsets
@@ -129,7 +132,8 @@ mmm = 'JJA'
 
 
 fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=vv)
-print 'in %s months, getting mat file: %s' % (mmm,fpm)
+if verbose:
+    print 'in %s months, getting mat file: %s' % (mmm,fpm)
 
 
 # In[32]:
@@ -220,7 +224,9 @@ make_base = True
 if dowrite: 
     ff = 'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=vv,lbl=std_label)
     file_list = file(fp_out+ff,'w')
-    print 'Starting list file: '+fp_out+ff
+    if verbose: 
+        print 'Starting list file: '
+    print fp_out+ff
 
 
 # In[217]:
@@ -241,7 +247,8 @@ else:
 # In[ ]:
 
 
-print 'Running through the permutations'
+if verbose:
+    print 'Running through the permutations'
 b = []
 first_time = True
 for icod,c in enumerate(codd):
@@ -348,7 +355,8 @@ if dowrite: file_list.close()
 # In[ ]:
 
 
-pbar = tqdm(total=len(b))
+if verbose:
+    pbar = tqdm(total=len(b))
 
 
 # # Functions for use in this program
@@ -359,7 +367,9 @@ pbar = tqdm(total=len(b))
 def worker_init():
     # ignore the SIGINI in sub process, just print a log
     def sig_int(signal_num, frame):
-        print 'signal: %s' % signal_num
+        if verbose: 
+            print 'signal: %s' % signal_num
+        raise IOError
     signal.signal(signal.SIGINT, sig_int)
 
 
@@ -402,7 +412,8 @@ def print_input_aac_24h(d):
 
         if not aero['link_to_mom_file']:
             aero['link_to_mom_file'] = True
-        pbar.update(1)
+        if verbose:
+            pbar.update(1)
 
 
 # In[ ]:
@@ -448,7 +459,8 @@ def read_input_aac_24h(d):
     output['SW_irr_up_avg'] = np.mean(output['SW_irr_up_utc'],axis=1)
     output['LW_irr_dn_avg'] = np.mean(output['LW_irr_dn_utc'],axis=1)
     output['LW_irr_up_avg'] = np.mean(output['LW_irr_up_utc'],axis=1)
-    pbar.update(1)
+    if verbose:
+        pbar.update(1)
 
     return output        
 
@@ -459,7 +471,8 @@ def read_input_aac_24h(d):
 
 
 if dowrite:
-    print 'Now preparing the pool of workers and making them print the files'
+    if verbose:
+        print 'Now preparing the pool of workers and making them print the files'
     p = Pool(cpu_count(),worker_init)
     results = p.map(print_input_aac_24h,b)
     p.close()
@@ -473,8 +486,11 @@ if doread:
     if shortread:
         ll = os.listdir(fp_output)
         il = len(ll)
+        if verbose:
+            print 'Only reading over {} files'.format(il)
     
-    print 'Now preparing the pool of workers and making them read all the files'
+    if verbose:
+        print 'Now preparing the pool of workers and making them read all the files'
     p = Pool(cpu_count(),worker_init)
     results = p.map(read_input_aac_24h,b[0:il])
     p.close()
@@ -494,6 +510,7 @@ if doread:
     
     fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
     
-    print 'Saving read file: '+fp_save
+    if verbose:
+        print 'Saving read file: '+fp_save
     sio.savemat(fp_save,saves)
 
