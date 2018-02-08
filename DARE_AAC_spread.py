@@ -95,15 +95,25 @@ parser.add_argument('-s','--shortread',help='if set, will only read the availabl
                     action='store_true',default=False)
 parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the work on each node/ COD',type =int)
 #parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
-parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
+#parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
+parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp directory to use')
 parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',False)
 i = in_.get('index',0)
-tmp = in_.get('tmp_folder',False)
 shortread = in_.get('shortread',False)
 verbose = in_.get('verbose',False)
+
+
+# In[ ]:
+
+
+if in_.get('tmp_folder'):
+    tmp_folder = in_.get('tmp_folder')
+    tmp = True
+else:
+    tmp = False
 
 
 # In[22]:
@@ -117,7 +127,7 @@ if i>0:
 
 
 if tmp:
-    fp_out = '/tmp/AAC_DARF/input/' + std_label + '/'
+    fp_out = tmp_folder+'/AAC_DARF/input/' + std_label + '/'
 
 
 # In[24]:
@@ -230,10 +240,10 @@ make_base = True
 
 if dowrite: 
     ff = 'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=vv,lbl=std_label)
-    file_list = file(fp_out+ff,'w')
+    file_list = file(fp+ff,'w')
     if verbose: 
         print 'Starting list file: '
-    print fp_out+ff
+    print fp+ff
 
 
 # In[217]:

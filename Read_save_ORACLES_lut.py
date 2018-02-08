@@ -45,6 +45,7 @@
 
 # In[9]:
 
+
 import numpy as np
 import Run_libradtran as RL
 import hdf5storage as hs
@@ -52,6 +53,7 @@ import os
 
 
 # In[5]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
@@ -67,10 +69,12 @@ else:
 
 # In[6]:
 
+
 vv = 'v3'
 
 
 # In[ ]:
+
 
 # try to read from the saved version file
 from load_utils import load_from_json
@@ -106,10 +110,12 @@ except ValueError: # not a json file try old way
 
 # In[7]:
 
+
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 
 # In[ ]:
+
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   phase=['wc','ic'],
@@ -119,16 +125,19 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 
 # In[ ]:
 
+
 if use_json:
     dat['lut_details'] = d
 
 
 # In[ ]:
 
+
 print 'Saving matlab file'
 
 
 # In[10]:
+
 
 hs.savemat(fp+'{}_ORACLES_lut.mat'.format(vv),dat)
 
