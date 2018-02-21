@@ -64,6 +64,7 @@ warnings.simplefilter('ignore')
 
 std_label = 'v4_spread'
 verbose = False
+imax = 36
 
 
 # In[21]:
@@ -98,12 +99,15 @@ parser.add_argument('-i','--index',help='index (from 0 to 36) to split up the wo
 #parser.add_argument('-t','--tmp_folder',help='Set to use the temporary folder',action='store_true',default=False)
 parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp directory to use')
 parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',default=False)
+parser.add_argument('-j','--splitindex',
+                    help='add extra level of index splitting, on addition to -i, split up the work on each node /COD and per 10/ext',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',False)
 i = in_.get('index',0)
 shortread = in_.get('shortread',False)
 verbose = in_.get('verbose',False)
+j_index = in_.get('splitindex',False)
 
 
 # In[ ]:
@@ -120,7 +124,10 @@ else:
 
 
 if i>0:
-    std_label = std_label+'_{:02.0f}'.format(i)
+    if j_index:
+        std_label = std_label+'_{:02.0f}_e{:02.0f}'.format(i%imax,i/imax)
+    else:
+        std_label = std_label+'_{:02.0f}'.format(i)
 
 
 # In[23]:
@@ -240,10 +247,10 @@ make_base = True
 
 if dowrite: 
     ff = 'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=vv,lbl=std_label)
-    file_list = file(fp+ff,'w')
+    file_list = file(fp_pmom+ff,'w')
     if verbose: 
         print 'Starting list file: '
-    print fp+ff
+    print fp_pmom+ff
 
 
 # In[217]:
@@ -256,9 +263,15 @@ aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 
 
 if i>0:
-    codd = [cod[i]]
+    if j_index:
+        codd = [codd[i%imax]]
+        iee = np.arange((i/imax)*4,(i/imax+1)*4)
+    else:
+        codd = [cod[i]]
+        iee = np.arange(0,36) 
 else:
     codd = cod
+    iee = np.arange(0,36)
 
 
 # In[ ]:
@@ -294,7 +307,7 @@ for icod,c in enumerate(codd):
     if aero['wvl_arr'].max()<100000.0:
         aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
     
-    for iext,e in enumerate(ext):
+    for iext,e in enumerate(ext[iee]):
         # set the aerosol values
         aero['ext'] = e
         aero['ext'][aero['ext']<0.0] = 0.0
@@ -351,10 +364,10 @@ for icod,c in enumerate(codd):
                     fthm_o.append(fp_output+'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out' % (icod,iext,issa,iasy,mmm,HH))
                     
                     if dowrite:
-                        file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
-                                    +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out\n' % (icod,iext,issa,iasy,mmm,HH))
-                        file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
-                                    +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out\n' % (icod,iext,issa,iasy,mmm,HH))
+                        file_list.write(fp_uvspec+' < "'+file_out_sol+'" > "'+fp_output
+                                    +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_sol.out"\n' % (icod,iext,issa,iasy,mmm,HH))
+                        file_list.write(fp_uvspec+' < "'+file_out_thm+'" > "'+fp_output
+                                    +'AAC_input_cod%02i_ext%02i_ssa%02i_asy%02i_%s_HH%02i_thm.out"\n' % (icod,iext,issa,iasy,mmm,HH))
                         if first_time:
                             cloud['link_to_mom_file'],cloud['file_name'] = True,cloud_file_name_sol
                             RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
