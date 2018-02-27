@@ -264,14 +264,16 @@ aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
 
 if i>0:
     if j_index:
-        codd = [codd[i%imax]]
+        codd = [cod[i%imax]]
         iee = np.arange((i/imax)*4,(i/imax+1)*4)
+        if (i/imax+1)*4 > 33:
+             iee = np.arange((i/imax)*4,37)
     else:
         codd = [cod[i]]
-        iee = np.arange(0,36) 
+        iee = np.arange(0,37)
 else:
     codd = cod
-    iee = np.arange(0,36)
+    iee = np.arange(0,37)
 
 
 # In[ ]:
@@ -307,7 +309,9 @@ for icod,c in enumerate(codd):
     if aero['wvl_arr'].max()<100000.0:
         aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
     
-    for iext,e in enumerate(ext[iee]):
+    for iext,e in enumerate(ext):
+        if not iext in iee:
+            continue
         # set the aerosol values
         aero['ext'] = e
         aero['ext'][aero['ext']<0.0] = 0.0
@@ -540,6 +544,11 @@ if doread:
     saves['cloud'] = cloud
     
     fp_save = fp+'AAC_spread_{m}_{v}_{i}.mat'.format(m=mmm,v=vv,i=i)
+    try:
+        if j_index:
+            fp_save = fp+'AAC_spread_{m}_{v}_{i}_e{j}.mat'.format(m=mmm,v=vv,i=i%imax,j=i/imax)
+    except:
+        pass
     
     if verbose:
         print 'Saving read file: '+fp_save
