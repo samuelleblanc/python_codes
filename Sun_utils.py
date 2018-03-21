@@ -531,3 +531,250 @@ def angstrom_from_logpoly(c,wvl,polynum=4):
     ang = np.array(ang[0])
     return ang
 
+
+# In[1]:
+
+
+def get_angstrom(aod,wvl_in,wvl_out,polynum=4):
+    """
+    Purpose:  
+        calculate the angstrom exponent at a defined wavelength, using a polynomial fit to aerosol optical depth
+        and returns the angstrom exponent at specified wavelengths. Combines above function of 
+        logaod_polyfit and angstrom_from_logpoly
+
+    Input:
+        aod: array of aerosol optical depth, with one of the array length related to 
+             the wavelength they are used to be described (wvl_in)
+        wvl_in: wavelengths (in nm) relating to the spectra of aod
+        wvl_out: wavelengths (in nm) to calculate the angstrom exponent
+        
+    Output:
+        numpy array of angstrom values, one for each time in aod
+
+    Keywords:
+        polynum: (optional, defaults to 4) number of polynomials coefficients to use (order of the polynomial) 
+        
+    Dependencies:
+        - numpy
+        - Sun_utils (this file)
+
+    Needed Files:
+      - None
+
+    Modification History:
+
+        Written: Samuel LeBlanc, Santa Cruz, CA, 2018-03-14
+    """
+    import numpy as np
+    import Sun_utils as su
+    from tqdm import tqdm
+    
+    # reorganise and sanitze the inputs
+    ao = np.array([aod])
+    ix = np.where(np.array(ao.shape)==len(wvl_in))[0][0]
+    an = np.rollaxis(ao,ix,0)
+    nn = np.where(np.array(an.shape)==1)[0][0]
+    ac = np.rollaxis(an,nn,len(ao.shape))
+    n = ac.shape[1]
+    
+    pbar = tqdm(total=n+1)
+    poly = []
+    for i in xrange(n):
+        pl = su.logaod_polyfit(wvl_in,ac[i,:],polynum=polynum)
+        poly.append(pl)
+        pbar.update(1)
+    poly = np.array(poly)
+    
+    angs = su.angstrom_from_logpoly(poly,wvl_out,polynum=polynum)
+    pbar.update(1)
+    return angs
+
+
+# # The Spectral deconvolution algorithm for fine/coarse mode fraction
+
+# In[8]:
+
+
+def sda(aod,wvl_in,ref_wvl=500.0,polynum=3,compute_errors=False,physical_forcing=False):
+    """
+    Purpose:  
+        Compute the total, fine and coarse mode aerosol optical depth (AOD), the total and fine mode Angstrom exponents (alpha),
+        and the total spectral derivative of the angstrom exponent (alpha') at a reference wavelength.
+        
+        Adapted from tauf_tauc.m matlab function from Norm O'Neill (see below for references and contact info)
+
+    Input:
+        aod: array of aerosol optical depth, with one of the array length related to 
+             the wavelength they are used to be described (wvl_in)
+        wvl_in: wavelengths (in nm) relating to the spectra of aod
+        ref_wvl: (defaults to 500 nm), the reference wavelength [nm] to use for sda
+        polynum: (defaults to 3) number of coefficients for best fit polynomial decomposition of log(aod) vs log(wvl) 
+        compute_errors: (defaults to False) if True computes the errors and returns another array
+        physical_forcing: (defaults to False) if True determines whether a physical forcing correction is applied
+        
+    Output:
+        dictionary with these values:
+            tauf: numpy array of aod fine mode fraction at reference wavelength
+            tauc: numpy array of aod coarse mode fraction at reference wavelength
+            tau: numpy array of aod best fit at reference wavelength
+            etauf: (optional, only returned if compute_errors is True) stochastic error of tauf 
+            etauc: (optional, only returned if compute_errors is True) stochastic error of tauc
+
+    Keywords:
+        polynum: (optional, defaults to 4) number of polynomials coefficients to use (order of the polynomial) 
+        
+    Dependencies:
+        - numpy
+        - Sun_utils (this file)
+
+    Needed Files:
+      - None
+
+    Modification History:
+        Written: (adpated from original matlab codes) Samuel LeBlanc, Santa Cruz, CA, 2018-03-15
+    
+    ORIGINAL Comments:
+    % HISTORY 
+    % 1. VERSION 1 was basically a simplification and merging of CIMEL_process (program employed for ref. 1 and ref. 2) and CIMEL_errors into
+    %    the tauf_tauc function.
+    % 2. VERSION 2; on Sept. 1, 2004 a corrected option was added corresponding to physical_forcing = 'y'. This version corrects non-physical values
+    %    of eta (outside the range [0, 1]). This exclusion is done smoothly by averaging the correction between the extremes of non-physical limits
+    %    and allowable values corresponging to the extremes of the estimated stochastic error. This new option also incorporated a new estimate
+    %    of the rms AOD error at the reference wavelength (change from 0.01 to 0.006); a lower value was used because the 2nd order polynomial 
+    %    AOD fitting error will be less than the raw AOD error as estimated from AERONET Langley plots. Other changes from VERSION 1 included the addition
+    %    of a global set of variables and new output parameters in the output variable list. Setting physical_forcing = 'n' and Dtau = 0.01 yields
+    %    the outputs obtained in references 1 and 2.
+    % 3. VERSION 3; on March 19, 2005 a new version was created. This version incorporated physical forcing "at the upper
+    %    alpha_f end" : when AOD input errors were very large then alpha_f could be above the theoretical upper limit of 
+    %    alpha_f (= 4 for Rayleigh particles). The new version sets a limit of the theoretical alpha_f value for alpha_f
+    %    (in precisely the same way that the lower limit of alpha was set in VERSION 2). Also, wavelength dependent 
+    %    coefficients of the alpha'_f versus alpha_f relationship were incorporated (and these relationships, besides
+    %    being used in the deconvolution code proper were incorporated in the calculation of the alpha_f dependent 
+    %    error of alpha'_f. These relationships are derived in visible.xls. 
+    % 4. VERSION 4; on April 26, 2006 a new version was delivered to AERONET.
+    %    An overly complicated expression for the stochastic error in alpha' was simplified to Dalphap = k1*Dtau_rel 
+    %    where k1 is simply = 10 (the more complicated expression in ref. 1 did not produce signficantly better 
+    %    estimates of the empirical errors derived from stochastic simulations). Physical forcing was rendered
+    %    less extreme by incorporating a quadratic weighting scheme rather than the MOE (Mean of extrema) averaging
+    %    employed in Version 3. This modification (for cases near eta = 1 and eta = 0) produced moderate changes
+    %    in tauf, tauc and eta and eliminated a suspicious correlation between derived values of tauf and tauc. These 
+    %    changes are discussed in the newest version of the tauf_tauc technical memo (reference 3 below).
+    %
+    %    VERSION 4.1; on Mar. 19, 2008 and April 1, 2008 some minor code changes were incorporated to respectively (a) correct an inconsistancy 
+    %    in the alpha_f_max_theoretical loop (basically it was just moved above the "if alpha_f_min < alpha | alpha_c_max > alpha" loop and a 
+    %    few consequentially redundant executable statements were removed) and (b) to correct the error model code (details in ref. 3). Other code 
+    %    cleanup was performed Updates were also made to the code documentation.
+    %
+    %   ** WARNING **
+    %   The algorithm has only been physically validated at a reference wavlength of 0.5 um
+    %   The input AOD spectrum must have at least 4 optical depths. The wavelengths employed in the 0.5 um reference 
+    %   wavelength validation exercise were [1.02 0.870 0.670 0.5 0.44 0.38] um (in other words 0.34 um was 
+    %   systematically excluded). In April of 2007 the 1020 nm channel was eliminated from AERONET processing (see ref. 3)
+    %
+    % REFERENCES
+    % 1.    O'Neill, N. T., Eck, T. F., Smirnov, A., Holben B. N., S. Thulasiraman, (2003), Spectral discrimination 
+    %       of coarse and fine mode optical depth, JGR, Vol. 108, No. D17, 4559.
+    % 2.    O'Neill, N. T., Dubovik, O., Eck, T. F., (2001), A modified Angstrom coefficient for the characterization 
+    %       of sub-micron aerosols, App. Opt., Vol. 40, No. 15, pp. 2368-2374.
+    % 3.    O'Neill, N. T., Eck, T. F., Smirnov, A., Holben B. N., S. Thulasiraman, (2008), Spectral Deconvolution 
+    %       algorithm Technical memo.
+    %
+    % CONTACT
+    % Norm O'Neill
+    % Senior Scientist and Professor,
+    % CARTEL,Universite de Sherbrooke,Sherbrooke, Quebec, Canada, J1K 2R1
+    % tel.; (819)-821-8000, ext 2965, fax; (819)-821-7965
+    % Email; norm.oneill@usherbrooke.ca
+    % web;  http://pages.usherbrooke.ca/noneill/ 
+    
+    """
+    import numpy as np
+    from scipy import polyval
+    import Sun_utils as su
+    from tqdm import tqdm_notebook as tqdm
+    
+    # fix coarse mode Angstrom parameters
+    alpha_c = -0.15
+    alphap_c = 0.0 # generic case as per ref. 2
+    
+    # Set up fine mode constants for alpha_f estimation
+    # a, b, c, b_star, and c_star defined in reference 2 (with the following correction; b* = b + 2 a alpha_c).
+    # see visible.xls (sheet "AERONET") for the source of the equations immediately below (available from the author)
+    # upper and lower refer to the upper and lower error bounds of the alphap_f vs alpha_f expression
+    a_upper = -0.22
+    b_upper = (10**-0.2388)*(ref_wvl**1.0275)
+    c_upper = (10**0.2633)*(ref_wvl**(-0.4683))
+    a_lower = -0.3
+    b_lower = 0.8
+    c_lower = 0.63
+    a = (a_lower + a_upper)/2
+    b = (b_lower + b_upper)/2
+    c = (c_lower + c_upper)/2
+    b_star = b + 2*alpha_c*a
+    c_star = c - alphap_c + b*alpha_c + a*alpha_c**2.0
+    
+    # reorganise and sanitze the inputs
+    ao = np.array([aod])
+    ix = np.where(np.array(ao.shape)==len(wvl_in))[0][0]
+    an = np.rollaxis(ao,ix,0)
+    nn = np.where(np.array(an.shape)==1)[0][0]
+    ac = np.rollaxis(an,nn,len(ao.shape))
+    n = ac.shape[1]
+    
+    pbar = tqdm(total=n+2)
+    pbar.update(1)
+    
+    #Compute the spectral polynomial (ln-ln fit)
+    poly = []
+    tau,tauf,tauc = [],[],[]
+    alphap,alpha = [],[]
+    for i in xrange(n):
+        #if i>55446:
+        #    import pdb; pdb.set_trace()
+        pl = su.logaod_polyfit(wvl_in,ac[:,i,0],polynum=polynum)
+        poly.append(pl)
+    
+        # compute the aod at the reference wavelength
+        ar = polyval(poly[i],np.log(ref_wvl))
+        tau.append(np.exp(ar))
+    
+        # compute alpha
+        alpha.append(0.0)
+        for i_d in xrange(1,polynum+1):
+            expon = polynum-i_d
+            alpha[i] = alpha[i] - (expon+1)*poly[i][i_d-1]*np.log(ref_wvl)**expon
+        
+        # compute alphap
+        alphap.append(0.0)
+        for i_d in xrange(2,polynum+1):
+            expon = polynum-i_d
+            alphap[i] = alphap[i] - (expon+1)*(expon+2)*poly[i][i_d-2]*np.log(ref_wvl)**expon
+
+        # Compute the derived fine and coarse mode parameters. "t" is the invariant generic parameter defined in reference 2.
+        alpha_offset = alpha[i] - alpha_c
+        alphap_offset = alphap[i] - alphap_c
+        t = alpha_offset - alphap_offset/alpha_offset
+        alpha_f = ((t + b_star) + np.sqrt((t + b_star)**2.0 + 4*(1 - a)*c_star))/(2*(1 - a)) + alpha_c
+        alpha_f_offset = alpha_f - alpha_c
+        eta = alpha_offset/alpha_f_offset
+        tau_f = eta*tau[i]
+        tau_c = tau[i] - tau_f
+        tauf.append(tau_f)
+        tauc.append(tau_c)
+        
+        pbar.update(1)
+
+    tauf = np.array(tauf)
+    tauc = np.array(tauc)
+    tau = np.array(tau)
+    poly = np.array(poly)
+    alpha = np.array(alpha)
+    alphap = np.array(alphap)
+    
+    out = {'tauf':tauf,'tauc':tauc,'tau':tau,'poly':poly,'alpha':alpha,'alphap':alphap}
+    pbar.update(1)
+    
+    return out
+    
+    
+
