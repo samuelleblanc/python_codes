@@ -829,7 +829,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     if make_base:
         if fp_base_file:
             base = file(fp_base_file,'w')
-            include_base = False
+            include_base = True
         else:
             print 'Problem: No fp_base_file set, please set before running'
             return
@@ -863,8 +863,6 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         base.write('rte_solver {}\n'.format(solver))
         if set_quiet:
             base.write('quiet\n')
-    elif include_base:
-        output.write('include %s\n' % fp_base_file)
     else:
         if set_quiet:
             output.write('quiet\n')
@@ -873,7 +871,9 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             output.write('mol_abs_param sbdart\n')
         output.write('rte_solver {}\n'.format(solver))
-    
+        
+    if include_base:
+        output.write('include %s\n' % fp_base_file)
     
     if verbose: print '..write out source dict values'
     if make_base:
@@ -1867,6 +1867,77 @@ def run_from_ipython():
         return True
     except NameError:
         return False
+
+
+# In[ ]:
+
+
+def read_24h_aac(d):
+    'function to read out the 24hour files (sol and thm) from a list of files'
+    import numpy as np
+    import Run_libradtran as RL
+    d.sort()
+    
+    zout=[0,3,100]
+    nz = len(zout)
+    output = {}
+    #output = {'zout':zout,'ext':d['aero']['ext'],'asy':d['aero']['asy'],'ssa':d['aero']['ssa']}
+    output['SW_irr_dn_utc'] = np.zeros((nz,24))
+    output['SW_irr_up_utc'] = np.zeros((nz,24))
+    output['LW_irr_dn_utc'] = np.zeros((nz,24))
+    output['LW_irr_up_utc'] = np.zeros((nz,24))  
+    output['HH'] = np.zeros((24,1))
+    output['file_sol'] = []
+    output['file_thm'] = []
+    
+    for HH in xrange(24):
+        output['HH'][HH] = HH
+        h = 'HH{:02.0f}'.format(HH)
+        for fin in d:
+            if h in fin:
+                if 'sol' in fin:
+                    file_out_sol = fin
+                if 'thm' in fin:
+                    file_out_thm = fin
+        
+        output['file_sol'].append(file_out_sol)           
+        output['file_thm'].append(file_out_thm)
+                    
+        try:
+            sol = RL.read_libradtran(file_out_sol,zout=zout)
+        except IOError:
+            print 'File {} not found skip'.format(file_out_sol) 
+            if HH==0:
+                print file_out_sol
+            continue
+        except ValueError:
+            print 'Problem with file: {}'.format(file_out_sol)
+            output['SW_irr_dn_utc'][:,HH] = np.nan
+            output['SW_irr_up_utc'][:,HH] = np.nan
+                    
+        try:
+            thm = RL.read_libradtran(file_out_thm,zout=zout)
+        except IOError:
+            print 'File {} not found skip'.format(file_out_thm) 
+            if HH==0:
+                print file_out_thm
+            continue
+        except ValueError:
+            print 'Problem with file: {}'.format(file_out_thm)
+            output['LW_irr_dn_utc'][:,HH] = np.nan
+            output['LW_irr_up_utc'][:,HH] = np.nan
+            
+            
+        output['SW_irr_dn_utc'][:,HH] = sol['direct_down']+sol['diffuse_down']
+        output['SW_irr_up_utc'][:,HH] = sol['diffuse_up']
+        output['LW_irr_dn_utc'][:,HH] = thm['direct_down']+thm['diffuse_down']
+        output['LW_irr_up_utc'][:,HH] = thm['diffuse_up']
+
+    output['SW_irr_dn_avg'] = np.mean(output['SW_irr_dn_utc'],axis=1)
+    output['SW_irr_up_avg'] = np.mean(output['SW_irr_up_utc'],axis=1)
+    output['LW_irr_dn_avg'] = np.mean(output['LW_irr_dn_utc'],axis=1)
+    output['LW_irr_up_avg'] = np.mean(output['LW_irr_up_utc'],axis=1)
+    return output        
 
 
 # In[ ]:
