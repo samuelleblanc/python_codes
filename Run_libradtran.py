@@ -1181,7 +1181,8 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False):
+                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False,
+                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON']):
     """
     Purpose:
     
@@ -1204,7 +1205,9 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                      'ext','ssa','asym', 'COD','ref'
         max_nmom: Maximum number of phase function moments to write out. (defaults to none)
         list_only: (default False) When True, only write out the list file (for debugging)
-       
+        start_lat: (default None) if set to an integer, uses the index to start the latitutde loops creating the files (for debugging)
+        start_lon: (default None) if set to an integer, uses the index to start the longitutde loops creating the files (for debugging)
+        mmmlist: (default ['DJF','MAM','JJA','SON']) the list of months to go through
         
     Dependencies:
     
@@ -1282,7 +1285,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             else: n='m'
             std_label = std_label+'_'+k+nstdfac_dict
     
-    for mmm in ['DJF','MAM','JJA','SON']:
+    for mmm in mmmlist: #['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
         print 'in %s months, getting mat file: %s' % (mmm,fpm)
         input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
@@ -1325,7 +1328,13 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         
         print 'Running through the files'
         for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
+            if start_lat:
+                if not ilat>=start_lat:
+                    continue
             for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
+                if start_lon:
+                    if not ilo>=start_lon:
+                        continue
                 geo['lat'],geo['lon'] = lat,lon
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
