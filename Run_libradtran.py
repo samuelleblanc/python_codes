@@ -1333,7 +1333,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     continue
             for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
                 if start_lon:
-                    if not ilo>=start_lon:
+                    if not ilon>=start_lon:
                         continue
                 geo['lat'],geo['lon'] = lat,lon
                 # set the aerosol values
