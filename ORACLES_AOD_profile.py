@@ -75,7 +75,7 @@ fp = getpath('ORACLES')
 fp
 
 
-# In[18]:
+# In[3]:
 
 
 fdat = getpath('4STAR_data')
@@ -83,7 +83,7 @@ fdat = fdat[0:-1]
 fdat
 
 
-# In[3]:
+# In[4]:
 
 
 from mpl_toolkits.basemap import Basemap,cm
@@ -95,19 +95,19 @@ from Sp_parameters import deriv, smooth
 # ## Load the 4STAR starsun
 # 
 
-# In[4]:
+# In[5]:
 
 
 dd = '20160920'
 
 
-# In[5]:
+# In[6]:
 
 
 f_star = fp+'data/4STAR_{}starsun.mat'.format(dd)
 
 
-# In[6]:
+# In[7]:
 
 
 s = sio.loadmat(f_star)
@@ -127,13 +127,13 @@ s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 # ## Get the flag file
 
-# In[21]:
+# In[9]:
 
 
 fmat = getpath('4STAR_data',make_path=True,path='/mnt/c/Users/sleblanc/Research/4STAR_codes/data_folder/')
 
 
-# In[30]:
+# In[10]:
 
 
 with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
@@ -143,27 +143,27 @@ with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[31]:
+# In[11]:
 
 
 sf.keys()
 
 
-# In[32]:
+# In[12]:
 
 
 ifl = (np.array(sf['bad_aod'])==0) & (np.array(sf['unspecified_clouds'])==0) & (np.array(sf['cirrus'])==0)
 ifl = ifl.flatten()
 
 
-# In[33]:
+# In[13]:
 
 
 iflt = ((ifl) & (s['utc']>=11.8667) & (s['utc']<=12.25))
 iflt = iflt.flatten()
 
 
-# In[34]:
+# In[14]:
 
 
 print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profile:',iflt.shape,      'selected valid',ifl.sum(),'selected valid during profile',iflt.sum()
@@ -171,7 +171,7 @@ print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profi
 
 # ## Plot some early 4STAR data
 
-# In[35]:
+# In[15]:
 
 
 plt.figure()
@@ -199,20 +199,20 @@ plt.plot(s['tau_aero'][ifl,400],s['Alt'][ifl],'+r')
 plt.plot(s['tau_aero'][iflt,400],s['Alt'][iflt],'xg')
 
 
-# In[36]:
+# In[16]:
 
 
 # profile = [13.24,13.56] for 20160904
 profile = [11.8667, 12.25]
 
 
-# In[37]:
+# In[17]:
 
 
 it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,400]<0.8)
 
 
-# In[38]:
+# In[18]:
 
 
 it = it.flatten()
@@ -220,25 +220,25 @@ it = it.flatten()
 
 # ## Load the 4STAR dirty clean correction file
 
-# In[39]:
+# In[19]:
 
 
 s_dirty = fmat+'20160920_AOD_merge_marks.mat'
 
 
-# In[40]:
+# In[20]:
 
 
 dm = sio.loadmat(s_dirty)
 
 
-# In[41]:
+# In[21]:
 
 
 dm.keys()
 
 
-# In[42]:
+# In[22]:
 
 
 dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
@@ -246,7 +246,7 @@ dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
 
 # ### Create a full wavelength tau correction from polyfit
 
-# In[43]:
+# In[23]:
 
 
 import Sun_utils as su
@@ -254,7 +254,7 @@ from scipy import polyval
 from write_utils import nearest_neighbor
 
 
-# In[44]:
+# In[24]:
 
 
 dm['dAODs'].shape
@@ -262,7 +262,13 @@ dm['dAODs'].shape
 
 # Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
 
-# In[45]:
+# In[42]:
+
+
+[(i,iv) for i,iv in enumerate(dm['wl_nm'].flatten())]
+
+
+# In[40]:
 
 
 daod = []
@@ -281,32 +287,45 @@ plt.figure()
 plt.plot(da)
 
 
-# In[46]:
+# In[39]:
 
 
-dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=4) for i in xrange(len(s['utc']))]    
+daod[:,10]
+
+
+# In[37]:
+
+
+dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=3) for i in xrange(len(s['utc']))]    
 np.shape(dm['polyaod'])
 
 
-# In[ ]:
+# In[27]:
 
 
 dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
 
 
-# In[47]:
+# In[28]:
 
 
 np.shape(dm['tau'])
 
 
-# In[414]:
+# In[29]:
 
 
 s['tau_aero'].shape
 
 
-# In[435]:
+# In[33]:
+
+
+s_list = s.keys()
+s_list.sort()
+
+
+# In[35]:
 
 
 aod = s['tau_aero']-np.array(dm['tau'])
