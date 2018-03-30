@@ -3,6 +3,7 @@
 
 # In[ ]:
 
+
 def __init__():
     """
        Collection of codes to run some typical map utilities
@@ -17,6 +18,7 @@ def __init__():
 
 
 # In[1]:
+
 
 def spherical_dist(pos1, pos2, r=6378.1,use_mi=False):
     """
@@ -45,6 +47,7 @@ def spherical_dist(pos1, pos2, r=6378.1,use_mi=False):
 
 # In[1]:
 
+
 def bearing(pos1,pos2):
     "Calculate the initial bearing, in degrees, to go from one point to another, along a great circle"
     import numpy as np
@@ -63,6 +66,7 @@ def bearing(pos1,pos2):
 
 
 # In[2]:
+
 
 def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
     """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
@@ -114,6 +118,7 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
 
 # In[ ]:
 
+
 def radius_m2deg(center_lon,center_lat,radius):
     """ 
     Return the radius in lat lon degrees of a circle centered at the points defined by
@@ -135,6 +140,7 @@ def radius_m2deg(center_lon,center_lat,radius):
 
 
 # In[1]:
+
 
 def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
     """
@@ -195,6 +201,7 @@ def stats_within_radius(lat1,lon1,lat2,lon2,x2,radius,subset=True):
 
 # In[3]:
 
+
 def equi(m, centerlon, centerlat, radius, *args, **kwargs):
     """
     plot a single circle on a map
@@ -221,6 +228,7 @@ def equi(m, centerlon, centerlat, radius, *args, **kwargs):
 
 
 # In[4]:
+
 
 def shoot(lon, lat, azimuth, maxdist=None):
     """Shooter Function
@@ -293,6 +301,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
 
 # In[ ]:
 
+
 def great(m, startlon, startlat, azimuth,*args, **kwargs):
     """
     function to draw great circle, takes into account crossing the border
@@ -324,6 +333,7 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
 
 
 # In[1]:
+
 
 def get_sza_azi(lat,lon,datetimet,alt=None,return_sunearthfactor=False,return_sunf_and_dec=False):
     """
@@ -371,6 +381,7 @@ def get_sza_azi(lat,lon,datetimet,alt=None,return_sunearthfactor=False,return_su
 
 # In[1]:
 
+
 def consecutive(data, stepsize=1):
     'simple program to get consecutive values'
     import numpy as np
@@ -378,6 +389,7 @@ def consecutive(data, stepsize=1):
 
 
 # In[3]:
+
 
 def mplot_spec(m,lon,lat,*args,**kwargs):
     'Program to plot lines on a map, wihtout the extra cross sides of lines because of the dateline problem'
@@ -400,6 +412,7 @@ def mplot_spec(m,lon,lat,*args,**kwargs):
 
 # In[3]:
 
+
 def PolyArea(x,y):
     'Program to calculate the area within a polygon defined by vertices x,y (both arrays)'
     import numpy as np
@@ -407,6 +420,7 @@ def PolyArea(x,y):
 
 
 # In[2]:
+
 
 def WithinArea(xpoint,ypoint,xpoly,ypoly):
     'return True if point (at xpoint,ypoint coordinates) within area defined by xpoly,ypoly vertices'
@@ -417,9 +431,4 @@ def WithinArea(xpoint,ypoint,xpoly,ypoly):
     for i in xrange(len(xpoly)-1):
         area_sup += PolyArea([xpoint,xpoly[i],xpoly[i+1]],[ypoint,ypoly[i],ypoly[i+1]])
     return area_sup<=area
-
-
-# In[ ]:
-
-
 
