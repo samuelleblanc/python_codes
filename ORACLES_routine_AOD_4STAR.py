@@ -111,13 +111,13 @@ s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
 s.keys()
 
 
-# In[10]:
+# In[9]:
 
 
 days = np.unique(s['days'])
 
 
-# In[11]:
+# In[10]:
 
 
 len(s['fl_QA'])
@@ -125,14 +125,14 @@ len(s['fl_QA'])
 
 # ### Load the acaod flags
 
-# In[12]:
+# In[11]:
 
 
 fdat = getpath('4STAR_data')
 fdat
 
 
-# In[13]:
+# In[12]:
 
 
 flag_acaod = []
@@ -153,7 +153,7 @@ for j in days:
         flag_acaod_t.append([])
 
 
-# In[14]:
+# In[13]:
 
 
 s['fl_acaod'] = np.zeros_like(s['fl_QA'])
@@ -179,19 +179,19 @@ for i,j in enumerate(days):
                 s['fl_acaod_noQA'][iu] = (fa[:,0]==1)
 
 
-# In[15]:
+# In[14]:
 
 
 len(s['fl_acaod'])
 
 
-# In[16]:
+# In[15]:
 
 
 len(s['fl_QA'])
 
 
-# In[17]:
+# In[16]:
 
 
 s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
@@ -2060,7 +2060,7 @@ plt.title('ORACLES 2016 4STAR AOD')
 plt.legend(frameon=False)
 
 
-# In[76]:
+# In[54]:
 
 
 s['fl6'] = s['fl_alt_6'] & s['fl_QA']
@@ -2103,45 +2103,45 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD501_histogram.png',
 
 # ### Using the polynomial fit method
 
-# In[77]:
+# In[19]:
 
 
 nn = s.keys()
 nn.sort()
 
 
-# In[78]:
+# In[20]:
 
 
 wvl = np.array([float(i[-4:]) for i in nn[0:24]])
 
 
-# In[79]:
+# In[21]:
 
 
 aods = np.array([s[i] for i in nn[0:24]]).T
 
 
-# In[80]:
+# In[22]:
 
 
 aods.shape
 
 
-# In[81]:
+# In[23]:
 
 
 uncaods = np.array([s[i] for i in nn[28:28+24]]).T
 
 
-# In[82]:
+# In[45]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[83]:
+# In[46]:
 
 
 for i,u in enumerate(s['Start_UTC']):
@@ -2153,19 +2153,19 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[84]:
+# In[47]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,470.0,500.0,530.0,660.0,865.0,1250.0],polynum=3)
 
 
-# In[85]:
+# In[48]:
 
 
 s['angs'].shape
 
 
-# In[86]:
+# In[49]:
 
 
 awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
@@ -2173,20 +2173,20 @@ awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
 
 # ### Using the typical 2 wavelength method
 
-# In[87]:
+# In[50]:
 
 
 wvl
 
 
-# In[88]:
+# In[51]:
 
 
 ja,je = 3,15
 wvl[ja],wvl[je]
 
 
-# In[89]:
+# In[52]:
 
 
 s['angs_470_865'] = []
@@ -2727,10 +2727,10 @@ np.nanmedian(s['angs_470_865'][s['fl_acaod']])
 np.nanstd(s['angs_470_865'][s['fl_acaod']])
 
 
-# In[105]:
+# In[55]:
 
 
-np.nanmean(s['angs_470_865'][s['fl6']])
+np.nanmean(s['angs_470_865'][s['fl6']]),np.nanmedian(s['angs_470_865'][s['fl6']]),np.nanstd(s['angs_470_865'][s['fl6']])
 
 
 # In[106]:
@@ -3623,21 +3623,21 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_statsAOD_2panel_actualmap_withAERONET_
             transparent=True,dpi=500)
 
 
-# # Prepare the spectral AOD mean, median, pca, std...
+# # Spectral AOD mean, median, pca, std...
 
-# In[227]:
+# In[24]:
 
 
 aods.shape
 
 
-# In[228]:
+# In[25]:
 
 
 s['fl_acaod']
 
 
-# In[229]:
+# In[26]:
 
 
 ns = len(s['Start_UTC'][s['fl_acaod']])
@@ -3679,7 +3679,15 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_all_ACAOD_spectra.png',
             transparent=True,dpi=500)
 
 
-# In[231]:
+# ## ACAOD spectra, mean, median, std
+
+# In[29]:
+
+
+iw = wvl!=700.0
+
+
+# In[27]:
 
 
 meanaod = np.nanmean(aods[s['fl_acaod'],:],axis=0)
@@ -3687,27 +3695,29 @@ medianaod = np.nanmedian(aods[s['fl_acaod'],:],axis=0)
 stdaod = np.nanstd(aods[s['fl_acaod'],:],axis=0)
 
 
-# In[232]:
+# In[28]:
 
 
 meanuncaod = np.nanmean(uncaods[s['fl_acaod'],:],axis=0)
 
 
-# In[543]:
+# In[44]:
 
 
 plt.figure()
-plt.plot(wvl,meanaod,'k-+',label='Mean')
-plt.errorbar(wvl,meanaod,yerr=meanuncaod,color='k')
-plt.plot(wvl,meanaod+stdaod,'--x',color='grey',lw=0.4,label='Standard Deviation')
-plt.plot(wvl,meanaod-stdaod,'--x',color='grey',lw=0.4)
-plt.plot(wvl,medianaod,'-o',lw=2.0,color='lightblue',label='Median',zorder=-1)
+plt.plot(wvl[iw],meanaod[iw],'k-+',label='Mean')
+plt.errorbar(wvl[iw],meanaod[iw],yerr=meanuncaod[iw],color='k')
+plt.plot(wvl[iw],meanaod[iw]+stdaod[iw],'--x',color='grey',lw=0.4,label='Mean +/- 1 Standard Deviation')
+plt.plot(wvl[iw],stdaod[iw],'-^',lw=0.4,color='lightcoral',label='Standard Deviation',zorder=-2,alpha=0.5)
+plt.plot(wvl[iw],meanaod[iw]-stdaod[iw],'--x',color='grey',lw=0.4)
+plt.plot(wvl[iw],medianaod[iw],'-o',lw=2.0,color='lightblue',label='Median',zorder=-1)
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('AOD')
 plt.title('ACAOD average spectra from 4STAR at selected wavelengths')
+plt.grid()
 
 plt.legend(frameon=False)
-plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_mean_ACAOD_spectra.png',
+plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_mean_ACAOD_spectra_less700.png',
             transparent=True,dpi=500)
 
 
@@ -3724,28 +3734,22 @@ mean_angs
 wvl[[2,15]]
 
 
-# In[549]:
+# In[30]:
 
 
 meanaod[[2,15]], medianaod[[2,15]],stdaod[[2,15]],meanuncaod[[2,15]]
 
 
-# In[545]:
-
-
-iw = wvl!=700.0
-
-
 # ## Get the Principal components from PCA
 
-# In[233]:
+# In[36]:
 
 
 ivalid = np.all(np.isfinite(aods[s['fl_acaod'],:]),axis=1)
 aods_valid = aods[s['fl_acaod'],:][ivalid,:]
 
 
-# In[234]:
+# In[37]:
 
 
 from sklearn.decomposition import PCA
@@ -3753,25 +3757,25 @@ pca = PCA(n_components=20)
 pca.fit(aods_valid)
 
 
-# In[235]:
+# In[38]:
 
 
 pca.explained_variance_ratio_[0]
 
 
-# In[562]:
+# In[39]:
 
 
 pca.explained_variance_ratio_[:]
 
 
-# In[236]:
+# In[40]:
 
 
 pca.components_.shape
 
 
-# In[238]:
+# In[42]:
 
 
 plt.figure()
@@ -3779,6 +3783,7 @@ plt.plot(wvl,meanaod,'k-+',label='Mean')
 plt.errorbar(wvl,meanaod,yerr=meanuncaod,color='k')
 plt.plot(wvl,meanaod+stdaod,'--x',color='grey',lw=0.4,label='Mean +/- 1 Standard Deviation')
 plt.plot(wvl,meanaod-stdaod,'--x',color='grey',lw=0.4)
+plt.plot(wvl,stdaod,'-s',color='orange',lw=0.4,label='Standard Deviation')
 plt.plot(wvl,medianaod,'-o',lw=2.0,color='lightblue',label='Median',zorder=-1)
 plt.plot(wvl,pca.components_[0,:],'-*',lw=0.8,color='coral',zorder=-2,
          label='Principal Component\nrepresenting {:2.1f}% of variance'.format(pca.explained_variance_ratio_[0]*100.0))

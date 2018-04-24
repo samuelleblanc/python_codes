@@ -44,6 +44,7 @@
 
 # In[1]:
 
+
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
@@ -53,6 +54,7 @@ import numpy as np
 
 # In[2]:
 
+
 import map_utils as mu
 import Sun_utils as su
 import Cair_utils as cu
@@ -61,10 +63,12 @@ import plotting_utils as pu
 
 # In[3]:
 
+
 from mpltools import color
 
 
 # In[4]:
+
 
 fp = 'C:\\Users\\sleblan2\\Research\\4STAR\\MLO_2016\\'
 
@@ -73,20 +77,24 @@ fp = 'C:\\Users\\sleblan2\\Research\\4STAR\\MLO_2016\\'
 
 # In[5]:
 
+
 f = fp+'20160702_MLO5\\CAST_001_160702_090020_URC.csv'
 
 
 # In[56]:
+
 
 c = cu.read_Cair(fp+'20160702_MLO5\\CAST_001_160702_090020_URC.csv')
 
 
 # In[7]:
 
+
 c.keys()
 
 
 # In[8]:
+
 
 c['DateTimeUTC'][0]
 
@@ -97,6 +105,7 @@ c['DateTimeUTC'][0]
 
 # In[57]:
 
+
 def Gamma2sigma(Gamma):
     '''Function to convert FWHM (Gamma) to standard deviation (sigma)'''
     import numpy as np
@@ -104,6 +113,7 @@ def Gamma2sigma(Gamma):
 
 
 # In[58]:
+
 
 def gaussian(x_center,fwhm):
     'Function that generates a gaussian distribution and a new x array to fit it onto'
@@ -116,10 +126,12 @@ def gaussian(x_center,fwhm):
 
 # In[59]:
 
+
 fwhm = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,15,30]
 
 
 # In[60]:
+
 
 band_f = []
 band_wvl = []
@@ -131,6 +143,7 @@ for i,l in enumerate(c['wvl']):
 
 # In[61]:
 
+
 c['band_f'] = band_f
 c['band_wvl'] = band_wvl
 
@@ -138,6 +151,7 @@ c['band_wvl'] = band_wvl
 # ## Plot the filter functions
 
 # In[14]:
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -158,20 +172,24 @@ plt.savefig(fp+'C-air_synthetic_bandwidth.png',dpi=600,transparent=True)
 
 # In[62]:
 
+
 f_oz = fp+'..\\O3_273K_V3_0.dat'
 
 
 # In[63]:
+
 
 oz = np.genfromtxt(f_oz,skip_header=41)
 
 
 # In[64]:
 
+
 oz.shape
 
 
 # In[65]:
+
 
 gas = {}
 gas['o3_coef'] = oz[:,1]
@@ -180,11 +198,13 @@ gas['o3_wvl'] = oz[:,0]
 
 # In[66]:
 
+
 gas['o3_du'] = 261.0
 gas['o3_tau'] = gas['o3_coef']*2.54070E19*gas['o3_du']/1000.0 
 
 
 # In[67]:
+
 
 plt.figure()
 plt.semilogy(gas['o3_wvl'],gas['o3_tau'])
@@ -196,10 +216,12 @@ plt.ylabel('O3 $\\tau$')
 
 # In[68]:
 
+
 gas['o3_tau_band'] = cu.calc_gas_tau(c['band_wvl'],gas['o3_wvl'],gas['o3_tau'])
 
 
 # In[69]:
+
 
 gas['o3_tau_band'].shape
 
@@ -208,12 +230,14 @@ gas['o3_tau_band'].shape
 
 # In[70]:
 
+
 gas['o3_tau_band'][0,:] = 0.0
 
 
 # # Run analysis and calculate the airmass and rayleigh
 
 # In[71]:
+
 
 lat, lon, alt = 19.5365,-155.57615,3428.0
 
@@ -222,15 +246,18 @@ lat, lon, alt = 19.5365,-155.57615,3428.0
 
 # In[72]:
 
+
 c = su.calc_sza_airmass(c['DateTimeUTC'],lat,lon,alt,c=c)
 
 
 # In[17]:
 
+
 c.keys()
 
 
 # In[18]:
+
 
 c['Lt'].shape
 
@@ -239,10 +266,12 @@ c['Lt'].shape
 
 # In[73]:
 
+
 c['tau_rayleigh'],c['tau_rayleigh_err'] = cu.calc_rayleigh(c,press=680.0)
 
 
 # In[20]:
+
 
 c['wvl']
 
@@ -251,11 +280,13 @@ c['wvl']
 
 # In[22]:
 
+
 import matplotlib.dates as mdates
 fmt = mdates.DateFormatter('%H:%M')
 
 
 # In[22]:
+
 
 fig = plt.figure()
 for i,l in enumerate(c['wvl']):
@@ -268,10 +299,12 @@ plt.ylabel('$\\tau$')
 
 # In[23]:
 
+
 c['DateTimeUTC'][-1]
 
 
 # In[24]:
+
 
 fig = plt.figure()
 plt.plot(c['DateTimeUTC'],c['m_ray'],'.')
@@ -283,6 +316,7 @@ plt.ylabel('Rayleigh arimass')
 
 # In[25]:
 
+
 fig = plt.figure()
 plt.plot(c['DateTimeUTC'],c['sunearthf'],'.')
 fig.axes[0].xaxis.set_major_formatter(fmt)
@@ -292,6 +326,7 @@ plt.ylabel('Sun earth distance factor')
 
 
 # In[26]:
+
 
 fig = plt.figure()
 for i,l in enumerate(c['wvl']):
@@ -306,6 +341,7 @@ plt.ylabel('Transmission due to Rayleigh')
 
 # In[74]:
 
+
 c['tau_rayleigh_fl'],c['tau_rayleigh_fl_err'] = cu.calc_rayleigh_filter(c,band_wvl,press=680.0)
 
 
@@ -314,10 +350,12 @@ c['tau_rayleigh_fl'],c['tau_rayleigh_fl_err'] = cu.calc_rayleigh_filter(c,band_w
 
 # In[75]:
 
+
 c['Lt_aero'] = c['Lt']/np.array(c['sunearthf'])/np.exp(-np.array(c['m_ray'])*c['tau_rayleigh'])
 
 
 # In[25]:
+
 
 c['Lt_aero'].shape
 
@@ -326,11 +364,13 @@ c['Lt_aero'].shape
 
 # In[76]:
 
+
 c['Lt_aero_fl'] = np.zeros_like(c['Lt_aero'])
 c['tr_rayleigh'] = np.zeros_like(c['Lt_aero'])
 
 
 # In[77]:
+
 
 for i,l in enumerate(c['wvl']):
     tr = 1.0/np.exp(-np.array(c['m_ray'])[:,np.newaxis]*c['tau_rayleigh_fl'][i,:,:])
@@ -342,11 +382,13 @@ for i,l in enumerate(c['wvl']):
 
 # In[32]:
 
+
 import matplotlib.dates as mdates
 fmt = mdates.DateFormatter('%H:%M')
 
 
 # In[33]:
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -364,20 +406,24 @@ plt.ylabel('Transmission due to filter modified Rayleigh')
 
 # In[78]:
 
+
 c['tr_o3'] = np.zeros_like(c['Lt_aero'])
 
 
 # In[250]:
+
 
 c['m_o3']
 
 
 # In[29]:
 
+
 gas['o3_tau_band'].shape
 
 
 # In[79]:
+
 
 for i,l in enumerate(c['wvl']):
     tr = 1.0/np.exp(-np.array(c['m_o3'])[:,np.newaxis]*gas['o3_tau_band'][i,:])
@@ -388,6 +434,7 @@ for i,l in enumerate(c['wvl']):
 # ### plot the ozone transmission
 
 # In[268]:
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -406,6 +453,7 @@ plt.ylabel('Transmission due to Ozone absorption')
 
 # In[80]:
 
+
 from datetime import datetime
 import dateutil
 from dateutil.tz import tzutc
@@ -413,15 +461,18 @@ from dateutil.tz import tzutc
 
 # In[81]:
 
+
 fl = np.where((c['DateTimeUTC']>datetime(2016,7,2,16,tzinfo=dateutil.tz.tzutc())) & (c['DateTimeUTC']<datetime(2016,7,2,21,tzinfo=dateutil.tz.tzutc())))[0]
 
 
 # In[82]:
 
+
 fl_mu = (np.array(c['m_aero'])[fl]<12.0)&(np.array(c['m_aero'])[fl]>1.5)
 
 
 # In[141]:
+
 
 for i,l in enumerate(c['wvl']):
     fig = plt.figure()
@@ -436,6 +487,7 @@ for i,l in enumerate(c['wvl']):
 
 
 # In[195]:
+
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
@@ -459,6 +511,7 @@ plt.savefig(fp+'{:%Y%m%d}_timeseries_Lt.png'.format(c['DateTimeUTC'][0]),transpa
 # ### Plot the langleys seperated by channel
 
 # In[158]:
+
 
 fig,ax = plt.subplots(5,4,sharex=True,figsize=(12,9))
 ax = ax.ravel()
@@ -488,6 +541,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined.png'.format(c['DateTimeUTC'][0]),dpi=6
 
 
 # In[83]:
+
 
 fig,ax = plt.subplots(5,4,sharex=True,figsize=(12,9))
 ax = ax.ravel()
@@ -530,6 +584,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_bandwidth.png'.format(c['DateTimeUTC']
 
 # In[36]:
 
+
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
 color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.gist_ncar,ax=fig.axes[0])
@@ -559,6 +614,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_one.png'.format(c['DateTimeUTC'][0]),d
 
 # In[39]:
 
+
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
 color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.gist_ncar,ax=fig.axes[0])
@@ -586,6 +642,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_bandwitdth_one.png'.format(c['DateTime
 
 # In[270]:
 
+
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
 color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.gist_ncar,ax=fig.axes[0])
@@ -612,6 +669,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_bandwitdth_norm_one.png'.format(c['Dat
 
 # In[271]:
 
+
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
 color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.gist_ncar,ax=fig.axes[0])
@@ -636,6 +694,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_bandwitdth_norm_zoom_one.png'.format(c
 
 
 # In[272]:
+
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
@@ -662,6 +721,7 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_refined_bandwitdth_subtract_zoom_one.png'.form
 
 
 # In[273]:
+
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(111)
@@ -691,10 +751,12 @@ plt.savefig(fp+'{:%Y%m%d}_Lt_Lt0_one.png'.format(c['DateTimeUTC'][0]),dpi=600,tr
 
 # In[37]:
 
+
 from matplotlib.ticker import FormatStrFormatter
 
 
 # In[113]:
+
 
 plt.figure()
 plt.loglog(c['wvl'],c['langley_aod'],'o',label='C-AIR')
@@ -714,15 +776,18 @@ plt.savefig(fp+'{:%Y%m%d}_Langley_AOD.png'.format(c['DateTimeUTC'][0]),dpi=600,t
 
 # In[114]:
 
+
 xa,ya = pu.plotmatfig(fp+'..\\figs\\AATS20160702amstdev_mult3LangleyAOD.fig')
 
 
 # In[117]:
 
+
 aats_wvl,aats_tau = xa[0],ya[0]
 
 
 # In[125]:
+
 
 plt.figure()
 plt.loglog(c['wvl'],c['langley_aod'],'o',label='C-AIR')
@@ -744,10 +809,12 @@ plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_AOD.png'.format(c['DateTimeUTC'][0])
 
 # In[123]:
 
+
 pu.plotmatfig(fp+'AATS20160702amstdev_mult3LangleyperV0calc.fig')
 
 
 # In[39]:
+
 
 x,y = pu.plotmatfig(fp+'AATS20160702amstdev_mult3LangleyperlogV0calc.fig')
 
@@ -756,16 +823,19 @@ x,y = pu.plotmatfig(fp+'AATS20160702amstdev_mult3LangleyperlogV0calc.fig')
 
 # In[40]:
 
+
 len(x)
 
 
 # In[41]:
+
 
 aats = {}
 aats['wvl'] = [353.3,380.0,451.2,499.4,520.4,605.8,675.1,779.1,864.5,1019.1,1241.3,1558.5,2139.1]
 
 
 # In[42]:
+
 
 aats['V'] = np.zeros((len(x)/2,len(y[0])))*np.nan
 aats['V_good'] = np.zeros((len(x)/2,len(y[0])))*np.nan
@@ -774,6 +844,7 @@ aats['m_good'] = np.zeros((len(x)/2,len(y[0])))*np.nan
 
 
 # In[43]:
+
 
 for i in range(0,len(x),2):
     aats['m'][i/2,:] = x[i]
@@ -785,6 +856,7 @@ for i in range(0,len(x),2):
 # ### Make the plot of log I - log I0 for cAIR and AATS
 
 # In[287]:
+
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(121)
@@ -847,6 +919,7 @@ plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_subtract.png'.format(c['DateTimeUTC'
 
 # In[84]:
 
+
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(121)
 color.cycle_cmap(len(c['wvl'])+1,cmap=plt.cm.gist_ncar,ax=fig.axes[0])
@@ -908,21 +981,25 @@ plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_subtract_zoom_adjusted.png'.format(c
 
 # In[52]:
 
+
 i_cair = [2,4,5,6,11,14,15,16,17]
 i_aats = [1,2,3,4,6,7,8,9,10]
 
 
 # In[91]:
 
+
 c_cair_aats = plt.cm.jet(len(i_cair))
 
 
 # In[103]:
 
+
 c_cair_aats = plt.cm.jet(np.arange(len(i_cair))/float(len(i_cair)))
 
 
 # In[51]:
+
 
 import cmaps
 cmaps.cmaps()
@@ -930,10 +1007,12 @@ cmaps.cmaps()
 
 # In[93]:
 
+
 c_cair_aats
 
 
 # In[110]:
+
 
 fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(121)
@@ -1006,9 +1085,4 @@ plt.ylabel('log(V) - log(V$_0$)')
 ax.set_title('AATS-14')
 plt.savefig(fp+'{:%Y%m%d}_CAIR_AATS_Langley_highlight.png'.format(c['DateTimeUTC'][0]),
             dpi=600,transparent=True)
-
-
-# In[ ]:
-
-
 
