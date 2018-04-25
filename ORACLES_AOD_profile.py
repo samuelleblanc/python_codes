@@ -163,7 +163,7 @@ iflt = ((ifl) & (s['utc']>=11.8667) & (s['utc']<=12.25))
 iflt = iflt.flatten()
 
 
-# In[14]:
+# In[15]:
 
 
 print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profile:',iflt.shape,      'selected valid',ifl.sum(),'selected valid during profile',iflt.sum()
@@ -199,20 +199,20 @@ plt.plot(s['tau_aero'][ifl,400],s['Alt'][ifl],'+r')
 plt.plot(s['tau_aero'][iflt,400],s['Alt'][iflt],'xg')
 
 
-# In[15]:
+# In[16]:
 
 
 # profile = [13.24,13.56] for 20160904
 profile = [11.8667, 12.25]
 
 
-# In[16]:
+# In[17]:
 
 
 it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,400]<0.8)
 
 
-# In[17]:
+# In[18]:
 
 
 it = it.flatten()
@@ -220,25 +220,25 @@ it = it.flatten()
 
 # ## Load the 4STAR dirty clean correction file
 
-# In[18]:
+# In[19]:
 
 
 s_dirty = fmat+'20160920_AOD_merge_marks.mat'
 
 
-# In[19]:
+# In[20]:
 
 
 dm = sio.loadmat(s_dirty)
 
 
-# In[28]:
+# In[21]:
 
 
 dm.keys()
 
 
-# In[20]:
+# In[22]:
 
 
 dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
@@ -246,7 +246,7 @@ dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
 
 # ### Create a full wavelength tau correction from polyfit
 
-# In[21]:
+# In[23]:
 
 
 import Sun_utils as su
@@ -254,7 +254,7 @@ from scipy import polyval
 from write_utils import nearest_neighbor
 
 
-# In[22]:
+# In[24]:
 
 
 dm['dAODs'].shape
@@ -262,13 +262,13 @@ dm['dAODs'].shape
 
 # Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
 
-# In[23]:
+# In[25]:
 
 
 [(i,iv) for i,iv in enumerate(dm['wl_nm'].flatten())]
 
 
-# In[24]:
+# In[26]:
 
 
 daod = []
@@ -280,39 +280,39 @@ daod = np.array(daod)
 daod.shape
 
 
-# In[25]:
+# In[27]:
 
 
 dm['dAODs'].shape
 
 
-# In[26]:
+# In[28]:
 
 
 dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=2) for i in xrange(len(s['utc']))]    
 np.shape(dm['polyaod'])
 
 
-# In[27]:
+# In[29]:
 
 
 dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
 
 
-# In[28]:
+# In[30]:
 
 
 np.shape(dm['tau']),s['tau_aero'].shape
 
 
-# In[30]:
+# In[31]:
 
 
 s_list = s.keys()
 s_list.sort()
 
 
-# In[29]:
+# In[32]:
 
 
 aod = s['tau_aero']-np.array(dm['tau'])
@@ -364,7 +364,7 @@ plt.savefig(fp+'plot/map_take_off_profile_{dd}.png'.format(dd=dd),dpi=600,transp
 
 # ## Vertical profile of AOD
 
-# In[31]:
+# In[33]:
 
 
 i515 = np.argmin(abs(s['w']*1000.0-515.0))
@@ -373,25 +373,25 @@ i865 = np.argmin(abs(s['w']*1000.0-865.0))
 i1250 = np.argmin(abs(s['w']*1000.0-1250.0))
 
 
-# In[32]:
+# In[34]:
 
 
 ii = np.where(it)[0][-3]
 
 
-# In[33]:
+# In[35]:
 
 
 tau_max = 1.0
 
 
-# In[34]:
+# In[36]:
 
 
 ii
 
 
-# In[35]:
+# In[37]:
 
 
 s['tau_aero'].shape
@@ -429,20 +429,20 @@ plt.setp(ax.get_xticklabels(), visible=True)
 plt.savefig(fp+'plot/AOD_Alt_profile_{}.png'.format(dd),dpi=600,transparent=True)
 
 
-# In[36]:
+# In[38]:
 
 
 u = np.where(it)[0]
 iit = u[np.linspace(0,len(u)-1,6).astype(int)]
 
 
-# In[37]:
+# In[39]:
 
 
 tau_max = 1.2
 
 
-# In[38]:
+# In[40]:
 
 
 w_archive = [354.9,380.0,451.7,470.2,500.7,520,530.3,532.0,550.3,605.5,619.7,660.1,675.2,699.7,780.6,864.6,1019.9,1039.6,1064.2,1235.8,1249.9,1558.7,1626.6,1650.1]
@@ -568,7 +568,7 @@ plt.savefig(fp+'plot/AOD_Alt_profile_loglog_hsrlwvl_{}.png'.format(dd),dpi=500,t
 
 # ### Redo the color plot, but with shading for the gas aod
 
-# In[39]:
+# In[43]:
 
 
 s['tau_aero'][:,1041] = np.nan
@@ -591,7 +591,7 @@ ax3.set_ylim([0.03,tau_max*1.05])
 plt.grid()
 
 
-# In[40]:
+# In[41]:
 
 
 shade_rg = [[584.0,597.0],
@@ -608,7 +608,7 @@ shade_rg = [[584.0,597.0],
             [1293.0,1521.0]]
 
 
-# In[41]:
+# In[42]:
 
 
 i501 = np.argmin(abs(s['w']*1000.0-501.0))
@@ -678,7 +678,7 @@ plt.setp(ax.get_xticklabels(), visible=True)
 plt.savefig(fp+'plot_v2/AOD_Alt_profile_loglog_hsrlwvl_shaded_{}.png'.format(dd),dpi=500,transparent=True)
 
 
-# In[85]:
+# In[44]:
 
 
 fig = plt.figure(figsize=(11,8))
@@ -713,7 +713,7 @@ for line,text in zip(leg.get_lines(), leg.get_texts()):
     text.set_color(line.get_color())
     line.set_linewidth(5.0)
 axc = plt.colorbar(cb,extend='max')
-axc.set_label('Aerosol Optical Thickness')
+axc.set_label('AOD')
 
 ax3 = plt.subplot2grid((4,4),(3,0),sharex=ax,colspan=3)
 for i in iit:
