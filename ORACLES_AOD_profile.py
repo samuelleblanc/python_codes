@@ -113,13 +113,13 @@ f_star = fp+'data/4STAR_{}starsun.mat'.format(dd)
 s = sio.loadmat(f_star)
 
 
-# In[15]:
+# In[8]:
 
 
 s.keys()
 
 
-# In[8]:
+# In[9]:
 
 
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
@@ -127,13 +127,13 @@ s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 # ## Get the flag file
 
-# In[9]:
+# In[10]:
 
 
 fmat = getpath('4STAR_data',make_path=True,path='/mnt/c/Users/sleblanc/Research/4STAR_codes/data_folder/')
 
 
-# In[10]:
+# In[11]:
 
 
 with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
@@ -143,20 +143,20 @@ with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[11]:
+# In[12]:
 
 
 sf.keys()
 
 
-# In[12]:
+# In[13]:
 
 
 ifl = (np.array(sf['bad_aod'])==0) & (np.array(sf['unspecified_clouds'])==0) & (np.array(sf['cirrus'])==0)
 ifl = ifl.flatten()
 
 
-# In[13]:
+# In[14]:
 
 
 iflt = ((ifl) & (s['utc']>=11.8667) & (s['utc']<=12.25))
@@ -181,7 +181,7 @@ plt.plot(s['utc'][iflt],s['Alt'][iflt],'xg',label='Profile valid data points')
 plt.legend(loc=2,numpoints=1,frameon=False)
 
 
-# In[88]:
+# In[17]:
 
 
 plt.figure()
@@ -190,7 +190,7 @@ plt.plot(s['utc'][ifl],s['tau_aero'][ifl,400],'+r')
 plt.plot(s['utc'][iflt],s['tau_aero'][iflt,400],'xg')
 
 
-# In[89]:
+# In[18]:
 
 
 plt.figure()
@@ -199,20 +199,20 @@ plt.plot(s['tau_aero'][ifl,400],s['Alt'][ifl],'+r')
 plt.plot(s['tau_aero'][iflt,400],s['Alt'][iflt],'xg')
 
 
-# In[16]:
+# In[19]:
 
 
 # profile = [13.24,13.56] for 20160904
 profile = [11.8667, 12.25]
 
 
-# In[17]:
+# In[20]:
 
 
 it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,400]<0.8)
 
 
-# In[18]:
+# In[21]:
 
 
 it = it.flatten()
@@ -220,25 +220,25 @@ it = it.flatten()
 
 # ## Load the 4STAR dirty clean correction file
 
-# In[19]:
+# In[22]:
 
 
 s_dirty = fmat+'20160920_AOD_merge_marks.mat'
 
 
-# In[20]:
+# In[23]:
 
 
 dm = sio.loadmat(s_dirty)
 
 
-# In[21]:
+# In[24]:
 
 
 dm.keys()
 
 
-# In[22]:
+# In[25]:
 
 
 dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
@@ -246,7 +246,7 @@ dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
 
 # ### Create a full wavelength tau correction from polyfit
 
-# In[23]:
+# In[26]:
 
 
 import Sun_utils as su
@@ -254,7 +254,7 @@ from scipy import polyval
 from write_utils import nearest_neighbor
 
 
-# In[24]:
+# In[27]:
 
 
 dm['dAODs'].shape
@@ -262,13 +262,13 @@ dm['dAODs'].shape
 
 # Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
 
-# In[25]:
+# In[28]:
 
 
 [(i,iv) for i,iv in enumerate(dm['wl_nm'].flatten())]
 
 
-# In[26]:
+# In[29]:
 
 
 daod = []
@@ -286,37 +286,43 @@ daod.shape
 dm['dAODs'].shape
 
 
-# In[28]:
+# In[30]:
 
 
 dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=2) for i in xrange(len(s['utc']))]    
 np.shape(dm['polyaod'])
 
 
-# In[29]:
+# In[31]:
 
 
 dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
 
 
-# In[30]:
+# In[32]:
 
 
 np.shape(dm['tau']),s['tau_aero'].shape
 
 
-# In[31]:
+# In[33]:
 
 
 s_list = s.keys()
 s_list.sort()
 
 
-# In[32]:
+# In[34]:
 
 
 aod = s['tau_aero']-np.array(dm['tau'])
 aod.shape
+
+
+# In[119]:
+
+
+aod[it,i501][0],s['Alt'][it][0]
 
 
 # ### Plot to ensure proper correction
@@ -350,6 +356,18 @@ def make_map(ax=plt.gca()):
     return m
 
 
+# In[110]:
+
+
+np.nanmean(s['Lon'][it]),np.nanmean(s['Lat'][it])
+
+
+# In[114]:
+
+
+s['tau_aero'][it,i501]
+
+
 # In[95]:
 
 
@@ -364,7 +382,7 @@ plt.savefig(fp+'plot/map_take_off_profile_{dd}.png'.format(dd=dd),dpi=600,transp
 
 # ## Vertical profile of AOD
 
-# In[33]:
+# In[35]:
 
 
 i515 = np.argmin(abs(s['w']*1000.0-515.0))
@@ -373,25 +391,25 @@ i865 = np.argmin(abs(s['w']*1000.0-865.0))
 i1250 = np.argmin(abs(s['w']*1000.0-1250.0))
 
 
-# In[34]:
+# In[36]:
 
 
 ii = np.where(it)[0][-3]
 
 
-# In[35]:
+# In[37]:
 
 
 tau_max = 1.0
 
 
-# In[36]:
+# In[38]:
 
 
 ii
 
 
-# In[37]:
+# In[39]:
 
 
 s['tau_aero'].shape
@@ -429,20 +447,20 @@ plt.setp(ax.get_xticklabels(), visible=True)
 plt.savefig(fp+'plot/AOD_Alt_profile_{}.png'.format(dd),dpi=600,transparent=True)
 
 
-# In[38]:
+# In[40]:
 
 
 u = np.where(it)[0]
 iit = u[np.linspace(0,len(u)-1,6).astype(int)]
 
 
-# In[39]:
+# In[41]:
 
 
 tau_max = 1.2
 
 
-# In[40]:
+# In[42]:
 
 
 w_archive = [354.9,380.0,451.7,470.2,500.7,520,530.3,532.0,550.3,605.5,619.7,660.1,675.2,699.7,780.6,864.6,1019.9,1039.6,1064.2,1235.8,1249.9,1558.7,1626.6,1650.1]
@@ -591,7 +609,7 @@ ax3.set_ylim([0.03,tau_max*1.05])
 plt.grid()
 
 
-# In[41]:
+# In[44]:
 
 
 shade_rg = [[584.0,597.0],
@@ -608,7 +626,7 @@ shade_rg = [[584.0,597.0],
             [1293.0,1521.0]]
 
 
-# In[42]:
+# In[45]:
 
 
 i501 = np.argmin(abs(s['w']*1000.0-501.0))
@@ -743,20 +761,20 @@ plt.savefig(fp+'plot_v2/AOD_Alt_profile_loglog_hsrlwvl_shaded_v2_{}.png'.format(
 
 # ### Add the angstrom exponent vertical dependence
 
-# In[42]:
+# In[73]:
 
 
 import Sun_utils as su
 
 
-# In[43]:
+# In[74]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[44]:
+# In[48]:
 
 
 for i in np.where(it)[0]:
@@ -768,16 +786,29 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[45]:
+# In[49]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,515.0,865.0,1250.0],polynum=4)
 
 
-# In[46]:
+# In[50]:
 
 
 s['angs'].shape
+
+
+# In[77]:
+
+
+i470 = np.argmin(abs(s['w']*1000.0-470.0))
+i865 = np.argmin(abs(s['w']*1000.0-865.0))
+s['angs_470_865'] = []
+for i in np.where(it)[0]:
+    to = np.log(s['tau_aero'][i,i865])-np.log(s['tau_aero'][i,i470])
+    bo = np.log(s['w'][0,i865]*1000.0)-np.log(s['w'][0,i470]*1000.0)
+    s['angs_470_865'].append(to/bo*-1.0)
+s['angs_470_865'] = np.array(s['angs_470_865'])
 
 
 # In[364]:
@@ -790,7 +821,14 @@ plt.plot(s['angs'][:,2],s['Alt'][it],'.',label='865 nm')
 plt.legend(numpoints=1,frameon=False)
 
 
-# In[47]:
+# In[78]:
+
+
+plt.figure()
+plt.plot(s['angs_470_865'],s['Alt'][it])
+
+
+# In[51]:
 
 
 def smoothb(y, box_pts):
@@ -870,6 +908,69 @@ ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(d
 plt.savefig(fp+'plot/AOD_Alt_profile_log_angstrom_{}.png'.format(dd),dpi=600,transparent=True)
 
 
+# In[ ]:
+
+
+fig = plt.figure(figsize=(11,8))
+plt.title('{} profile at {}h'.format(dd,profile[0]))
+ax = plt.subplot2grid((4,4),(0,0),colspan=3,rowspan=3)
+cb = ax.pcolor(s['w'].flatten()*1000.0,s['Alt'][it].flatten(),s['tau_aero'][it,:][:-1,:-1],
+                   cmap='gist_ncar',vmin=0,vmax=tau_max)
+for rg in shade_rg:
+    plt.axvspan(rg[0],rg[1],color='white',alpha=0.75)
+plt.xscale('log')
+ax.set_ylabel('Altitude [m]')
+ax.set_ylim([900,6700])
+ax.set_xscale('log')
+
+ax2 = plt.subplot2grid((4,4),(0,3),sharey=ax,rowspan=3)
+
+#ax2.plot(s['tau_aero'][it,i355],s['Alt'][it],'.-',color='purple',label='355 nm')
+ax2.plot(s['tau_aero'][it,i501],s['Alt'][it],'g.-',label='501 nm')
+ax2.plot(s['tau_aero'][it,i865],s['Alt'][it],'r.-',label='865 nm')
+ax2.plot(s['tau_aero'][it,i1064],s['Alt'][it],'.-',color='y',label='1064 nm')
+
+#ax2.plot(s['tau_aero'][it,i1250],s['Alt'][it],'.-',color='grey',label='1250 nm')
+
+plt.setp(ax2.get_yticklabels(), visible=False)
+ax2.set_xticks([0.0,0.2,0.4,0.6])
+ax2.set_xlim([0.0,0.7])
+plt.grid()
+ax2.set_xlabel('AOD')
+ax2.set_ylim([900,6700])
+leg = ax2.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+axc = plt.colorbar(cb,extend='max')
+axc.set_label('AOD')
+
+ax3 = plt.subplot2grid((4,4),(3,0),sharex=ax,colspan=3)
+for i in iit:
+    p =ax3.plot(s['w'].flatten()*1000.0,s['tau_aero'][i,:].flatten(),label='Alt: {:4.0f} m'.format(s['Alt'][i][0]))
+    p =ax3.plot(s['w'].flatten()[iw_archive]*1000.0,s['tau_aero'][i,iw_archive].flatten(),'x',color=p[0].get_color())
+    ax.axhline(s['Alt'][i][0],ls='--',color=p[0].get_color(),lw=2)
+for rg in shade_rg:
+    ax3.axvspan(rg[0],rg[1],color='white',alpha=0.75,zorder=200)
+ax.set_xlim([350,1650])
+ax3.set_ylim([0.03,tau_max*1.05])
+ax.set_xscale('log')
+ax3.set_xscale('log')
+ax3.set_yscale('log')
+ax.set_xticks([350,400,500,600,750,900,1000,1200,1600])
+ax.set_xticklabels([350,400,500,600,750,900,1000,1200,1600])
+ax3.grid()
+leg = ax3.legend(frameon=False,loc=2,numpoints=1,bbox_to_anchor=(1.0,0.94),handlelength=0.2)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+ax3.set_xlabel('Wavelength [nm]')
+ax3.set_ylabel('AOD')
+ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(dd=dd,t0=profile[0],t1=profile[1]))
+plt.setp(ax.get_xticklabels(), visible=True)
+plt.savefig(fp+'plot_v2/AOD_Alt_profile_loglog_hsrlwvl_shaded_v2_{}.png'.format(dd),dpi=500,transparent=True)
+
+
 # ## Redo but with the dirty corrected data
 
 # In[441]:
@@ -879,13 +980,13 @@ plt.figure()
 plt.plot(s['utc'],aod[:,400])
 
 
-# In[48]:
+# In[52]:
 
 
 polylogaod = np.array([su.logaod_polyfit(s['w'].flatten()[iw_archive]*1000.0,aod[i,iw_archive],polynum=4) for i in np.where(it)[0]])
 
 
-# In[49]:
+# In[53]:
 
 
 angs = su.angstrom_from_logpoly(polylogaod,[380.0,515.0,865.0,1250.0],polynum=4)
@@ -964,7 +1065,7 @@ ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(d
 
 # ## Vertical profile of extinction
 
-# In[50]:
+# In[54]:
 
 
 from Sp_parameters import deriv,smooth
@@ -972,21 +1073,21 @@ import scipy.stats as st
 import scipy.interpolate as si
 
 
-# In[51]:
+# In[55]:
 
 
 s['ext'] = np.zeros_like(s['tau_aero'])
 
 
-# In[52]:
+# In[121]:
 
 
 for l,w in enumerate(s['w'][0]):
-    s['ext'][it,l] = smooth(deriv(smooth(s['tau_aero'][it,l],50,nan=False,old=True),
-                                  s['Alt'][it][:,0])*-1000000.0,5,nan=False,old=True)
+    s['ext'][it,l] = smooth(deriv(smooth(aod[it,l],50,nan=False,old=True),
+                                  s['Alt'][it][:,0])*-1000000.0,9,nan=False,old=True)
 
 
-# In[53]:
+# In[70]:
 
 
 def calc_ext(aod,alt,dz,su=0.0006):
@@ -1003,7 +1104,7 @@ def calc_ext(aod,alt,dz,su=0.0006):
     return extc,dz_bin
 
 
-# In[54]:
+# In[71]:
 
 
 s['ext_spline'] = []
@@ -1014,7 +1115,7 @@ s['ext_spline'] = np.array(s['ext_spline'])
 s['ext_spline'].shape
 
 
-# In[81]:
+# In[72]:
 
 
 plt.figure()
@@ -1175,7 +1276,7 @@ plt.savefig(fp+'plot_v2/Ext_Alt_profile_spline_{dd}.png'.format(dd=dd),dpi=600,t
 
 # ### Extinction profile, with spaces in missing data
 
-# In[55]:
+# In[59]:
 
 
 alts = s['Alt'][it].flatten()
@@ -1231,19 +1332,19 @@ plt.savefig(fp+'plot_v2/Ext_Alt_profile_derivative_empty_{dd}.png'.format(dd=dd)
 
 # # Add CO concentration
 
-# In[56]:
+# In[60]:
 
 
 import load_utils as lu
 
 
-# In[57]:
+# In[61]:
 
 
 coma,coma_h = lu.load_ict(fp+'/data_other/COMA_P3_20160920_R0.ict',return_header=True)
 
 
-# In[58]:
+# In[62]:
 
 
 itc = (coma['Start_UTC']>=profile[0]) & (coma['Start_UTC']<=profile[1]) & (coma['CO_ppbv']>0)
@@ -1251,7 +1352,7 @@ itc = (coma['Start_UTC']>=profile[0]) & (coma['Start_UTC']<=profile[1]) & (coma[
 
 # ## Now add the CO to the figure
 
-# In[59]:
+# In[63]:
 
 
 co_fx = si.interp1d(coma['Start_UTC'],coma['CO_ppbv'])
@@ -1273,14 +1374,14 @@ cb.set_label('CO [ppbv]')
 plt.savefig(fp+'plot_v2/Ext_Alt_profile_CO_{dd}.png'.format(dd=dd),dpi=600,transparent=True)
 
 
-# In[60]:
+# In[64]:
 
 
 it_g = s['ext'][it,i501]>0.0
 gg = np.where(it_g)[0]
 
 
-# In[61]:
+# In[65]:
 
 
 it_g.shape
@@ -1452,6 +1553,149 @@ plt.setp(ax4.get_yticklabels(), visible=False)
 plt.grid()
     
 plt.savefig(fp+'plot_v2/Ext_Alt_profile_derivative_vs_AOD_vs_CO_{dd}.png'.format(dd=dd),dpi=600,transparent=True)
+
+
+# In[122]:
+
+
+fig = plt.figure(figsize=(9,6))
+ax2 = plt.subplot2grid((1,4),(0,2))
+
+ax2.plot(s['ext'][it,i355],s['Alt'][it],'.',color='purple',label='355 nm')
+ax2.plot(s['ext'][it,i532],s['Alt'][it],'g.',label='535 nm')
+ax2.plot(s['ext'][it,i865],s['Alt'][it],'r.',label='865 nm')
+ax2.plot(s['ext'][it,i1064],s['Alt'][it],'.',color='y',label='1064 nm')
+ax2.plot(s['ext'][it,i1250],s['Alt'][it],'.',color='grey',label='1250 nm')
+
+ax2.set_xticks([0.0,200.0,400.0,600.0])
+ax2.set_xlim([0.0,800.0])
+ax2.set_ylim([900,6700])
+ax2.set_xlabel('Extinction [1/Mm]')
+plt.grid()
+leg = ax2.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2,labelspacing=0.1)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+    
+plt.setp(ax2.get_yticklabels(), visible=False)
+
+ax3 = plt.subplot2grid((1,4),(0,0),sharey=ax2)
+ax3.plot(aod[it,i355],s['Alt'][it],'.',color='purple',label='355 nm')
+ax3.plot(aod[it,i532],s['Alt'][it],'g.',label='535 nm')
+ax3.plot(aod[it,i865],s['Alt'][it],'r.',label='865 nm')
+ax3.plot(aod[it,i1064],s['Alt'][it],'.',color='y',label='1064 nm')
+ax3.plot(aod[it,i1250],s['Alt'][it],'.',color='grey',label='1250 nm')
+
+
+ax3.set_xticks([0.0,0.200,0.400,0.600,0.8])
+ax3.set_xlim([0.0,1.000])
+ax3.set_ylim([900,6700])
+ax3.set_xlabel('AOD')
+ax3.set_ylabel('Altitude [m]')
+plt.grid()
+
+leg = ax3.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2,labelspacing=0.1)
+for line,text in zip(leg.get_lines(), leg.get_texts()):
+    text.set_color(line.get_color())
+    line.set_linewidth(5.0)
+    
+axa = plt.subplot2grid((1,4),(0,1),sharey=ax2)
+ita = s['tau_aero'][it,i532]>0.1
+axa.plot(s['angs_470_865'][ita],s['Alt'][it][ita],'.')
+axa.set_xlabel('AE 470 / 865')
+axa.set_ylim([900,6700])
+plt.setp(axa.get_yticklabels(), visible=False)
+axa.set_xticks([1.25,1.5,1.75,2.0])
+plt.grid()
+
+ax4 = plt.subplot2grid((1,4),(0,3),sharey=ax2)
+ax4.plot(co,s['Alt'][it],'.')
+ax4.set_xlabel('CO [ppbv]')
+ax4.set_xlim(0,350)
+ax4.set_xticks([0,50,150,250,350])
+ax4.set_ylim([900,6700])
+plt.setp(ax4.get_yticklabels(), visible=False)
+plt.grid()
+    
+plt.savefig(fp+'plot_v2/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_{dd}.png'.format(dd=dd),dpi=600,transparent=True)
+
+
+# # Add the in situ extinction
+
+# In[96]:
+
+
+mrg,mrgh = lu.load_netcdf(fp+'data_other/merge/mrg1_P3_20160920_R21.nc',(('nwvl',49),('exttot',195),('scattot',195),('time',0),('utc',2),('time_bounds',1),('Alt',6)))
+
+
+# In[97]:
+
+
+mrgh['exttot']
+
+
+# In[98]:
+
+
+itm = (mrg['utc']/3600.0>profile[0]) & (mrg['utc']/3600.0<profile[1])
+
+
+# In[99]:
+
+
+mrg['nwvl']
+
+
+# In[100]:
+
+
+i450 = np.argmin(np.abs(s['w']*1000.0-450.0)) 
+i550 = np.argmin(np.abs(s['w']*1000.0-550.0))
+i700 = np.argmin(np.abs(s['w']*1000.0-700.0))
+
+
+# In[108]:
+
+
+plt.figure()
+plt.plot(mrg['exttot'][itm,0],mrg['Alt'][itm],'x',label='450 nm')
+plt.plot(mrg['exttot'][itm,1],mrg['Alt'][itm],'x',label='550 nm')
+plt.plot(mrg['exttot'][itm,2],mrg['Alt'][itm],'x',label='700 nm')
+
+
+#plt.plot(s['ext'][it,i450]/2,s['Alt'][it],'.',color='purple',label='450 nm')
+#plt.plot(s['ext'][it,i550]/2,s['Alt'][it],'g.',label='550 nm')
+#plt.plot(s['ext'][it,i700]/2,s['Alt'][it],'r.',label='700 nm')
+
+plt.plot(s['ext_spline'][i450,:]/2,altz,'s',color='lightcoral',label='450 nm')
+
+
+# In[109]:
+
+
+len(mrg['exttot'][itm,0]),len(s['ext'][it,i450])
+
+
+# # Save to file
+
+# In[67]:
+
+
+import hdf5storage as hs
+
+
+# In[66]:
+
+
+saves = {'tau_aero':s['tau_aero'][it,:],'extinction':s['ext'][it,:],
+         'Altitude':s['Alt'][it],'UTC':s['utc'][it],'Profile_time_bounds':profile,
+         'CO_ppbv':co,'wvl':s['w']*1000.0}
+
+
+# In[68]:
+
+
+hs.savemat(fp+'AOD_profile_{}.mat'.format(dd),saves)
 
 
 # # Now load the HSRL data and plot that

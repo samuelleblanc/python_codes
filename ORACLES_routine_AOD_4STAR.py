@@ -199,7 +199,7 @@ s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
 
 # ## MODIS climatology
 
-# In[18]:
+# In[17]:
 
 
 fp
@@ -208,7 +208,7 @@ fp
 # From Rob Wood, email on 2016-11-08, 15:35, 
 # These are just the all-years means (the black lines), for the month of September (DOY 244 to 273)
 
-# In[19]:
+# In[18]:
 
 
 m = sio.netcdf_file(fp+'data_other/climatology/mombl_oracles_routine_flight_NW-SE.nc')
@@ -220,7 +220,7 @@ m = sio.netcdf_file(fp+'data_other/climatology/mombl_oracles_routine_flight_NW-S
 m.variables
 
 
-# In[21]:
+# In[19]:
 
 
 m2 = sio.netcdf_file(fp+'data_other/climatology/mombl_oracles_routine_flight_NW-SE_all.nc')
@@ -255,32 +255,32 @@ m2.variables['AOD_YRMEAN'].data
 # Here’s a short description of the dataset (Kerry, please correct me if I’m wrong):
 # Combination of MODIS and TERRA AAC AOD, high-resolution 0.1 x 0.1º. Suggested quality filtering is applied. Parameter is "Above_Cloud_AOT_MOD04Abs" i.e retrievals assuming the MOD04 absorbing aerosol model rather than the Haywood/SAFARI-2000 model, which is what is used to create the near-real time retrieval imagery in the field for ORACLES.
 
-# In[25]:
+# In[20]:
 
 
 import datetime
 import load_utils as lu
 
 
-# In[26]:
+# In[21]:
 
 
 aac = sio.loadmat(fp+'data_other/MODIS_AAC/MODIS_AAC_per_bin_all_flights_20160801_20161031.mat')
 
 
-# In[27]:
+# In[22]:
 
 
 aac['data_aac'][0,0].dtype.names
 
 
-# In[28]:
+# In[23]:
 
 
 daac = []
 
 
-# In[29]:
+# In[24]:
 
 
 for i in xrange(len(aac['data_aac'][0,:])):
@@ -288,7 +288,7 @@ for i in xrange(len(aac['data_aac'][0,:])):
     daac.append(lu.recarray_to_dict(aac['data_aac'][0,i]))
 
 
-# In[30]:
+# In[25]:
 
 
 # simplify the dict
@@ -297,7 +297,7 @@ for i in xrange(len(daac)):
         daac[i][k] = daac[i][k][0,0]
 
 
-# In[31]:
+# In[26]:
 
 
 for i in xrange(len(daac)):
@@ -312,7 +312,7 @@ for i in xrange(len(daac)):
 len(daac)
 
 
-# In[33]:
+# In[27]:
 
 
 i_aug = range(0,31)
@@ -332,25 +332,25 @@ i_flt = [30,34,38,40,42,55]
 
 # # Subset for routine flight
 
-# In[34]:
+# In[28]:
 
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[35]:
+# In[29]:
 
 
 d_rtnf = [20160831.0,20160904.0,20160908.0,20160910.0,20160912.0,20160925.0]
 
 
-# In[36]:
+# In[30]:
 
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[37]:
+# In[31]:
 
 
 s['days'][0]
@@ -362,7 +362,7 @@ s['days'][0]
 ff
 
 
-# In[39]:
+# In[32]:
 
 
 ff = []
@@ -370,21 +370,21 @@ for d in d_rtnf:
     ff.append(s['days']==d)
 
 
-# In[40]:
+# In[33]:
 
 
 fl = ((s['days']==d_rtnf[0]) | (s['days']==d_rtnf[1]) | (s['days']==d_rtnf[2]) | 
       (s['days']==d_rtnf[3]) | (s['days']==d_rtnf[4]) | (s['days']==d_rtnf[5]))
 
 
-# In[41]:
+# In[34]:
 
 
 s['fl_rtn'] = fl & s['fl']
 s['fl_rtn']
 
 
-# In[42]:
+# In[35]:
 
 
 s['fl_rtna'] = fl & s['fl_acaod']
@@ -457,7 +457,7 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_hist_MODIS.png',transparent=True,dpi=600)
 
 # ## Use bins from heat map to make box whisker plot
 
-# In[43]:
+# In[36]:
 
 
 bins = []
@@ -468,7 +468,7 @@ for i,c in enumerate(cc[1][0:-2]):
     pos.append((c+cc[1][i+1])/2.0)
 
 
-# In[44]:
+# In[334]:
 
 
 def color_box(bp, color):
@@ -580,32 +580,32 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box2_simpler_MODIS.png',transparent=True,
 
 # ## Now try with same bins as MODIS
 
-# In[45]:
+# In[316]:
 
 
 pos3 = m.variables['LONGITUDE'].data[0,:]
 
 
-# In[46]:
+# In[317]:
 
 
 pos3
 
 
-# In[47]:
+# In[318]:
 
 
 lims3 = pos3-0.5
 lims3= np.append(lims3,pos3[-1]+0.5)
 
 
-# In[48]:
+# In[319]:
 
 
 lims3
 
 
-# In[49]:
+# In[320]:
 
 
 bins3 = []
@@ -614,7 +614,7 @@ for i,c in enumerate(lims3[0:-1]):
     bins3.append(s['AOD0501'][s['fl_rtn']][lon_fl])
 
 
-# In[50]:
+# In[321]:
 
 
 bins3a = []
@@ -623,13 +623,13 @@ for i,c in enumerate(lims3[0:-1]):
     bins3a.append(s['AOD0501'][s['fl_rtna']][lon_fl])
 
 
-# In[51]:
+# In[322]:
 
 
 len(lims3)
 
 
-# In[52]:
+# In[323]:
 
 
 len(bins3)
@@ -713,33 +713,33 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 plt.savefig(fp+'plot/Climat_AAC_flagged_4STAR_box3_simpler_MODIS_median.png',transparent=True,dpi=600)
 
 
-# In[54]:
+# In[311]:
 
 
 s['fl_alt12'] = (s['GPS_Alt']>=600)&(s['GPS_Alt']<1200)
 s['fl_alt16'] = (s['GPS_Alt']>=500)&(s['GPS_Alt']<1600)
 
 
-# In[55]:
+# In[312]:
 
 
 s['fl_alt12']
 
 
-# In[56]:
+# In[313]:
 
 
 s['fl_rtn_12'] = s['fl_alt12'] & s['fl_QA'] & s['fl_rtn']
 s['fl_rtn_16'] = s['fl_alt16'] & s['fl_QA'] & s['fl_rtn']
 
 
-# In[57]:
+# In[314]:
 
 
 s['fl_rtn_12']
 
 
-# In[58]:
+# In[315]:
 
 
 bins3_12 = []
@@ -780,19 +780,19 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_2alt_MODIS.png',transparent=
 
 # ## make a plot day by day
 
-# In[59]:
+# In[308]:
 
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[60]:
+# In[309]:
 
 
 s['days']==2.0
 
 
-# In[61]:
+# In[324]:
 
 
 flr2 = s['fl_rtn_16']&(s['days']==d_rtnf[0])
@@ -803,7 +803,7 @@ flr8 = s['fl_rtn_16']&(s['days']==d_rtnf[4])
 flr13 = s['fl_rtn_16']&(s['days']==d_rtnf[5])
 
 
-# In[62]:
+# In[325]:
 
 
 fr2 = s['fl_rtn']&(s['days']==d_rtnf[0])
@@ -814,20 +814,20 @@ fr8 = s['fl_rtn']&(s['days']==d_rtnf[4])
 fr13 = s['fl_rtn']&(s['days']==d_rtnf[5])
 
 
-# In[63]:
+# In[326]:
 
 
 fr = [fr2,fr4,fr6,fr7,fr8,fr13]
 flr = [flr2,flr4,flr6,flr7,flr8,flr13]
 
 
-# In[64]:
+# In[327]:
 
 
 flr2
 
 
-# In[65]:
+# In[328]:
 
 
 flr2a = s['fl_rtna']&(s['days']==d_rtnf[0])
@@ -838,7 +838,7 @@ flr8a = s['fl_rtna']&(s['days']==d_rtnf[4])
 flr13a = s['fl_rtna']&(s['days']==d_rtnf[5])
 
 
-# In[66]:
+# In[329]:
 
 
 fr2a = s['fl_rtna']&(s['days']==d_rtnf[0])
@@ -849,20 +849,20 @@ fr8a = s['fl_rtna']&(s['days']==d_rtnf[4])
 fr13a = s['fl_rtna']&(s['days']==d_rtnf[5])
 
 
-# In[67]:
+# In[330]:
 
 
 fra = [fr2a,fr4a,fr6a,fr7a,fr8a,fr13a]
 flra = [flr2a,flr4a,flr6a,flr7a,flr8a,flr13a]
 
 
-# In[68]:
+# In[331]:
 
 
 cls = ['green','blue','yellow','cyan','magenta','orange']
 
 
-# In[69]:
+# In[332]:
 
 
 d_rtn
@@ -1893,7 +1893,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_MODIS_Climatology_vs_AAC_flagged_4STAR_and_M
             transparent=True,dpi=600)
 
 
-# In[75]:
+# In[336]:
 
 
 plt.figure(figsize=(12,8))
@@ -2060,7 +2060,7 @@ plt.title('ORACLES 2016 4STAR AOD')
 plt.legend(frameon=False)
 
 
-# In[54]:
+# In[45]:
 
 
 s['fl6'] = s['fl_alt_6'] & s['fl_QA']
@@ -2103,45 +2103,45 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD501_histogram.png',
 
 # ### Using the polynomial fit method
 
-# In[19]:
+# In[46]:
 
 
 nn = s.keys()
 nn.sort()
 
 
-# In[20]:
+# In[47]:
 
 
 wvl = np.array([float(i[-4:]) for i in nn[0:24]])
 
 
-# In[21]:
+# In[48]:
 
 
 aods = np.array([s[i] for i in nn[0:24]]).T
 
 
-# In[22]:
+# In[49]:
 
 
 aods.shape
 
 
-# In[23]:
+# In[50]:
 
 
 uncaods = np.array([s[i] for i in nn[28:28+24]]).T
 
 
-# In[45]:
+# In[51]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[46]:
+# In[52]:
 
 
 for i,u in enumerate(s['Start_UTC']):
@@ -2153,19 +2153,19 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[47]:
+# In[53]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,470.0,500.0,530.0,660.0,865.0,1250.0],polynum=3)
 
 
-# In[48]:
+# In[54]:
 
 
 s['angs'].shape
 
 
-# In[49]:
+# In[55]:
 
 
 awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
@@ -2173,20 +2173,20 @@ awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
 
 # ### Using the typical 2 wavelength method
 
-# In[50]:
+# In[56]:
 
 
 wvl
 
 
-# In[51]:
+# In[57]:
 
 
 ja,je = 3,15
 wvl[ja],wvl[je]
 
 
-# In[52]:
+# In[58]:
 
 
 s['angs_470_865'] = []
@@ -2229,7 +2229,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_angstrom_histogram.png',
 
 # ## Combine both histogram
 
-# In[90]:
+# In[37]:
 
 
 ia = 4
@@ -2351,7 +2351,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_angstrom_histogram_sub.png',
             transparent=True,dpi=500)
 
 
-# In[91]:
+# In[38]:
 
 
 s['fl_both'] = s['fl_acaod'] | s['fl6']
@@ -2582,14 +2582,14 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_2wvl_histogram_stack.png',
 
 # ## Create a histogram of Angstrom at 2 wavelengths
 
-# In[100]:
+# In[39]:
 
 
 ia = 4 #660 nm
 ib = 2 #500 nm
 
 
-# In[101]:
+# In[40]:
 
 
 awvl
@@ -2737,6 +2737,221 @@ np.nanmean(s['angs_470_865'][s['fl6']]),np.nanmedian(s['angs_470_865'][s['fl6']]
 
 
 np.nanmean(s['angs'][s['fl_acaod'],ib]),np.nanmean(s['angs'][s['fl6'],ib])
+
+
+# ## Get vertical dependence of Angstrom exponent
+
+# In[62]:
+
+
+s['fl_QA_angs'] = s['fl_QA'] & (s['AOD0501']>0.1)
+
+
+# In[171]:
+
+
+s['fl_QA_angs_aca'] = s['fl_acaod'] & (s['AOD0501']>0.1) & (s['GPS_Alt']>300.0)
+
+
+# In[63]:
+
+
+plt.figure()
+plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.')
+
+
+# In[180]:
+
+
+binned_ang,binned_alt,binned_num,binned_ndays = [],[],[],[]
+for i in xrange(70):
+    flaa = (s['GPS_Alt'][s['fl_QA_angs']]>=i*100.0) & (s['GPS_Alt'][s['fl_QA_angs']]<(i+1.0)*100.0)
+    binned_ang.append(s['angs_470_865'][s['fl_QA_angs']][flaa])
+    binned_alt.append(np.mean([i*100.0,(i+1.0)*100.0]))
+    binned_num.append(len(s['angs_470_865'][s['fl_QA_angs']][flaa]))
+    binned_ndays.append(len(np.unique(s['days'][s['fl_QA_angs']][flaa])))
+
+
+# In[179]:
+
+
+binned_angc,binned_altc,binned_numc,binned_ndaysc = [],[],[],[]
+for i in xrange(70):
+    flaa = (s['GPS_Alt'][s['fl_QA_angs_aca']]>=i*100.0) & (s['GPS_Alt'][s['fl_QA_angs_aca']]<(i+1.0)*100.0)
+    binned_angc.append(s['angs_470_865'][s['fl_QA_angs_aca']][flaa])
+    binned_altc.append(np.mean([i*100.0,(i+1.0)*100.0]))
+    binned_numc.append(len(s['angs_470_865'][s['fl_QA_angs_aca']][flaa]))
+    binned_ndaysc.append(len(np.unique(s['days'][s['fl_QA_angs_aca']][flaa])))
+
+
+# In[109]:
+
+
+bp.keys()
+
+
+# In[187]:
+
+
+bbb = bp['whiskers'][0]
+
+
+# In[190]:
+
+
+bbb.get_data()[0][1]
+
+
+# In[345]:
+
+
+max(binned_ndaysc)*1.0
+
+
+# In[383]:
+
+
+plt.figure(figsize=(6,7))
+bp =plt.boxplot(binned_ang,positions=binned_alt,vert=False,showfliers=False,widths=100,showmeans=True,patch_artist=True)
+plt.xlabel('Angstrom of 470 nm / 865 nm')
+plt.ylabel('Altitude [m]')
+#plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.',alpha=0.005)
+for b in bp['boxes']:
+    b.set_facecolor('green')
+    b.set_edgecolor('green')
+    b.set_alpha(0.4)
+for b in bp['means']:
+    b.set_marker('o')
+    b.set_color('firebrick')
+    b.set_alpha(0.4)
+for b in bp['whiskers']:
+    b.set_linestyle('-')
+    b.set_color('green')
+    b.set_alpha(0.4)
+for b in bp['caps']:
+    b.set_alpha(0.4)
+    b.set_color('green')
+for b in bp['medians']:
+    b.set_linewidth(4)
+    b.set_color('gold')
+    b.set_alpha(0.4)
+    
+bpc =plt.boxplot(binned_angc,positions=binned_altc,vert=False,showfliers=False,widths=100,showmeans=True,patch_artist=True)
+for b in bpc['boxes']:
+    b.set_facecolor('blue')
+    b.set_edgecolor('blue')
+for b in bpc['means']:
+    b.set_marker('o')
+    b.set_color('firebrick')
+for b in bpc['whiskers']:
+    b.set_linestyle('-')
+for b in bpc['medians']:
+    b.set_linewidth(4)
+    b.set_color('gold')
+bpc['boxes'][0].set_color('grey')
+ax = plt.gca()
+plt.ylim(0,7000)
+plt.yticks([0,1000,2000,3000,4000,5000,6000,7000])
+ax.set_yticklabels([0,1000,2000,3000,4000,5000,6000,7000])
+plt.xlim(0,2.2)
+plt.grid()
+for j,nn in enumerate(binned_ndays): 
+    if nn>0:
+        plt.text(min(bp['means'][j].get_data()[0])*0.75,binned_alt[j],'{:2.0f}'.format(nn),alpha=0.4,color='g',fontsize=7,verticalalignment='center')
+for j,nn in enumerate(binned_ndaysc): 
+    if nn>0:
+        plt.text(min(bp['means'][j].get_data()[0])*0.8,binned_altc[j],'{:2.0f}'.format(nn),color='b',fontsize=7,verticalalignment='center')
+
+plt.legend([bp['boxes'][0],bpc['boxes'][1],bpc['means'][0],bpc['medians'][0],bpc['boxes'][0],bpc['whiskers'][0]],
+           ['All data','Above cloud','Mean','Median','25% - 75%','min-max'],
+           frameon=False,loc=2,numpoints=1)
+plt.tight_layout()
+
+plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_Angstrom_2wvl_vertical.png',
+            transparent=True,dpi=500)
+
+
+# In[423]:
+
+
+plt.figure(figsize=(6,7))
+bp =plt.boxplot(binned_ang,positions=np.array(binned_alt)-5.0,vert=False,
+                showfliers=False,widths=90,showmeans=True,patch_artist=True)
+plt.xlabel('Angstrom of 470 nm / 865 nm')
+plt.ylabel('Altitude [m]')
+#plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.',alpha=0.005)
+gr = plt.cm.RdPu
+bl = plt.cm.Blues
+bndm = np.nanmax(binned_ndays)*1.0
+for j,b in enumerate(bp['boxes']):
+    b.set_facecolor(gr(binned_ndays[j]*1.0/bndm))
+    b.set_edgecolor(gr(binned_ndays[j]*1.0/bndm))
+    #b.set_alpha(0.4)
+for j,b in enumerate(bp['means']):
+    b.set_marker('.')
+    b.set_color('None')
+    b.set_markerfacecolor('darkgreen')
+    b.set_markeredgecolor('darkgreen')
+    b.set_alpha(0.6)
+for j,b in enumerate(bp['whiskers']):
+    b.set_linestyle('-')
+    b.set_color('pink') #gr(binned_ndays[j]*1.0/bndm))
+    b.set_alpha(0.4)
+for j,b in enumerate(bp['caps']):
+    b.set_alpha(0.4)
+    b.set_color('pink')#gr(binned_ndays[j]*1.0/bndm))
+for j,b in enumerate( bp['medians']):
+    b.set_linewidth(4)
+    b.set_color('gold')
+    b.set_alpha(0.4)
+    
+bpc =plt.boxplot(binned_angc,positions=np.array(binned_altc)+10.0,vert=False,
+                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
+for j,b in enumerate(bpc['boxes']):
+    b.set_facecolor(bl(binned_ndaysc[j]*1.0/bndm)) #'blue')
+    b.set_edgecolor(bl(binned_ndaysc[j]*1.0/bndm))
+for b in bpc['means']:
+    b.set_marker('.')
+    b.set_color('None')
+    b.set_markerfacecolor('darkgreen')
+    b.set_markeredgecolor('darkgreen')
+    b.set_alpha(0.6)
+for b in bpc['whiskers']:
+    b.set_linestyle('-')
+for b in bpc['medians']:
+    b.set_linewidth(4)
+    b.set_color('gold')
+    b.set_alpha(0.6)
+bpc['boxes'][0].set_color('grey')
+ax = plt.gca()
+plt.ylim(0,7000)
+plt.yticks([0,1000,2000,3000,4000,5000,6000,7000])
+ax.set_yticklabels([0,1000,2000,3000,4000,5000,6000,7000])
+plt.xlim(0,2.2)
+plt.grid()
+plt.legend([bp['boxes'][5],bpc['boxes'][18],bpc['means'][0],bpc['medians'][0],bpc['boxes'][0],bpc['whiskers'][0]],
+           ['All data','Above cloud','Mean','Median','25% - 75%','min-max'],
+           frameon=False,loc=2,numpoints=1)
+
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(binned_ndays)
+scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+scalarmapbl.set_array(binned_ndays)
+cbaxesgr = plt.gcf().add_axes([0.25, 0.2, 0.015, 0.3])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr)
+cbaxesbl = plt.gcf().add_axes([0.27, 0.2, 0.015, 0.3])
+cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl)
+cbg.set_ticks([0,3,6,9,12,15])
+#cbg.ax.yaxis.set_ticks_position('right')
+#cbg.set_ticklabels(['0','3','6','9','12','15'],horizontalalignment='left')
+cbb.set_ticks([0,3,6,9,12,15]),cbb.set_ticklabels(['','','','',''])#,cbg.set_label('Days sampled',verticalalignment='top')
+cbaxesgr.yaxis.set_ticks_position('left'),cbaxesbl.yaxis.set_ticks_position('left')
+cbaxesgr.text(-4.0,0.5,'Days sampled',rotation=90,verticalalignment='center')
+
+plt.tight_layout()
+
+plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_Angstrom_2wvl_vertical_cb.png',
+            transparent=True,dpi=500)
 
 
 # # Make some figures of the map statistic distribution
@@ -3898,35 +4113,35 @@ pca_angs
 
 # # Get the spacing and altitudes of gap from ACAOD altitudes and distances
 
-# In[496]:
+# In[216]:
 
 
 ii_flacaod = np.where(s['fl_acaod_noQA'])[0] 
 ii_flacaod[0]
 
 
-# In[503]:
+# In[217]:
 
 
 ii_flacaod_0_5 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=0) & (s['Longitude']<5.0))[0] 
 ii_flacaod_0_5[0]
 
 
-# In[504]:
+# In[218]:
 
 
 ii_flacaod_5_10 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=5) & (s['Longitude']<10.0))[0] 
 ii_flacaod_5_10[0]
 
 
-# In[505]:
+# In[219]:
 
 
 ii_flacaod_10_15 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<15.0))[0] 
 ii_flacaod_10_15[0]
 
 
-# In[506]:
+# In[220]:
 
 
 disc_flacaod = np.where(np.diff(ii_flacaod,1)>1)[0]
@@ -3945,21 +4160,21 @@ plt.plot(np.arange(100)[disc_flacaod[0:6]],ii_flacaod[0:100][disc_flacaod[0:6]],
 plt.plot(np.arange(100)[disc_flacaod[0:6]+1],ii_flacaod[0:100][disc_flacaod[0:6]+1],'go')
 
 
-# In[507]:
+# In[221]:
 
 
 discontinuity_istart =  ii_flacaod[np.append(0,disc_flacaod[:-1]+1)]
 discontinuity_iend =  ii_flacaod[disc_flacaod]
 
 
-# In[508]:
+# In[222]:
 
 
 discontinuity_istart_long =  ii_flacaod[np.append(0,disc_flacaod_long[:-1]+1)]
 discontinuity_iend_long =  ii_flacaod[disc_flacaod_long]
 
 
-# In[509]:
+# In[223]:
 
 
 discontinuity_istart_0_5 =  ii_flacaod_0_5[np.append(0,disc_flacaod_0_5[:-1]+1)]
@@ -3970,7 +4185,7 @@ discontinuity_istart_10_15 =  ii_flacaod_10_15[np.append(0,disc_flacaod_10_15[:-
 discontinuity_iend_10_15 =  ii_flacaod_10_15[disc_flacaod_10_15]
 
 
-# In[510]:
+# In[224]:
 
 
 delta_alt,delta_lon,delta_lat = [],[],[]
@@ -3988,10 +4203,10 @@ delta_lon = np.array(delta_lon)
 delta_lat = np.array(delta_lat)
 
 
-# In[511]:
+# In[234]:
 
 
-ldelta_alt,ldelta_lon,ldelta_lat = [],[],[]
+ldelta_alt,ldelta_lon,ldelta_lat,ldelta_lon_days,ldelta_lat_days = [],[],[],[],[]
 for i,start in enumerate(discontinuity_istart_long):
     try:
         ma = np.nanmax(s['GPS_Alt'][start:discontinuity_iend_long[i]])
@@ -3999,14 +4214,18 @@ for i,start in enumerate(discontinuity_istart_long):
         ldelta_alt.append(ma-mi)
         ldelta_lon.append(np.nanmean(s['Longitude'][start:discontinuity_iend_long[i]]))
         ldelta_lat.append(np.nanmean(s['Latitude'][start:discontinuity_iend_long[i]]))
+        ldelta_lat_days.append(np.unique(s['days'][start:discontinuity_iend_long[i]]))
+        ldelta_lon_days.append(np.unique(s['days'][start:discontinuity_iend_long[i]]))
     except:
         pass
 ldelta_alt = np.array(ldelta_alt)
 ldelta_lon = np.array(ldelta_lon)
 ldelta_lat = np.array(ldelta_lat)
+ldelta_lat_days = np.array(ldelta_lat_days)
+ldelta_lon_days = np.array(ldelta_lon_days)
 
 
-# In[512]:
+# In[226]:
 
 
 delta_alt1,delta_lon1,delta_lat1 = [],[],[]
@@ -4052,13 +4271,13 @@ delta_lon3 = np.array(delta_lon3)
 delta_lat3 = np.array(delta_lat3)
 
 
-# In[513]:
+# In[227]:
 
 
 np.nanmax(delta_alt),np.nanmax(ldelta_alt),np.nanmax(delta_alt1),np.nanmax(delta_alt2),np.nanmax(delta_alt3)
 
 
-# In[307]:
+# In[228]:
 
 
 delta_alt
@@ -4117,19 +4336,19 @@ plt.legend(frameon=False)
 delta_lon
 
 
-# In[521]:
+# In[229]:
 
 
 numlon,binlon = np.histogram(delta_lon,range=(0,16))
 
 
-# In[325]:
+# In[230]:
 
 
 binlon
 
 
-# In[522]:
+# In[231]:
 
 
 bin_alt,bin_lon = [],[]
@@ -4139,14 +4358,18 @@ for i in xrange(16):
     bin_lon.append(np.mean([i,i+1.0]))
 
 
-# In[523]:
+# In[263]:
 
 
-lbin_alt,lbin_lon = [],[]
+lbin_alt,lbin_lon,lbin_ndays = [],[],[]
 for i in xrange(16):
     fllon = (ldelta_lon>=i) & (ldelta_lon<(i+1.0))
     lbin_alt.append(ldelta_alt[fllon])
     lbin_lon.append(np.mean([i,(i+1.0)]))
+    try:
+        lbin_ndays.append(len(np.unique(np.hstack(ldelta_lon_days[fllon]))))
+    except:
+        lbin_ndays.append(0)
 
 
 # In[330]:
@@ -4214,20 +4437,25 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_gap_distribution.png',
             transparent=True,dpi=500)
 
 
-# In[536]:
+# In[306]:
 
 
 plt.figure(figsize=(12,5))
 ax = plt.subplot2grid((1,4),(0,0),colspan=3)
 
-ax.boxplot(lbin_alt,positions=lbin_lon,showfliers=False)
-ax.plot(ldelta_lon,ldelta_alt,'k.',alpha=0.2,zorder=-1)
+bow = ax.boxplot(lbin_alt,positions=lbin_lon,showfliers=True,sym='.')
+ax.plot(ldelta_lon,ldelta_alt,'k.',alpha=0.01,zorder=-1)
+for j,nn in enumerate(lbin_ndays):
+    if nn>0:
+        ax.text(lbin_lon[j],np.nanmax(bow['medians'][j].get_data()[1])+30,'{:2.0f}'.format(nn),color='blue',horizontalalignment='center')
+    else:
+        ax.text(lbin_lon[j],50,'{:2.0f}'.format(nn),color='blue',horizontalalignment='center')
 #plt.yscale('log')
 ax.set_ylim(-50,3700)
-ax.set_ylabel('Gap distance [m]')
+ax.set_ylabel('Vertical extent [m]')
 ax.set_xlabel(u'Longitude [°]')
 #plt.xticks(rotation=45,ha="right") 
-ax.set_title('Distribution of gap altitude per longitude')
+ax.set_title('Distribution of gap vertical extent per longitude')
 
 ax2 = plt.subplot2grid((1,12),(0,9),sharey=ax)
 ax2.hist(delta_alt1,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
@@ -4250,11 +4478,11 @@ plt.setp(ax3.get_yticklabels(), visible=False)
 ax3.axhline(np.nanmedian(delta_alt2),label='Median',ls='--')
 ax3.annotate('{:4.0f} m'.format(np.nanmean(delta_alt2)),(1.5,np.nanmean(delta_alt2)*1.05),color='b',alpha=0.3)
 ax3.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt2)),(1.5,np.nanmedian(delta_alt2)*1.05),color='b',alpha=0.3)
-ax3.set_title('Gap distribution\n'+u'5°-10°')
+ax3.set_title('Gap extent distribution\n'+u'5°-10°')
 #plt.xticks(rotation=45,ha="right")
 ax3.set_xlabel('Counts')
 ax3.set_xticks([0,6,12])
-plt.legend(frameon=True,handletextpad=0.05)
+plt.legend(frameon=True,handletextpad=0.02)#,ncol=2,columnspacing=0.2,loc=1)
 
 ax4 = plt.subplot2grid((1,12),(0,11),sharey=ax)
 ax4.hist(delta_alt3,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
@@ -4265,6 +4493,7 @@ ax4.annotate('{:4.0f} m'.format(np.nanmean(delta_alt3)),(0.5,np.nanmean(delta_al
 ax4.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt3)),(0.5,np.nanmedian(delta_alt3)*1.05),color='b',alpha=0.3)
 ax4.set_title(u'10°-15°')
 ax4.set_xticks([0,3,6])
+#ax4.legend(frameon=True,handletextpad=0.02,loc=1)
 #plt.xticks(rotation=45,ha="right")
 #ax4.set_xlabel('Counts')
 #plt.legend(frameon=False,handletextpad=0.05)
@@ -4272,6 +4501,12 @@ ax4.set_xticks([0,3,6])
 #plt.tight_layout()
 plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_gap_distribution_3sub.png',
             transparent=True,dpi=500)
+
+
+# In[290]:
+
+
+help(plt.legend)
 
 
 # # Calculate the fine mode and coarse mode aod
