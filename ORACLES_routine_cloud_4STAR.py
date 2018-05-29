@@ -42,6 +42,7 @@
 
 # In[1]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -50,10 +51,12 @@ import matplotlib.pyplot as plt
 
 # In[2]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[3]:
+
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
@@ -61,10 +64,12 @@ from Sp_parameters import smooth
 
 # In[4]:
 
+
 import hdf5storage as hs
 
 
 # In[5]:
+
 
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
@@ -76,16 +81,19 @@ fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
 # In[6]:
 
+
 days = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
 # In[7]:
 
+
 vv = 'R0'
 
 
 # In[8]:
+
 
 out = []
 out_head = []
@@ -98,10 +106,12 @@ for d in days:
 
 # In[21]:
 
+
 nm = out[0].dtype.names
 
 
 # In[22]:
+
 
 s = {}
 s['days'] = np.array([])
@@ -116,6 +126,7 @@ for i,d in enumerate(days):
 
 # In[23]:
 
+
 s['LAT'].shape
 
 
@@ -123,20 +134,24 @@ s['LAT'].shape
 
 # In[9]:
 
+
 m = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE.nc')
 
 
 # In[10]:
+
 
 m.variables
 
 
 # In[11]:
 
+
 m2 = sio.netcdf_file(fp+'data_other\\climatology\\mombl_oracles_routine_flight_NW-SE_all.nc')
 
 
 # In[12]:
+
 
 m2.variables
 
@@ -146,20 +161,24 @@ m2.variables
 
 # In[13]:
 
+
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
 # In[14]:
+
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
 # In[16]:
 
+
 len(out)
 
 
 # In[25]:
+
 
 ff = []
 for d in d_irtn:
@@ -167,6 +186,7 @@ for d in d_irtn:
 
 
 # In[26]:
+
 
 for i,f in enumerate(ff):
     if i==0:
@@ -177,6 +197,7 @@ for i,f in enumerate(ff):
 
 # In[27]:
 
+
 s['fl_rtn'] = fl
 
 
@@ -185,6 +206,7 @@ s['fl_rtn'] = fl
 # ## Prepare with special functions
 
 # In[29]:
+
 
 def color_box(bp, color):
     'Coloring of the box plot'
@@ -199,6 +221,7 @@ def color_box(bp, color):
 
 # In[32]:
 
+
 def subset_bins(vals,val_lim,lims):
     'create the subsetted bins of values'
     bins = []
@@ -209,6 +232,7 @@ def subset_bins(vals,val_lim,lims):
 
 
 # In[113]:
+
 
 def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None):
     'Compile the functions to make a box plot'
@@ -240,6 +264,7 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
 
 # In[94]:
 
+
 def prelim():
     plt.text(0.5, 0.5, 'Preliminary',
         verticalalignment='bottom', horizontalalignment='center',
@@ -251,16 +276,19 @@ def prelim():
 
 # In[28]:
 
+
 plt.figure()
 plt.plot(s['LON'][fl],s['COD'][fl],'b.')
 
 
 # In[33]:
 
+
 pos3 = m.variables['LONGITUDE'].data[0,:]
 
 
 # In[34]:
+
 
 lims3 = pos3-0.5
 lims3= np.append(lims3,pos3[-1]+0.5)
@@ -268,11 +296,13 @@ lims3= np.append(lims3,pos3[-1]+0.5)
 
 # In[35]:
 
+
 bins_cod = subset_bins(s['COD'][fl],s['LON'][fl],lims3)
 bins_ref = subset_bins(s['REF'][fl],s['LON'][fl],lims3)
 
 
 # In[51]:
+
 
 plt.figure()
 
@@ -305,6 +335,7 @@ plt.savefig(fp+'plot\\MODIS_Climatology_vs_4STAR_cld_ref.png',transparent=True,d
 
 # In[98]:
 
+
 plt.figure()
 
 plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['RE_CLIMOMEAN'].data[0,:],
@@ -327,6 +358,7 @@ plt.savefig(fp+'plot\\MODIS_Climatology_vs_4STAR_cld_ref.png',transparent=True,d
 
 
 # In[150]:
+
 
 plt.figure(figsize=(11,6))
 plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['RE_CLIMOMEAN'].data[0,:],
@@ -360,6 +392,7 @@ plt.savefig(fp+'plot\\MODIS_Climatology_vs_4STAR_cld_ref_days.png',transparent=T
 
 
 # In[127]:
+
 
 plt.figure(figsize=(11,6))
 plt.plot(m2.variables['LONGITUDE'].data[0,:],m2.variables['LWP_CLIMOMEAN'].data[0,:],
