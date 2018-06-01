@@ -1182,7 +1182,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
                     wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False,
-                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON']):
+                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON'],deltascale=True):
     """
     Purpose:
     
@@ -1208,6 +1208,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         start_lat: (default None) if set to an integer, uses the index to start the latitutde loops creating the files (for debugging)
         start_lon: (default None) if set to an integer, uses the index to start the longitutde loops creating the files (for debugging)
         mmmlist: (default ['DJF','MAM','JJA','SON']) the list of months to go through
+        deltascale: (default to True) use the new delta scaled cloud moments if set to True
         
     Dependencies:
     
@@ -1255,14 +1256,17 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     import load_utils as lm
     import os
     if fp_pmom:
-        pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')
+        pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar',deltascale=deltascale)
         pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
     else:
-        pmom_solar = RL.make_pmom_inputs(source='solar')
+        pmom_solar = RL.make_pmom_inputs(source='solar',deltascale=deltascale)
         pmom_thermal = RL.make_pmom_inputs(source='thermal')
     if max_nmom:
         pmom_solar['max_nmoms'] = max_nmom
         pmom_thermal['max_nmoms'] = max_nmom
+    else:
+        pmom_solar['max_nmoms'],pmom_thermal['max_nmoms'] = False,False
+        
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
     aero = {'z_arr':[3.0,4.0]}
     cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
@@ -1345,7 +1349,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 if aero_clear:
                     aero['ext'] = aero['ext']*0.0
                 if np.isnan(aero['ext']).all():
-                    print 'skipping lat:%i, lon:%i' % (ilat,ilon)
+                    #print 'skipping lat:%i, lon:%i' % (ilat,ilon)
                     continue
                 aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
                 aero['ssa'] = aero['ssa']+stdfac_dict['ssa']*input_mmm['MOC_ssa_std'][0,0][ilat,ilon,:]
@@ -1647,12 +1651,12 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
                     if read_thm:
                         thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
                 except IOError:
-                    print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
+                    #print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     if iutc==0:
                         print file_out_sol
                     continue
                 except ValueError:
-                    print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
+                    #print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
                     output['SW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
                     output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
