@@ -52,151 +52,130 @@
 #     Wrtten: Samuel LeBlanc, NASA Ames, 2018-05-29
 #     Modified: 
 
-# In[ ]:
+# In[4]:
 
 
 if __name__ == '__main__':
     import argparse
-    long_description = """    Prepare or read the fuliou DARE AAC calculations"""
+    import os
+    from DARE_AAC_fuliou import write_fuliou_aac, read_fuliou_aac
+    long_description = """    Prepare or read the fuliou DARE AAC calculations for Meloe's study"""
     parser = argparse.ArgumentParser(description=long_description)
     parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
                         action='store_true')
     parser.add_argument('-dowrite','--dowrite',help='if set, will write the input and list files for fuliou',
                         action='store_true')
-    parser.add_argument('-i','--index',help='Sets the index of the pixel file to use (19374,22135). Default is 0',type=int)
+    parser.add_argument('mmm',nargs='?',help='3 letter season designator (DJF, MAM, JJA, SON)')
+    parser.add_argument('sub',nargs='?',help='string designating the subset (ssam,ssap,...)')
+    parser.add_argument('-c','--clear',help='if set, will write the input for no aerosol case',
+                        action='store_true',default=False)
+    parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp directory to use')
+    parser.add_argument('-v','--vn',nargs='?',help='The version identifier (subfolder names)')
     in_ = vars(parser.parse_args())
+    
     doread = in_.get('doread',False)
     dowrite = in_.get('dowrite',False)
-    i = in_.get('index',0)
+    doclear = in_.get('clear',False)
+    if doclear:
+        print 'doing the clear no aerosol version'
+    ms = in_.get('mmm',False)
+    if not ms:
+        ms = ['DJF','MAM','JJA','SON']
+    else:
+        ms = [ms]
+    print 'doing the season:',ms
+
+    vn = in_.get('vn','v5_fuliou')
+    
+    if in_.get('tmp_folder'):
+        tmp_folder = in_.get('tmp_folder')
+        fp_out = tmp_folder+'/AAC_DARF/input/{vn}/'.format(vn=vn)
+    else:
+        fp_out = '/nobackup/sleblan2/AAC_DARF/input/{vn}/'.format(vn=vn)
+    
+    sub = in_.get('sub',False)
+    if not sub:
+         sub = '' #'_asymp'
+         subi = sub
+    elif sub=='clear':
+         sub = '_clear'
+         subi = '_clear'
+    else:
+         sub = '_'+sub
+         subi = sub
+    print 'doing the subset: ', sub
+    if not os.path.exists(fp_out):
+        os.makedirs(fp_out)
+    fp_in = fp_out.replace('input','output')
+    if not os.path.exists(fp_in):
+        os.makedirs(fp_in)
 
     if dowrite:
-        run_fuliou_linux(i=i)
+        write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
     elif doread:
-        read_fuliou_linux(i=i)
+        read_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
     else:
-        run_fuliou_linux(i=i)
+        write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
 
 
 # For writing
 
-# In[ ]:
+# In[5]:
 
 
 # Program to prepare and call the build_aac_input
+def write_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou'):
+    from DARE_AAC_fuliou import build_aac_FLinput
+    print 'working on folder: '+fp_out
 
-import Run_libradtran as RL
-import os
-import argparse
-long_d = """ Program to build the AAC files """
-parser = argparse.ArgumentParser(description=long_d)
-parser.add_argument('mmm',nargs='?',help='3 letter season designator (DJF, MAM, JJA, SON)')
-parser.add_argument('sub',nargs='?',help='string designating the subset (ssam,ssap,...)')
-parser.add_argument('-c','--clear',help='if set, will write the input for no aerosol case',
-                    action='store_true',default=False)
-parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp directory to use')
-in_ = vars(parser.parse_args())
-doclear = in_.get('clear',False)
-if doclear:
-    print 'doing the clear no aerosol version'
-ms = in_.get('mmm',False)
-if not ms:
-    ms = ['DJF','MAM','JJA','SON']
-else:
-    ms = [ms]
-print 'doing the season:',ms
+    vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    fp = '/u/sleblan2/meloe_AAC/{vn}/'.format(vn=vn)
+    fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
+    fp_pmom = '/nobackup/sleblan2/AAC_DARF/rtm/'
+    fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
 
-if in_.get('tmp_folder'):
-    tmp_folder = in_.get('tmp_folder')
-    fp_out = tmp_folder+'/AAC_DARF/input/v3b_faac/'
-else:
-    fp_out = '/nobackup/sleblan2/AAC_DARF/input/v3b_faac/'
-
-if not os.path.exists(fp_out):
-    os.makedirs(fp_out)
-fp_in = fp_out.replace('input','output')
-if not os.path.exists(fp_in):
-    os.makedirs(fp_in)
-
-print 'working on folder: '+fp_out
-
-vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
-fp = '/u/sleblan2/meloe_AAC/v3_faac/'
-fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
-fp_pmom = '/nobackup/sleblan2/AAC_DARF/rtm/'
-fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
-wvl_thm = '/nobackup/sleblan2/AAC_DARF/rtm/wvl.thm.dat'
-
-stdfac = {'COD':+0.0}
-RL.build_aac_input(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_pmom=fp_pmom,version=vv,stdfac_dict=stdfac,list_only=False,aero_clear=doclear,mmmlist=ms,deltascale=False)
+    stdfac = {'COD':+0.0}
+    build_aac_FLinput(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_pmom=fp_pmom,version=vv,stdfac_dict=stdfac,list_only=False,aero_clear=doclear,mmmlist=ms)
 
 
 # For reading
 
-# In[ ]:
+# In[6]:
 
 
-import Run_libradtran as RL
-import scipy.io as sio
+def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou'):
+    
+    from DARE_AAC_fuliou import read_aac_fl
+    import scipy.io as sio
 
-import argparse
-long_d = """ Program to read in the AAC files """
-parser = argparse.ArgumentParser(description=long_d)
-parser.add_argument('mmm',nargs='?',help='3 letter season designator (DJF, MAM, JJA, SON)')
-parser.add_argument('sub',nargs='?',help='string designating the subset (ssam,ssap,...)')
-parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp directory to use')
-in_ = vars(parser.parse_args())
-ms = in_.get('mmm',False)
-if not ms:
-    ms = ['DJF','MAM','JJA','SON']
-else:
-    ms = [ms]
-print 'doing the season:',ms
+    import time
+    time.sleep(0.5)
 
-if in_.get('tmp_folder'):
-    tmp_folder = in_.get('tmp_folder')
-    fp_out = tmp_folder+'/AAC_DARF/output/v3b_faac/'
-else:
-    fp_out = '/nobackup/sleblan2/AAC_DARF/output/v3b_faac/'
+    #vv = 'v3_20160408_CALIOP_AAC_AOD_With_Sa_only'
+    #vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    for mmm in ms:
+    #     fp_out = '/nobackup/sleblan2/AAC_DARF/output/v3_without/{}/'.format(mmm)
+         fp_mat = '/u/sleblan2/meloe_AAC/{vn}/Input_to_DARF_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn)
+    #     aac = RL.read_aac(fp_out,fp_mat,mmm=mmm)
+    #     sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/v3_without/AAC_{m}_{v}.mat'.format(m=mmm,v=vv),aac)
 
-sub = in_.get('sub',False)
-if not sub:
-     sub = '' #'_asymp'
-     subi = sub
-elif sub=='clear':
-     sub = '_clear'
-     subi = '_clear'
-else:
-     sub = '_'+sub
-     subi = sub
-print 'doing the subset: ', sub
-
-import time
-time.sleep(0.5)
-
-#vv = 'v3_20160408_CALIOP_AAC_AOD_With_Sa_only'
-#vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
-vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
-for mmm in ms:
-#     fp_out = '/nobackup/sleblan2/AAC_DARF/output/v3_without/{}/'.format(mmm)
-     fp_mat = '/u/sleblan2/meloe_AAC/v3_faac/Input_to_DARF_{m}_{v}.mat'.format(m=mmm,v=vv)
-#     aac = RL.read_aac(fp_out,fp_mat,mmm=mmm)
-#     sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/v3_without/AAC_{m}_{v}.mat'.format(m=mmm,v=vv),aac)
-
-     fp_outc = fp_out+'{}/'.format(mmm+sub)
-     aac_clear = RL.read_aac(fp_outc,fp_mat,mmm=mmm)
-     sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/v3c_faac/AAC_{m}_{v}.mat'.format(m=mmm+subi,v=vv),aac_clear)
+         fp_outc = fp_out+'{}/'.format(mmm+sub)
+         aac_clear = read_aac_fl(fp_outc,fp_mat,mmm=mmm)
+         sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/{vn}/AAC_{m}_{v}.mat'.format(m=mmm+subi,v=vv,vn=vn),aac_clear)
 
 
-# In[ ]:
+# In[7]:
 
 
-def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
+def build_aac_FLinput(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
                     wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False,
                     start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON']):
     """
     Purpose:
     
-        Program to build the inputs of libradtran for Meloë's AAC study
+        Program to build the inputs of libradtran for Meloë's AAC study 
+        Subset for using the Fu Liou codes, without clouds underneath
     
     Inputs:
     
@@ -239,43 +218,20 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         
     Modification History:
     
-        Written: Samuel LeBlanc, 2015-07-01, Happy Canada Day!, Santa Cruz, CA
-        Modified: Samuel LeBlanc, 2015-07-07, NASA Ames
-                - Modified the calling paths to include fp_pmom
-                - Added comments
-                - Changed out of Prepare_input_aac to Run_libradtran
-        Modified: Samuel LeBlanc, 2015-07-08, Santa Cruz, CA
-                - added creator of list file (for running on cluster), creating list file in the path described by fp_out
-                - added fp_uvspec 
-                - added fp_output for list file creation of uvspec output
-                - changed to use the base_file method
-                - changed to use wavelength_files
-        Modified: Samuel LeBlanc, 2015-07-09, NASA Ames, CA
-                - using one set of cloud files per lat lon combinations, not for every hour
-                - added aero_clear keyword to define clear value
-        Modified: Samuel LeBlanc, 2015-07-10, Santa Cruz, CA
-                - changed to have seperate path and list file for each mmm
-        MOdified: Samuel LeBlanc, 2017-03-06, Santa Cruz, CA
-                - added the version keyword for version tracking
+        Written: Samuel LeBlanc, 2015-05-30, Santa Cruz, CA
+                 imported from Run_libradtran and ported to use Run_fuliou
+        Modified: 
         
     """
     import numpy as np
     import scipy.io as sio
     import Run_libradtran as RL
+    import Run_fuliou as RF
     import load_utils as lm
     import os
-    if fp_pmom:
-        pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')
-        pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
-    else:
-        pmom_solar = RL.make_pmom_inputs(source='solar')
-        pmom_thermal = RL.make_pmom_inputs(source='thermal')
-    if max_nmom:
-        pmom_solar['max_nmoms'] = max_nmom
-        pmom_thermal['max_nmoms'] = max_nmom
+    
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
     aero = {'z_arr':[3.0,4.0]}
-    cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
     albedo = {'create_albedo_file':False}
     if not fp_output:
@@ -377,78 +333,36 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                     aero['ext'] = np.append(aero['ext'],aero['ext'][-1])
                     aero['ssa'] = np.append(aero['ssa'],aero['ssa'][-1])
                     aero['asy'] = np.append(aero['asy'],aero['asy'][-1])
-                # set the cloud values
-                cloud['tau'] = input_mmm['MODIS_COD_mean'][0,0][ilat,ilon]
-                cloud['tau'] = cloud['tau']+stdfac_dict['COD']*input_mmm['MODIS_COD_std'][0,0][ilat,ilon]
-                cloud['ref'] = input_mmm['MODIS_effrad_mean'][0,0][ilat,ilon]
-                cloud['ref'] = cloud['ref']+stdfac_dict['ref']*input_mmm['MODIS_Effrad_std'][0,0][ilat,ilon]
-                try: cloud['tau'][cloud['tau']<0.0] = 0.0
-                except: pass
-                try: cloud['ref'][cloud['ref']<2.0] = 2.0
-                except: pass
                 
                 # set the albedo
                 alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
                 if np.isnan(alb): 
                     albedo['sea_surface_albedo'] = True
                 else:
-                    albedo['albedo'] = alb
-                    
-                cloud['link_to_mom_file'] = False
-                aero['link_to_mom_file'] = False
-                cloud_file_name_sol = fp_out2+'AAC_input_lat%02i_lon%02i_%s_sol.inp_cloud' % (ilat,ilon,mmm)
-                cloud_file_name_thm = fp_out2+'AAC_input_lat%02i_lon%02i_%s_thm.inp_cloud' % (ilat,ilon,mmm)
-                aero['file_name'] = fp_out2+'AAC_input_lat%02i_lon%02i_%s_thm.inp_aero' % (ilat,ilon,mmm)
+                    albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_alb,doy,geo['lat'],geo['lon'],year_of_MODIS=2007)
+                    albedo['sea_surface_albedo'] = False
 
                 for HH in xrange(24):
                     geo['hour'] = HH
-                    #build the solar input file
-                    source['source'] = 'solar'
-                    if wvl_file_sol:
-                        source['wvl_filename'] = wvl_file_sol
-                    else:
-                        source['wvl_range'] = [250,5600]
-                        source['wvl_filename'] = None
-                    cloud['moms_dict'] = pmom_solar
-                    cloud['file_name'] = cloud_file_name_sol
-                    file_out_sol = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.inp' % (ilat,ilon,mmm,HH)
-                    if not list_only:
-                        RL.write_input_aac(file_out_sol,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=make_base,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
-                    if make_base:
-                        make_base = False
-                    #build the thermal input file
-                    source['source'] = 'thermal'
-                    if wvl_file_thm:
-                        source['wvl_filename'] = wvl_file_thm
-                    else:
-                        source['wvl_range'] = [4000,50000-1]
-                        source['wvl_filename'] = None
-                    cloud['moms_dict'] = pmom_thermal
-                    cloud['file_name'] = cloud_file_name_thm
-                    file_out_thm = fp_out2+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.inp' % (ilat,ilon,mmm,HH)
+
+                    file_in = fp_out2+'AAC_input_fuliou_lat%02i_lon%02i_%s_HH%02i.datin' % (ilat,ilon,mmm,HH)
+                    file_out = fp_out2+'AAC_input_fuliou_lat%02i_lon%02i_%s_HH%02i.wrt' % (ilat,ilon,mmm,HH)
                     
                     if not list_only:
-                        RL.write_input_aac(file_out_thm,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=False,
-                                       make_base=False,fp_base_file=fp_base_file,set_quiet=True,solver='rodents')
-                    file_list.write(fp_uvspec+' < '+file_out_sol+' > '+fp_output
-                                    +'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out\n' % (ilat,ilon,mmm,HH))
-                    file_list.write(fp_uvspec+' < '+file_out_thm+' > '+fp_output
-                                    +'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out\n' % (ilat,ilon,mmm,HH))
-                    if not cloud['link_to_mom_file']:
-                        cloud['link_to_mom_file'] = True
-                    if not aero['link_to_mom_file']:
-                        aero['link_to_mom_file'] = True
+                        RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
+              
+                    file_list.write(fp_uvspec+' '+file_in+' '+fp_output
+                                    +file_out+'\n' % (ilat,ilon,mmm,HH))
                     print mmm,ilat,ilon,HH
         del alb_geo
         del input_mmm
         file_list.close()
 
 
-# In[ ]:
+# In[8]:
 
 
-def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
+def read_aac_fl(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
     """
     Purpose:
     
