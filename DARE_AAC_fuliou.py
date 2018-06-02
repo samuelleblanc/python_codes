@@ -52,7 +52,7 @@
 #     Wrtten: Samuel LeBlanc, NASA Ames, 2018-05-29
 #     Modified: 
 
-# In[4]:
+# In[9]:
 
 
 if __name__ == '__main__':
@@ -91,6 +91,7 @@ if __name__ == '__main__':
         tmp_folder = in_.get('tmp_folder')
         fp_out = tmp_folder+'/AAC_DARF/input/{vn}/'.format(vn=vn)
     else:
+        tmp_folder = ''
         fp_out = '/nobackup/sleblan2/AAC_DARF/input/{vn}/'.format(vn=vn)
     
     sub = in_.get('sub',False)
@@ -131,11 +132,10 @@ def write_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou
     vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
     fp = '/u/sleblan2/meloe_AAC/{vn}/'.format(vn=vn)
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
-    fp_pmom = '/nobackup/sleblan2/AAC_DARF/rtm/'
-    fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
+    fp_fuliou = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
 
     stdfac = {'COD':+0.0}
-    build_aac_FLinput(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_pmom=fp_pmom,version=vv,stdfac_dict=stdfac,list_only=False,aero_clear=doclear,mmmlist=ms)
+    build_aac_FLinput(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_fuliou=fp_fuliou,version=vv,stdfac_dict=stdfac,list_only=False,aero_clear=doclear,mmmlist=ms)
 
 
 # For reading
@@ -168,8 +168,8 @@ def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou'
 # In[7]:
 
 
-def build_aac_FLinput(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
-                    wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False,
+def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v20180201/fuliou',fp_output=None,
+                    aero_clear=False,version='v1',stdfac_dict={},list_only=False,
                     start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON']):
     """
     Purpose:
@@ -182,17 +182,13 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libra
         fp: path of directory to matlab input files
         fp_alb: full path to where (without the filename) of the MODIS albedo
         fp_out: full path to where the input files will be saved
-        fp_pmom: full path (without the filename) to pmom files
-        fp_uvspec: full path to the uvspec program, defaults to : /u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec
-        fp_output: path to output of uvspec, if none, the fp_out is used, with the last assumed directory 
+        fp_fuliou: full path to the fuliou program, defaults to : home5/sleblan2/fuliou/v20180201/fuliou
+        fp_output: path to output of fuliou, if none, the fp_out is used, with the last assumed directory 
                     /input/ to be changed to /output/
-        wvl_file_sol: full path to solar wavelength file (wavelengths in nm in second column)
-        wvl_file_thm: full path of thermal wavelength file (wavelengths in nm in second column)
         aero_clear: if set to True, then aerosol extinction is set to zero in all cases. (defaults to False) 
         version: (defaults to v1) version number of the files for tracking
         stdfac_dict: Dict that contains the multiplicative factors to the standard deviation stored in the keys:
                      'ext','ssa','asym', 'COD','ref'
-        max_nmom: Maximum number of phase function moments to write out. (defaults to none)
         list_only: (default False) When True, only write out the list file (for debugging)
         start_lat: (default None) if set to an integer, uses the index to start the latitutde loops creating the files (for debugging)
         start_lon: (default None) if set to an integer, uses the index to start the longitutde loops creating the files (for debugging)
@@ -328,11 +324,9 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libra
                 try: aero['asy'][aero['asy']>1.0] = 1.0
                 except: pass
                 
-                if aero['wvl_arr'].max()<100000.0:
-                    aero['wvl_arr'] = np.append(aero['wvl_arr'],100000.0)
-                    aero['ext'] = np.append(aero['ext'],aero['ext'][-1])
-                    aero['ssa'] = np.append(aero['ssa'],aero['ssa'][-1])
-                    aero['asy'] = np.append(aero['asy'],aero['asy'][-1])
+                aero['ext'] = np.array([aero['ext'],aero['ext']])
+                aero['ssa'] = np.array([aero['ssa'],aero['ssa']])
+                aero['asy'] = np.array([aero['asy'],aero['asy']])
                 
                 # set the albedo
                 alb = alb_geo_sub[np.argmin(abs(alb_geo_lat-lat)),np.argmin(abs(alb_geo_lon-lon))]
@@ -344,15 +338,14 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libra
 
                 for HH in xrange(24):
                     geo['hour'] = HH
-
-                    file_in = fp_out2+'AAC_input_fuliou_lat%02i_lon%02i_%s_HH%02i.datin' % (ilat,ilon,mmm,HH)
-                    file_out = fp_out2+'AAC_input_fuliou_lat%02i_lon%02i_%s_HH%02i.wrt' % (ilat,ilon,mmm,HH)
+                    form = {'ilat':ilat,'ilon':ilon,'mmm':mmm,'HH':HH}
+                    file_in = fp_out2+'AAC_input_fuliou_lat{ilat:02.0f}_lon{ion:02.0f}_{mmm}_HH{HH:02.0f}.datin'.format(**form)
+                    file_out = fp_out2+'AAC_output_fuliou_lat{ilat:02.0f}_lon{ion:02.0f}_{mmm}_HH{HH:02.0f}.wrt'.format(**form)
                     
                     if not list_only:
                         RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
               
-                    file_list.write(fp_uvspec+' '+file_in+' '+fp_output
-                                    +file_out+'\n' % (ilat,ilon,mmm,HH))
+                    file_list.write(fp_fuliou+' '+file_in+' '+fp_output+file_out+'\n')
                     print mmm,ilat,ilon,HH
         del alb_geo
         del input_mmm
