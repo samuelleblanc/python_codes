@@ -333,7 +333,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                 if np.isnan(alb): 
                     albedo['sea_surface_albedo'] = True
                 else:
-                    albedo['modis_albedo'] = get_MODIS_surf_albedo(fp_alb,doy,geo['lat'],geo['lon'],year_of_MODIS=2007)
+                    albedo['modis_albedo'] = RF.get_MODIS_surf_albedo(fp_alb,doy,geo['lat'],geo['lon'],year_of_MODIS=2007)
                     albedo['sea_surface_albedo'] = False
 
                 for HH in xrange(24):

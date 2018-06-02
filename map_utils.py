@@ -236,6 +236,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
     Translated to python by Thomas Lecocq
     """
     import numpy as np
+    import warnings
     glat1 = lat * np.pi / 180.
     glon1 = lon * np.pi / 180.
     s = maxdist / 1.852
@@ -243,7 +244,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
  
     EPS= 0.00000000005
     if ((np.abs(np.cos(glat1))<EPS) and not (np.abs(np.sin(faz))<EPS)):
-        alert("Only N-S courses are meaningful, starting at a pole!")
+        warnings.warn("Only N-S courses are meaningful, starting at a pole!")
  
     a=6378.13/1.852
     f=1/298.257223563
