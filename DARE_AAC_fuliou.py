@@ -339,8 +339,8 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                 for HH in xrange(24):
                     geo['hour'] = HH
                     form = {'ilat':ilat,'ilon':ilon,'mmm':mmm,'HH':HH}
-                    file_in = fp_out2+'AAC_input_fuliou_lat{ilat:02.0f}_lon{ion:02.0f}_{mmm}_HH{HH:02.0f}.datin'.format(**form)
-                    file_out = fp_out2+'AAC_output_fuliou_lat{ilat:02.0f}_lon{ion:02.0f}_{mmm}_HH{HH:02.0f}.wrt'.format(**form)
+                    file_in = fp_out2+'AAC_input_fuliou_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}_HH{HH:02.0f}.datin'.format(**form)
+                    file_out = fp_out2+'AAC_output_fuliou_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}_HH{HH:02.0f}.wrt'.format(**form)
                     
                     if not list_only:
                         RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
