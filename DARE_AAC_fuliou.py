@@ -336,17 +336,17 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                     albedo['modis_albedo'] = RF.get_MODIS_surf_albedo(fp_alb,doy,geo['lat'],geo['lon'],year_of_MODIS=2007)
                     albedo['sea_surface_albedo'] = False
 
-                for HH in xrange(24):
-                    geo['hour'] = HH
-                    form = {'ilat':ilat,'ilon':ilon,'mmm':mmm,'HH':HH}
-                    file_in = fp_out2+'AACFLin_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}_HH{HH:02.0f}.datin'.format(**form)
-                    file_out = fp_out2+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}_HH{HH:02.0f}.wrt'.format(**form)
+                #for HH in xrange(24):
+                #    geo['hour'] = HH
+                form = {'ilat':ilat,'ilon':ilon,'mmm':mmm,'HH':HH}
+                file_in = fp_out2+'AACFLin_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.datin'.format(**form)
+                file_out = fp_out2+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'.format(**form)
                     
-                    if not list_only:
-                        RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
+                if not list_only:
+                    RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
               
-                    file_list.write(fp_fuliou+' '+file_in+' '+file_out+'\n')
-                    print mmm,ilat,ilon,HH
+                file_list.write(fp_fuliou+' '+file_in+' '+file_out+'\n')
+                print mmm,ilat,ilon
         del alb_geo
         del input_mmm
         file_list.close()
