@@ -519,7 +519,9 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     MODIS_select_day = MODIS_start_days[(doy-MODIS_start_days)>=0][-1]
     # get the lat lon range from the center point
     lats,lons = np.arange(4).astype(float),np.arange(4).astype(float)
-    for i in range(4): lats[i],lons[i],_ = shoot(lat,lon,45.0+i*90.0,maxdist=20.000*np.sqrt(2.0))
+    for i in range(4): lons[i],lats[i],_ = shoot(lon,lat,45.0+i*90.0,maxdist=20.000*np.sqrt(2.0))
+    if len(np.unique(lons))<2: lons[0],lons[1] = lons[0]-0.1,lons[1]+0.1
+    if len(np.unique(lats))<2: lats[0],lats[1] = lats[0]-0.1,lats[1]+0.1
         
     # Select the proper grid points to load from the MCD43GF gapfilled albedo files
     latgrid = np.arange(90,-90,-30.0/3600.0)
