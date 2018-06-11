@@ -273,6 +273,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         fp_out2 = fp_out+mmm+std_label+'/'
         if not os.path.exists(fp_out2):
             os.mkdir(fp_out2)
+        
         if change_fp_output:
             fp_output = fp_out2.replace('input','output')
             if not os.path.exists(fp_output):
@@ -338,7 +339,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
 
                 #for HH in xrange(24):
                 #    geo['hour'] = HH
-                form = {'ilat':ilat,'ilon':ilon,'mmm':mmm,'HH':HH}
+                form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
                 file_in = fp_out2+'AACFLin_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.datin'.format(**form)
                 file_out = fp_out2+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'.format(**form)
                     
