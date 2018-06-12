@@ -160,7 +160,7 @@ def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',vn='v5_fuliou'):
         fp_mat = '/u/sleblan2/meloe_AAC/{vn}/Input_to_DARF_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn)
             
         fp_outc = fp_out+'{}/'.format(mmm)
-        aac = read_aac_fl(fp_outc,fp,mmmlist=mmm,version=vv)
+        aac = read_aac_fl(fp_outc,fp,mmmlist=[mmm],version=vv)
         sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/{vn}/AAC_DARE_FuLiou_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn),aac)
 
 
@@ -352,7 +352,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         file_list.close()
 
 
-# In[1]:
+# In[19]:
 
 
 def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt',
@@ -432,7 +432,7 @@ def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat
             geo['month'] = 10
             doy = 321
     
-        d = []
+        d = np.zeros((len(input_mmm['MODIS_lon'][0,0]),len(input_mmm['MODIS_lat'][0,0]))).astype(dict)
         
         print 'Running through the files'
         for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
@@ -463,13 +463,14 @@ def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat
                 form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
                 file_out = fp_out+outstr.format(**form)
     
-                d.append(RF.read_fuliou_output(file_out))
-                d[i]['ssa'] = np.array(aero['ssa'])
-                d[i]['asy'] = np.array(aero['asy'])
-                d[i]['ext'] = np.array(aero['ext'])
-                d[i]['wvl'] = np.array(aero['wvl_arr'])
-                d[i]['lat'],d[i]['lon'] = lat,lon
-                RF.analyse_fuliou_output(d[i])
+                d[ilon,ilat] = (RF.read_fuliou_output(file_out))
+                d[ilon,ilat]['ssa'] = np.array(aero['ssa'])
+                d[ilon,ilat]['asy'] = np.array(aero['asy'])
+                d[ilon,ilat]['ext'] = np.array(aero['ext'])
+                d[ilon,ilat]['wvl'] = np.array(aero['wvl_arr'])
+                d[ilon,ilat]['lat'],d[ilon,ilat]['lon'] = lat,lon
+                RF.analyse_fuliou_output(d[ilon,ilat])
         out[mmm] = d
+    out['lat'],out['lon'] = input_mmm['MODIS_lat'][0,0],input_mmm['MODIS_lon'][0,0]
     return out
 
