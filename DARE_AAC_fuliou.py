@@ -114,6 +114,7 @@ if __name__ == '__main__':
     if dowrite:
         write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
     elif doread:
+        fp_out = fp_out.replace('input','output')
         read_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,vn=vn)
     else:
         write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
@@ -440,7 +441,7 @@ def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]) # is in AOD units, not ext, but since it is for 1 km, does not matter
-                print 'ext:',aero['ext'][9]
+                print 'ext:',aero['ext'][9],', lat:',ilat,', lon:',ilon
                 aero['ext'][aero['ext']<0.0] = 0.0
                 if np.isnan(aero['ext']).all():
                     print 'skipping lat:%i, lon:%i' % (ilat,ilon)

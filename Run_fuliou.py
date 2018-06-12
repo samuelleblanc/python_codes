@@ -760,8 +760,18 @@ def read_fuliou_output(fname,verbose=False):
             a = map(float,f.readline().split())
             d['cosSZA'].append(c)
             d['AOD550'].append(a)
-            t = map(float,f.readline().split()[1:])
-            n = map(float,f.readline().split()[1:])
+            try:
+                t = map(float,f.readline().split()[1:])
+            except:
+                frl = f.readline()
+                t = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
+                t.insert(0,118)
+            try:
+                n = map(float,f.readline().split()[1:])
+            except:
+                frl = f.readline()
+                n = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
+                n.insert(0,118)
             d['swdn17lev_aer'].append(t[1:18])
             d['swup17lev_aer'].append(t[18:35])
             d['swdntoa_aer'].append(t[35])
