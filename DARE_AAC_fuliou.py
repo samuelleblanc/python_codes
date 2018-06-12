@@ -114,7 +114,7 @@ if __name__ == '__main__':
     if dowrite:
         write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
     elif doread:
-        read_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
+        read_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,vn=vn)
     else:
         write_fuliou_aac(fp_out,ms=ms,tmp_folder=tmp_folder,doclear=doclear,vn=vn)
 
@@ -140,29 +140,28 @@ def write_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou
 
 # For reading
 
-# In[6]:
+# In[2]:
 
 
-def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou'):
+def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',vn='v5_fuliou'):
     
     from DARE_AAC_fuliou import read_aac_fl
     import scipy.io as sio
 
-    import time
-    time.sleep(0.5)
+    from DARE_AAC_fuliou import build_aac_FLinput
+    print 'working on folder: '+fp_out
 
-    #vv = 'v3_20160408_CALIOP_AAC_AOD_With_Sa_only'
-    #vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
     vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    fp = '/u/sleblan2/meloe_AAC/{vn}/'.format(vn=vn)
+    fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
+    fp_fuliou = '/home5/sleblan2/fuliou/v20180201/fuliou'
+    
     for mmm in ms:
-    #     fp_out = '/nobackup/sleblan2/AAC_DARF/output/v3_without/{}/'.format(mmm)
-         fp_mat = '/u/sleblan2/meloe_AAC/{vn}/Input_to_DARF_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn)
-    #     aac = RL.read_aac(fp_out,fp_mat,mmm=mmm)
-    #     sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/v3_without/AAC_{m}_{v}.mat'.format(m=mmm,v=vv),aac)
-
-         fp_outc = fp_out+'{}/'.format(mmm+sub)
-         aac_clear = read_aac_fl(fp_outc,fp_mat,mmm=mmm)
-         sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/{vn}/AAC_{m}_{v}.mat'.format(m=mmm+subi,v=vv,vn=vn),aac_clear)
+        fp_mat = '/u/sleblan2/meloe_AAC/{vn}/Input_to_DARF_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn)
+            
+        fp_outc = fp_out+'{}/'.format(mmm)
+        aac = read_aac_fl(fp_outc,fp,mmmlist=mmm)
+        sio.savemat('/nobackup/sleblan2/AAC_DARF/mat/{vn}/AAC_DARE_FuLiou_{m}_{v}.mat'.format(m=mmm,v=vv,vn=vn),aac)
 
 
 # In[7]:
@@ -199,14 +198,14 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         numpy
         scipy
         load_utils
-        Run_libradtran 
+        Run_libradtran
+        Run_fuliou
         os
         
     Required files:
     
         Input_to_DARF_mmm.mat : input files from Meloë
         surface albedo files from MODIS (MCD43GF_geo_shortwave_doy_2007.hdf)
-        pmom files in netcdf (thermal and solar)
         
     Example:
     
@@ -338,10 +337,10 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                     albedo['sea_surface_albedo'] = False
 
                 #for HH in xrange(24):
-                #    geo['hour'] = HH
+                geo['hour'] = 12.0
                 form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
                 file_in = fp_out2+'AACFLin_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.datin'.format(**form)
-                file_out = fp_out2+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'.format(**form)
+                file_out = fp_output+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'.format(**form)
                     
                 if not list_only:
                     RF.write_fuliou_input(file_in,geo=geo,aero=aero,albedo=albedo,verbose=False)
@@ -353,24 +352,24 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         file_list.close()
 
 
-# In[8]:
+# In[1]:
 
 
-def read_aac_fl(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
+def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'):
     """
     Purpose:
     
-        Simple program to read all the output of the libradtran runs for AAC
+        Simple program to read all the output of the Fu Liou runs for AAC
         Program to read the output of libradtran irradiance files
         Very simple output of 3 zout, one wavelength
     
     Inputs:
     
         fp_out: full path of the directory with the files to read
-        fp_mat: full path of mat file with lat and lon to use
-        mmm: string with the season defined (can be DJF,MAM,JJA, or SON)
-        read_sol: set to True (default) to read the sol files
-        read_thm: set to True (default) to read the thm files
+        fp: full path of mat file with lat and lon to use and with MOC results
+        fp_alb: full path of the  albedo files
+        mmmlist: list of strings with the season defined (can be DJF,MAM,JJA, or SON)
+        outstr: string format of the file names
         
     Outputs:
     
@@ -378,107 +377,97 @@ def read_aac_fl(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
         
     Dependencies:
     
-        Run_libradtran (this file)
+        Run_fuliou
         os
         numpy
         scipy
+        load_utils
+        
         
     Required files:
     
-        files of libradtran output
-        meloë's .mat files
+        files of Fu Liou output
+        Input_to_DARF_mmm.mat : input files from Meloë
+        albedo files (MODIS gap filled)
         
     Example:
     
-        >>> import Run_libradtran as RL
-        >>> fp_out = '/nobackup/sleblan2/AAC_DARF/output/v2/DJF/'
-        >>> fp_mat = '/u/sleblan2/meloe_AAC/Input_to_DARF_DJF.mat'
-        >>> mmm = 'DJF'
-        >>> DJF = RL.read_aac(fp_out,fp_mat,mmm=mmm)
-        
-        DJF 0 0
-        File not found skip: lat00_lon00_DJF_HH00 
-        .
-        .
-        .
-        
-        >>> DJF.keys()
-        ['UTC', 
-         'LW_irr_up_utc', 
-         'lon', 
-         'SW_irr_dn_avg', 
-         'SW_irr_up_utc',
-         'LW_irr_dn_avg', 
-         'zout', 
-         'LW_irr_up_avg', 
-         'lat', 
-         'SW_irr_up_avg', 
-         'SW_irr_dn_utc', 
-         'LW_irr_dn_utc']
  
     Modification History:
     
-        Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
-        Modified: Samuel LeBlanc, 2015-07-15, Santa Cruz, CA
-                    - added read_sol and read_thm keywords
-                    - added example
+        Written: Samuel LeBlanc, 2018-06-11, Santa Cruz, CA
+                Ported from Run_libradtran to use Fuliou outputs
+        Modified: 
         
     """
     import os
     import scipy.io as sio
     import Run_libradtran as RL
+    import Run_fuliou as RF
     import numpy as np
+    import load_utils as lm
     
-    if not mmm:
-        raise NameError('no season string defined')
-        return
+    geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
+    aero = {'z_arr':[3.0,4.0]}
+    source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
+    albedo = {'create_albedo_file':False}
     
-    input_mmm = sio.loadmat(fp_mat,mat_dtype=True)['data_input_darf']
-    output = {'lat':input_mmm['MODIS_lat'][0,0],
-              'lon':input_mmm['MODIS_lon'][0,0],
-              'UTC':range(24),
-              'zout':[0,3,100]}
-    nlat,nlon,nz = len(output['lat']),len(output['lon']),len(output['zout'])
-    output['SW_irr_dn_utc'] = np.zeros((nz,nlat,nlon,24))
-    output['SW_irr_up_utc'] = np.zeros((nz,nlat,nlon,24))
-    output['LW_irr_dn_utc'] = np.zeros((nz,nlat,nlon,24))
-    output['LW_irr_up_utc'] = np.zeros((nz,nlat,nlon,24))
-    output['SW_irr_dn_avg'] = np.zeros((nz,nlat,nlon))
-    output['SW_irr_up_avg'] = np.zeros((nz,nlat,nlon))
-    output['LW_irr_dn_avg'] = np.zeros((nz,nlat,nlon))
-    output['LW_irr_up_avg'] = np.zeros((nz,nlat,nlon))    
-    for ilat in xrange(nlat):
-        for ilon in xrange(nlon):        
-            for iutc in output['UTC']:
-                file_out_sol = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_sol.out' % (ilat,ilon,mmm,iutc)
-                file_out_thm = fp_out+'AAC_input_lat%02i_lon%02i_%s_HH%02i_thm.out' % (ilat,ilon,mmm,iutc)
-                try:
-                    if read_sol:
-                        sol = RL.read_libradtran(file_out_sol,zout=output['zout'])
-                    if read_thm:
-                        thm = RL.read_libradtran(file_out_thm,zout=output['zout'])
-                except IOError:
-                    print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
-                    if iutc==0:
-                        print file_out_sol
+    out = {}
+    for mmm in mmmlist: #['DJF','MAM','JJA','SON']:
+        fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
+        print 'in %s months, getting mat file: %s' % (mmm,fpm)
+        input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
+        if mmm=='DJF':
+            geo['month'] = 1
+            doy = 17
+        elif mmm=='MAM':
+            geo['month'] = 4
+            doy = 137
+        elif mmm=='JJA':
+            geo['month'] = 7
+            doy = 225
+        elif mmm=='SON':
+            geo['month'] = 10
+            doy = 321
+    
+        d = []
+        
+        print 'Running through the files'
+        for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
+            for ilon,lon in enumerate(input_mmm['MODIS_lon'][0,0]):
+                # set the aerosol values
+                aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
+                aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]) # is in AOD units, not ext, but since it is for 1 km, does not matter
+                print 'ext:',aero['ext'][9]
+                aero['ext'][aero['ext']<0.0] = 0.0
+                if np.isnan(aero['ext']).all():
+                    print 'skipping lat:%i, lon:%i' % (ilat,ilon)
                     continue
-                except ValueError:
-                    print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
-                    output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
-                    output['SW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
-                    output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = np.nan
-                    output['LW_irr_up_utc'][:,ilat,ilon,iutc] = np.nan
-                    continue
-                if read_sol:
-                    output['SW_irr_dn_utc'][:,ilat,ilon,iutc] = sol['direct_down']+sol['diffuse_down']
-                    output['SW_irr_up_utc'][:,ilat,ilon,iutc] = sol['diffuse_up']
-                if read_thm:
-                    output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
-                    output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
-            print mmm,ilat,ilon
-            output['SW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['SW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
-            output['SW_irr_up_avg'][:,ilat,ilon] = np.mean(output['SW_irr_up_utc'][:,ilat,ilon,:],axis=1)
-            output['LW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['LW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
-            output['LW_irr_up_avg'][:,ilat,ilon] = np.mean(output['LW_irr_up_utc'][:,ilat,ilon,:],axis=1)
-    return output
+                aero['ssa'] = input_mmm['MOC_ssa_mean'][0,0][ilat,ilon,:]
+                aero['asy'] = input_mmm['MOC_asym_mean'][0,0][ilat,ilon,:]
+                
+                #sanitize inputs after adding subtracting standard deviations
+                try: aero['ssa'][aero['ssa']<0.0] = 0.0
+                except: pass
+                try: aero['ssa'][aero['ssa']>1.0] = 1.0
+                except: pass
+                try: aero['asy'][aero['asy']<0.0] = 0.0
+                except: pass
+                try: aero['asy'][aero['asy']>1.0] = 1.0
+                except: pass
+
+                #for HH in xrange(24):
+                geo['hour'] = 12.0
+                form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
+                file_out = fp_out+outstr.format(**form)
+    
+                d.append(RF.read_fuliou_output(file_out))
+                d[i]['ssa'] = np.array(aero['ssa'])
+                d[i]['asy'] = np.array(aero['asy'])
+                d[i]['ext'] = np.array(aero['ext'])
+                d[i]['wvl'] = np.array(aero['wvl_arr'])
+                d[i]['lat'],d[i]['lon'] = lat,lon
+                RF.analyse_fuliou_output(d[i])
+        out[mmm] = d
+    return out
 
