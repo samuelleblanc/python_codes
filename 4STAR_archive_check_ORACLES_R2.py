@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[159]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -24,19 +24,19 @@ from Sp_parameters import smooth
 from path_utils import getpath
 
 
-# In[160]:
+# In[2]:
 
 
 from linfit import linfit
 
 
-# In[161]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[162]:
+# In[4]:
 
 
 #fp ='C:/Users/sleblan2/Research/ORACLES/'
@@ -46,7 +46,7 @@ fp
 
 # # load the files
 
-# In[163]:
+# In[5]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -78,19 +78,19 @@ days = ['20160902','20160904','20160906','20160908']
 days = ['20160831']
 
 
-# In[164]:
+# In[7]:
 
 
 vv = 'R2'
 
 
-# In[165]:
+# In[6]:
 
 
 vi = 'v7'
 
 
-# In[166]:
+# In[8]:
 
 
 outaod_RA = []
@@ -116,13 +116,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[167]:
+# In[9]:
 
 
 len(outaod_RA)
 
 
-# In[168]:
+# In[10]:
 
 
 len(days)
@@ -167,25 +167,25 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[171]:
+# In[13]:
 
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[172]:
+# In[14]:
 
 
 nm
 
 
-# In[173]:
+# In[15]:
 
 
 wl = nm[6:-1]
 
 
-# In[174]:
+# In[16]:
 
 
 wl = wl[0:24]
@@ -200,7 +200,7 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
     plt.axvline(x,color='#DDDDDD',alpha=0.02)
 
 
-# In[175]:
+# In[17]:
 
 
 for a in wl:
@@ -445,13 +445,13 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[181]:
+# In[18]:
 
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[182]:
+# In[19]:
 
 
 wv
@@ -534,7 +534,7 @@ plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,tr
 
 # ### Special plotting of AOD per altitude and latitude
 
-# In[183]:
+# In[20]:
 
 
 days
@@ -586,13 +586,13 @@ def calc_angs(time,w,aod,flag):
     return ang
 
 
-# In[185]:
+# In[21]:
 
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[186]:
+# In[22]:
 
 
 wls = np.array(wv)/1000.0
@@ -644,7 +644,7 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[187]:
+# In[23]:
 
 
 ar = {}
@@ -652,14 +652,14 @@ for n in nm:
     ar[n] = np.array([])
 
 
-# In[188]:
+# In[24]:
 
 
 ar['idays'] = np.array([])
 ar['days'] = np.array([])
 
 
-# In[195]:
+# In[25]:
 
 
 for i,d in enumerate(days):
@@ -669,7 +669,7 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[196]:
+# In[26]:
 
 
 ar['GPS_Alt'].shape
@@ -683,43 +683,43 @@ ar.keys()
 
 # ## filter for low altitudes
 
-# In[198]:
+# In[27]:
 
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[199]:
+# In[28]:
 
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[200]:
+# In[29]:
 
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[201]:
+# In[30]:
 
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[202]:
+# In[31]:
 
 
 ar['fl'] = ar['fl_QA']&ar['fl_alt']
 
 
-# In[203]:
+# In[32]:
 
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[204]:
+# In[33]:
 
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
@@ -835,16 +835,22 @@ plt.savefig(fp+'aod_ict/{vv}/{vv}_Airmass_histogram.png'.format(vv=vv),dpi=600,t
 
 # # Make histogram for each flight 
 
-# In[42]:
+# In[11]:
 
 
 i
 
 
-# In[43]:
+# In[34]:
 
 
 np.nanmean(outaod_RA[i]['AOD0501'][fl])
+
+
+# In[36]:
+
+
+outaod_RA[0].dtype.names
 
 
 # In[44]:

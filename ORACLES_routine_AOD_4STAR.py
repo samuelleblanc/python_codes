@@ -191,7 +191,7 @@ len(s['fl_acaod'])
 len(s['fl_QA'])
 
 
-# In[16]:
+# In[17]:
 
 
 s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
@@ -2108,7 +2108,7 @@ plt.title('ORACLES 2016 4STAR AOD')
 plt.legend(frameon=False)
 
 
-# In[45]:
+# In[18]:
 
 
 s['fl6'] = s['fl_alt_6'] & s['fl_QA']
@@ -2145,6 +2145,83 @@ plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order],frameo
 
 plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD501_histogram.png',
             transparent=True,dpi=500)
+
+
+# ### Plot histogram per day
+
+# In[21]:
+
+
+np.unique(s['days'])
+
+
+# In[22]:
+
+
+iid = s['days']==s['days'][0]
+
+
+# In[24]:
+
+
+s['AOD0501'][iid][s['fl6'][iid]]
+
+
+# In[28]:
+
+
+for d in np.unique(s['days']):
+    
+    iid = s['days']==d
+    fig = plt.figure(figsize=(7,6))
+    plt.subplot(2,1,1)
+    try:
+        plt.hist([s['AOD0501'][iid][s['fl6'][iid]],s['AOD0501'][iid][s['fl_acaod'][iid]]], bins=15,range=(0,1.0),color=['lightcoral','b'],histtype='bar',
+             edgecolor='None',label=['Full Column','Only above clouds'],alpha=0.75,normed=False,stacked=True)
+    except:
+        continue
+
+    plt.axvline(x=np.nanmean(s['AOD0501'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,label='Mean')
+    plt.axvline(x=np.nanmedian(s['AOD0501'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,ls='--',label='Median')
+
+
+    plt.axvline(x=np.nanmean(s['AOD0501'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2)
+    plt.axvline(x=np.nanmean(s['AOD0501'][iid][s['fl_acaod'][iid]]),color='b',ymin=0, ymax=10,lw=2)
+    plt.axvline(x=np.nanmean(s['AOD0501'][iid][s['fl6'][iid]]),color='lightcoral',ymin=0, ymax=10,lw=2)
+
+    plt.axvline(x=np.nanmedian(s['AOD0501'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,ls='--')
+    plt.axvline(x=np.nanmedian(s['AOD0501'][iid][s['fl_acaod'][iid]]),color='b',ymin=0, ymax=10,lw=2,ls='--')
+    plt.axvline(x=np.nanmedian(s['AOD0501'][iid][s['fl6'][iid]]),color='lightcoral',ymin=0, ymax=10,lw=2,ls='--')
+
+    plt.xlabel('AOD 501 nm')
+    plt.ylabel('Samples')
+    plt.title('ORACLES 4STAR AOD for {:8.0f}'.format(d))
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [2,3,0,1]
+    plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order],frameon=False)
+    #plt.legend(frameon=False)
+
+    fig.subplots_adjust(hspace=.3)
+    plt.subplot(2,1,2)
+    plt.hist([s['AOD1020'][iid][s['fl6'][iid]],s['AOD1020'][iid][s['fl_acaod'][iid]]],color=['lightcoral','b'],histtype='bar',
+            bins=15,range=[0.0,0.3],label=['Only above cloud','Below 0.6 km'],edgecolor='None',alpha=0.75,normed=False,stacked=True)
+    plt.xlim(0.0,0.3)
+    plt.ylabel('Samples')
+    plt.xlabel('AOD 1020 nm')
+
+    plt.axvline(x=np.nanmean(s['AOD1020'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,label='Mean')
+    plt.axvline(x=np.nanmedian(s['AOD1020'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,ls='--',label='Median')
+
+    plt.axvline(x=np.nanmean(s['AOD1020'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2)
+    plt.axvline(x=np.nanmean(s['AOD1020'][iid][s['fl_acaod'][iid]]),color='b',ymin=0, ymax=10,lw=2)
+    plt.axvline(x=np.nanmean(s['AOD1020'][iid][s['fl6'][iid]]),color='lightcoral',ymin=0, ymax=10,lw=2)
+
+    plt.axvline(x=np.nanmedian(s['AOD1020'][iid][s['fl_both'][iid]]),color='k',ymin=0, ymax=10,lw=2,ls='--')
+    plt.axvline(x=np.nanmedian(s['AOD1020'][iid][s['fl_acaod'][iid]]),color='b',ymin=0, ymax=10,lw=2,ls='--')
+    plt.axvline(x=np.nanmedian(s['AOD1020'][iid][s['fl6'][iid]]),color='lightcoral',ymin=0, ymax=10,lw=2,ls='--')
+
+    plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_2wvl_histogram_stack_{:8.0f}.png'.format(d),
+                transparent=True,dpi=500)
 
 
 # ## Now get the angstrom
@@ -2408,7 +2485,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_angstrom_histogram_sub.png',
             transparent=True,dpi=500)
 
 
-# In[42]:
+# In[26]:
 
 
 s['fl_both'] = s['fl_acaod'] | s['fl6']
