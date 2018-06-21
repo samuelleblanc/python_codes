@@ -170,10 +170,13 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
     # Get the surface albedo for every 5 minutes
     if albedo.get('sea_surface_albedo'):
         if verbose: print 'albedo set to sea_surface_albedo'
-        albedo['albedo_fine'] = 0.037/(1.1*np.real((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15)
+        albedo['albedo_fine'] = np.real(0.037/(1.1*((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15))
+        albedo['albedo_fine'][albedo['albedo_fine']<0] = 0.0
+        #surfalb = real(0.037*ones(size(cosSZAfine))./((1.1 * (cosSZAfine.^(1.4))) + 0.15));
     if albedo.get('land_surface_albedo'):
         if verbose: print 'albedo set to land_surface_albedo'
-        albedo['albedo_fine'] = 0.070/(0.3*np.real((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15)
+        albedo['albedo_fine'] = np.real(0.070/(0.3*((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15))
+        albedo['albedo_fine'][albedo['albedo_fine']<0] = 0.0
     if albedo.get('modis_surface_albedo'):
         if verbose: print 'albedo set to modis_surface_albedo'
         fiso = albedo['modis_albedo']['mean_iso']
@@ -761,17 +764,23 @@ def read_fuliou_output(fname,verbose=False):
             d['cosSZA'].append(c)
             d['AOD550'].append(a)
             try:
-                t = map(float,f.readline().split()[1:])
-            except:
                 frl = f.readline()
-                t = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
-                t.insert(0,118)
+                t = map(float,frl.split()[1:])
+            except:
+                try:
+                    t = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
+                    t.insert(0,118)
+                except ValueError:
+                    t = np.zeros([39,])+np.nan                
             try:
-                n = map(float,f.readline().split()[1:])
-            except:
                 frl = f.readline()
-                n = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
-                n.insert(0,118)
+                n = map(float,frl.split()[1:])
+            except:
+                try:
+                    n = map(float,[frl[9+9*i:9+9*(i+1)].strip() for i in xrange(38)])
+                    n.insert(0,118)
+                except ValueError:
+                    n = np.zeros([39,])+np.nan
             d['swdn17lev_aer'].append(t[1:18])
             d['swup17lev_aer'].append(t[18:35])
             d['swdntoa_aer'].append(t[35])

@@ -130,13 +130,19 @@ def write_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',doclear=False,vn='v5_fuliou
     from DARE_AAC_fuliou import build_aac_FLinput
     print 'working on folder: '+fp_out
 
-    vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    MOC_only = False
+    if vn=='v5_fuliiou':
+        vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    else if vn=='v6_fuliou':
+        vv = 'v3_20180620_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+        MOC_only = True
     fp = '/u/sleblan2/meloe_AAC/{vn}/'.format(vn=vn)
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     fp_fuliou = '/home5/sleblan2/fuliou/v20180201/fuliou'
 
     stdfac = {'COD':+0.0}
-    build_aac_FLinput(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_fuliou=fp_fuliou,version=vv,stdfac_dict=stdfac,list_only=False,aero_clear=doclear,mmmlist=ms)
+    build_aac_FLinput(fp=fp,fp_alb=fp_alb,fp_out=fp_out,fp_fuliou=fp_fuliou,version=vv,stdfac_dict=stdfac,
+                      list_only=False,aero_clear=doclear,mmmlist=ms,MOC_only=MOC_only)
 
 
 # For reading
@@ -152,7 +158,10 @@ def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',vn='v5_fuliou'):
     from DARE_AAC_fuliou import build_aac_FLinput
     print 'working on folder: '+fp_out
 
-    vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    if vn=='v5_fuliiou':
+        vv = 'v3_20170616_CALIOP_AAC_AODxfAAC_With_Without_Sa'
+    else if vn=='v6_fuliou':
+        vv = 'v3_20180620_CALIOP_AAC_AODxfAAC_With_Without_Sa'
     fp = '/u/sleblan2/meloe_AAC/{vn}/'.format(vn=vn)
     fp_alb = '/nobackup/sleblan2/AAC_DARF/surface_albedo/'
     fp_fuliou = '/home5/sleblan2/fuliou/v20180201/fuliou'
@@ -170,7 +179,7 @@ def read_fuliou_aac(fp_out,ms=['SON'],tmp_folder='',vn='v5_fuliou'):
 
 def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v20180201/fuliou',fp_output=None,
                     aero_clear=False,version='v1',stdfac_dict={},list_only=False,
-                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON']):
+                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON'],MOC_only=False):
     """
     Purpose:
     
@@ -193,6 +202,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         start_lat: (default None) if set to an integer, uses the index to start the latitutde loops creating the files (for debugging)
         start_lon: (default None) if set to an integer, uses the index to start the longitutde loops creating the files (for debugging)
         mmmlist: (default ['DJF','MAM','JJA','SON']) the list of months to go through
+        MOC_only: (default False) If set to True, uses the v3_20180620 version from Meloë where there is only the MOC values
         
     Dependencies:
     
@@ -301,9 +311,13 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                 geo['lat'],geo['lon'] = lat,lon
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
-                aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]) # is in AOD units, not ext, but since it is for 1 km, does not matter
+                if MOC_only:
+                    aero['ext'] = np.abs(input_mmm['MOC_ext_mean_Mm_minus1'][0,0][ilat,ilon,:])*1000.0   
+                    aero['zarr'] = [input_mmm['Mean_CALIOP_z_layer_min'][0,0][ilat,ilon],input_mmm['Mean_CALIOP_z_layer_max'][0,0][ilat,ilon]]
+                else:
+                    aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])*1000.0 # is in AOD units, not ext, but since it is for 1 km, does not matter
                 print 'ext:',stdfac_dict['ext'],aero['ext'][9],stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,9])/1000.0
-                aero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])/1000.0 #convert  per Mm to per km
+                #baero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])/1000.0 #convert  per Mm to per km
                 aero['ext'][aero['ext']<0.0] = 0.0
                 if aero_clear:
                     aero['ext'] = aero['ext']*0.0
@@ -338,7 +352,7 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                     albedo['sea_surface_albedo'] = False
 
                 #for HH in xrange(24):
-                geo['hour'] = 12.0
+                geo['hour'] = lon/15.0*-1.0+12.0
                 form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
                 file_in = fp_out2+'AACFLin_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.datin'.format(**form)
                 file_out = fp_output+'AACFLout_lat{ilat:02.0f}_lon{ilon:02.0f}_{mmm}.wrt'.format(**form)
@@ -460,7 +474,7 @@ def read_aac_fl(fp_out,fp,mmmlist=['DJF','MAM','JJA','SON'],outstr='AACFLout_lat
                 except: pass
 
                 #for HH in xrange(24):
-                geo['hour'] = 12.0
+                geo['hour'] = lon/15.0*-1.0+12.0
                 form = {'ilat':ilat,'ilon':ilon,'mmm':mmm}
                 file_out = fp_out+outstr.format(**form)
     
