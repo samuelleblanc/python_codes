@@ -177,13 +177,18 @@ def write_fuliou_input(output_file,geo={},aero={},albedo={},verbose=False):
         if verbose: print 'albedo set to land_surface_albedo'
         albedo['albedo_fine'] = np.real(0.070/(0.3*((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15))
         albedo['albedo_fine'][albedo['albedo_fine']<0] = 0.0
-    if albedo.get('modis_surface_albedo'):
-        if verbose: print 'albedo set to modis_surface_albedo'
-        fiso = albedo['modis_albedo']['mean_iso']
-        fvol = albedo['modis_albedo']['mean_vol']
-        fgeo = albedo['modis_albedo']['mean_geo']
-        frac_diffuse = get_frac_diffuse(albedo['modis_albedo'],geo['sza_fine'],ext=aero['ext'],z=aero['z_arr'])
-        albedo['albedo_fine'] = calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,geo['sza_fine'])
+    if albedo.get('modis_albedo'):
+        if np.isnan(albedo['modis_albedo']['mean_iso']):
+            if verbose: print 'albedo set to modis_surface_albedo, but failed therefore using land_surface_albedo'
+            albedo['albedo_fine'] = np.real(0.070/(0.3*((np.cos(np.array(geo['sza_fine'])*np.pi/180.0)+0j)**1.4)+0.15))
+            albedo['albedo_fine'][albedo['albedo_fine']<0] = 0.0
+        else:
+            if verbose: print 'albedo set to modis_surface_albedo'
+            fiso = albedo['modis_albedo']['mean_iso']
+            fvol = albedo['modis_albedo']['mean_vol']
+            fgeo = albedo['modis_albedo']['mean_geo']
+            frac_diffuse = get_frac_diffuse(albedo['modis_albedo'],geo['sza_fine'],ext=aero['ext'],z=aero['z_arr'])
+            albedo['albedo_fine'] = calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,geo['sza_fine'])
     if not 'albedo_fine' in albedo:
         raise AttributeError('No albedo defined please review albedo dict input')
     else:
@@ -308,8 +313,13 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
     g1bs = np.array([0.0, -0.070987, -0.166314])
     g2bs = np.array([0.0,  0.307588,  0.041840])
     gws  = np.array([1.0,  0.189184, -1.377622])
+    
+    if len(np.array([fiso]))==1:
+        fiso = np.array([fiso])
+        fvol = np.array([fvol])
+        fgeo = np.array([fgeo])
 
-    albedo_sfc = np.zeros((len(fiso),len(SZAin)))
+    albedo_sfc = np.zeros((len(fiso),len(np.array(SZAin))))
 
     SZAinrad = np.array(SZAin)/180.0*np.pi
     SZAsq = SZAinrad*SZAinrad
@@ -323,6 +333,7 @@ def calc_sfc_albedo_Schaaf(fiso,fvol,fgeo,frac_diffuse,SZAin):
 
     #now for all SZA>=90 set surface albedo=0
     albedo_sfc[:,np.array(SZAin)>=90]=0.0
+    albedo_sfc = albedo_sfc.squeeze()
     return albedo_sfc
 
 
@@ -516,7 +527,7 @@ def get_MODIS_surf_albedo(fp,doy,lat,lon,year_of_MODIS=2007):
     modis_albedo['table_AOD'] = np.arange(0,0.99,0.02)
     r = np.genfromtxt(f,skip_header=2)
     modis_albedo['table_SZA'] = r[:,0]
-    modis_albedo['table_fracdiffuse'] = r[:,1:-1]
+    modis_albedo['table_fracdiffuse'] = r[:,1:]
     
     # get the MODIS file day
     MODIS_select_day = MODIS_start_days[(doy-MODIS_start_days)>=0][-1]

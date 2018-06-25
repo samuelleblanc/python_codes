@@ -298,6 +298,8 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
         alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
+        #alb_geo_lat = np.arange(90,-90,-30.0/3600.0)
+        #alb_geo_lon = np.arange(-180.0,180,30.0/3600.0)
         
         print 'Running through the files'
         for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
@@ -312,7 +314,8 @@ def build_aac_FLinput(fp,fp_alb,fp_out,fp_fuliou='/home5/sleblan2/fuliou/v201802
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 if MOC_only:
-                    aero['ext'] = np.abs(input_mmm['MOC_ext_mean_Mm_minus1'][0,0][ilat,ilon,:])*1000.0   
+                    aero['ext'] = np.abs(input_mmm['MOC_ext_mean_Mm_minus1'][0,0][ilat,ilon,:])
+                    aero['ext'][aero['ext']==9999.0] = np.nan
                     aero['zarr'] = [input_mmm['Mean_CALIOP_z_layer_min'][0,0][ilat,ilon],input_mmm['Mean_CALIOP_z_layer_max'][0,0][ilat,ilon]]
                 else:
                     aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:])*1000.0 # is in AOD units, not ext, but since it is for 1 km, does not matter
