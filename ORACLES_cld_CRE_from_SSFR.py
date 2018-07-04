@@ -50,6 +50,7 @@ import numpy as np
 import hdf5storage as hs
 import os
 import write_utils as wu
+from tqdm import tqdm
 
 
 # In[5]:
@@ -67,7 +68,7 @@ name = 'ORACLES'
 # In[7]:
 
 
-vv = 'v5_irr'
+vv = 'v6_irr'
 
 
 # In[49]:
@@ -180,7 +181,7 @@ cloud['phase'] = 'wc'
 geo['sza'] = 40.0
 cloud['tau'] = 2.0
 cloud['ref'] = 5.0
-pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
+pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=False)
 cloud['moms_dict'] = pmom
 
 
@@ -208,12 +209,6 @@ else:
 aero = load_from_json(fp_aero)
 
 
-# In[13]:
-
-
-aero = load_from_json(u'/mnt/c/Users/sleblanc/Research/ORACLES/model/aero_save_v2.txt')
-
-
 # In[14]:
 
 
@@ -224,18 +219,6 @@ aero
 
 
 wv = np.array(aero['wvl_arr'])
-
-
-# In[17]:
-
-
-aero['ext'].shape
-
-
-# In[18]:
-
-
-aero['ext'][0,:]
 
 
 # ## Prepare the paths and files for input files
@@ -269,6 +252,7 @@ ar.keys()
 # In[ ]:
 
 
+pbar = tqdm(total=len(np.isfinite(ar['rau'])))
 if not do_read:
 
 
@@ -279,11 +263,11 @@ if not do_read:
     for i,l in enumerate(ar['lat']):
         if np.isnan(ar['tau'][i]):
             continue
-        print i
+        #print i
 
         f_in = '{name}_{vv}_ssfr_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
         geo['lat'],geo['lon'],geo['sza'] = l,ar['lon'][i],ar['sza'][i]
-        day = dds[ar['days'][i]]
+        day = dds[ar['days'][i].astype(int)]
         geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
         cloud['tau'],cloud['ref'] = ar['tau'][i],ar['ref'][i]
         cloud['write_moments_file'] = True
@@ -291,14 +275,15 @@ if not do_read:
         aero['ext'][0,:] = ext
         
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
+                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
         f_in = '{name}_{vv}_ssfr_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = 0.0
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
+                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+        pbar.update()
 
        # f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
        # cloud['tau'] = ar['tau_fl'][i]
@@ -347,7 +332,8 @@ else:
     for i,l in enumerate(ar['lat']):
         if np.isnan(ar['tau'][i]):
             continue
-        print '\r{}..'.format(i)
+        #print '\r{}..'.format(i)
+        pbar.update()
         f_in = '{name}_{vv}_ssfr_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
         s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
         f_in = '{name}_{vv}_ssfr_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
