@@ -169,7 +169,7 @@ ar['days']
 geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
-source = {'wvl_range':[201.0,4000.0],'source':'solar','integrate_values':True,'run_fuliou':True,
+source = {'wvl_range':[201.0,5600.0],'source':'solar','integrate_values':True,'run_fuliou':True,
           'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
@@ -215,10 +215,16 @@ aero = load_from_json(fp_aero)
 aero
 
 
-# In[15]:
+# In[24]:
 
 
 wv = np.array(aero['wvl_arr'])
+
+
+# In[26]:
+
+
+wv[-1] = 5600.0
 
 
 # ## Prepare the paths and files for input files
@@ -252,7 +258,7 @@ ar.keys()
 # In[ ]:
 
 
-pbar = tqdm(total=len(np.isfinite(ar['rau'])))
+pbar = tqdm(total=len(np.where(np.isfinite(ar['tau']))[0]))
 if not do_read:
 
 
@@ -265,7 +271,7 @@ if not do_read:
             continue
         #print i
 
-        f_in = '{name}_{vv}_ssfr_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        f_in = '{name}_{vv}_ssfr_{i:05d}_withaero.dat'.format(name=name,vv=vv,i=i)
         geo['lat'],geo['lon'],geo['sza'] = l,ar['lon'][i],ar['sza'][i]
         day = dds[ar['days'][i].astype(int)]
         geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
@@ -275,13 +281,13 @@ if not do_read:
         aero['ext'][0,:] = ext
         
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20)
+                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-        f_in = '{name}_{vv}_ssfr_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+        f_in = '{name}_{vv}_ssfr_{i:05d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = 0.0
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20)
+                                   verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
         pbar.update()
 
