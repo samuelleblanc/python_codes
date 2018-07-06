@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <headingcell level=1>
+# coding: utf-8
 
-# Module that runs the 2-wavelength reflectance retrieval of cloud properties
+# # Module that runs the 2-wavelength reflectance retrieval of cloud properties
 
-# <codecell>
+# In[3]:
+
 
 def run_2wvl_retrieval(meas,model,wvls=[500.0,1600.0],sza_norm=True):
     """ 
@@ -101,7 +100,9 @@ def run_2wvl_retrieval(meas,model,wvls=[500.0,1600.0],sza_norm=True):
     Sp.endprogress()
     return (ta,re,ki)
 
-# <codecell>
+
+# In[2]:
+
 
 def build_lut_2wvl(model,wvls,sza_norm):
     " function that builds the 2 wavelength Reflectance lut from the model Sp object (lut) "
