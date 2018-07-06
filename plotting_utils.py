@@ -582,7 +582,7 @@ def subset_bins(vals,val_lim,lims):
 # In[1]:
 
 
-def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False):
+def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False,**kwargs):
     """Compile the functions to make a box plot
     
     vals: values to box
@@ -609,7 +609,7 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
         
     bins = subset_bins(vals,val_lim,lims)
     
-    bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos,vert=vert)
+    bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos,vert=vert,**kwargs)
     color_box(bo,color)
     for n in bo.keys():
         nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in xrange(len(bo[n]))]

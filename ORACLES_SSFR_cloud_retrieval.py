@@ -136,6 +136,12 @@ for d in days:
 ssfr_a[3]['Start_UTC'][100]
 
 
+# In[271]:
+
+
+star_ah[4]
+
+
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
 # In[243]:
@@ -287,27 +293,27 @@ lut['sza']
 
 # ### Make a hires version of the LUT
 
-# In[206]:
+# In[416]:
 
 
-lut['tau_hi'] = np.hstack([np.arange(0,25,0.5),np.arange(25,50,1),np.arange(50,102.5,2.5)])
+lut['tau_hi'] = np.hstack([np.arange(1.0,25,0.5),np.arange(25,50,1),np.arange(50,102.5,2.5)])
 lut['ref_hi'] = np.hstack([np.arange(0,15,0.25),np.arange(15,30.5,0.5)])
 
 
-# In[208]:
+# In[417]:
 
 
 len(lut['tau_hi']), len(lut['ref_hi'])
 
 
-# In[209]:
+# In[418]:
 
 
-lut['Rvis_hi'] = np.zeros([91,96,48])
-lut['Rnir_hi'] = np.zeros([91,96,48])
+lut['Rvis_hi'] = np.zeros([91,94,48])
+lut['Rnir_hi'] = np.zeros([91,94,48])
 
 
-# In[210]:
+# In[419]:
 
 
 for i,z in enumerate(lut['sza']):
@@ -317,21 +323,35 @@ for i,z in enumerate(lut['sza']):
     lut['Rnir_hi'][:,:,i] = fn(lut['ref_hi'],lut['tau_hi'])
 
 
+# In[434]:
+
+
+plt.figure()
+for i,r in enumerate(lut['tau_hi']):
+    plt.plot(lut['Rvis_hi'][i,:,0],lut['Rnir_hi'][i,:,0],'x-')
+
+
 # # Run the retrieval
 
-# In[258]:
+# In[420]:
 
 
 ar['tau'], ar['ref'] = np.zeros_like(ar['sza'])*np.nan,np.zeros_like(ar['sza'])*np.nan
 
 
-# In[259]:
+# In[421]:
 
 
 ar['ki'] = np.zeros_like(ar['sza'])
 
 
-# In[260]:
+# In[429]:
+
+
+ar['isza'] = []
+
+
+# In[430]:
 
 
 pbar = tqdm(total=len(ar['sza']))
@@ -342,19 +362,40 @@ for i,s in enumerate(ar['sza']):
     if not i in igood:
         continue
     isza = np.argmin(np.abs(lut['sza']-s))
+    ar['isza'].append(isza)
     ki = (ar['meas'].Rvis[i]-lut['Rvis_hi'][:,:,isza]/ar['meas'].Rvis[i])**2+(ar['meas'].Rnir[i]-lut['Rnir_hi'][:,:,isza]/ar['meas'].Rnir[i])**2
     kimin = np.unravel_index(np.nanargmin(ki),ki.shape)
     ar['ki'][i] = np.nanmin(ki)
     ar['tau'][i],ar['ref'][i] = lut['tau_hi'][kimin[1]],lut['ref_hi'][kimin[0]]
 
 
+# In[432]:
+
+
+plt.figure()
+plt.hist(ar['isza'],bins=20)
+
+
 # # Plot the retrieval results
 
-# In[215]:
+# In[423]:
 
 
 plt.figure()
 plt.plot(ar['tau'],'.')
+
+
+# In[426]:
+
+
+np.nanmean(ar['tau'])
+
+
+# In[427]:
+
+
+plt.figure()
+plt.hist(ar['tau'][np.isfinite(ar['tau'])])
 
 
 # In[216]:
@@ -364,16 +405,23 @@ plt.figure()
 plt.plot(ar['ref'],'.')
 
 
-# In[261]:
+# In[424]:
 
 
 len(np.where(np.isfinite(ar['ref']))[0])
 
 
-# In[262]:
+# In[425]:
 
 
 len(ar['ref'])
+
+
+# In[269]:
+
+
+plt.figure()
+plt.plot(np.where(np.isfinite(ar['ref']))[0])
 
 
 # # Save the retrieved output
@@ -420,4 +468,281 @@ hs.savemat(fp+'data_other/ssfr_2016_retrieved_COD.mat',out)
 
 
 out['days']
+
+
+# # Load the results of the CRE calculations
+# See the ORACLES_cld_CRE_from_SSFR jupyter notebook for details
+
+# In[273]:
+
+
+c = hs.loadmat(fp+'rtm/ORACLES_CRE_v6_irr.mat')
+
+
+# In[274]:
+
+
+c.keys()
+
+
+# In[276]:
+
+
+c['ssfr_aero_CRE'].keys()
+
+
+# In[277]:
+
+
+CRE_toa = c['ssfr_aero_CRE']['up'][:,2]-c['ssfr_aero_CRE_clear']['up'][:,2]
+
+
+# In[282]:
+
+
+flt = np.isfinite(out['aod']) & (CRE_toa>0.0)
+
+
+# In[294]:
+
+
+out['days']
+
+
+# In[295]:
+
+
+plt.figure()
+for i in np.unique(out['days']):
+    fi = np.where((flt==1) & (i==out['days']))
+    plt.plot(out['aod'][fi],CRE_toa[fi],'.')
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('TOA CRE [W/m$^2$]')
+
+
+# In[284]:
+
+
+plt.figure()
+plt.plot(out['aod'][flt],c['ssfr_aero_C'][flt,0],'.')
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('Surface CRE [W/m$^2$]')
+
+
+# In[293]:
+
+
+plt.figure()
+plt.cm.viridis
+plt.hist2d(out['aod'][flt],CRE_toa[flt],bins=30)
+plt.colorbar()
+
+
+# In[300]:
+
+
+import seaborn as sns
+import plotting_utils as pu
+
+
+# In[299]:
+
+
+plt.figure()
+#plt.hexbin(out['aod'][flt],CRE_toa[flt])
+sns.kdeplot(out['aod'][flt],CRE_toa[flt], shade=True)
+
+
+# In[307]:
+
+
+plt.figure()
+plt.plot(out['aod'][flt],CRE_toa[flt],'.',alpha=0.05)
+pu.plot_lin(out['aod'][flt],CRE_toa[flt])
+plt.legend(frameon=False)
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('TOA CRE [W/m$^2$]')
+
+
+# In[308]:
+
+
+plt.figure()
+plt.plot(out['aod'][flt],c['ssfr_aero_C'][flt,0],'.',alpha=0.05)
+pu.plot_lin(out['aod'][flt],c['ssfr_aero_C'][flt,0])
+plt.legend(frameon=False)
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('Surface CRE [W/m$^2$]')
+
+
+# In[324]:
+
+
+plt.figure()
+ax1 = plt.subplot(2,1,1)
+plt.plot(out['aod'][flt],CRE_toa[flt],'.',color='grey',alpha=0.05)
+pu.plot_lin(out['aod'][flt],CRE_toa[flt],color='r')
+plt.legend(frameon=False,loc=2)
+plt.ylabel('TOA CRE [W/m$^2$]')
+plt.xlim(0,.9)
+
+ax2 = plt.subplot(2,1,2)
+plt.plot(out['aod'][flt],c['ssfr_aero_C'][flt,0],'.',color='blue',alpha=0.05)
+pu.plot_lin(out['aod'][flt],c['ssfr_aero_C'][flt,0],color='r')
+plt.legend(frameon=False,loc=3)
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('Surface CRE [W/m$^2$]')
+plt.xlim(0,.9)
+
+
+# In[325]:
+
+
+rCRE_toa = CRE_toa/c['ssfr_aero_CRE']['dn'][:,2]*100.0
+rCRE_sur = c['ssfr_aero_C'][:,0]/c['ssfr_aero_CRE']['dn'][:,2]*100.0
+
+
+# In[328]:
+
+
+plt.figure()
+ax1 = plt.subplot(2,1,1)
+plt.plot(out['aod'][flt],rCRE_toa[flt],'.',color='grey',alpha=0.05)
+pu.plot_lin(out['aod'][flt],rCRE_toa[flt],color='r',ci=0.99)
+plt.legend(frameon=False,loc=1)
+plt.ylabel('TOA relative CRE [%]')
+plt.xlim(0,.9)
+
+ax2 = plt.subplot(2,1,2)
+plt.plot(out['aod'][flt],rCRE_sur[flt],'.',color='blue',alpha=0.05)
+pu.plot_lin(out['aod'][flt],rCRE_sur[flt],color='r',ci=0.99)
+plt.legend(frameon=False,loc=4)
+plt.xlabel('AOD$_{{500nm}}$')
+plt.ylabel('Surface relative CRE [%]')
+plt.xlim(0,.9)
+
+
+# In[330]:
+
+
+help(pu.make_boxplot)
+
+
+# In[337]:
+
+
+lims = np.arange(0,1.3,0.1)
+pos = np.arange(0.05,1.2,0.1)
+
+
+# In[339]:
+
+
+lims,pos,len(lims),len(pos)
+
+
+# In[362]:
+
+
+fp
+
+
+# In[404]:
+
+
+plt.figure()
+ax1 = plt.subplot(2,1,1)
+pu.make_boxplot(rCRE_toa[flt],out['aod'][flt],lims,pos,color='k',fliers_off=True,widths=0.09,patch_artist=True,alpha=0.5)
+pu.plot_lin(out['aod'][flt],rCRE_toa[flt],color='r',ci=0.99,zorder=200)
+plt.xlim(0.0,1.2)
+plt.legend(frameon=False,loc=1)
+plt.ylabel('TOA relative CRE [%]')
+
+ax2 = plt.subplot(2,1,2)
+pu.make_boxplot(rCRE_sur[flt],out['aod'][flt],lims,pos,color='blue',fliers_off=True,widths=0.09,patch_artist=True,alpha=0.6)
+pu.plot_lin(out['aod'][flt],rCRE_sur[flt],color='r',ci=0.99,zorder=200)
+plt.xlim(0.0,1.2)
+plt.legend(frameon=False,loc=4)
+plt.ylabel('Surface relative CRE [%]')
+plt.xlabel('AOD$_{{500nm}}$')
+plt.savefig(fp+'plot/SSFR_CRE_vs_AOD.png',transparent=True,dpi=600)
+
+
+# In[387]:
+
+
+flo = (flt==1) & (out['tau']>0)
+
+
+# In[446]:
+
+
+plt.figure(figsize=(7,4))
+plt.subplot(2,1,1)
+plt.hist(out['tau'][flo]*4.0,normed=True,edgecolor='None',color='g',alpha=0.6,bins=100)
+plt.xlabel('COD')
+plt.xlim(0,80)
+plt.ylabel('Normed counts')
+plt.grid()
+
+plt.subplot(2,1,2)
+plt.hist(out['ref'][flo],normed=True,edgecolor='None',color='grey',alpha=0.6,bins=30)
+plt.xlabel('r$_{{eff}}$ [$\mu$m]')
+plt.ylabel('Normed counts')
+plt.grid()
+plt.xlim(0,30)
+plt.tight_layout()
+plt.savefig(fp+'plot/SSFR_COD_ref_ORACLES2016_flagacaod.png',transparent=True,dpi=600)
+
+
+# In[445]:
+
+
+np.nanmean(out['tau'][flo]*4.0)
+
+
+# In[408]:
+
+
+import scipy.stats as st
+
+
+# In[449]:
+
+
+a,xe,ye,bn = st.binned_statistic_2d(out['lat'][flo],out['lon'][flo],out['tau'][flo]*4.0,
+                           bins=26,range=[[-25,-8],[0,16]],statistic='mean')
+a = np.ma.masked_array(a,np.isnan(a))
+
+
+# In[450]:
+
+
+plt.figure()
+p = plt.pcolor(ye,xe,a,vmin=0.0,vmax=1.0,cmap='plasma')
+
+plt.xlabel(u'Longitude [°]')
+plt.ylabel(u'Latitude [°]')
+plt.title('Mean COD')
+
+cb = plt.colorbar(p,extend='both')
+cb.set_label('Mean COD')
+
+
+# In[405]:
+
+
+np.nanmean(out['tau'][flo])
+
+
+# In[406]:
+
+
+np.nanmean(out['ref'][flo])
+
+
+# In[394]:
+
+
+fp
 

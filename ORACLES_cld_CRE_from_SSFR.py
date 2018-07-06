@@ -282,6 +282,7 @@ if not do_read:
         
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
+        aero['file_name'] = None
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
         f_in = '{name}_{vv}_ssfr_{i:05d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
@@ -289,6 +290,7 @@ if not do_read:
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+        aero['file_name'] = None
         pbar.update()
 
        # f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
