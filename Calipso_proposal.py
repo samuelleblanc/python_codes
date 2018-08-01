@@ -1,78 +1,107 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
 
-# <codecell>
+# coding: utf-8
 
-%config InlineBackend.rc = {}
+# In[1]:
+
+
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np
 import scipy.io as sio
 from mpl_toolkits.basemap import Basemap
 
-# <codecell>
+
+# In[2]:
+
 
 fp = 'C:\Users\sleblan2\Research\Calipso\proposal\\'
 
-# <headingcell level=2>
 
-# Load CERES data
+# ## Load CERES data
 
-# <codecell>
+# In[3]:
+
 
 ceres = sio.netcdf_file(fp+'CERES\CERES_SYN1deg-Month_Terra-Aqua-MODIS_Ed3A_Subset_200708-200710.nc','r')
 
-# <codecell>
+
+# In[64]:
+
 
 ceres.version
 
-# <codecell>
+
+# In[4]:
+
 
 var = ceres.variables
 
-# <codecell>
+
+# In[5]:
+
 
 var
 
-# <codecell>
+
+# In[49]:
+
 
 ceres.comment
 
-# <codecell>
+
+# In[50]:
+
 
 ceres.title
 
-# <codecell>
+
+# In[51]:
+
 
 ceres.filename
 
-# <codecell>
+
+# In[19]:
+
 
 ceres.dimensions
 
-# <codecell>
+
+# In[10]:
+
 
 var['time'].data
 
-# <codecell>
+
+# In[31]:
+
 
 ceres.variables['lon'].data.max()
 
-# <codecell>
+
+# In[32]:
+
 
 ceres.variables['lon'].data.min()
 
-# <codecell>
+
+# In[33]:
+
 
 ceres.variables['lat'].data.max()
 
-# <codecell>
+
+# In[6]:
+
 
 ceres.variables['cldarea_low_mon'].data.shape
 
-# <codecell>
+
+# In[7]:
+
 
 ctr = plt.contourf(ceres.variables['lon'].data,ceres.variables['lat'].data,ceres.variables['cldarea_low_mon'].data[0,:,:],20)
 plt.colorbar(ctr)
@@ -80,7 +109,9 @@ plt.title('CERES Low Cloud Area Fraction')
 plt.xlabel('Longitude')
 plt.ylabel('Latitude')
 
-# <codecell>
+
+# In[8]:
+
 
 def create_map(lower_left=[-20,-25],upper_right=[20,10],ax=plt.gca()):
     "Create a basemap for the region of South East Atlantic + Africa"
@@ -95,32 +126,44 @@ def create_map(lower_left=[-20,-25],upper_right=[20,10],ax=plt.gca()):
     m.drawparallels(np.linspace(lower_left[1],upper_right[1],8).astype(int),labels=[1,0,0,0])
     return m
 
-# <codecell>
+
+# In[40]:
+
 
 aero_darf = var['toa_comp_sw-up_naer_mon'][2,:,:]-var['toa_comp_sw-up_all_mon'][2,:,:]
 aero_darf_sep = var['toa_comp_sw-up_naer_mon'][1,:,:]-var['toa_comp_sw-up_all_mon'][1,:,:]
 cld_frac_sep = var['cldarea_low_mon'][1,:,:]
 cld_frac = var['cldarea_low_mon'][2,:,:]
 
-# <codecell>
+
+# In[277]:
+
 
 aero_tau_aug = var['modis_aod_55_ocean_mon'][0,:,:]
 aero_tau_sep = var['modis_aod_55_ocean_mon'][1,:,:]
 aero_tau_oct = var['modis_aod_55_ocean_mon'][2,:,:]
 
-# <codecell>
+
+# In[237]:
+
 
 var.keys()
 
-# <codecell>
+
+# In[19]:
+
 
 import cmaps
 
-# <codecell>
+
+# In[20]:
+
 
 cmaps.cmaps()
 
-# <codecell>
+
+# In[63]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -142,7 +185,9 @@ ax0.set_title('Shortwave DARE as a function of Cloud fraction')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Oct2007.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[70]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -165,12 +210,16 @@ ax0.text(160,-12,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Sept2007.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[54]:
+
 
 aero_darf_aug = var['toa_comp_sw-up_naer_mon'][0,:,:]-var['toa_comp_sw-up_all_mon'][0,:,:]
 cld_frac_aug = var['cldarea_low_mon'][0,:,:]
 
-# <codecell>
+
+# In[71]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -193,23 +242,21 @@ ax0.text(160,-18,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Aug2007.png',dpi=600,transparent=True)
 
-# <headingcell level=2>
 
-# Now subset the different areas
-
-# <markdowncell>
+# ## Now subset the different areas
 
 # For the ocean
 
-# <codecell>
+# In[138]:
+
 
 iocean = np.where((clon<10) & (clon>-17) & (clat>-25) & (clat<0))
 
-# <markdowncell>
 
 # Prepare funciton to plot greatcircles - to be moved to map_utils
 
-# <codecell>
+# In[ ]:
+
 
 def plot_greatcircle_path(lon,lat,m=None,*args,**kwargs):
     """
@@ -232,17 +279,19 @@ def plot_greatcircle_path(lon,lat,m=None,*args,**kwargs):
             lats = np.append(lats,ylat,axis=0)
     return lons,lats
 
-# <markdowncell>
 
 # Prepare the flight paths
 
-# <codecell>
+# In[186]:
+
 
 path_15_lon,path_15_lat = [ 14.645278,   9.      ,  -5.      ,   9.      ,  14.645278],[-23., -15., -15., -15., -23.]
 path_NS_lon,path_NS_lat = [ 14.645278,  11.      ,  11.      ,   9.      ,   9.      ,
         14.645278], [-23., -15.,  -4.,  -4., -15., -23.]
 
-# <codecell>
+
+# In[263]:
+
 
 import itertools
 import map_utils as mu
@@ -250,38 +299,52 @@ reload(mu)
 import plotting_utils as pu
 reload(pu)
 
-# <codecell>
+
+# In[259]:
+
 
 lons15,lats15 = plot_greatcircle_path(path_15_lon,path_15_lat,m=m,color='y',linewidth=3,marker='x')
 lonsNS,latsNS = plot_greatcircle_path(path_NS_lon,path_NS_lat,m=m,color='b',linewidth=2,marker='x')
 iocean15 = np.where((lons15<10) & (lons15>-17) & (lats15>-25) & (lats15<0))[0]
 ioceanNS = np.where((lonsNS<10) & (lonsNS>-17) & (latsNS>-25) & (latsNS<0))[0]
 
-# <codecell>
+
+# In[261]:
+
 
 cld_fr_15 = mu.stats_within_radius(lats15[iocean15],lons15[iocean15],clat,clon,aero_darf_aug,100000,subset=False)
 
-# <codecell>
+
+# In[262]:
+
 
 cld_fr_NS = mu.stats_within_radius(latsNS[ioceanNS],lonsNS[ioceanNS],clat,clon,aero_darf_aug,100000,subset=False)
 
-# <codecell>
+
+# In[264]:
+
 
 iNS = unique(list(itertools.chain(*cld_fr_NS['index'])))
 i15 = unique(list(itertools.chain(*cld_fr_15['index'])))
 
-# <codecell>
+
+# In[265]:
+
 
 plt.plot(clon,clat,'b.')
 plt.plot(clon.flatten()[iNS],clat.flatten()[iNS],'r.')
 plt.plot(lonsNS,latsNS,'r-')
 plt.plot(path_NS_lon,path_NS_lat,'mx')
 
-# <codecell>
+
+# In[246]:
+
 
 clevels = linspace(-12,12,45)
 
-# <codecell>
+
+# In[272]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -322,7 +385,9 @@ ax0.text(160,-18,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Aug2007_sub.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[273]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -363,11 +428,15 @@ ax0.text(160,-13,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Sep2007_sub.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[223]:
+
 
 aero_darf_oct, cld_frac_oct = aero_darf, cld_frac
 
-# <codecell>
+
+# In[276]:
+
 
 fig,(ax0,ax) = plt.subplots(1,2,figsize=(12,4))
 m = create_map(ax=ax)
@@ -408,7 +477,4 @@ ax0.set_title('Shortwave DARE as a function of Cloud fraction')
 ax0.text(160,-12,'$\\textrm{---}$ Low Cloud Fraction',color='g')
 
 plt.savefig(fp+'plots/CERES_SW_DARE_cloud_fraction_Oct2007_sub.png',dpi=600,transparent=True)
-
-# <codecell>
-
 
