@@ -652,3 +652,24 @@ def prelim(ax=None):
         transform=ax.transAxes,
         color='k', fontsize=18,zorder=1,alpha=0.3)
 
+
+# In[ ]:
+
+
+def sub_note(note,ax=None,out=False):
+    'Stamp note in top right of the plot'
+    import matplotlib.pyplot as plt
+    if not ax:
+        ax = plt.gca()
+    
+    if out: 
+        yup = 1.02
+        val = 'bottom'
+    else: 
+        yup = 0.98
+        val = 'top'
+    ax.text(0.01, yup, ' '+note,
+        verticalalignment=val, horizontalalignment='left',
+        transform=ax.transAxes,
+        color='k', fontsize=18,zorder=1,alpha=0.7)
+
