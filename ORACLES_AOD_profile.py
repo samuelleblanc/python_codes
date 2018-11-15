@@ -119,7 +119,7 @@ s = sio.loadmat(f_star)
 s.keys()
 
 
-# In[9]:
+# In[8]:
 
 
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
@@ -127,13 +127,13 @@ s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 # ## Get the flag file
 
-# In[10]:
+# In[9]:
 
 
 fmat = getpath('4STAR_data',make_path=True,path='/mnt/c/Users/sleblanc/Research/4STAR_codes/data_folder/')
 
 
-# In[11]:
+# In[10]:
 
 
 with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
@@ -143,27 +143,27 @@ with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[12]:
+# In[11]:
 
 
 sf.keys()
 
 
-# In[13]:
+# In[12]:
 
 
 ifl = (np.array(sf['bad_aod'])==0) & (np.array(sf['unspecified_clouds'])==0) & (np.array(sf['cirrus'])==0)
 ifl = ifl.flatten()
 
 
-# In[14]:
+# In[13]:
 
 
 iflt = ((ifl) & (s['utc']>=11.8667) & (s['utc']<=12.25))
 iflt = iflt.flatten()
 
 
-# In[15]:
+# In[14]:
 
 
 print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profile:',iflt.shape,      'selected valid',ifl.sum(),'selected valid during profile',iflt.sum()
@@ -171,7 +171,7 @@ print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profi
 
 # ## Plot some early 4STAR data
 
-# In[16]:
+# In[65]:
 
 
 plt.figure()
@@ -199,20 +199,20 @@ plt.plot(s['tau_aero'][ifl,400],s['Alt'][ifl],'+r')
 plt.plot(s['tau_aero'][iflt,400],s['Alt'][iflt],'xg')
 
 
-# In[19]:
+# In[15]:
 
 
 # profile = [13.24,13.56] for 20160904
 profile = [11.8667, 12.25]
 
 
-# In[20]:
+# In[16]:
 
 
 it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,400]<0.8)
 
 
-# In[21]:
+# In[17]:
 
 
 it = it.flatten()
@@ -220,25 +220,25 @@ it = it.flatten()
 
 # ## Load the 4STAR dirty clean correction file
 
-# In[22]:
+# In[18]:
 
 
 s_dirty = fmat+'20160920_AOD_merge_marks.mat'
 
 
-# In[23]:
+# In[19]:
 
 
 dm = sio.loadmat(s_dirty)
 
 
-# In[24]:
+# In[20]:
 
 
 dm.keys()
 
 
-# In[25]:
+# In[21]:
 
 
 dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
@@ -246,7 +246,7 @@ dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
 
 # ### Create a full wavelength tau correction from polyfit
 
-# In[26]:
+# In[22]:
 
 
 import Sun_utils as su
@@ -254,7 +254,7 @@ from scipy import polyval
 from write_utils import nearest_neighbor
 
 
-# In[27]:
+# In[23]:
 
 
 dm['dAODs'].shape
@@ -262,13 +262,13 @@ dm['dAODs'].shape
 
 # Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
 
-# In[28]:
+# In[24]:
 
 
 [(i,iv) for i,iv in enumerate(dm['wl_nm'].flatten())]
 
 
-# In[29]:
+# In[25]:
 
 
 daod = []
@@ -280,46 +280,46 @@ daod = np.array(daod)
 daod.shape
 
 
-# In[27]:
+# In[26]:
 
 
 dm['dAODs'].shape
 
 
-# In[30]:
+# In[27]:
 
 
 dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=2) for i in xrange(len(s['utc']))]    
 np.shape(dm['polyaod'])
 
 
-# In[31]:
+# In[28]:
 
 
 dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
 
 
-# In[32]:
+# In[29]:
 
 
 np.shape(dm['tau']),s['tau_aero'].shape
 
 
-# In[33]:
+# In[30]:
 
 
 s_list = s.keys()
 s_list.sort()
 
 
-# In[34]:
+# In[31]:
 
 
 aod = s['tau_aero']-np.array(dm['tau'])
 aod.shape
 
 
-# In[119]:
+# In[32]:
 
 
 aod[it,i501][0],s['Alt'][it][0]
@@ -335,6 +335,247 @@ plt.figure()
 plt.plot(s['utc'],daod[4,:],'r.')
 plt.plot(s['utc'],np.array(dm['tau'])[:,400],'b.')
 plt.plot(s['utc'],aod[:,400],'g.')
+
+
+# ## Load the merge file with PDI and scat total
+
+# In[41]:
+
+
+fpo = getpath('ORACLES_data_other_2016')
+fpo
+
+
+# In[125]:
+
+
+mrg,mrgh = lm.load_netcdf(fpo+'merge/mrg1_P3_{}_R24.nc'.format('20160912'),everything=True)
+
+
+# In[50]:
+
+
+ll  = mrgh.keys()
+
+
+# In[52]:
+
+
+for l in ll:
+    if l.startswith('Scat'): 
+        print l
+
+
+# In[53]:
+
+
+for l in ll:
+    if l.startswith('PDI'): 
+        print l
+
+
+# In[126]:
+
+
+cdn = np.nansum(mrg['PDI-CDNC_dNdlogd'],axis=1)
+
+
+# In[59]:
+
+
+cdn.shape
+
+
+# In[57]:
+
+
+mrg['PDI-CDNC_dNdlogd'].shape
+
+
+# In[60]:
+
+
+mrg['AOD'].shape
+
+
+# In[61]:
+
+
+mrg['AODwavelength']
+
+
+# In[102]:
+
+
+mrgh['qual_flag']
+
+
+# In[79]:
+
+
+aodm = np.ma.masked_array(mrg['AOD'][:,4],mrg['qual_flag']==0)
+
+
+# In[170]:
+
+
+mrgh['CDP_Conc']
+
+
+# In[169]:
+
+
+mrgh['PDI-CDNC_dNdlogd']
+
+
+# In[192]:
+
+
+mrg['nephelometerwavelength']
+
+
+# ### Plot the vertical distribution of the AOD, scat, and total number from PDI
+
+# In[72]:
+
+
+imfl = (mrg['Start_UTC']/3600.0 > profile[0]-0.01)&(mrg['Start_UTC']/3600.0<profile[1]+0.07)
+
+
+# In[202]:
+
+
+imfl = (mrg['Start_UTC']/3600.0 > 14.12)&(mrg['Start_UTC']/3600.0<14.55)
+imfl1 = (mrg['Start_UTC']/3600.0 > 14.21)&(mrg['Start_UTC']/3600.0<14.55)
+imfl2 = (mrg['Start_UTC']/3600.0 > 10.91)&(mrg['Start_UTC']/3600.0<11.37)
+
+
+# In[134]:
+
+
+plt.figure()
+plt.plot(mrg['Start_UTC']/3600.0,mrg['MSL_GPS_Altitude'],'.b')
+plt.plot(mrg['Start_UTC'][imfl]/3600.0,mrg['MSL_GPS_Altitude'][imfl],'or')
+
+
+# In[62]:
+
+
+plt.figure()
+plt.plot(mrg['Start_UTC'],mrg['ScatTSI1_ATP'],'.b')
+plt.plot(mrg['Start_UTC'],cdn,'+r')
+plt.plot(mrg['Start_UTC'],mrg['AOD'][:,4],'sg')
+
+
+# In[203]:
+
+
+imflqa = (mrg['qual_flag']==0)&(imfl1==True)
+imfl2qa = (mrg['qual_flag']==0)&(imfl2==True)
+
+
+# In[222]:
+
+
+import plotting_utils as pu
+
+
+# In[229]:
+
+
+fig = plt.figure(figsize=(6.5,6.5))
+ax1 = fig.add_subplot(121)
+fig.subplots_adjust(top=0.85,left=0.1)
+ax1.plot(mrg['ScatTSI1_ATP'][imfl1,1]*1.1,mrg['MSL_GPS_Altitude'][imfl1],'.',color='brown')
+ax1.set_xlabel('Aerosol Scattering [Mm$^{{-1}}$]')
+ax1.set_xlim([0,100])
+ax1.set_ylabel('Altitude [m]')
+ax1.axvline(50,ls='--',color='brown')
+ax2 = ax1.twiny()
+ax2.plot(cdn[imfl],mrg['MSL_GPS_Altitude'][imfl],'sb',markeredgecolor='None')
+ax2.set_xlabel('Cloud drop concentration [1/cm$^{{3}}$]')
+ax2.axvline(100,ls='--',color='b')
+ax3 = ax1.twiny()
+ax3.plot(mrg['AOD'][imflqa,4],mrg['MSL_GPS_Altitude'][imflqa],'og',markeredgecolor='None',markersize=6)
+ax3.set_xlabel('AOD$_{{500}}$')
+ax3.set_xlim([0,0.6])
+ax3.spines["top"].set_position(("axes", 1.1))
+ax3.set_ylim([0,6500])
+
+ax1.xaxis.label.set_color('brown')
+ax1.tick_params(axis='x', colors=('brown'))
+ax2.xaxis.label.set_color('b')
+ax2.tick_params(axis='x', colors=('b'))
+ax3.xaxis.label.set_color('green')
+ax3.tick_params(axis='x', colors=('green'))
+plt.legend(frameon=False)
+
+ax3.axhspan(137,690,color='grey',alpha=0.3,zorder=-10,label='Cloud')
+ax3.axhspan(690,2745,color='lightblue',alpha=0.3,zorder=-11,label='CAS/Gap')
+ax3.axhspan(2750,5240,color='coral',alpha=0.3,zorder=-12,label='Aerosol')
+iffl = (mrg['MSL_GPS_Altitude'][imflqa]>690.0) & (mrg['MSL_GPS_Altitude'][imflqa]<2735.0)
+ax3.plot(mrg['AOD'][imflqa,4][iffl],mrg['MSL_GPS_Altitude'][imflqa][iffl],'oy',
+         label='ACAOD',markeredgecolor='None',markersize=4)
+
+#ax3.legend(frameon=True,loc=7,bbox_to_anchor=(1.02,0.3))
+
+ax4 = fig.add_subplot(122)
+ax4.plot(mrg['ScatTSI1_ATP'][imfl2,1],mrg['MSL_GPS_Altitude'][imfl2],'.',color='brown')
+ax4.set_xlabel('Aerosol Scattering [Mm$^{{-1}}$]')
+ax4.axvline(50,ls='--',color='brown')
+ax4.set_xlim([0,100])
+#ax4.set_ylabel('Altitude [m]')
+ax5 = ax4.twiny()
+ax5.plot(cdn[imfl2],mrg['MSL_GPS_Altitude'][imfl2],'sb',markeredgecolor='None')
+ax5.set_xlabel('Cloud drop concentration [1/cm$^{{3}}$]')
+ax5.set_xlim(0,10000)
+ax5.axvline(100,ls='--',color='b')
+ax6 = ax4.twiny()
+ax6.plot(mrg['AOD'][imfl2qa,4],mrg['MSL_GPS_Altitude'][imfl2qa],'og',markeredgecolor='None',markersize=6)
+ax6.set_xlabel('AOD$_{{500}}$')
+ax6.set_xlim([0,0.6])
+ax6.spines["top"].set_position(("axes", 1.1))
+ax6.set_ylim([0,6500])
+
+ax4.xaxis.label.set_color('brown')
+ax4.tick_params(axis='x', colors=('brown'))
+ax5.xaxis.label.set_color('b')
+ax5.tick_params(axis='x', colors=('b'))
+ax6.xaxis.label.set_color('green')
+ax6.tick_params(axis='x', colors=('green'))
+#plt.legend(frameon=False)
+
+ax6.axhspan(948,1148,color='grey',alpha=0.3,zorder=-10,label='Cloud')
+ax6.axhspan(1148,1240,color='lightblue',alpha=0.3,zorder=-11,label='CAS/Gap')
+ax6.axhspan(1715,2692,color='lightblue',alpha=0.3,zorder=-11)
+ax6.axhspan(1240,1715,color='coral',alpha=0.3,zorder=-12,label='Aerosol')
+ax6.axhspan(2692,4805,color='coral',alpha=0.3,zorder=-12)
+
+iff2l = (mrg['MSL_GPS_Altitude'][imfl2qa]>1147.0) & (mrg['MSL_GPS_Altitude'][imfl2qa]<1250.0)
+ax6.plot(mrg['AOD'][imfl2qa,4][iff2l],mrg['MSL_GPS_Altitude'][imfl2qa][iff2l],'oy',
+         label='ACAOD',markeredgecolor='None',markersize=4)
+
+ax6.legend(frameon=True,loc=1)
+
+#ax3.text(0.03,6200,'a)')
+#ax6.text(0.03,6200,'b)')
+pu.sub_note('a)',ax=ax3)
+pu.sub_note('b)',ax=ax6)
+
+plt.savefig(fp+'plot_v2/Profile_example_gap_20160912.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_v2/Profile_example_gap_20160912.svg')
+
+
+# In[196]:
+
+
+np.nanmean(mrg['Latitude'][imfl]), np.nanmean(mrg['Longitude'][imfl])
+
+
+# In[198]:
+
+
+np.nanmean(mrg['Latitude'][imfl2]), np.nanmean(mrg['Longitude'][imfl2])
 
 
 # # Plot the geographical region and add context

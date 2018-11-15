@@ -57,7 +57,7 @@ import matplotlib.pyplot as plt
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[48]:
+# In[3]:
 
 
 from load_utils import mat2py_time, toutc, load_ict
@@ -107,7 +107,7 @@ vv = 'R1'
 s = hs.loadmat(fp+'/aod_ict_2017/{vv}/all_aod_ict_{vv}_2017.mat'.format(vv=vv))
 
 
-# In[13]:
+# In[9]:
 
 
 varname = s.keys()
@@ -115,7 +115,7 @@ varname.sort()
 varname
 
 
-# In[14]:
+# In[10]:
 
 
 days_nums = np.unique(s['days'])
@@ -127,13 +127,13 @@ days_nums = np.unique(s['days'])
 len(s['fl_QA'])
 
 
-# In[15]:
+# In[12]:
 
 
 days_nums
 
 
-# In[16]:
+# In[13]:
 
 
 days = ['20170801','20170802','20170807','20170809', '20170812','20170813',
@@ -141,25 +141,25 @@ days = ['20170801','20170802','20170807','20170809', '20170812','20170813',
         '20170824','20170826','20170828','20170830','20170831','20170902','20170903','20170904']
 
 
-# In[19]:
+# In[14]:
 
 
 s['fl_acaod'] = (s['flag_acaod']==1) & s['fl_QA']
 
 
-# In[20]:
+# In[15]:
 
 
 len(s['fl_acaod'])
 
 
-# In[21]:
+# In[16]:
 
 
 len(s['fl_QA'])
 
 
-# In[22]:
+# In[17]:
 
 
 s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
@@ -2439,41 +2439,41 @@ pca_angs
 
 # # Get the spacing and altitudes of gap from ACAOD altitudes and distances
 
-# In[196]:
+# In[18]:
 
 
 s['fl_acaod_noQA'] = s['flag_acaod']==1
 
 
-# In[197]:
+# In[19]:
 
 
 ii_flacaod = np.where(s['fl_acaod_noQA'])[0] 
 ii_flacaod[0]
 
 
-# In[198]:
+# In[20]:
 
 
 ii_flacaod_0_5 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=0) & (s['Longitude']<5.0))[0] 
 ii_flacaod_0_5[0]
 
 
-# In[199]:
+# In[21]:
 
 
 ii_flacaod_5_10 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=5) & (s['Longitude']<10.0))[0] 
 ii_flacaod_5_10[0]
 
 
-# In[200]:
+# In[22]:
 
 
 ii_flacaod_10_15 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<15.0))[0] 
 ii_flacaod_10_15[0]
 
 
-# In[70]:
+# In[23]:
 
 
 disc_flacaod = np.where(np.diff(ii_flacaod,1)>1)[0]
@@ -2483,7 +2483,7 @@ disc_flacaod_5_10 = np.where(np.diff(ii_flacaod_5_10,1)>150)[0]
 disc_flacaod_10_15 = np.where(np.diff(ii_flacaod_10_15,1)>150)[0]
 
 
-# In[304]:
+# In[24]:
 
 
 plt.figure()
@@ -2492,21 +2492,21 @@ plt.plot(np.arange(100)[disc_flacaod[0:6]],ii_flacaod[0:100][disc_flacaod[0:6]],
 plt.plot(np.arange(100)[disc_flacaod[0:6]+1],ii_flacaod[0:100][disc_flacaod[0:6]+1],'go')
 
 
-# In[71]:
+# In[25]:
 
 
 discontinuity_istart =  ii_flacaod[np.append(0,disc_flacaod[:-1]+1)]
 discontinuity_iend =  ii_flacaod[disc_flacaod]
 
 
-# In[72]:
+# In[26]:
 
 
 discontinuity_istart_long =  ii_flacaod[np.append(0,disc_flacaod_long[:-1]+1)]
 discontinuity_iend_long =  ii_flacaod[disc_flacaod_long]
 
 
-# In[73]:
+# In[27]:
 
 
 discontinuity_istart_0_5 =  ii_flacaod_0_5[np.append(0,disc_flacaod_0_5[:-1]+1)]
@@ -2517,7 +2517,7 @@ discontinuity_istart_10_15 =  ii_flacaod_10_15[np.append(0,disc_flacaod_10_15[:-
 discontinuity_iend_10_15 =  ii_flacaod_10_15[disc_flacaod_10_15]
 
 
-# In[74]:
+# In[28]:
 
 
 delta_alt,delta_lon,delta_lat = [],[],[]
@@ -2535,7 +2535,7 @@ delta_lon = np.array(delta_lon)
 delta_lat = np.array(delta_lat)
 
 
-# In[75]:
+# In[29]:
 
 
 ldelta_alt,ldelta_lon,ldelta_lat,ldelta_lon_days,ldelta_lat_days = [],[],[],[],[]
@@ -2555,6 +2555,12 @@ ldelta_lon = np.array(ldelta_lon)
 ldelta_lat = np.array(ldelta_lat)
 ldelta_lat_days = np.array(ldelta_lat_days)
 ldelta_lon_days = np.array(ldelta_lon_days)
+
+
+# In[30]:
+
+
+ldelta_alt.shape
 
 
 # In[76]:
