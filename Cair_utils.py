@@ -5,6 +5,7 @@
 
 # In[50]:
 
+
 def read_Cair(filein):
     """
     Purpose:  
@@ -85,6 +86,7 @@ def read_Cair(filein):
 
 # In[ ]:
 
+
 def get_darks(c):
     """
     Purpose:  
@@ -117,6 +119,7 @@ def get_darks(c):
 
 
 # In[1]:
+
 
 def calc_rayleigh(c,press=None):
     """
@@ -161,6 +164,7 @@ def calc_rayleigh(c,press=None):
 
 
 # In[2]:
+
 
 def calc_rayleigh_filter(c,band_wvl,press=None):
     """
@@ -211,6 +215,7 @@ def calc_rayleigh_filter(c,band_wvl,press=None):
 
 # In[7]:
 
+
 def calc_gas_tau(band_wvl,gas_wvl,gas_tau):
     'Function that convolves the gas tau at fine wavelength spacing to a band representative value'
     import numpy as np
@@ -219,9 +224,4 @@ def calc_gas_tau(band_wvl,gas_wvl,gas_tau):
     for i,v in enumerate(band_wvl):
         gas_tau_out[i] = np.interp(v,gas_wvl,gas_tau,right=0.0,left=0.0)
     return gas_tau_out   
-
-
-# In[ ]:
-
-
 
