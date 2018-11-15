@@ -37,6 +37,7 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
     from urllib import urlopen
     from datetime import datetime
     from load_utils import recarray_to_dict
+    import pandas as pd
     
     # validate input
     if avg:
@@ -100,17 +101,24 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
     s.seek(0)
     
     try:
-        dat = np.genfromtxt(s,delimiter=',',names=True,dtype=None)
-    except IndexError:
-        print 'Failed to read the returned html file'
-        #return s
-        return False
-    fields_to_ignore = ['AERONET_Site_Name','Principal_Investigator','PI_Email','Dateddmmyy']
-    for label in dat.dtype.names:
-        if not label in fields_to_ignore:
-	    if dat[label].dtype.type is np.str_:
-	         dat[label] = np.genfromtxt(dat[label])
-    
+        dat_pd = pd.read_csv(s)
+        dat = dat_pd.to_records()
+    except:
+        try:
+            dat = np.genfromtxt(s,delimiter=',',names=True,dtype=None)
+        except IndexError:
+            print 'Failed to read the returned html file'
+            #return s
+            return False
+        except ValueError:
+            print 'Failed to format the html file, returning the strings'
+            return s
+        fields_to_ignore = ['AERONET_Site_Name','Principal_Investigator','PI_Email','Dateddmmyy']
+        for label in dat.dtype.names:
+            if not label in fields_to_ignore:
+                if dat[label].dtype.type is np.str_:
+                     dat[label] = np.genfromtxt(dat[label])
+
     return recarray_to_dict(dat)
     
 def plot_aero(m,aero,no_colorbar=True,a_max = 1.5):
