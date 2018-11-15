@@ -101,6 +101,50 @@ def getpathfile():
     return f
 
 
+# In[1]:
+
+
+def listpath():
+    """
+    Purpose:  
+        print out all named paths and their full path
+
+    Input:
+        None
+
+    Output:
+        None
+        
+    Keywords:
+        None
+
+    Dependencies:
+        - os
+        - json
+        - warnings
+        - this file
+
+    Needed Files:
+      - python_named_paths.json in .jupyter directory (if not found, will create it) 
+
+    Modification History:
+        Written: Samuel LeBlanc, Santa Cruz, 2018-09-05
+        Modified: 
+    
+    """
+    import os
+    from path_utils import getpathfile, namepath
+    import json
+    from warnings import warn
+    
+    f = getpathfile()
+    
+    with open(f) as json_file:  
+        p = json.load(json_file)
+    for k in p.keys():
+        print "'{}': {}".format(k,p[k])
+
+
 # In[62]:
 
 
