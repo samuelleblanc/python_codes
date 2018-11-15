@@ -871,10 +871,10 @@ def remove_field_name(a, name):
     return b
 
 
-# In[ ]:
+# In[61]:
 
 
-def load_netcdf(datfile,values=None,verbose=True):
+def load_netcdf(datfile,values=None,verbose=True,everything=False):
     """
     Name:
 
@@ -904,6 +904,7 @@ def load_netcdf(datfile,values=None,verbose=True):
                 second: indes of full name in variables)
                 example: modis_values=(('tau',35),('lat',22),('lon',23))
         verbose: if true (default), then everything is printed. if false, nothing is printed
+        everything: if true (defaults to false), then everything is saved, without the need for the 'values' variable
     
     Dependencies:
 
@@ -920,6 +921,8 @@ def load_netcdf(datfile,values=None,verbose=True):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-12-07, NASA Ames
+        Modified (v1.1): Samuel  LeBlanc, 2018-08-09, NASA Ames Research Center
+                        Added the 'everything' keyword for loading all the variables from the netcdf file.
         
     """
     import netCDF4 as nc
@@ -927,11 +930,12 @@ def load_netcdf(datfile,values=None,verbose=True):
         print 'Reading file: '+datfile
     f = nc.Dataset(datfile,'r')
     varnames = f.variables.keys()
-    
+    if everything: values = [('nul',-999)]
     if verbose: 
         print 'Outputting the Data subdatasets:'
         for i in range(len(varnames)):
             if values:
+                if everything: values.append((varnames[i].encode('ascii','ignore'),i))
                 if any(i in val for val in values):
                     print '\x1b[1;36m{0}: {1}\x1b[0m'.format(i,varnames[i])
                 else:
@@ -944,7 +948,7 @@ def load_netcdf(datfile,values=None,verbose=True):
             print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
             print " where namei is the name of the returned variable, and indexi is the index of the variable (from above)"
         return None, None
-    
+    if everything: values = values[1:]
     cdf_dict = {}
     cdf_data = {}
     for i,j in values:
