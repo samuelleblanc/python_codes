@@ -44,6 +44,7 @@
 
 # In[2]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -52,25 +53,30 @@ import matplotlib.pyplot as plt
 
 # In[3]:
 
+
 import hdf5storage as hs
 
 
 # In[4]:
+
 
 import Sp_parameters as Sp
 
 
 # In[5]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[6]:
 
+
 import plotting_utils as pu
 
 
 # In[7]:
+
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
@@ -78,10 +84,12 @@ from Sp_parameters import smooth
 
 # In[8]:
 
+
 fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
 # In[9]:
+
 
 vr = 'R0'
 
@@ -93,10 +101,12 @@ vr = 'R0'
 
 # In[10]:
 
+
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_ict.mat')
 
 
 # In[11]:
+
 
 ar.keys()
 
@@ -105,20 +115,24 @@ ar.keys()
 
 # In[12]:
 
+
 aod_names = sorted([a for a in ar.keys() if ('AOD' in a) and not ('UNC' in a)])
 
 
 # In[13]:
+
 
 aod_names
 
 
 # In[14]:
 
+
 arc = {}
 
 
 # In[15]:
+
 
 for nn in aod_names:
     arc[nn] = ar[nn]-ar['UNC'+nn]
@@ -128,6 +142,7 @@ for nn in aod_names:
 
 # In[16]:
 
+
 arc.keys()
 
 
@@ -135,10 +150,12 @@ arc.keys()
 
 # In[17]:
 
+
 ar['fl'][0]
 
 
 # In[18]:
+
 
 ar['AOD0501'].shape
 
@@ -147,35 +164,42 @@ ar['AOD0501'].shape
 
 # In[19]:
 
+
 ar['fl_8'] = ar['GPS_Alt']>8000
 
 
 # In[20]:
+
 
 ar['fl_2_8'] = (ar['GPS_Alt']<=8000) & (ar['GPS_Alt']>2000) & ar['fl_QA']
 
 
 # In[21]:
 
+
 ar['fl_1.5_2'] = (ar['GPS_Alt']<=2000) & (ar['GPS_Alt']>1500) & ar['fl_QA']
 
 
 # In[22]:
+
 
 ar['fl_1_1.5'] = (ar['GPS_Alt']<=1500) & (ar['GPS_Alt']>1000) & ar['fl_QA']
 
 
 # In[23]:
 
+
 ar['fl_0.5_1'] = (ar['GPS_Alt']<=1000) & (ar['GPS_Alt']>500) & ar['fl_QA']
 
 
 # In[24]:
 
+
 ar['fl_0.5'] = (ar['GPS_Alt']<=500) & ar['fl_QA']
 
 
 # In[25]:
+
 
 ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
 
@@ -185,6 +209,7 @@ ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
 # ## Make some simple plots first
 
 # In[26]:
+
 
 plt.figure()
 plt.plot(arc['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.')
@@ -196,6 +221,7 @@ plt.ylabel('GPS Altitude [m]')
 
 
 # In[27]:
+
 
 plt.figure()
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=(0,1.5),edgecolor='None',alpha=0.2,label='All points')
@@ -211,6 +237,7 @@ plt.legend(frameon=False)
 
 # In[28]:
 
+
 plt.figure()
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=(0,1.2),edgecolor='None',alpha=0.2,label='All points',normed=True)
 plt.hist(arc['AOD0501'][ar['fl_2_8']],bins=25,range=(0,1.2),edgecolor='None',alpha=0.2,label='2000 m to 8000 m',normed=True)
@@ -225,20 +252,24 @@ plt.legend(frameon=False)
 
 # In[29]:
 
+
 n[-2][:-1]
 
 
 # In[30]:
+
 
 y=[(nn+n[-2][j+1])/2.0 for j,nn in enumerate(n[-2][:-1])]
 
 
 # In[31]:
 
+
 n[1]
 
 
 # In[124]:
+
 
 fig = plt.figure()
 n=plt.hist([arc['AOD0501'][ar['fl']],
@@ -281,15 +312,18 @@ plt.savefig(fp+'plot/AOD_hist_alt_KORUS.png',dpi=600,transparent=True)
 
 # In[114]:
 
+
 np.nanmean(arc['AOD0501'][ar['fl']]),np.nanmedian(arc['AOD0501'][ar['fl']])
 
 
 # In[115]:
 
+
 np.nanmean(arc['AOD0501'][ar['fl_0.5']]),np.nanmedian(arc['AOD0501'][ar['fl_0.5']])
 
 
 # In[33]:
+
 
 plt.figure()
 n,bins,p = plt.hist(ar['GPS_Alt'][ar['fl']],bins=30,range=(0,10000))
@@ -302,20 +336,24 @@ plt.title('KORUS Altitudes')
 
 # In[34]:
 
+
 bins.shape
 
 
 # In[35]:
+
 
 pos = np.array([(bins[i]+bins[i+1])/2.0 for i,b in enumerate(bins[:-1])])
 
 
 # In[36]:
 
+
 len(pos)
 
 
 # In[37]:
+
 
 plt.figure(figsize=(8,7))
 plt.plot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.',alpha=0.0,color='w')
@@ -334,6 +372,7 @@ plt.savefig(fp+'plot\\KORUS_AOD_profile_avg.png',transparent=True,dpi=600)
 
 
 # In[38]:
+
 
 fig = plt.figure(figsize=(8,6))
 
@@ -387,20 +426,24 @@ plt.savefig(fp+'plot\\KORUS_AOD_profile_wvl_avg.png',transparent=True,dpi=600)
 
 # In[39]:
 
+
 aod_names
 
 
 # In[40]:
+
 
 wvl = np.array([380,452,501,520,532,550,606,620,675,781,865,1020,1040,1064,1236,1559,1627])
 
 
 # In[41]:
 
+
 wvl_bins = np.append(wvl[0]-10,wvl+10)
 
 
 # In[42]:
+
 
 wvl_bins
 
@@ -408,6 +451,7 @@ wvl_bins
 # Make a single arrays for all wavelengths for easier plotting
 
 # In[43]:
+
 
 arcs = []
 wvls = []
@@ -427,6 +471,7 @@ wvlsn = wvls.reshape(wvls.size)
 
 
 # In[431]:
+
 
 plt.figure()
 plt.plot(wvlsn[fls['fl_0.5']],arcsn[fls['fl_0.5']],'.',alpha=0)
@@ -457,6 +502,7 @@ plt.savefig(fp+'plot\\KORUS_AOD_wvl.png',dpi=500,transparent=True)
 
 
 # In[125]:
+
 
 plt.figure()
 plt.plot(wvlsn[fls['fl_0.5']],arcsn[fls['fl_0.5']],'.',alpha=0)
@@ -490,30 +536,30 @@ plt.savefig(fp+'plot\\KORUS_AOD_wvl_loglog.png',dpi=500,transparent=True)
 
 # In[44]:
 
+
 arcs.shape
 
 
 # In[45]:
+
 
 import Sun_utils as su
 
 
 # In[63]:
 
+
 reload(su)
 
 
-# In[ ]:
-
-
-
-
 # In[102]:
+
 
 c = su.aod_polyfit(wvl,arcs[:,ar['fl_0.5'][0]],polynum=4)
 
 
 # In[103]:
+
 
 plt.figure()
 plt.plot(wvl,arcs[:,ar['fl_0.5'][0]],'s-r')
@@ -522,40 +568,42 @@ plt.plot(wvl,polyval(c,wvl),'d-b')
 
 # In[87]:
 
+
 reload(su)
 
 
 # In[104]:
+
 
 c
 
 
 # In[113]:
 
+
 su.angstrom_from_poly(c,[400,500,600])
 
 
 # In[109]:
 
+
 np.gradient(polyval(c,[499,500,501]))
 
 
-# In[ ]:
-
-
-
-
 # In[76]:
+
 
 help(np.gradient)
 
 
 # In[78]:
 
+
 a = np.gradient(np.log([499,500,501]))
 
 
 # In[79]:
+
 
 np.gradient(-1.0*np.log(polyval(c,[499,500,501])),a)
 
@@ -564,21 +612,25 @@ np.gradient(-1.0*np.log(polyval(c,[499,500,501])),a)
 
 # In[72]:
 
+
 fp
 
 
 # In[73]:
+
 
 fpdat = fp+'data_zen//'
 
 
 # In[74]:
 
+
 dds = ['20160501','20160504','20160505','20160510','20160511','20160514',
        '20160515','20160519','20160521','20160524','20160526','20160602','20160604','20160609']
 
 
 # In[76]:
+
 
 dds = ['20160502']
 
@@ -587,11 +639,13 @@ dds = ['20160502']
 
 # In[77]:
 
+
 rts = []
 sps = []
 
 
 # In[79]:
+
 
 for daystr in dds:
     print daystr
@@ -608,11 +662,13 @@ for daystr in dds:
 
 # In[80]:
 
+
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
 # In[81]:
+
 
 for i,daystr in enumerate(dds):
     nvis = np.nanmean(sps[i].norm[:,i_vis],axis=1)
@@ -626,15 +682,18 @@ for i,daystr in enumerate(dds):
 
 # In[331]:
 
+
 zalt = 3000.0
 
 
 # In[332]:
 
+
 fl_alt = rt['alt']>zalt
 
 
 # In[333]:
+
 
 for i,daystr in enumerate(dds):
     rts[i]['fl_alt'] = rts[i]['alt'][:,0]>zalt
@@ -645,6 +704,7 @@ for i,daystr in enumerate(dds):
 
 # In[334]:
 
+
 for i,daystr in enumerate(dds):
     rts[i]['fl_ki'] = rts[i]['ki']<0.6
     print daystr,rts[i]['utc'].shape,rts[i]['utc'][rts[i]['fl_ki']].shape,        float(rts[i]['utc'][rts[i]['fl_ki']].shape[0])/ float(rts[i]['utc'].shape[0])*100.0
@@ -653,6 +713,7 @@ for i,daystr in enumerate(dds):
 # ### Combine the filters
 
 # In[335]:
+
 
 tot=0
 tot_fl=0
@@ -665,6 +726,7 @@ for i,daystr in enumerate(dds):
 
 # In[336]:
 
+
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 
@@ -673,6 +735,7 @@ print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 # ## Run through and plot the results
 
 # In[225]:
+
 
 for i,daystr in enumerate(dds):
     plt.figure()
@@ -699,6 +762,7 @@ for i,daystr in enumerate(dds):
 
 # In[341]:
 
+
 for i,daystr in enumerate(dds):
     try:
         rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
@@ -717,10 +781,12 @@ for i,daystr in enumerate(dds):
 
 # In[89]:
 
+
 import write_utils as wu
 
 
 # In[90]:
+
 
 hdict = {'PI':'Jens Redemann',
      'Institution':'NASA Ames Research Center',
@@ -746,6 +812,7 @@ order = ['LAT','LON','COD','REF']
 
 
 # In[91]:
+
 
 for i,daystr in enumerate(dds):
     d_dict = {'Start_UTC':{'data':rts[i]['utc'][rts[i]['fl']]*3600.0,
@@ -774,10 +841,12 @@ for i,daystr in enumerate(dds):
 
 # In[227]:
 
+
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
 # In[228]:
+
 
 def dict_keys_to_unicode(d):
     out = dict()
@@ -797,6 +866,7 @@ for n in rtss.keys():
 
 # In[94]:
 
+
 hs.savemat(fp+'zen_ict/v2/{}_all_retrieved.mat'.format(vr),rtss)
 
 
@@ -806,10 +876,12 @@ hs.savemat(fp+'zen_ict/v2/{}_all_retrieved.mat'.format(vr),rtss)
 
 # In[95]:
 
+
 from load_utils import load_ict
 
 
 # In[96]:
+
 
 out_RA = []
 out_head_RA = []
@@ -825,12 +897,14 @@ for d in dds:
 
 # In[97]:
 
+
 out_head_RA[0]
 
 
 # ## Combine to single array
 
 # In[338]:
+
 
 cr = {}
 for n in rts[0].keys():
@@ -839,10 +913,12 @@ for n in rts[0].keys():
 
 # In[339]:
 
+
 cr['days'] = np.array([])
 
 
 # In[340]:
+
 
 for i,d in enumerate(dds):
     cr['days'] = np.append(cr['days'],np.zeros_like(rts[i]['utc'])+i)
@@ -854,22 +930,26 @@ for i,d in enumerate(dds):
 
 # In[232]:
 
+
 import plotting_utils as pu
 from map_interactive import build_basemap
 
 
 # In[233]:
 
+
 rts[i]['tau_fl']
 
 
 # In[234]:
+
 
 for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
 
 
 # In[354]:
+
 
 fig = plt.figure(figsize=(10,6))
 ax = plt.subplot(111)
@@ -888,6 +968,7 @@ plt.savefig(fp+'plot/KORUS_COD_map.png',transparent=True,dpi=600)
 
 
 # In[355]:
+
 
 fig = plt.figure(figsize=(10,6))
 ax = plt.subplot(111)
@@ -909,6 +990,7 @@ plt.savefig(fp+'plot/KORUS_REF_map.png',transparent=True,dpi=600)
 
 # In[247]:
 
+
 plt.figure()
 plt.plot(cr['lat_fl'],cr['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(cr['lat_fl'],cr['tau_fl'],bins=40,normed=True)
@@ -922,6 +1004,7 @@ cb.set_label('Normalized counts')
 
 # In[114]:
 
+
 plt.figure()
 plt.plot(cr['lon_fl'],cr['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(cr['lon_fl'],cr['tau_fl'],bins=40,normed=True)
@@ -934,6 +1017,7 @@ cb.set_label('Normalized counts')
 
 
 # In[248]:
+
 
 plt.figure()
 plt.plot(cr['lon_fl'],cr['ref_fl'],'.',color='grey',alpha=0.1)
@@ -949,6 +1033,7 @@ cb.set_label('Normalized counts')
 
 # In[117]:
 
+
 plt.figure()
 plt.plot(cr['lat_fl'],cr['ref_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(cr['lat_fl'],cr['ref_fl'],bins=40,normed=True,cmap=plt.cm.gist_earth)
@@ -963,6 +1048,7 @@ cb.set_label('Normalized counts')
 
 # In[237]:
 
+
 fig = plt.figure()
 plt.hist(cr['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
 plt.hist(cr['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='All points')
@@ -976,6 +1062,7 @@ plt.legend(frameon=False)
 
 # In[238]:
 
+
 fig = plt.figure()
 plt.hist(cr['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
 plt.hist(cr['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,30),label='all points')
@@ -988,6 +1075,7 @@ plt.legend(frameon=False)
 
 
 # In[240]:
+
 
 fig,ax = plt.subplots(2,1)
 ax = ax.ravel()
@@ -1013,18 +1101,15 @@ plt.savefig(fp+'zen_ict/v3/KORUS_cod_ref_hist.png',transparent=True,dpi=600)
 
 # In[242]:
 
+
 print 'AVERAGE COD', np.nanmean(cr['tau_fl']),np.nanmedian(cr['tau_fl'])
 print 'AVERAGE REF', np.nanmean(cr['ref_fl']),np.nanmedian(cr['ref_fl']),
-
-
-# In[ ]:
-
-
 
 
 # # Combine Aerosol and Cloud properties into a single figure
 
 # In[302]:
+
 
 fig=plt.figure()
 plt.hist(cr['tau_fl'],bins=25,range=[0,5.0],edgecolor='None',color='r',alpha=0.5,normed=True,label='Cirrus')
@@ -1054,6 +1139,7 @@ plt.savefig(fp+'zen_ict//v3//KORUS_AOD_COD.png',dpi=600,transparent=True)
 
 # In[287]:
 
+
 plt.figure()
 plt.hist(cr['tau_fl'],bins=25,range=[0,5.0],edgecolor='None',color='r',alpha=0.4,normed=True,label='Cirrus Optical Depth')
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=[0,5.0],normed=True,edgecolor='None',alpha=0.4,
@@ -1068,10 +1154,12 @@ plt.ylabel('Frequency')
 
 # In[276]:
 
+
 ar.keys()
 
 
 # In[280]:
+
 
 plt.figure()
 plt.plot(cr['lon_fl'],cr['tau_fl'],'sr',alpha=0.2,label='Cirrus')
@@ -1086,11 +1174,7 @@ plt.ylim(0.01,40)
 
 # In[285]:
 
+
 plt.figure()
 plt.hist([cr['tau_fl'],arc['AOD0501'][ar['fl_1.0']]],bins=30,range=[0,5],label=['Cirrus','AOD @ 501 nm'],normed=True)
-
-
-# In[ ]:
-
-
 
