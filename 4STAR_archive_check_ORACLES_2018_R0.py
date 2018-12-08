@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[56]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -26,13 +26,13 @@ from path_utils import getpath
 from plotting_utils import make_boxplot
 
 
-# In[57]:
+# In[2]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[58]:
+# In[3]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
@@ -45,34 +45,34 @@ fp
 
 
 days = ['20180924','20180927','20180930','20181002','20181003','20181005','20181007'] #,'20170818','20170819']
+days = ['20180921','20180922','20180924','20180927','20180930','20181002','20181003','20181005','20181007','20181010','20181012',
+        '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[59]:
+# In[118]:
 
 
 days = ['20181010','20181012']
-#days = ['20170813','20170817']
-#days = ['20170818','20170819']
 days = ['20181019']
-#days = ['20170824','20170826']
-#days = ['20170812']
-#days = ['20170801','20170802','20170903','20170904']
-#days = ['20170807']
+days = ['20181002','20181025']
+days = ['20181017','20181023']
+days = ['20180921','20180922']
+days = ['20181026','20181027']
 
 
-# In[60]:
+# In[5]:
 
 
 vv = 'R0'
 
 
-# In[61]:
+# In[6]:
 
 
 vi = ''
 
 
-# In[62]:
+# In[7]:
 
 
 outaod_RA = []
@@ -98,13 +98,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[63]:
+# In[8]:
 
 
 len(outaod_RA)
 
 
-# In[64]:
+# In[9]:
 
 
 len(days)
@@ -135,13 +135,13 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[65]:
+# In[10]:
 
 
 outaod_head_RA[-1]
 
 
-# In[14]:
+# In[84]:
 
 
 outgas_head_RA[0]
@@ -149,25 +149,25 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[66]:
+# In[11]:
 
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[67]:
+# In[12]:
 
 
 nm
 
 
-# In[68]:
+# In[13]:
 
 
 wl = nm[10:-1]
 
 
-# In[69]:
+# In[14]:
 
 
 wl = wl[0:24]
@@ -176,22 +176,13 @@ wl = wl[0:24]
 # In[15]:
 
 
-plt.figure()
-plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
-for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
-    plt.axvline(x,color='#DDDDDD',alpha=0.02)
-
-
-# In[70]:
-
-
 for a in wl:
     print a
 
 
 # # Plot the files
 
-# In[71]:
+# In[128]:
 
 
 for i,d in enumerate(days):
@@ -227,7 +218,7 @@ for i,d in enumerate(days):
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[72]:
+# In[131]:
 
 
 for i,d in enumerate(days):
@@ -257,13 +248,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_high_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[15]:
+# In[50]:
 
 
 wl[0:16]
 
 
-# In[73]:
+# In[132]:
 
 
 for i,d in enumerate(days):
@@ -294,7 +285,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_high_alt_AOD_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[74]:
+# In[133]:
 
 
 for i,d in enumerate(days):
@@ -327,7 +318,7 @@ for i,d in enumerate(days):
 
 # ## Plot the ACAOD (mid altitude 600-1800 m)
 
-# In[75]:
+# In[134]:
 
 
 i,d = 5,'20181005'
@@ -359,7 +350,7 @@ ax[1].set_xlim(8.65,9.05)
 plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_mid_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[76]:
+# In[106]:
 
 
 for i,d in enumerate(days):
@@ -371,7 +362,7 @@ for i,d in enumerate(days):
         ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>1800)&(outaod_RA[i]['GPS_Alt']<3500))[0]
         ax[0].plot(outaod_RA[i][nm[0]][ii],outaod_RA[i][aod][ii],'.',label=aod)
     ax[0].set_ylabel('AOD')
-    ax[0].set_ylim(0,0.4)
+    #ax[0].set_ylim(0,0.4)
     ax[0].axhline(0,color='k')
     box = ax[0].get_position()
     ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -389,7 +380,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_mid_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[21]:
+# In[135]:
 
 
 for i,d in enumerate(days):
@@ -401,7 +392,7 @@ for i,d in enumerate(days):
         ii = np.where((outaod_RA[i][nm[4]]==0)&(outaod_RA[i]['GPS_Alt']>600)&(outaod_RA[i]['GPS_Alt']<1800))[0]
         ax[0].plot(outaod_RA[i][nm[0]][ii],outaod_RA[i][aod][ii],'.',label=aod)
     ax[0].set_ylabel('AOD')
-    ax[0].set_ylim(0,0.08)
+    ax[0].set_ylim(0.2,0.8)
     ax[0].axhline(0,color='k')
     box = ax[0].get_position()
     ax[0].set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -416,18 +407,18 @@ for i,d in enumerate(days):
     box = axy.get_position()
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
-    plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_mid_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
+    plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_aca_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
 # ## Plot the AOD with the uncertainty
 
-# In[77]:
+# In[95]:
 
 
 nm[34:50]
 
 
-# In[78]:
+# In[136]:
 
 
 for i,d in enumerate(days):
@@ -460,19 +451,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_uncert_{vi}_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[17]:
+# In[66]:
 
 
 nm[50:]
 
 
-# In[18]:
-
-
-nm[50:]
-
-
-# In[80]:
+# In[137]:
 
 
 for i,d in enumerate(days):
@@ -505,19 +490,19 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_uncert_{vi}_{}_nir.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[19]:
+# In[62]:
 
 
 outaod_RA[i][unc][ii]
 
 
-# In[20]:
+# In[63]:
 
 
 nm[4]
 
 
-# In[43]:
+# In[64]:
 
 
 plt.figure()
@@ -527,19 +512,19 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[81]:
+# In[16]:
 
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[82]:
+# In[17]:
 
 
 wv
 
 
-# In[83]:
+# In[138]:
 
 
 for i,d in enumerate(days):
@@ -573,9 +558,56 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_high_alt_AOD_spectra_{vi}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
+# ## Plot AOD spectra with polyfit
+
+# In[139]:
+
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
+    ax.set_title('AOD spectra {} for flight {}'.format(vv,d))
+    #bins = len(outaod_RA[i]['Start_UTC'])/10
+    cc = plt.cm.gist_ncar(outaod_RA[i]['Start_UTC']/outaod_RA[i]['Start_UTC'].max())
+    cmapname = 'gist_ncar'
+
+    ard =  outaod_RA[i]
+    asp = np.array([ard['AOD0355'],ard['AOD0380'],ard['AOD0452'],ard['AOD0470'],ard['AOD0501'],ard['AOD0520'],ard['AOD0530'],
+                    ard['AOD0532'],ard['AOD0550'],ard['AOD0606'],ard['AOD0620'],ard['AOD0660'],ard['AOD0675'],ard['AOD0700'],
+                    ard['AOD0781'],ard['AOD0865'],ard['AOD1020'],ard['AOD1040'],ard['AOD1064'],ard['AOD1236'],ard['AOD1250'],
+                    ard['AOD1559'],ard['AOD1627'],ard['AOD1650']])
+    qa = outaod_RA[i]['qual_flag']==0
+    ax.plot([350],[1],'.',alpha=0.0)
+    jj = 0
+    for j,f in enumerate(ard['Start_UTC']):
+        #if not np.isfinite(asp[:,j]).any(): continue
+        if qa[j]: 
+            jj = jj+1
+            if jj%200>0: continue
+            ax.plot(wv,asp[:,j],marker='d',linestyle='None',color=cc[j,:])
+            ax.plot(wv,np.exp(np.polyval([ard['AOD_polycoef_a2'][j],ard['AOD_polycoef_a1'][j],ard['AOD_polycoef_a0'][j]],
+                                         np.log(wv))),'-',c=cc[j,:])
+    ax.set_ylim(0.0005,1.5)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel('AOD')
+    ax.set_ylim(0.0005,1.5)
+    ax.set_xlabel('Wavelength [nm]')
+    ax.set_xlim(380.0,1700.0)
+    plt.xticks([350,400,500,600,800,1000,1200,1400,1650])
+
+    ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.grid()
+
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap(cmapname))
+    scalarmap.set_array(outaod_RA[i]['Start_UTC'][:0:-1])
+    cba = plt.colorbar(scalarmap)
+    cba.set_label('UTC time [h]')
+    plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_spectra_polyfit_{vi}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
+
+
 # ## Special case plotting
 
-# In[80]:
+# In[35]:
 
 
 outaod_RA
@@ -614,15 +646,9 @@ plt.grid()
 plt.savefig(fp+'aod_ict/{vv}_20160920_zoom_QA_flag.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# ### Special plotting of AOD per altitude and latitude
+# ## Plotting of AOD per altitude and latitude
 
-# In[84]:
-
-
-days
-
-
-# In[85]:
+# In[140]:
 
 
 for i,d in enumerate(days):
@@ -647,25 +673,25 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[29]:
+# In[18]:
 
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[86]:
+# In[19]:
 
 
 wls = np.array(wv)/1000.0
 
 
-# In[87]:
+# In[20]:
 
 
 wl[4]
 
 
-# In[88]:
+# In[142]:
 
 
 for i,d in enumerate(days):
@@ -696,9 +722,43 @@ for i,d in enumerate(days):
     plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_{}_lat_alt_angstrom.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
+# ## Plotting of AOD per altitude and Angstrom
+
+# In[143]:
+
+
+for i,d in enumerate(days):
+    plt.figure()
+    #d = days[15]
+    #plt.plot(outaod_RA[i]['AOD0501'],outaod_RA[i]['GPS_Alt'],'+',color='lightgrey',zorder=0)
+    #if i==1:
+    #    iiu = (outaod_RA[i]['qual_flag']==0) & (outaod_RA[i]['Latitude']>10.0)
+    #else:
+    #    iiu = (outaod_RA[i]['qual_flag']==0) & (outaod_RA[i]['Latitude']<-9.0)
+    iiu = outaod_RA[i]['qual_flag']==0
+    b = plt.scatter(outaod_RA[i]['AOD0501'][iiu],outaod_RA[i]['GPS_Alt'][iiu],
+                marker='o',edgecolor='None',c=outaod_RA[i]['AOD_angstrom_470_865'][iiu],cmap='gist_ncar',vmin=0.1,vmax=1.8)
+    #plt.axhline(600)
+    #plt.axhline(1200)
+    plt.xlim(0,1.0)
+    plt.ylim(0,5000)
+    plt.grid()
+    plt.xlabel('AOD 500 nm')
+    plt.ylabel('Altitude [m]')
+    iiula,iiulo = np.nanmean(outaod_RA[i]['Latitude'][iiu]),np.nanmean(outaod_RA[i]['Longitude'][iiu])
+    plt.title('AOD for {} near {:2.2f}$^{{\circ}}${}, {:2.2f}$^{{\circ}}${}'.format(
+        d,abs(iiula),'N' if iiula>0 else 'S',abs(iiulo),'E' if iiulo>0 else 'W'))
+    try:
+        cb = plt.colorbar(b,extend='both')
+        cb.set_label('Angstrom Exponent')
+    except:
+        pass
+    plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_{}_aod_alt_AE.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
+
+
 # # Combine all the data in a single array
 
-# In[20]:
+# In[21]:
 
 
 ar = {}
@@ -706,13 +766,13 @@ for n in nm:
     ar[n] = np.array([])
 
 
-# In[21]:
+# In[22]:
 
 
 ar['days'] = np.array([])
 
 
-# In[22]:
+# In[23]:
 
 
 for i,d in enumerate(days):
@@ -721,7 +781,7 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[23]:
+# In[24]:
 
 
 ar['GPS_Alt'].shape
@@ -789,13 +849,13 @@ ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
 
 
-# In[34]:
+# In[47]:
 
 
-ar['fl_routine'] = (ar['days']==1.0)|(ar['days']==3.0)|(ar['days']==6.0)|(ar['days']==7.0)
+ar['fl_routine'] = (ar['days']==3.0)|(ar['days']==5.0)|(ar['days']==9.0)|(ar['days']==10.0)|(ar['days']==12.0)|(ar['days']==15.0)
 
 
-# In[35]:
+# In[48]:
 
 
 ar['flr'] = ar['fl_routine'] & ar['fl_QA'] & ar['fl_alt']
@@ -803,13 +863,13 @@ ar['flr'] = ar['fl_routine'] & ar['fl_QA'] & ar['fl_alt']
 
 # ## save to file
 
-# In[56]:
+# In[36]:
 
 
 import hdf5storage as hs
 
 
-# In[57]:
+# In[49]:
 
 
 hs.savemat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv=vv),ar)
@@ -831,13 +891,13 @@ ar = hs.loadmat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv=vv))
 
 # ## Plot a histogram of all the AOD
 
-# In[51]:
+# In[38]:
 
 
 from plotting_utils import prelim
 
 
-# In[59]:
+# In[39]:
 
 
 plt.figure()
@@ -861,20 +921,20 @@ plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[60]:
+# In[50]:
 
 
 np.nanmean(ar['AOD0501'][ar['flr']])
 
 
-# In[61]:
+# In[51]:
 
 
 lim = np.linspace(-15,7,12)
 pos = np.array([(l+lim[i+1])/2.0 for i,l in enumerate(lim[0:-1])])
 
 
-# In[62]:
+# In[42]:
 
 
 plt.figure()
@@ -892,7 +952,7 @@ plt.title('ORACLES 2018 above cloud AOD')
 plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_longitude.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[64]:
+# In[52]:
 
 
 lima = np.linspace(-15,0,11)
@@ -919,7 +979,7 @@ plt.title('ORACLES 2018 above cloud AOD')
 plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_latitude.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[65]:
+# In[43]:
 
 
 plt.figure()
@@ -939,13 +999,13 @@ plt.legend(frameon=False)
 plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_AOD_histogram_nox.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[66]:
+# In[53]:
 
 
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
-# In[67]:
+# In[54]:
 
 
 plt.figure()
@@ -975,19 +1035,19 @@ plt.title('Above clouds AOD distribution [600-1800 m, cloud filtered]')
 plt.savefig(fp+'aod_ict_2018/{vv}_AOD_histogram_cum.png'.format(vv=vv),dpi=600,transparent=True)
 
 
-# In[68]:
+# In[55]:
 
 
 np.nanmean(ar['AOD0501'][ar['fl']])
 
 
-# In[69]:
+# In[56]:
 
 
 np.nanmedian(ar['AOD0501'][ar['fl']])
 
 
-# In[70]:
+# In[57]:
 
 
 np.nanstd(ar['AOD0501'][ar['fl']])
@@ -1001,7 +1061,7 @@ np.nanstd(ar['AOD0501'][ar['fl']])
 ar.keys()
 
 
-# In[72]:
+# In[58]:
 
 
 plt.figure()
@@ -1023,51 +1083,51 @@ plt.savefig(fp+'aod_ict_2018/{vv}/{vv}_Airmass_histogram.png'.format(vv=vv),dpi=
 
 # ### Load 2016
 
-# In[38]:
+# In[59]:
 
 
 ar_1 = hs.loadmat(fp+'/aod_ict/R2/all_aod_ict_R2.mat')
 
 
-# In[39]:
+# In[60]:
 
 
 ar_1.keys()
 
 
-# In[40]:
+# In[61]:
 
 
 days_1 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[41]:
+# In[62]:
 
 
 #routine days
 rd = [20160831.0,20160904.0,20160908.0,20160910.0,20160912.0,20160925.0]
 
 
-# In[42]:
+# In[63]:
 
 
 ar_1['days']
 
 
-# In[43]:
+# In[64]:
 
 
 flr1 = ((ar_1['days']==rd[0]) | (ar_1['days']==rd[1]) | (ar_1['days']==rd[2]) | (ar_1['days']==rd[3]) | (ar_1['days']==rd[4]) | (ar_1['days']==rd[5]))
 
 
-# In[44]:
+# In[65]:
 
 
 #flr1 = ((ar_1['days']==4) | (ar_1['days']==6) | (ar_1['days']==8) | (ar_1['days']==9) | (ar_1['days']==10) | (ar_1['days']==15))
 
 
-# In[45]:
+# In[66]:
 
 
 ar_1['flr'] = flr1&ar_1['fl_QA']&ar_1['fl_alt']
@@ -1075,13 +1135,13 @@ ar_1['flr'] = flr1&ar_1['fl_QA']&ar_1['fl_alt']
 
 # ### Load the 2017 data
 
-# In[46]:
+# In[67]:
 
 
 ar_2 = hs.loadmat(fp+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
 
 
-# In[47]:
+# In[68]:
 
 
 ar_2.keys()
@@ -1089,19 +1149,19 @@ ar_2.keys()
 
 # ### Plot the histogram comparisons
 
-# In[48]:
+# In[69]:
 
 
 len(ar['AOD0501'][ar['fl']]), len(ar_1['AOD0501'][ar_1['fl']]), len(ar_2['AOD0501'][ar_2['fl']])
 
 
-# In[49]:
+# In[70]:
 
 
 np.nanmean(ar['AOD0501'][ar['fl']]),np.nanmean(ar_1['AOD0501'][ar_1['fl']]),np.nanmean(ar_2['AOD0501'][ar_2['fl']])
 
 
-# In[52]:
+# In[71]:
 
 
 plt.figure()
