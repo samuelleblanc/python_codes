@@ -656,8 +656,8 @@ def prelim(ax=None):
 # In[ ]:
 
 
-def sub_note(note,ax=None,out=False):
-    'Stamp note in top right of the plot'
+def sub_note(note,ax=None,out=False,dx=0.0,dy=0.0):
+    'Stamp note in top right of the plot, adjust with dx, dy, if out set to true, is put outside the plot'
     import matplotlib.pyplot as plt
     if not ax:
         ax = plt.gca()
@@ -668,7 +668,7 @@ def sub_note(note,ax=None,out=False):
     else: 
         yup = 0.98
         val = 'top'
-    ax.text(0.01, yup, ' '+note,
+    ax.text(0.01+dx, yup+dy, ' '+note,
         verticalalignment=val, horizontalalignment='left',
         transform=ax.transAxes,
         color='k', fontsize=18,zorder=1,alpha=0.7)
