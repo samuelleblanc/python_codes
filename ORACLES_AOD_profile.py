@@ -120,7 +120,7 @@ s = sio.loadmat(f_star)
 s.keys()
 
 
-# In[9]:
+# In[8]:
 
 
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
@@ -128,13 +128,13 @@ s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 # ## Get the flag file
 
-# In[10]:
+# In[9]:
 
 
 fmat = getpath('4STAR_data',make_path=True,path='/mnt/c/Users/sleblanc/Research/4STAR_codes/data_folder/')
 
 
-# In[11]:
+# In[10]:
 
 
 with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
@@ -144,27 +144,27 @@ with open (fmat+'starinfo_{}.m'.format(dd), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[12]:
+# In[11]:
 
 
 sf.keys()
 
 
-# In[13]:
+# In[11]:
 
 
 ifl = (np.array(sf['bad_aod'])==0) & (np.array(sf['unspecified_clouds'])==0) & (np.array(sf['cirrus'])==0)
 ifl = ifl.flatten()
 
 
-# In[14]:
+# In[12]:
 
 
 iflt = ((ifl) & (s['utc']>=11.8667) & (s['utc']<=12.25))
 iflt = iflt.flatten()
 
 
-# In[15]:
+# In[13]:
 
 
 print 'total utc points', s['utc'].shape, 'valid', ifl.shape,'valid during profile:',iflt.shape,      'selected valid',ifl.sum(),'selected valid during profile',iflt.sum()
@@ -200,20 +200,20 @@ plt.plot(s['tau_aero'][ifl,400],s['Alt'][ifl],'+r')
 plt.plot(s['tau_aero'][iflt,400],s['Alt'][iflt],'xg')
 
 
-# In[19]:
+# In[14]:
 
 
 # profile = [13.24,13.56] for 20160904
 profile = [11.8667, 12.25]
 
 
-# In[20]:
+# In[15]:
 
 
 it = (s['utc']>=profile[0]) & (s['utc']<=profile[1]) & (ifl) & (s['tau_aero'][:,400]<0.8)
 
 
-# In[21]:
+# In[16]:
 
 
 it = it.flatten()
@@ -221,25 +221,25 @@ it = it.flatten()
 
 # ## Load the 4STAR dirty clean correction file
 
-# In[22]:
+# In[17]:
 
 
 s_dirty = fmat+'20160920_AOD_merge_marks.mat'
 
 
-# In[23]:
+# In[18]:
 
 
 dm = sio.loadmat(s_dirty)
 
 
-# In[24]:
+# In[20]:
 
 
 dm.keys()
 
 
-# In[25]:
+# In[19]:
 
 
 dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
@@ -247,7 +247,7 @@ dm['utc'] = lm.toutc(lm.mat2py_time(dm['time']))
 
 # ### Create a full wavelength tau correction from polyfit
 
-# In[204]:
+# In[20]:
 
 
 import Sun_utils as su
@@ -255,7 +255,7 @@ from scipy import polyval
 from write_utils import nearest_neighbor
 
 
-# In[27]:
+# In[21]:
 
 
 dm['dAODs'].shape
@@ -263,13 +263,13 @@ dm['dAODs'].shape
 
 # Get the nearest neighboring daod values, matched to the utc time in the starsun.mat file
 
-# In[28]:
+# In[22]:
 
 
 [(i,iv) for i,iv in enumerate(dm['wl_nm'].flatten())]
 
 
-# In[29]:
+# In[23]:
 
 
 daod = []
@@ -281,39 +281,39 @@ daod = np.array(daod)
 daod.shape
 
 
-# In[30]:
+# In[24]:
 
 
 dm['dAODs'].shape
 
 
-# In[31]:
+# In[25]:
 
 
 dm['polyaod'] = [su.aod_polyfit(dm['wl_nm'].flatten(),daod[:,i],polynum=2) for i in xrange(len(s['utc']))]    
 np.shape(dm['polyaod'])
 
 
-# In[32]:
+# In[26]:
 
 
 dm['tau'] = [polyval(dm['polyaod'][i].flatten(),s['w'].flatten()*1000.0) for i in xrange(len(s['utc']))] 
 
 
-# In[33]:
+# In[29]:
 
 
 np.shape(dm['tau']),s['tau_aero'].shape
 
 
-# In[34]:
+# In[27]:
 
 
 s_list = s.keys()
 s_list.sort()
 
 
-# In[35]:
+# In[28]:
 
 
 aod = s['tau_aero']-np.array(dm['tau'])
@@ -340,26 +340,26 @@ plt.plot(s['utc'],aod[:,400],'g.')
 
 # ## Load the merge file with PDI and scat total
 
-# In[38]:
+# In[29]:
 
 
 fpo = getpath('ORACLES_data_other_2016')
 fpo
 
 
-# In[39]:
+# In[30]:
 
 
 mrg,mrgh = lm.load_netcdf(fpo+'merge/mrg1_P3_{}_R24.nc'.format('20160912'),everything=True)
 
 
-# In[40]:
+# In[31]:
 
 
 ll  = mrgh.keys()
 
 
-# In[41]:
+# In[32]:
 
 
 for l in ll:
@@ -367,7 +367,7 @@ for l in ll:
         print l
 
 
-# In[42]:
+# In[33]:
 
 
 for l in ll:
@@ -375,43 +375,43 @@ for l in ll:
         print l
 
 
-# In[43]:
+# In[34]:
 
 
 cdn = np.nansum(mrg['PDI-CDNC_dNdlogd'],axis=1)
 
 
-# In[44]:
+# In[38]:
 
 
 cdn.shape
 
 
-# In[45]:
+# In[35]:
 
 
 mrg['PDI-CDNC_dNdlogd'].shape
 
 
-# In[46]:
+# In[42]:
 
 
 mrg['AOD'].shape
 
 
-# In[47]:
+# In[43]:
 
 
 mrg['AODwavelength']
 
 
-# In[48]:
+# In[44]:
 
 
 mrgh['qual_flag']
 
 
-# In[49]:
+# In[36]:
 
 
 aodm = np.ma.masked_array(mrg['AOD'][:,4],mrg['qual_flag']==0)
@@ -423,13 +423,13 @@ aodm = np.ma.masked_array(mrg['AOD'][:,4],mrg['qual_flag']==0)
 mrgh['CDP_Conc']
 
 
-# In[51]:
+# In[46]:
 
 
 mrgh['PDI-CDNC_dNdlogd']
 
 
-# In[52]:
+# In[47]:
 
 
 mrg['nephelometerwavelength']
@@ -437,13 +437,13 @@ mrg['nephelometerwavelength']
 
 # ### Plot the vertical distribution of the AOD, scat, and total number from PDI
 
-# In[53]:
+# In[37]:
 
 
 imfl = (mrg['Start_UTC']/3600.0 > profile[0]-0.01)&(mrg['Start_UTC']/3600.0<profile[1]+0.07)
 
 
-# In[54]:
+# In[38]:
 
 
 imfl = (mrg['Start_UTC']/3600.0 > 14.12)&(mrg['Start_UTC']/3600.0<14.55)
@@ -468,7 +468,7 @@ plt.plot(mrg['Start_UTC'],cdn,'+r')
 plt.plot(mrg['Start_UTC'],mrg['AOD'][:,4],'sg')
 
 
-# In[58]:
+# In[39]:
 
 
 imflqa = (mrg['qual_flag']==0)&(imfl1==True)
@@ -620,7 +620,7 @@ plt.savefig(fp+'plot/map_take_off_profile_{dd}.png'.format(dd=dd),dpi=600,transp
 
 # ## Vertical profile of AOD
 
-# In[72]:
+# In[40]:
 
 
 i515 = np.argmin(abs(s['w']*1000.0-515.0))
@@ -629,25 +629,25 @@ i865 = np.argmin(abs(s['w']*1000.0-865.0))
 i1250 = np.argmin(abs(s['w']*1000.0-1250.0))
 
 
-# In[73]:
+# In[41]:
 
 
 ii = np.where(it)[0][-3]
 
 
-# In[74]:
+# In[42]:
 
 
 tau_max = 1.0
 
 
-# In[75]:
+# In[43]:
 
 
 ii
 
 
-# In[76]:
+# In[52]:
 
 
 s['tau_aero'].shape
@@ -685,20 +685,20 @@ plt.setp(ax.get_xticklabels(), visible=True)
 plt.savefig(fp+'plot/AOD_Alt_profile_{}.png'.format(dd),dpi=600,transparent=True)
 
 
-# In[77]:
+# In[44]:
 
 
 u = np.where(it)[0]
 iit = u[np.linspace(0,len(u)-1,6).astype(int)]
 
 
-# In[78]:
+# In[45]:
 
 
 tau_max = 1.2
 
 
-# In[79]:
+# In[46]:
 
 
 w_archive = [354.9,380.0,451.7,470.2,500.7,520,530.3,532.0,550.3,605.5,619.7,660.1,675.2,699.7,780.6,864.6,1019.9,1039.6,1064.2,1235.8,1249.9,1558.7,1626.6,1650.1]
@@ -824,7 +824,7 @@ plt.savefig(fp+'plot/AOD_Alt_profile_loglog_hsrlwvl_{}.png'.format(dd),dpi=500,t
 
 # ### Redo the color plot, but with shading for the gas aod
 
-# In[80]:
+# In[47]:
 
 
 s['tau_aero'][:,1041] = np.nan
@@ -847,7 +847,7 @@ ax3.set_ylim([0.03,tau_max*1.05])
 plt.grid()
 
 
-# In[81]:
+# In[48]:
 
 
 shade_rg = [[584.0,597.0],
@@ -864,7 +864,7 @@ shade_rg = [[584.0,597.0],
             [1293.0,1521.0]]
 
 
-# In[82]:
+# In[49]:
 
 
 i501 = np.argmin(abs(s['w']*1000.0-501.0))
@@ -1076,20 +1076,20 @@ plt.savefig(fp+'plot_v3/AOD_Alt_profile_loglog_hsrlwvl_shaded_v3_{}.pdf'.format(
 
 # ### Add the angstrom exponent vertical dependence
 
-# In[116]:
+# In[50]:
 
 
 import Sun_utils as su
 
 
-# In[117]:
+# In[51]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[118]:
+# In[52]:
 
 
 for i in np.where(it)[0]:
@@ -1101,19 +1101,19 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[119]:
+# In[53]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,515.0,865.0,1250.0],polynum=4)
 
 
-# In[120]:
+# In[54]:
 
 
 s['angs'].shape
 
 
-# In[121]:
+# In[55]:
 
 
 i470 = np.argmin(abs(s['w']*1000.0-470.0))
@@ -1143,7 +1143,7 @@ plt.figure()
 plt.plot(s['angs_470_865'],s['Alt'][it])
 
 
-# In[51]:
+# In[56]:
 
 
 def smoothb(y, box_pts):
@@ -1295,13 +1295,13 @@ plt.figure()
 plt.plot(s['utc'],aod[:,400])
 
 
-# In[123]:
+# In[57]:
 
 
 polylogaod = np.array([su.logaod_polyfit(s['w'].flatten()[iw_archive]*1000.0,aod[i,iw_archive],polynum=4) for i in np.where(it)[0]])
 
 
-# In[124]:
+# In[58]:
 
 
 angs = su.angstrom_from_logpoly(polylogaod,[380.0,515.0,865.0,1250.0],polynum=4)
@@ -1380,7 +1380,7 @@ ax.set_title('4STAR AOD profile for {dd} at {t0:2.2f} to {t1:2.2f} UTC'.format(d
 
 # ## Vertical profile of extinction
 
-# In[135]:
+# In[59]:
 
 
 from Sp_parameters import deriv,smooth
@@ -1388,13 +1388,13 @@ import scipy.stats as st
 import scipy.interpolate as si
 
 
-# In[136]:
+# In[60]:
 
 
 s['ext'] = np.zeros_like(s['tau_aero'])
 
 
-# In[218]:
+# In[82]:
 
 
 nx = 1000
@@ -1404,7 +1404,7 @@ xd = nearest_neighbor(s['Alt'][it][:,0],aod[it,i550],xalt,dist=5.0)
 isn = np.isnan(xd)
 
 
-# In[219]:
+# In[83]:
 
 
 for l,w in enumerate(s['w'][0]):
@@ -1426,7 +1426,7 @@ plt.plot(mrg['Abs'][itm,1]+mrg['Scat540RRwet'][itm],mrg['Alt'][itm],'x')
 plt.xlim(0,400)
 
 
-# In[138]:
+# In[84]:
 
 
 def calc_ext(aod,alt,dz,su=0.0006):
@@ -1443,7 +1443,7 @@ def calc_ext(aod,alt,dz,su=0.0006):
     return extc,dz_bin
 
 
-# In[139]:
+# In[85]:
 
 
 s['ext_spline'] = []
@@ -1615,7 +1615,7 @@ plt.savefig(fp+'plot_v2/Ext_Alt_profile_spline_{dd}.png'.format(dd=dd),dpi=600,t
 
 # ### Extinction profile, with spaces in missing data
 
-# In[59]:
+# In[86]:
 
 
 alts = s['Alt'][it].flatten()
@@ -1671,19 +1671,19 @@ plt.savefig(fp+'plot_v2/Ext_Alt_profile_derivative_empty_{dd}.png'.format(dd=dd)
 
 # # Add CO concentration
 
-# In[131]:
+# In[63]:
 
 
 import load_utils as lu
 
 
-# In[132]:
+# In[64]:
 
 
 coma,coma_h = lu.load_ict(fp+'/data_other/COMA_P3_20160920_R0.ict',return_header=True)
 
 
-# In[133]:
+# In[65]:
 
 
 itc = (coma['Start_UTC']>=profile[0]) & (coma['Start_UTC']<=profile[1]) & (coma['CO_ppbv']>0)
@@ -1691,20 +1691,20 @@ itc = (coma['Start_UTC']>=profile[0]) & (coma['Start_UTC']<=profile[1]) & (coma[
 
 # ## Now add the CO to the figure
 
-# In[144]:
+# In[66]:
 
 
 co_fx = si.interp1d(coma['Start_UTC'],coma['CO_ppbv'])
 co = co_fx(s['utc'][it])
 
 
-# In[253]:
+# In[67]:
 
 
 itc = (coma['Start_UTC']>profile[0]) & (coma['Start_UTC']<profile[1])
 
 
-# In[258]:
+# In[68]:
 
 
 coutc = coma['Start_UTC'][itc]
@@ -1713,7 +1713,7 @@ coaltfx =  si.interp1d(s['utc'][it],s['Alt'][it][:,0],fill_value="extrapolate")
 coalt = coaltfx(coma['Start_UTC'][itc])
 
 
-# In[259]:
+# In[69]:
 
 
 coalt
@@ -1734,14 +1734,14 @@ cb.set_label('CO [ppbv]')
 plt.savefig(fp+'plot_v2/Ext_Alt_profile_CO_{dd}.png'.format(dd=dd),dpi=600,transparent=True)
 
 
-# In[140]:
+# In[70]:
 
 
 it_g = s['ext'][it,i501]>0.0
 gg = np.where(it_g)[0]
 
 
-# In[141]:
+# In[71]:
 
 
 it_g.shape
@@ -1756,13 +1756,13 @@ plt.plot(s['ext'][it,i501][it_g],co[it_g],'.')
 #plt.legend(frameon=False,loc=4)
 
 
-# In[ ]:
+# In[72]:
 
 
 e_c = np.corrcoef(s['ext'][it,i501][it_g],co[it_g])
 
 
-# In[ ]:
+# In[85]:
 
 
 e_c
@@ -1982,31 +1982,43 @@ plt.savefig(fp+'plot_v2/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_{dd}.png'.
 
 # # Add the in situ extinction
 
-# In[157]:
+# In[73]:
 
 
-mrg,mrgh = lu.load_netcdf(fp+'data_other/merge/mrg1_P3_20160920_R21.nc',(('nwvl',49),('exttot',195),('scattot',195),('time',0),('utc',2),('time_bounds',1),('Alt',6),('Scat540RRwet',64),('Scattering_interpolated',73),('Abs',69)))
+mrg,mrgh = lu.load_netcdf(fp+'data_other/merge/mrg1_P3_20160920_R21.nc',(('rh',35),('nwvl',49),('exttot',195),('scattot',195),('time',0),('utc',2),('time_bounds',1),('Alt',6),('Scat540RRwet',64),('Scattering_interpolated',73),('Abs',69)))
 
 
-# In[164]:
+# In[74]:
 
 
 mrgh['Scat540RRwet']
 
 
-# In[160]:
+# In[77]:
 
 
-itm = (mrg['utc']/3600.0>profile[0]) & (mrg['utc']/3600.0<profile[1])
+mrgh['nwvl']
 
 
-# In[161]:
+# In[91]:
+
+
+mrgh['rh']
+
+
+# In[79]:
 
 
 mrg['nwvl']
 
 
-# In[163]:
+# In[80]:
+
+
+itm = (mrg['utc']/3600.0>profile[0]) & (mrg['utc']/3600.0<profile[1])
+
+
+# In[81]:
 
 
 i450 = np.argmin(np.abs(s['w']*1000.0-450.0)) 
@@ -2031,7 +2043,7 @@ plt.plot(mrg['exttot'][itm,2],mrg['Alt'][itm],'x',label='700 nm')
 plt.plot(s['ext_spline'][i450,:]/2,altz,'s',color='lightcoral',label='450 nm')
 
 
-# In[ ]:
+# In[91]:
 
 
 len(mrg['exttot'][itm,0]),len(s['ext'][it,i450])
@@ -2039,7 +2051,7 @@ len(mrg['exttot'][itm,0]),len(s['ext'][it,i450])
 
 # ## Add the neph measurements
 
-# In[ ]:
+# In[97]:
 
 
 fig = plt.figure(figsize=(10,6))
@@ -2106,7 +2118,17 @@ leg = axn.legend(frameon=False,loc=1,numpoints=1,markerscale=0,handlelength=0.2,
 for line,text in zip(leg.get_lines(), leg.get_texts()):
     text.set_color(line.get_color())
     line.set_linewidth(5.0)
-
+    
+#axns = axn.twiny()
+#axns.plot(mrg['rh'][itm],mrg['Alt'][itm],'.',color='lightgrey',zorder=-10)
+#axns.set_xlabel('RH [$\%$]')
+#axns.set_xlim([0,100])
+##axns.spines["bottom"].set_position(("axes", -0.15))
+#axns.set_ylim([800,6900])
+#axns.xaxis.label.set_color('lightgrey')
+#axns.tick_params(axis='x', colors=('lightgrey'))
+    
+    
 ax4 = plt.subplot2grid((1,5),(0,4),sharey=ax2)
 ax4.plot(coppb,coalt,'.')
 ax4.set_xlabel('CO [ppbv]')
@@ -2123,8 +2145,8 @@ pu.sub_note('d)',ax=axn,dx=0.02)
 pu.sub_note('e)',ax=ax4,dx=0.02)
 
 plt.savefig(fp+'plot_v3/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_neph{dd}.png'.format(dd=dd),dpi=600,transparent=True)
-plt.savefig(fp+'plot_v3/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_neph{dd}.pdf'.format(dd=dd))
-plt.savefig(fp+'plot_v3/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_neph{dd}.eps'.format(dd=dd))
+#plt.savefig(fp+'plot_v3/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_neph{dd}.pdf'.format(dd=dd))
+#plt.savefig(fp+'plot_v3/Ext_Alt_profile_derivative_vs_AOD_vs_CO_vs_AE_neph{dd}.eps'.format(dd=dd))
 
 
 # # Save to file

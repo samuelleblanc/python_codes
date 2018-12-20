@@ -105,7 +105,7 @@ vv = 'R2'
 
 # ## 4STAR ict
 
-# In[9]:
+# In[10]:
 
 
 s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
@@ -358,37 +358,37 @@ i_flt = i_fltt#[30,34,38,40,42,55]
 
 # # Subset for routine flight
 
-# In[37]:
+# In[95]:
 
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[38]:
+# In[96]:
 
 
 d_rtnf = [20160831.0,20160904.0,20160908.0,20160910.0,20160912.0,20160925.0]
 
 
-# In[39]:
+# In[97]:
 
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[40]:
+# In[98]:
 
 
 s['days'][0]
 
 
-# In[41]:
+# In[99]:
 
 
 ff
 
 
-# In[42]:
+# In[100]:
 
 
 ff = []
@@ -396,49 +396,61 @@ for d in d_rtnf:
     ff.append(s['days']==d)
 
 
-# In[43]:
+# In[101]:
 
 
 fl = ((s['days']==d_rtnf[0]) | (s['days']==d_rtnf[1]) | (s['days']==d_rtnf[2]) | 
       (s['days']==d_rtnf[3]) | (s['days']==d_rtnf[4]) | (s['days']==d_rtnf[5]))
 
 
-# In[44]:
+# In[102]:
 
 
 s['fl_rtn'] = fl & s['fl']
 s['fl_rtn']
 
 
-# In[45]:
+# In[103]:
 
 
 s['fl_rtna'] = fl & s['fl_acaod']
 s['fl_rtna']
 
 
-# In[46]:
+# In[142]:
 
 
 np.nanmean(s['UNCAOD0501'][s['fl_acaod']]), np.nanmean(s['UNCAOD0501']), np.nanmean(s['UNCAOD0501'])/np.nanmean(s['AOD0501']) 
 
 
-# In[47]:
+# In[143]:
 
 
 np.nanmedian(s['UNCAOD0501'][s['fl_acaod']]), np.nanmedian(s['UNCAOD0501']), np.nanmedian(s['UNCAOD0501'])/np.nanmedian(s['AOD0501'])
 
 
-# In[48]:
+# In[106]:
 
 
 np.nanmean(s['UNCAOD0501'][s['fl_acaod']])/np.nanmean(s['AOD0501'][s['fl_acaod']])
 
 
-# In[49]:
+# In[146]:
+
+
+np.nanstd(s['UNCAOD0501'][s['fl_acaod']])
+
+
+# In[107]:
 
 
 np.nanmean(s['UNCAOD1020'][s['fl_acaod']]), np.nanmean(s['UNCAOD1020']), np.nanmean(s['UNCAOD1020'])/np.nanmean(s['AOD1020']) 
+
+
+# In[145]:
+
+
+np.nanmedian(s['UNCAOD1020'][s['fl_acaod']]),np.nanstd(s['UNCAOD1020'][s['fl_acaod']])
 
 
 # # Now plot the routine flight aods
@@ -763,27 +775,27 @@ tl = plt.gca().set_xticklabels([0,2,4,6,8,10,12,14])
 plt.savefig(fp+'plot/Climat_AAC_flagged_4STAR_box3_simpler_MODIS_median.png',transparent=True,dpi=600)
 
 
-# In[90]:
+# In[108]:
 
 
 s['fl_alt12'] = (s['GPS_Alt']>=600)&(s['GPS_Alt']<1200)
 s['fl_alt16'] = (s['GPS_Alt']>=500)&(s['GPS_Alt']<1600)
 
 
-# In[91]:
+# In[109]:
 
 
 s['fl_alt12']
 
 
-# In[92]:
+# In[110]:
 
 
 s['fl_rtn_12'] = s['fl_alt12'] & s['fl_QA'] & s['fl_rtn']
 s['fl_rtn_16'] = s['fl_alt16'] & s['fl_QA'] & s['fl_rtn']
 
 
-# In[93]:
+# In[111]:
 
 
 s['fl_rtn_12']
@@ -830,19 +842,19 @@ plt.savefig(fp+'plot\\Climat_AAC_4STAR_box3_simpler_2alt_MODIS.png',transparent=
 
 # ## make a plot day by day
 
-# In[95]:
+# In[112]:
 
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[96]:
+# In[113]:
 
 
 s['days']==2.0
 
 
-# In[97]:
+# In[114]:
 
 
 flr2 = s['fl_rtn_16']&(s['days']==d_rtnf[0])
@@ -853,7 +865,7 @@ flr8 = s['fl_rtn_16']&(s['days']==d_rtnf[4])
 flr13 = s['fl_rtn_16']&(s['days']==d_rtnf[5])
 
 
-# In[98]:
+# In[115]:
 
 
 fr2 = s['fl_rtn']&(s['days']==d_rtnf[0])
@@ -864,20 +876,20 @@ fr8 = s['fl_rtn']&(s['days']==d_rtnf[4])
 fr13 = s['fl_rtn']&(s['days']==d_rtnf[5])
 
 
-# In[99]:
+# In[116]:
 
 
 fr = [fr2,fr4,fr6,fr7,fr8,fr13]
 flr = [flr2,flr4,flr6,flr7,flr8,flr13]
 
 
-# In[100]:
+# In[117]:
 
 
 flr2
 
 
-# In[101]:
+# In[118]:
 
 
 flr2a = s['fl_rtna']&(s['days']==d_rtnf[0])
@@ -888,7 +900,7 @@ flr8a = s['fl_rtna']&(s['days']==d_rtnf[4])
 flr13a = s['fl_rtna']&(s['days']==d_rtnf[5])
 
 
-# In[102]:
+# In[119]:
 
 
 fr2a = s['fl_rtna']&(s['days']==d_rtnf[0])
@@ -899,7 +911,7 @@ fr8a = s['fl_rtna']&(s['days']==d_rtnf[4])
 fr13a = s['fl_rtna']&(s['days']==d_rtnf[5])
 
 
-# In[103]:
+# In[120]:
 
 
 fra = [fr2a,fr4a,fr6a,fr7a,fr8a,fr13a]
@@ -1214,7 +1226,7 @@ plt.savefig(fp+'plot_v2/Climat_AAC_4STAR_box3_days_avg_12_MODIS.png',transparent
 
 # ## Redo plots for entire column 
 
-# In[115]:
+# In[91]:
 
 
 s['fl_alt_6'] = (s['GPS_Alt']<=600)
@@ -2104,6 +2116,18 @@ np.median(np.median(m2.variables['AODFM_YRMEAN'].data[0,:,:],axis=1)), np.nanmed
 np.nanmean(m.variables['AODFM_CLIMOMEAN'].data[0,:])/maa*100.0, np.nanmean(np.nanmean(ac_aug,axis=0))/maa*100.0,np.nanmean(np.nanmean(ac_sep,axis=0))/maa*100.0
 
 
+# In[10]:
+
+
+1.0-0.30186/0.35921
+
+
+# In[11]:
+
+
+0.35921-0.30186
+
+
 # # Plot Histograms of measured AOD and angstrom
 
 # ## Plot histograms of ACAOD sampled at various altitudes
@@ -2122,14 +2146,14 @@ plt.title('ORACLES 2016 4STAR AOD')
 plt.legend(frameon=False)
 
 
-# In[140]:
+# In[121]:
 
 
 s['fl6'] = s['fl_alt_6'] & s['fl_QA'] 
 s['fl6b']  = s['fl_alt_6'] & s['fl_QA'] & (s['AOD0501']<4.0)
 
 
-# In[141]:
+# In[122]:
 
 
 sum(s['fl6'])
@@ -2249,51 +2273,51 @@ for d in np.unique(s['days']):
 
 # ### Using the polynomial fit method
 
-# In[126]:
+# In[177]:
 
 
 nn = s.keys()
 nn.sort()
 
 
-# In[127]:
+# In[178]:
 
 
 wvl = np.array([float(i[-4:]) for i in nn[0:24]])
 
 
-# In[249]:
+# In[179]:
 
 
 nn[0:24]
 
 
-# In[128]:
+# In[180]:
 
 
 aods = np.array([s[i] for i in nn[0:24]]).T
 
 
-# In[129]:
+# In[181]:
 
 
 aods.shape
 
 
-# In[130]:
+# In[182]:
 
 
 uncaods = np.array([s[i] for i in nn[28:28+24]]).T
 
 
-# In[131]:
+# In[183]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[132]:
+# In[184]:
 
 
 for i,u in enumerate(s['Start_UTC']):
@@ -2305,19 +2329,19 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[133]:
+# In[185]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,470.0,500.0,530.0,660.0,865.0,1250.0],polynum=3)
 
 
-# In[134]:
+# In[186]:
 
 
 s['angs'].shape
 
 
-# In[135]:
+# In[187]:
 
 
 awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
@@ -2334,20 +2358,20 @@ plt.legend()
 
 # ### Using the typical 2 wavelength method
 
-# In[136]:
+# In[188]:
 
 
 wvl
 
 
-# In[137]:
+# In[189]:
 
 
 ja,je = 3,15
 wvl[ja],wvl[je]
 
 
-# In[138]:
+# In[190]:
 
 
 s['angs_470_865'] = []
@@ -2512,10 +2536,11 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_angstrom_histogram_sub.png',
             transparent=True,dpi=500)
 
 
-# In[145]:
+# In[139]:
 
 
 s['fl_both'] = s['fl_acaod'] | s['fl6']
+s['fl_bothb'] = s['fl_acaod'] | s['fl6b']
 
 
 # In[137]:
@@ -2578,22 +2603,28 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_angstrom_histogram_comb.png',
 
 # Print out the mean, median, std, and number of samples for 501 nm the - acaod, below 0.6 km, and combine below cloud and acaod
 
-# In[68]:
+# In[125]:
 
 
 np.nanmean(s['AOD0501'][s['fl_acaod']]), np.nanmedian(s['AOD0501'][s['fl_acaod']]), np.nanstd(s['AOD0501'][s['fl_acaod']]),len(s['AOD0501'][s['fl_acaod']])
 
 
-# In[69]:
+# In[136]:
 
 
-np.nanmean(s['AOD0501'][s['fl6']]), np.nanmedian(s['AOD0501'][s['fl6']]), np.nanstd(s['AOD0501'][s['fl6b']]),len(s['AOD0501'][s['fl6']])
+s['fl6b'] = s['fl6'] & (s['AOD1020']<1.5)
 
 
-# In[70]:
+# In[138]:
 
 
-np.nanmean(s['AOD0501'][s['fl_both']]), np.nanmedian(s['AOD0501'][s['fl_both']]), np.nanstd(s['AOD0501'][s['fl_both']]),len(s['AOD0501'][s['fl_both']])
+np.nanmean(s['AOD0501'][s['fl6']]), np.nanmedian(s['AOD0501'][s['fl6']]), np.nanstd(s['AOD0501'][s['fl6b']]),len(s['AOD0501'][s['fl6b']])
+
+
+# In[141]:
+
+
+np.nanmean(s['AOD0501'][s['fl_both']]), np.nanmedian(s['AOD0501'][s['fl_both']]), np.nanstd(s['AOD0501'][s['fl_bothb']]),len(s['AOD0501'][s['fl_both']])
 
 
 # In[96]:
@@ -2695,19 +2726,25 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_2wvl_histogram_comb.png',
 
 # Print out the mean, median, std, and number of samples for 1020 nm the - acaod, below 0.6 km, and combine below cloud and acaod
 
-# In[95]:
+# In[126]:
 
 
 np.nanmean(s['AOD1020'][s['fl_acaod']]), np.nanmedian(s['AOD1020'][s['fl_acaod']]), np.nanstd(s['AOD1020'][s['fl_acaod']]),len(s['AOD1020'][s['fl_acaod']])
 
 
-# In[96]:
+# In[132]:
 
 
-np.nanmean(s['AOD1020'][s['fl6']]), np.nanmedian(s['AOD1020'][s['fl6']]), np.nanstd(s['AOD1020'][s['fl6']]),len(s['AOD1020'][s['fl6']])
+s['fl6b'] = s['fl6'] & (s['AOD1020']<1.5)
 
 
-# In[97]:
+# In[135]:
+
+
+np.nanmean(s['AOD1020'][s['fl6b']]), np.nanmedian(s['AOD1020'][s['fl6b']]), np.nanstd(s['AOD1020'][s['fl6b']]),len(s['AOD1020'][s['fl6b']])
+
+
+# In[128]:
 
 
 np.nanmean(s['AOD1020'][s['fl_both']]), np.nanmedian(s['AOD1020'][s['fl_both']]), np.nanstd(s['AOD1020'][s['fl_both']]),len(s['AOD1020'][s['fl_both']])
@@ -2789,14 +2826,14 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_AOD_2wvl_histogram_stack.eps')
 
 # ## Create a histogram of Angstrom at 2 wavelengths
 
-# In[143]:
+# In[191]:
 
 
 ia = 4 #660 nm
 ib = 2 #500 nm
 
 
-# In[51]:
+# In[192]:
 
 
 awvl
@@ -2920,25 +2957,25 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_Angstrom_2wvl_histogram_stacked.pdf')
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_Angstrom_2wvl_histogram_stacked.eps')
 
 
-# In[151]:
+# In[193]:
 
 
 np.nanmean(s['angs_470_865'][s['fl_acaod']])
 
 
-# In[152]:
+# In[194]:
 
 
 np.nanmedian(s['angs_470_865'][s['fl_acaod']])
 
 
-# In[153]:
+# In[195]:
 
 
 np.nanstd(s['angs_470_865'][s['fl_acaod']])
 
 
-# In[154]:
+# In[196]:
 
 
 np.nanmean(s['angs_470_865'][s['fl6']]),np.nanmedian(s['angs_470_865'][s['fl6']]),np.nanstd(s['angs_470_865'][s['fl6']])
@@ -2948,6 +2985,24 @@ np.nanmean(s['angs_470_865'][s['fl6']]),np.nanmedian(s['angs_470_865'][s['fl6']]
 
 
 np.nanmean(s['angs'][s['fl_acaod'],ib]),np.nanmean(s['angs'][s['fl6'],ib])
+
+
+# In[197]:
+
+
+np.nanmedian(s['angs'][s['fl_acaod'],ib]),np.nanmedian(s['angs'][s['fl6'],ib])
+
+
+# In[198]:
+
+
+np.nanstd(s['angs'][s['fl_acaod'],ib]),np.nanstd(s['angs'][s['fl6'],ib])
+
+
+# In[2]:
+
+
+1.25-1.08
 
 
 # ## Get vertical dependence of Angstrom exponent
@@ -3147,12 +3202,18 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_Angstrom_2wvl_vertical_cb.eps')
 
 # ## plot a map of the mean, median, and std of the AOD
 
-# In[156]:
+# In[166]:
 
 
 a,xe,ye,bn = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],s['Longitude'][s['fl_acaod']],s['AOD0501'][s['fl_acaod']],
                            bins=26,range=[[-25,-8],[0,16]])
 a = np.ma.masked_array(a,np.isnan(a))
+
+
+# In[167]:
+
+
+np.nanmean(a)
 
 
 # In[157]:
@@ -3183,12 +3244,13 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_meanAOD_map.png',
             transparent=True,dpi=500)
 
 
-# In[159]:
+# In[168]:
 
 
 astd,xe,ye,bn = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],s['Longitude'][s['fl_acaod']],s['AOD0501'][s['fl_acaod']],
                            bins=26,range=[[-25,-8],[0,16]],statistic=np.std)
 astd = np.ma.masked_array(astd,np.isnan(astd))
+np.nanmean(astd)
 
 
 # In[185]:
@@ -3207,12 +3269,13 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_stdAOD_map.png',
             transparent=True,dpi=500)
 
 
-# In[160]:
+# In[169]:
 
 
 med,xe,ye,bn = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],s['Longitude'][s['fl_acaod']],s['AOD0501'][s['fl_acaod']],
                            bins=26,range=[[-25,-8],[0,16]],statistic='median')
 med = np.ma.masked_array(med,np.isnan(med))
+np.nanmedian(med)
 
 
 # In[184]:
@@ -3230,6 +3293,182 @@ cb = plt.colorbar(p,extend='both')
 cb.set_label('Median Above cloud AOD 501 nm')
 plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_medianAOD_map.png',
             transparent=True,dpi=500)
+
+
+# ### Do the uncertainty at 501 and 1020
+
+# In[170]:
+
+
+
+stata05uc = {}
+
+
+# In[173]:
+
+
+stata05uc['mean'],stata05uc['x'],stata05uc['y'],stata05uc['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD0501'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+stata05uc['mean'] = np.ma.masked_array(stata05uc['mean'],np.isnan(stata05uc['mean'])|(stata05tc['mean']>1.5))
+
+stata05uc['median'],stata05uc['xe'],stata05uc['ye'],stata05uc['bine'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD0501'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic='median')
+stata05uc['median'] = np.ma.masked_array(stata05uc['median'],np.isnan(stata05uc['median'])|(stata05tc['mean']>1.5))
+
+stata05uc['std'],stata05uc['xs'],stata05uc['ys'],stata05uc['bins'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD0501'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic=np.nanstd)
+stata05uc['std'] = np.ma.masked_array(stata05uc['std'],np.isnan(stata05uc['std'])|(stata05tc['mean']>1.5))
+
+np.nanmean(stata05uc['mean']),np.nanmedian(stata05uc['median']), np.nanmean(stata05uc['std'])
+
+
+# In[175]:
+
+
+stata10uc = {}
+
+
+# In[176]:
+
+
+stata10uc['mean'],stata10uc['x'],stata10uc['y'],stata10uc['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+stata10uc['mean'] = np.ma.masked_array(stata10uc['mean'],np.isnan(stata10uc['mean'])|(stata05tc['mean']>1.5))
+
+stata10uc['median'],stata10uc['xe'],stata10uc['ye'],stata10uc['bine'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic='median')
+stata10uc['median'] = np.ma.masked_array(stata05uc['median'],np.isnan(stata05uc['median'])|(stata05tc['mean']>1.5))
+
+stata10uc['std'],stata10uc['xs'],stata10uc['ys'],stata10uc['bins'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['UNCAOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic=np.nanstd)
+stata10uc['std'] = np.ma.masked_array(stata10uc['std'],np.isnan(stata10uc['std'])|(stata05tc['mean']>1.5))
+
+np.nanmean(stata10uc['mean']),np.nanmedian(stata10uc['median']), np.nanmean(stata10uc['std'])
+
+
+# ### Redo but for ACAOD 1020
+
+# In[151]:
+
+
+stata10 = {}
+
+
+# In[152]:
+
+
+stata10['mean'],stata10['x'],stata10['y'],stata10['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['AOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+stata10['mean'] = np.ma.masked_array(stata10['mean'],np.isnan(stata10['mean']))
+np.nanmean(stata10['mean'])
+
+
+# In[153]:
+
+
+stata10['median'],stata10['xe'],stata10['ye'],stata10['bine'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['AOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic='median')
+stata10['median'] = np.ma.masked_array(stata10['median'],np.isnan(stata10['median']))
+np.nanmedian(stata10['median'])
+
+
+# In[154]:
+
+
+stata10['std'],stata10['xs'],stata10['ys'],stata10['bins'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
+                                                                          s['Longitude'][s['fl_acaod']],
+                                                                          s['AOD1020'][s['fl_acaod']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic=np.nanstd)
+stata10['std'] = np.ma.masked_array(stata10['std'],np.isnan(stata10['std']))
+np.nanmean(stata10['std'])
+
+
+# ### Redo for total column AOD at 501 and 1020
+
+# In[156]:
+
+
+stata10tc = {}
+
+
+# In[163]:
+
+
+stata10tc['mean'],stata10tc['x'],stata10tc['y'],stata10tc['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD1020'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+stata10tc['mean'] = np.ma.masked_array(stata10tc['mean'],np.isnan(stata10tc['mean'])|(stata10tc['mean']>1.5))
+
+stata10tc['median'],stata10tc['xe'],stata10tc['ye'],stata10tc['bine'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD1020'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic='median')
+stata10tc['median'] = np.ma.masked_array(stata10tc['median'],np.isnan(stata10tc['median'])|(stata10tc['mean']>1.5))
+
+stata10tc['std'],stata10tc['xs'],stata10tc['ys'],stata10tc['bins'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD1020'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic=np.nanstd)
+stata10tc['std'] = np.ma.masked_array(stata10tc['std'],np.isnan(stata10tc['std'])|(stata10tc['mean']>1.5))
+
+np.nanmean(stata10tc['mean']),np.nanmedian(stata10tc['median']), np.nanmean(stata10tc['std'])
+
+
+# In[164]:
+
+
+stata05uc = {}
+
+
+# In[165]:
+
+
+stata05uc['mean'],stata05uc['x'],stata05uc['y'],stata05uc['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD0501'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+stata05uc['mean'] = np.ma.masked_array(stata05uc['mean'],np.isnan(stata05uc['mean'])|(stata05uc['mean']>1.5))
+
+stata05uc['median'],stata05uc['xe'],stata05uc['ye'],stata05uc['bine'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD0501'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic='median')
+stata05uc['median'] = np.ma.masked_array(stata05uc['median'],np.isnan(stata05uc['median'])|(stata05uc['mean']>1.5))
+
+stata05uc['std'],stata05uc['xs'],stata05uc['ys'],stata05uc['bins'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['AOD0501'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                          statistic=np.nanstd)
+stata05uc['std'] = np.ma.masked_array(stata05uc['std'],np.isnan(stata05uc['std'])|(stata05uc['mean']>1.5))
+
+np.nanmean(stata05uc['mean']),np.nanmedian(stata05uc['median']), np.nanmean(stata05uc['std'])
 
 
 # ### combine plots on one figure
@@ -3391,19 +3630,20 @@ plt.hist(a.flatten(),25,range=(0,1.2),edgecolor='None',alpha=0.6)
 
 # ## Plot a map of the distribution of the Angstrom exponent
 
-# In[171]:
+# In[206]:
 
 
 astat,astat2 = {},{}
+castat,castat2 = {},{}
 
 
-# In[172]:
+# In[200]:
 
 
 ia = 2
 
 
-# In[173]:
+# In[203]:
 
 
 astat['mean'],astat['x'],astat['y'],astat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
@@ -3411,9 +3651,21 @@ astat['mean'],astat['x'],astat['y'],astat['bin'] = st.binned_statistic_2d(s['Lat
                                                                           s['angs'][s['fl_acaod'],ia],
                                                                           bins=26,range=[[-25,-8],[0,16]])
 astat['mean'] = np.ma.masked_array(astat['mean'],np.isnan(astat['mean']))
+np.nanmean(astat['mean'])
 
 
-# In[174]:
+# In[207]:
+
+
+castat['mean'],castat['x'],castat['y'],castat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs'][s['fl6'],ia],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+castat['mean'] = np.ma.masked_array(castat['mean'],np.isnan(castat['mean']))
+np.nanmean(castat['mean'])
+
+
+# In[202]:
 
 
 astat2['mean'],astat2['x'],astat2['y'],astat2['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
@@ -3421,6 +3673,17 @@ astat2['mean'],astat2['x'],astat2['y'],astat2['bin'] = st.binned_statistic_2d(s[
                                                                           s['angs_470_865'][s['fl_acaod']],
                                                                           bins=26,range=[[-25,-8],[0,16]])
 astat2['mean'] = np.ma.masked_array(astat2['mean'],np.isnan(astat2['mean']))
+
+
+# In[208]:
+
+
+castat2['mean'],castat2['x'],castat2['y'],castat2['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs_470_865'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]])
+castat2['mean'] = np.ma.masked_array(castat2['mean'],np.isnan(castat2['mean']))
+np.nanmean(castat2['mean'])
 
 
 # In[175]:
@@ -3440,7 +3703,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_meanAngstrom_map.png',
             transparent=True,dpi=500)
 
 
-# In[176]:
+# In[204]:
 
 
 astat['median'],astat['xe'],astat['ye'],astat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
@@ -3449,6 +3712,19 @@ astat['median'],astat['xe'],astat['ye'],astat['bin'] = st.binned_statistic_2d(s[
                                                                           bins=26,range=[[-25,-8],[0,16]],
                                                                            statistic='median')
 astat['median'] = np.ma.masked_array(astat['median'],np.isnan(astat['median']))
+np.nanmedian(astat['median'])
+
+
+# In[209]:
+
+
+castat['median'],castat['xe'],castat['ye'],castat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs'][s['fl6'],ia],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                           statistic='median')
+castat['median'] = np.ma.masked_array(castat['median'],np.isnan(castat['median']))
+np.nanmedian(castat['median'])
 
 
 # In[110]:
@@ -3460,6 +3736,18 @@ astat2['median'],astat2['xe'],astat2['ye'],astat2['bin'] = st.binned_statistic_2
                                                                           bins=26,range=[[-25,-8],[0,16]],
                                                                            statistic='median')
 astat2['median'] = np.ma.masked_array(astat2['median'],np.isnan(astat2['median']))
+
+
+# In[210]:
+
+
+castat2['median'],castat2['xe'],castat2['ye'],castat2['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs_470_865'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                           statistic='median')
+castat2['median'] = np.ma.masked_array(castat2['median'],np.isnan(castat2['median']))
+np.nanmedian(castat2['median'])
 
 
 # In[211]:
@@ -3477,7 +3765,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_medianAngstrom_map.png',
             transparent=True,dpi=500)
 
 
-# In[177]:
+# In[205]:
 
 
 astat['std'],astat['xs'],astat['ys'],astat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl_acaod']],
@@ -3486,6 +3774,19 @@ astat['std'],astat['xs'],astat['ys'],astat['bin'] = st.binned_statistic_2d(s['La
                                                                           bins=26,range=[[-25,-8],[0,16]],
                                                                            statistic=np.std)
 astat['std'] = np.ma.masked_array(astat['std'],np.isnan(astat['std']))
+np.nanmean(astat['std'])
+
+
+# In[211]:
+
+
+castat['std'],castat['xs'],castat['ys'],castat['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs'][s['fl6'],ia],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                           statistic=np.std)
+castat['std'] = np.ma.masked_array(castat['std'],np.isnan(castat['std']))
+np.nanmean(castat['std'])
 
 
 # In[178]:
@@ -3497,6 +3798,18 @@ astat2['std'],astat2['xs'],astat2['ys'],astat2['bin'] = st.binned_statistic_2d(s
                                                                           bins=26,range=[[-25,-8],[0,16]],
                                                                            statistic=np.std)
 astat2['std'] = np.ma.masked_array(astat2['std'],np.isnan(astat2['std']))
+
+
+# In[212]:
+
+
+castat2['std'],castat2['xs'],castat2['ys'],castat2['bin'] = st.binned_statistic_2d(s['Latitude'][s['fl6']],
+                                                                          s['Longitude'][s['fl6']],
+                                                                          s['angs_470_865'][s['fl6']],
+                                                                          bins=26,range=[[-25,-8],[0,16]],
+                                                                           statistic=np.std)
+castat2['std'] = np.ma.masked_array(castat2['std'],np.isnan(castat2['std']))
+np.nanmean(castat2['std'])
 
 
 # In[557]:
@@ -4606,35 +4919,42 @@ pca_angs
 
 # # Get the spacing and altitudes of gap from ACAOD altitudes and distances
 
-# In[251]:
+# In[20]:
 
 
 ii_flacaod = np.where(s['fl_acaod_noQA'])[0] 
 ii_flacaod[0]
 
 
-# In[252]:
+# In[21]:
 
 
 ii_flacaod_0_5 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=0) & (s['Longitude']<5.0))[0] 
 ii_flacaod_0_5[0]
 
 
-# In[253]:
+# In[22]:
 
 
 ii_flacaod_5_10 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=5) & (s['Longitude']<10.0))[0] 
 ii_flacaod_5_10[0]
 
 
-# In[254]:
+# In[23]:
 
 
 ii_flacaod_10_15 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<15.0))[0] 
 ii_flacaod_10_15[0]
 
 
-# In[255]:
+# In[80]:
+
+
+ii_flacaod_10_14 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<14.0))[0] 
+ii_flacaod_10_14[0]
+
+
+# In[81]:
 
 
 disc_flacaod = np.where(np.diff(ii_flacaod,1)>1)[0]
@@ -4642,9 +4962,10 @@ disc_flacaod_long = np.where(np.diff(ii_flacaod,1)>150)[0]
 disc_flacaod_0_5 = np.where(np.diff(ii_flacaod_0_5,1)>150)[0]
 disc_flacaod_5_10 = np.where(np.diff(ii_flacaod_5_10,1)>150)[0]
 disc_flacaod_10_15 = np.where(np.diff(ii_flacaod_10_15,1)>150)[0]
+disc_flacaod_10_14 = np.where(np.diff(ii_flacaod_10_14,1)>150)[0]
 
 
-# In[304]:
+# In[25]:
 
 
 plt.figure()
@@ -4653,21 +4974,21 @@ plt.plot(np.arange(100)[disc_flacaod[0:6]],ii_flacaod[0:100][disc_flacaod[0:6]],
 plt.plot(np.arange(100)[disc_flacaod[0:6]+1],ii_flacaod[0:100][disc_flacaod[0:6]+1],'go')
 
 
-# In[256]:
+# In[26]:
 
 
 discontinuity_istart =  ii_flacaod[np.append(0,disc_flacaod[:-1]+1)]
 discontinuity_iend =  ii_flacaod[disc_flacaod]
 
 
-# In[257]:
+# In[27]:
 
 
 discontinuity_istart_long =  ii_flacaod[np.append(0,disc_flacaod_long[:-1]+1)]
 discontinuity_iend_long =  ii_flacaod[disc_flacaod_long]
 
 
-# In[258]:
+# In[82]:
 
 
 discontinuity_istart_0_5 =  ii_flacaod_0_5[np.append(0,disc_flacaod_0_5[:-1]+1)]
@@ -4676,9 +4997,11 @@ discontinuity_istart_5_10 =  ii_flacaod_5_10[np.append(0,disc_flacaod_5_10[:-1]+
 discontinuity_iend_5_10 =  ii_flacaod_5_10[disc_flacaod_5_10]
 discontinuity_istart_10_15 =  ii_flacaod_10_15[np.append(0,disc_flacaod_10_15[:-1]+1)]
 discontinuity_iend_10_15 =  ii_flacaod_10_15[disc_flacaod_10_15]
+discontinuity_istart_10_14 =  ii_flacaod_10_14[np.append(0,disc_flacaod_10_14[:-1]+1)]
+discontinuity_iend_10_14 =  ii_flacaod_10_14[disc_flacaod_10_14]
 
 
-# In[259]:
+# In[29]:
 
 
 delta_alt,delta_lon,delta_lat = [],[],[]
@@ -4696,7 +5019,7 @@ delta_lon = np.array(delta_lon)
 delta_lat = np.array(delta_lat)
 
 
-# In[260]:
+# In[30]:
 
 
 ldelta_alt,ldelta_lon,ldelta_lat,ldelta_lon_days,ldelta_lat_days = [],[],[],[],[]
@@ -4718,7 +5041,7 @@ ldelta_lat_days = np.array(ldelta_lat_days)
 ldelta_lon_days = np.array(ldelta_lon_days)
 
 
-# In[261]:
+# In[83]:
 
 
 delta_alt1,delta_lon1,delta_lat1 = [],[],[]
@@ -4763,14 +5086,28 @@ delta_alt3 = np.array(delta_alt3)
 delta_lon3 = np.array(delta_lon3)
 delta_lat3 = np.array(delta_lat3)
 
+delta_alt3b,delta_lon3b,delta_lat3b = [],[],[]
+for i,start in enumerate(discontinuity_istart_10_14):
+    try:
+        ma = np.nanmax(s['GPS_Alt'][start:discontinuity_iend_10_14[i]])
+        mi = np.nanmin(s['GPS_Alt'][start:discontinuity_iend_10_14[i]])
+        delta_alt3b.append(ma-mi)
+        delta_lon3b.append(np.nanmean(s['Longitude'][start:discontinuity_iend_10_14[i]]))
+        delta_lat3b.append(np.nanmean(s['Latitude'][start:discontinuity_iend_10_14[i]]))
+    except:
+        pass
+delta_alt3b = np.array(delta_alt3b)
+delta_lon3b = np.array(delta_lon3b)
+delta_lat3b = np.array(delta_lat3b)
 
-# In[262]:
+
+# In[32]:
 
 
 np.nanmax(delta_alt),np.nanmax(ldelta_alt),np.nanmax(delta_alt1),np.nanmax(delta_alt2),np.nanmax(delta_alt3)
 
 
-# In[263]:
+# In[33]:
 
 
 float(len(ldelta_alt[ldelta_alt<360.0]))*100.0/len(ldelta_alt)
@@ -4827,13 +5164,13 @@ plt.axvline(np.nanmedian(ldelta_alt),label='median',ls='--')
 plt.legend(frameon=False)
 
 
-# In[85]:
+# In[34]:
 
 
 s['days']
 
 
-# In[86]:
+# In[35]:
 
 
 len(ldelta_alt)
@@ -4841,7 +5178,7 @@ len(ldelta_alt)
 
 # ## Plot the ACAOD altitudes
 
-# In[266]:
+# In[36]:
 
 
 np.min(s['GPS_Alt'][s['fl_acaod']][s['Longitude'][s['fl_acaod']]>13.0]), np.max(s['GPS_Alt'][s['fl_acaod']][s['Longitude'][s['fl_acaod']]>13.0])
@@ -4863,19 +5200,19 @@ plt.xlim(13,16)
 delta_lon
 
 
-# In[268]:
+# In[37]:
 
 
 numlon,binlon = np.histogram(delta_lon,range=(0,16))
 
 
-# In[81]:
+# In[38]:
 
 
 binlon
 
 
-# In[269]:
+# In[39]:
 
 
 bin_alt,bin_lon = [],[]
@@ -4885,7 +5222,7 @@ for i in xrange(16):
     bin_lon.append(np.mean([i,i+1.0]))
 
 
-# In[270]:
+# In[40]:
 
 
 lbin_alt,lbin_lon,lbin_ndays = [],[],[]
@@ -5040,6 +5377,124 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub.png',
             transparent=True,dpi=500)
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub.pdf')
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub.eps')
+
+
+# In[45]:
+
+
+len(ldelta_alt)
+
+
+# In[68]:
+
+
+ceal_bin,short_bin = [],[]
+for j in lbin_alt:
+    try:
+        ceal_bin.append(float(len(j[j<360.0]))*100.0/len(j))
+        short_bin.append(float(len(j[j<60.0]))*100.0/len(j))
+    except ZeroDivisionError:
+        ceal_bin.append(np.nan)
+        short_bin.append(np.nan)
+ceal_bin = np.array(ceal_bin)
+short_bin = np.array(short_bin)
+
+
+# In[59]:
+
+
+ceal_bin
+
+
+# In[79]:
+
+
+lbin_alt
+
+
+# In[86]:
+
+
+plt.figure(figsize=(12,5))
+axx = plt.subplot2grid((1,4),(0,0),colspan=3)
+axx.plot(lbin_lon,ceal_bin,'x-',color='darkgoldenrod',label='extent <60 m')
+axx.plot(lbin_lon,short_bin,'+--',color='gold', label='extent <360 m')
+axx.set_ylabel('Cases with small extent [$\%$]')
+axx.set_ylim([0,100])
+axx.spines["left"].set_position(("axes", -0.12))
+axx.spines["left"].set_visible(True)
+axx.yaxis.set_label_position('left')
+axx.yaxis.set_ticks_position('left')
+axx.set_xlim([0,16])
+axx.yaxis.label.set_color('goldenrod')
+axx.tick_params(axis='y', colors=('goldenrod'))
+axx.spines["left"].set_edgecolor('goldenrod')
+lgx = axx.legend(frameon=False)
+lgx.get_texts()[0].set_color('darkgoldenrod')
+lgx.get_texts()[1].set_color('gold')
+
+ax = axx.twinx()
+bow = ax.boxplot(lbin_alt,positions=lbin_lon,showfliers=True,sym='.')
+ax.plot(ldelta_lon,ldelta_alt,'k.',alpha=0.01,zorder=-1)
+for j,nn in enumerate(lbin_ndays):
+    if nn>0:
+        ax.text(lbin_lon[j],np.nanmax(bow['medians'][j].get_data()[1])+30,'{:2.0f}'.format(nn),color='blue',horizontalalignment='center')
+    else:
+        ax.text(lbin_lon[j],50,'{:2.0f}'.format(nn),color='blue',horizontalalignment='center')
+ax.set_ylim(-50,3700)
+ax.set_ylabel('Vertical extent [m]')
+ax.set_xlabel(u'Longitude [°]')
+pu.sub_note('a)')
+ax.set_title('Distribution of gap vertical extent per longitude')
+ax.spines["left"].set_visible(True)
+ax.yaxis.set_label_position('left')
+ax.yaxis.set_ticks_position('left')
+
+ax2 = plt.subplot2grid((1,12),(0,9),sharey=ax)
+ax2.hist(delta_alt1,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
+ax2.axhline(np.nanmean(delta_alt1),label='Mean')
+plt.setp(ax2.get_yticklabels(), visible=False)
+ax2.axhline(np.nanmedian(delta_alt1),label='Median',ls='--')
+ax2.annotate('{:4.0f} m'.format(np.nanmean(delta_alt1)),(1,np.nanmean(delta_alt1)*1.05),color='b',alpha=0.3)
+ax2.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt1)),(1,np.nanmedian(delta_alt1)*1.05),color='b',alpha=0.3)
+ax2.annotate(' {:2.0f}%'.format(float(len(delta_alt1[delta_alt1<60.0]))*100.0/len(delta_alt1)),(1.4,2450.0),color='darkgoldenrod')
+ax2.annotate('({:2.0f}%)'.format(float(len(delta_alt1[delta_alt1<360.0]))*100.0/len(delta_alt1)),(1.4,2300.0),color='gold')
+ax2.set_title(u'0°-5°')
+pu.sub_note('b)')
+ax2.set_xticks([0,3,6])
+
+ax3 = plt.subplot2grid((1,12),(0,10),sharey=ax)
+ax3.hist(delta_alt2,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
+ax3.axhline(np.nanmean(delta_alt2),label='Mean')
+plt.setp(ax3.get_yticklabels(), visible=False)
+ax3.axhline(np.nanmedian(delta_alt2),label='Median',ls='--')
+ax3.annotate('{:4.0f} m'.format(np.nanmean(delta_alt2)),(1.5,np.nanmean(delta_alt2)*1.05),color='b',alpha=0.3)
+ax3.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt2)),(1.5,np.nanmedian(delta_alt2)*1.05),color='b',alpha=0.3)
+ax3.annotate(' {:2.0f}%'.format(float(len(delta_alt2[delta_alt2<60.0]))*100.0/len(delta_alt2)),(3.1,2450.0),color='darkgoldenrod')
+ax3.annotate('({:2.0f}%)'.format(float(len(delta_alt2[delta_alt2<360.0]))*100.0/len(delta_alt2)),(3.1,2300.0),color='gold')
+ax3.set_title('Gap extent distribution\n'+u'5°-10°')
+#plt.xticks(rotation=45,ha="right")
+ax3.set_xlabel('Counts')
+pu.sub_note('c)')
+ax3.set_xticks([0,6,12])
+plt.legend(frameon=True,handletextpad=0.02,bbox_to_anchor=(1.01, 0.93))#,ncol=2,columnspacing=0.2,loc=1)
+
+ax4 = plt.subplot2grid((1,12),(0,11),sharey=ax)
+ax4.hist(delta_alt3b,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
+ax4.axhline(np.nanmean(delta_alt3b),label='Mean')
+plt.setp(ax4.get_yticklabels(), visible=False)
+ax4.axhline(np.nanmedian(delta_alt3b),label='Median',ls='--')
+ax4.annotate('{:4.0f} m'.format(np.nanmean(delta_alt3b)),(0.5,np.nanmean(delta_alt3b)*1.05),color='b',alpha=0.3)
+ax4.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt3b)),(0.5,np.nanmedian(delta_alt3b)*1.05),color='b',alpha=0.3)
+ax4.annotate(' {:2.0f}%'.format(float(len(delta_alt3b[delta_alt3b<60.0]))*100.0/len(delta_alt3b)),(1.2,2450.0),color='darkgoldenrod')
+ax4.annotate('({:2.0f}%)'.format(float(len(delta_alt3b[delta_alt3b<360.0]))*100.0/len(delta_alt3b)),(1.2,2300.0),color='gold')
+ax4.set_title(u'10°-15°')
+pu.sub_note('d)')
+ax4.set_xticks([0,3,6])
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub_smallextent.png',
+            transparent=True,dpi=500)
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub_smallextent.pdf')
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub_smallextent.eps')
 
 
 # In[292]:
