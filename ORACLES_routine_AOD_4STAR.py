@@ -105,7 +105,7 @@ vv = 'R2'
 
 # ## 4STAR ict
 
-# In[10]:
+# In[19]:
 
 
 s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
@@ -117,13 +117,13 @@ s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
 s.keys()
 
 
-# In[11]:
+# In[20]:
 
 
 days = np.unique(s['days'])
 
 
-# In[12]:
+# In[21]:
 
 
 len(s['fl_QA'])
@@ -131,14 +131,14 @@ len(s['fl_QA'])
 
 # ### Load the acaod flags
 
-# In[13]:
+# In[22]:
 
 
 fdat = getpath('4STAR_data')
 fdat
 
 
-# In[14]:
+# In[23]:
 
 
 flag_acaod = []
@@ -159,7 +159,7 @@ for j in days:
         flag_acaod_t.append([])
 
 
-# In[15]:
+# In[24]:
 
 
 s['fl_acaod'] = np.zeros_like(s['fl_QA'])
@@ -185,25 +185,25 @@ for i,j in enumerate(days):
                 s['fl_acaod_noQA'][iu] = (fa[:,0]==1)
 
 
-# In[16]:
+# In[25]:
 
 
 len(s['fl_acaod'])
 
 
-# In[17]:
+# In[26]:
 
 
 s['fl_acaod'] = s['fl_acaod'] & (s['AOD0501']<4.0)
 
 
-# In[18]:
+# In[27]:
 
 
 len(s['fl_QA'])
 
 
-# In[19]:
+# In[28]:
 
 
 s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
@@ -358,37 +358,37 @@ i_flt = i_fltt#[30,34,38,40,42,55]
 
 # # Subset for routine flight
 
-# In[95]:
+# In[19]:
 
 
 d_rtn = ['20160831','20160904','20160908','20160910','20160912','20160925']
 
 
-# In[96]:
+# In[20]:
 
 
 d_rtnf = [20160831.0,20160904.0,20160908.0,20160910.0,20160912.0,20160925.0]
 
 
-# In[97]:
+# In[21]:
 
 
 d_irtn = [2.0,4.0,6.0,7.0,8.0,13.0]
 
 
-# In[98]:
+# In[22]:
 
 
 s['days'][0]
 
 
-# In[99]:
+# In[23]:
 
 
 ff
 
 
-# In[100]:
+# In[24]:
 
 
 ff = []
@@ -396,28 +396,28 @@ for d in d_rtnf:
     ff.append(s['days']==d)
 
 
-# In[101]:
+# In[25]:
 
 
 fl = ((s['days']==d_rtnf[0]) | (s['days']==d_rtnf[1]) | (s['days']==d_rtnf[2]) | 
       (s['days']==d_rtnf[3]) | (s['days']==d_rtnf[4]) | (s['days']==d_rtnf[5]))
 
 
-# In[102]:
+# In[26]:
 
 
 s['fl_rtn'] = fl & s['fl']
 s['fl_rtn']
 
 
-# In[103]:
+# In[27]:
 
 
 s['fl_rtna'] = fl & s['fl_acaod']
 s['fl_rtna']
 
 
-# In[142]:
+# In[28]:
 
 
 np.nanmean(s['UNCAOD0501'][s['fl_acaod']]), np.nanmean(s['UNCAOD0501']), np.nanmean(s['UNCAOD0501'])/np.nanmean(s['AOD0501']) 
@@ -2273,51 +2273,51 @@ for d in np.unique(s['days']):
 
 # ### Using the polynomial fit method
 
-# In[177]:
+# In[30]:
 
 
 nn = s.keys()
 nn.sort()
 
 
-# In[178]:
+# In[31]:
 
 
 wvl = np.array([float(i[-4:]) for i in nn[0:24]])
 
 
-# In[179]:
+# In[32]:
 
 
 nn[0:24]
 
 
-# In[180]:
+# In[33]:
 
 
 aods = np.array([s[i] for i in nn[0:24]]).T
 
 
-# In[181]:
+# In[34]:
 
 
 aods.shape
 
 
-# In[182]:
+# In[35]:
 
 
 uncaods = np.array([s[i] for i in nn[28:28+24]]).T
 
 
-# In[183]:
+# In[36]:
 
 
 s['polyaod'] = []
 s['polylogaod'] = []
 
 
-# In[184]:
+# In[37]:
 
 
 for i,u in enumerate(s['Start_UTC']):
@@ -2329,19 +2329,19 @@ s['polyaod'] = np.array(s['polyaod'])
 s['polylogaod'] = np.array(s['polylogaod'])
 
 
-# In[185]:
+# In[38]:
 
 
 s['angs'] = su.angstrom_from_logpoly(s['polylogaod'],[380.0,470.0,500.0,530.0,660.0,865.0,1250.0],polynum=3)
 
 
-# In[186]:
+# In[39]:
 
 
 s['angs'].shape
 
 
-# In[187]:
+# In[40]:
 
 
 awvl = [380.0,470.0,500.0,530.0,660.0,865.0,1250.0]
@@ -2358,20 +2358,20 @@ plt.legend()
 
 # ### Using the typical 2 wavelength method
 
-# In[188]:
+# In[41]:
 
 
 wvl
 
 
-# In[189]:
+# In[42]:
 
 
 ja,je = 3,15
 wvl[ja],wvl[je]
 
 
-# In[190]:
+# In[43]:
 
 
 s['angs_470_865'] = []
@@ -4644,7 +4644,7 @@ plt.savefig(fp+'plot_v3/ORACLES2016_MODIS_Climatology_vs_AAC_flagged_4STAR_and_M
 
 # # Spectral AOD mean, median, pca, std...
 
-# In[224]:
+# In[29]:
 
 
 aods.shape
@@ -4700,13 +4700,13 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_all_ACAOD_spectra.png',
 
 # ## ACAOD spectra, mean, median, std
 
-# In[228]:
+# In[44]:
 
 
 iw = wvl!=700.0
 
 
-# In[232]:
+# In[45]:
 
 
 meanaod = np.nanmean(aods[s['fl_acaod'],:],axis=0)
@@ -4714,7 +4714,7 @@ medianaod = np.nanmedian(aods[s['fl_acaod'],:],axis=0)
 stdaod = np.nanstd(aods[s['fl_acaod'],:],axis=0)
 
 
-# In[233]:
+# In[46]:
 
 
 meanuncaod = np.nanmean(uncaods[s['fl_acaod'],:],axis=0)
@@ -4742,23 +4742,59 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_mean_ACAOD_spectra_less700.pdf')
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_mean_ACAOD_spectra_less700.eps')
 
 
-# In[235]:
+# In[47]:
 
 
 mean_angs = -1.0*(np.log(meanaod[je])-np.log(meanaod[ja]))/(np.log(wvl[je])-np.log(wvl[ja]))
 mean_angs
 
 
-# In[236]:
+# In[48]:
 
 
 wvl[[2,15]]
 
 
-# In[237]:
+# In[49]:
 
 
 meanaod[[2,15]], medianaod[[2,15]],stdaod[[2,15]],meanuncaod[[2,15]]
+
+
+# ## Log of ACAOD spectra
+
+# In[64]:
+
+
+fig = plt.figure()
+plt.plot(wvl[iw],meanaod[iw],'k-+',label='Mean')
+plt.errorbar(wvl[iw],meanaod[iw],yerr=meanuncaod[iw],color='k')
+plt.plot(wvl[iw],meanaod[iw]+stdaod[iw],'--x',color='grey',lw=0.4,label='Mean +/- 1 Standard Deviation')
+plt.plot(wvl[iw],stdaod[iw],'-^',lw=0.4,color='lightcoral',label='Standard Deviation',zorder=-2,alpha=0.5)
+plt.plot(wvl[iw],meanaod[iw]-stdaod[iw],'--x',color='grey',lw=0.4)
+plt.plot(wvl[iw],medianaod[iw],'-o',lw=2.0,color='lightblue',label='Median',zorder=-1)
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('AOD')
+plt.title('ACAOD average spectra from 4STAR at selected wavelengths')
+plt.grid()
+
+ax = plt.gca()
+
+ax.set_yscale('log')
+ax.set_xscale('log')
+
+plt.xlim(340,1700)
+plt.ylim(0.007,1)
+plt.xticks([350,400,500,600,700,800,900,1000,1200,1400,1600])
+ax.set_xticklabels([350,400,500,600,700,800,900,1000,1200,1400,1600])
+plt.yticks([0.01,0.02,0.05,0.1,0.15,0.2,0.3,0.5,0.8,1])
+ax.set_yticklabels([0.01,0.02,0.05,0.1,0.15,0.2,0.3,0.5,0.8,1])
+
+plt.legend(frameon=False,loc=3)
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_mean_ACAOD_spectra_less700_loglog.png',
+            transparent=True,dpi=500)
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_mean_ACAOD_spectra_less700_loglog.pdf')
+plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_mean_ACAOD_spectra_less700_loglog.eps')
 
 
 # ## Get the Principal components from PCA
@@ -4919,42 +4955,42 @@ pca_angs
 
 # # Get the spacing and altitudes of gap from ACAOD altitudes and distances
 
-# In[20]:
+# In[29]:
 
 
 ii_flacaod = np.where(s['fl_acaod_noQA'])[0] 
 ii_flacaod[0]
 
 
-# In[21]:
+# In[30]:
 
 
 ii_flacaod_0_5 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=0) & (s['Longitude']<5.0))[0] 
 ii_flacaod_0_5[0]
 
 
-# In[22]:
+# In[31]:
 
 
 ii_flacaod_5_10 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=5) & (s['Longitude']<10.0))[0] 
 ii_flacaod_5_10[0]
 
 
-# In[23]:
+# In[32]:
 
 
 ii_flacaod_10_15 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<15.0))[0] 
 ii_flacaod_10_15[0]
 
 
-# In[80]:
+# In[33]:
 
 
 ii_flacaod_10_14 = np.where(s['fl_acaod_noQA'] & (s['Longitude']>=10) & (s['Longitude']<14.0))[0] 
 ii_flacaod_10_14[0]
 
 
-# In[81]:
+# In[34]:
 
 
 disc_flacaod = np.where(np.diff(ii_flacaod,1)>1)[0]
@@ -4974,21 +5010,21 @@ plt.plot(np.arange(100)[disc_flacaod[0:6]],ii_flacaod[0:100][disc_flacaod[0:6]],
 plt.plot(np.arange(100)[disc_flacaod[0:6]+1],ii_flacaod[0:100][disc_flacaod[0:6]+1],'go')
 
 
-# In[26]:
+# In[35]:
 
 
 discontinuity_istart =  ii_flacaod[np.append(0,disc_flacaod[:-1]+1)]
 discontinuity_iend =  ii_flacaod[disc_flacaod]
 
 
-# In[27]:
+# In[36]:
 
 
 discontinuity_istart_long =  ii_flacaod[np.append(0,disc_flacaod_long[:-1]+1)]
 discontinuity_iend_long =  ii_flacaod[disc_flacaod_long]
 
 
-# In[82]:
+# In[37]:
 
 
 discontinuity_istart_0_5 =  ii_flacaod_0_5[np.append(0,disc_flacaod_0_5[:-1]+1)]
@@ -5001,7 +5037,7 @@ discontinuity_istart_10_14 =  ii_flacaod_10_14[np.append(0,disc_flacaod_10_14[:-
 discontinuity_iend_10_14 =  ii_flacaod_10_14[disc_flacaod_10_14]
 
 
-# In[29]:
+# In[38]:
 
 
 delta_alt,delta_lon,delta_lat = [],[],[]
@@ -5019,7 +5055,7 @@ delta_lon = np.array(delta_lon)
 delta_lat = np.array(delta_lat)
 
 
-# In[30]:
+# In[39]:
 
 
 ldelta_alt,ldelta_lon,ldelta_lat,ldelta_lon_days,ldelta_lat_days = [],[],[],[],[]
@@ -5041,7 +5077,7 @@ ldelta_lat_days = np.array(ldelta_lat_days)
 ldelta_lon_days = np.array(ldelta_lon_days)
 
 
-# In[83]:
+# In[40]:
 
 
 delta_alt1,delta_lon1,delta_lat1 = [],[],[]
@@ -5101,13 +5137,13 @@ delta_lon3b = np.array(delta_lon3b)
 delta_lat3b = np.array(delta_lat3b)
 
 
-# In[32]:
+# In[41]:
 
 
 np.nanmax(delta_alt),np.nanmax(ldelta_alt),np.nanmax(delta_alt1),np.nanmax(delta_alt2),np.nanmax(delta_alt3)
 
 
-# In[33]:
+# In[59]:
 
 
 float(len(ldelta_alt[ldelta_alt<360.0]))*100.0/len(ldelta_alt)
@@ -5222,7 +5258,7 @@ for i in xrange(16):
     bin_lon.append(np.mean([i,i+1.0]))
 
 
-# In[40]:
+# In[14]:
 
 
 lbin_alt,lbin_lon,lbin_ndays = [],[],[]
@@ -5385,7 +5421,7 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub.eps')
 len(ldelta_alt)
 
 
-# In[68]:
+# In[15]:
 
 
 ceal_bin,short_bin = [],[]
@@ -5400,25 +5436,31 @@ ceal_bin = np.array(ceal_bin)
 short_bin = np.array(short_bin)
 
 
-# In[59]:
+# In[16]:
 
 
 ceal_bin
 
 
-# In[79]:
+# In[17]:
 
 
 lbin_alt
 
 
-# In[86]:
+# In[58]:
+
+
+lbin_lon
+
+
+# In[57]:
 
 
 plt.figure(figsize=(12,5))
 axx = plt.subplot2grid((1,4),(0,0),colspan=3)
 axx.plot(lbin_lon,ceal_bin,'x-',color='darkgoldenrod',label='extent <60 m')
-axx.plot(lbin_lon,short_bin,'+--',color='gold', label='extent <360 m')
+axx.plot(lbin_lon,short_bin,'+--',color='sienna', label='extent <360 m')
 axx.set_ylabel('Cases with small extent [$\%$]')
 axx.set_ylim([0,100])
 axx.spines["left"].set_position(("axes", -0.12))
@@ -5429,9 +5471,10 @@ axx.set_xlim([0,16])
 axx.yaxis.label.set_color('goldenrod')
 axx.tick_params(axis='y', colors=('goldenrod'))
 axx.spines["left"].set_edgecolor('goldenrod')
+axx.set_xlabel(u'Longitude [°]')
 lgx = axx.legend(frameon=False)
 lgx.get_texts()[0].set_color('darkgoldenrod')
-lgx.get_texts()[1].set_color('gold')
+lgx.get_texts()[1].set_color('sienna')
 
 ax = axx.twinx()
 bow = ax.boxplot(lbin_alt,positions=lbin_lon,showfliers=True,sym='.')
@@ -5458,7 +5501,7 @@ ax2.axhline(np.nanmedian(delta_alt1),label='Median',ls='--')
 ax2.annotate('{:4.0f} m'.format(np.nanmean(delta_alt1)),(1,np.nanmean(delta_alt1)*1.05),color='b',alpha=0.3)
 ax2.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt1)),(1,np.nanmedian(delta_alt1)*1.05),color='b',alpha=0.3)
 ax2.annotate(' {:2.0f}%'.format(float(len(delta_alt1[delta_alt1<60.0]))*100.0/len(delta_alt1)),(1.4,2450.0),color='darkgoldenrod')
-ax2.annotate('({:2.0f}%)'.format(float(len(delta_alt1[delta_alt1<360.0]))*100.0/len(delta_alt1)),(1.4,2300.0),color='gold')
+ax2.annotate('({:2.0f}%)'.format(float(len(delta_alt1[delta_alt1<360.0]))*100.0/len(delta_alt1)),(1.4,2300.0),color='sienna')
 ax2.set_title(u'0°-5°')
 pu.sub_note('b)')
 ax2.set_xticks([0,3,6])
@@ -5471,13 +5514,13 @@ ax3.axhline(np.nanmedian(delta_alt2),label='Median',ls='--')
 ax3.annotate('{:4.0f} m'.format(np.nanmean(delta_alt2)),(1.5,np.nanmean(delta_alt2)*1.05),color='b',alpha=0.3)
 ax3.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt2)),(1.5,np.nanmedian(delta_alt2)*1.05),color='b',alpha=0.3)
 ax3.annotate(' {:2.0f}%'.format(float(len(delta_alt2[delta_alt2<60.0]))*100.0/len(delta_alt2)),(3.1,2450.0),color='darkgoldenrod')
-ax3.annotate('({:2.0f}%)'.format(float(len(delta_alt2[delta_alt2<360.0]))*100.0/len(delta_alt2)),(3.1,2300.0),color='gold')
+ax3.annotate('({:2.0f}%)'.format(float(len(delta_alt2[delta_alt2<360.0]))*100.0/len(delta_alt2)),(3.1,2300.0),color='sienna')
 ax3.set_title('Gap extent distribution\n'+u'5°-10°')
 #plt.xticks(rotation=45,ha="right")
 ax3.set_xlabel('Counts')
 pu.sub_note('c)')
 ax3.set_xticks([0,6,12])
-plt.legend(frameon=True,handletextpad=0.02,bbox_to_anchor=(1.01, 0.93))#,ncol=2,columnspacing=0.2,loc=1)
+#plt.legend(frameon=True,handletextpad=0.02,bbox_to_anchor=(1.01, 0.93))#,ncol=2,columnspacing=0.2,loc=1)
 
 ax4 = plt.subplot2grid((1,12),(0,11),sharey=ax)
 ax4.hist(delta_alt3b,bins=50,range=[0,4000],normed=False,edgecolor='None',alpha=0.3,orientation='horizontal')
@@ -5487,10 +5530,11 @@ ax4.axhline(np.nanmedian(delta_alt3b),label='Median',ls='--')
 ax4.annotate('{:4.0f} m'.format(np.nanmean(delta_alt3b)),(0.5,np.nanmean(delta_alt3b)*1.05),color='b',alpha=0.3)
 ax4.annotate('{:4.0f} m'.format(np.nanmedian(delta_alt3b)),(0.5,np.nanmedian(delta_alt3b)*1.05),color='b',alpha=0.3)
 ax4.annotate(' {:2.0f}%'.format(float(len(delta_alt3b[delta_alt3b<60.0]))*100.0/len(delta_alt3b)),(1.2,2450.0),color='darkgoldenrod')
-ax4.annotate('({:2.0f}%)'.format(float(len(delta_alt3b[delta_alt3b<360.0]))*100.0/len(delta_alt3b)),(1.2,2300.0),color='gold')
+ax4.annotate('({:2.0f}%)'.format(float(len(delta_alt3b[delta_alt3b<360.0]))*100.0/len(delta_alt3b)),(1.2,2300.0),color='sienna')
 ax4.set_title(u'10°-15°')
 pu.sub_note('d)')
 ax4.set_xticks([0,3,6])
+plt.legend(frameon=True,handletextpad=0.02,bbox_to_anchor=(0.5, 0.93),loc=2)
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub_smallextent.png',
             transparent=True,dpi=500)
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_gap_distribution_3sub_smallextent.pdf')
@@ -5511,13 +5555,229 @@ plt.hist(delta_alt1,bins=50)
 plt.xlim(0,1000)
 
 
+# ## Make a stats test to check if it can be at 60%
+
+# In[60]:
+
+
+import scipy.stats as stat
+
+
+# In[ ]:
+
+
+float(len(ldelta_alt[ldelta_alt<360.0]))*100.0/len(ldelta_alt)
+
+
+# In[61]:
+
+
+ldelta_alt[ldelta_alt<360.0]
+
+
+# In[81]:
+
+
+ceal_bin_ma = ceal_bin[np.isfinite(ceal_bin)]
+
+
+# In[82]:
+
+
+ceal_bin_ma
+
+
+# In[83]:
+
+
+t_val,p_val = stat.ttest_1samp(ceal_bin_ma,60.0)
+
+
+# In[84]:
+
+
+t_val,p_val
+
+
+# Extracted data from Rajapshke et al. 2017 fig. 5c (CATS nightime 1064nm aerosol bottom and cloud top)
+
+# In[64]:
+
+
+aerbot = [2.0157932886957894,
+2.04297524618854,
+2.0651235078493,
+2.083244812844466,
+2.104386335338833,
+2.1215009011676003,
+2.145662641161156,
+2.1668041636555166,
+2.188952425316277,
+2.2090872086442417,
+2.2211680786410213,
+2.217141121975427,
+2.205060251978651,
+2.195999599481066,
+2.184925468650686,
+2.176871555319501,
+2.1949928603146667,
+2.210093947810641,
+2.228215252805807,
+2.2433163403017815,
+2.2513702536329667,
+2.2443230794681774,
+2.2302287311386024,
+2.2181478611418264,
+2.203046773645852,
+2.1788850336522962,
+2.162777206989926,
+2.1376087278299707,
+2.111433509503616,
+2.083244812844466,
+2.061096551183706,
+2.072170682014086,
+2.0872717695100604,
+2.103379596172431,
+2.117473944502006,
+2.128548075332386,
+2.11042677033722,
+2.087271769510060,
+2.0641167686829007,
+2.0389482895229456,
+2.0157932886957894,
+2.022840462860575,
+2.0308943761917604,
+2.040961767855741,
+2.0510291595197216,
+2.0560628553517155,
+2.058076333684511,
+2.058076333684511,
+2.0500224203533257,
+2.047002202854131,
+2.04297524618854,
+2.006732636198201,
+1.9604226345438853,
+1.9151193720559654,
+1.869816109568049,
+1.8194791512481387,
+1.8184724120817393,
+1.8285398037457234,
+1.8376004562433046,
+1.8476678479072888,
+1.8496813262400806,
+1.8647824137360551,
+1.8768632837328347,
+1.8889441537296108,
+1.8980048062271955,
+1.9050519803919848,
+1.9151193720559654,
+1.9251867637199496,
+1.9322339378847353,
+1.9362608945503297,
+1.9392811120495246,
+1.9261935028863455,
+1.8949845887280041,
+1.872584642275644]
+
+
+# In[65]:
+
+
+cldtop = [1.8315600212449148,
+1.81142523791695,
+1.793303932921784,
+1.7741758887602188,
+1.75504784459865,
+1.7359198004370882,
+1.7480006704338642,
+1.7480006704338642,
+1.7480006704338642,
+1.7510208879330627,
+1.7469939312674683,
+1.7480006704338642,
+1.7480006704338642,
+1.7480006704338642,
+1.7439737137682698,
+1.7318928437714938,
+1.724845669606708,
+1.7107513212771295,
+1.7016906687795483,
+1.685582842117178,
+1.665448058789213,
+1.6594076237908233,
+1.6594076237908233,
+1.6594076237908233,
+1.6594076237908233,
+1.654373927958833,
+1.6594076237908233,
+1.6483334929604432,
+1.6483334929604432,
+1.6483334929604432,
+1.6392728404628585,
+1.6362526229636671,
+1.6161178396356988,
+1.5990032738069324,
+1.5879291429765523,
+1.5738347946469773,
+1.5547067504854084,
+1.5345719671574436,
+1.5144371838294823,
+1.4953091396679135,
+1.4711473996743578,
+1.4590665296775818,
+1.4429587030152113,
+1.4308778330184317,
+1.4137632671896654,
+1.3976554405272914,
+1.393628483861697,
+1.3956419621944924,
+1.4047026146920771,
+1.4047026146920771,
+1.3986621796936909,
+1.3906082663625021,
+1.3704734830345409,
+1.352352178039375,
+1.3332241338778061,
+1.3130893505498378,
+1.3010084805530617,
+1.2828871755578959,
+1.265772609729126,
+1.2506715222331515,
+1.235570434737177,
+1.21946260807481,
+1.20838847724443,
+1.192280650582059,
+1.1791930414188805,
+1.1640919539229095,
+1.1711391280876953,
+1.1872469547500692,
+1.2013413030796407,
+1.2174491297420111,
+1.2295299997387907,
+1.234563695570781,
+1.2275165214059953,
+1.2275165214059953]
+
+
+# In[70]:
+
+
+raj_gap = -np.array(cldtop)+np.array(aerbot)
+
+
+# In[73]:
+
+
+raj_gap.mean()
+
+
 # ## Save the delta gap to a file
 
-# In[37]:
+# In[66]:
 
 
 gap = {'delta_alt':delta_alt,'delta_lat':delta_lat,'delta_lon':delta_lon,
-       'ldelta_alt':ldelta_alt,'ldelta_lat':ldelta_lat,'ldelta_lat_days':ldelta_lat_days,'ldelta_lon':ldelta_lon,
+      'ldelta_alt':ldelta_alt,'ldelta_lat':ldelta_lat,'ldelta_lat_days':ldelta_lat_days,'ldelta_lon':ldelta_lon,
        'ldelta_lon_days':ldelta_lon_days,
        'delta_alt1':delta_alt1,'delta_lat1':delta_lat1,'delta_lon1':delta_lon1,
        'delta_alt2':delta_alt2,'delta_lat2':delta_lat2,'delta_lon2':delta_lon2,
@@ -5528,6 +5788,26 @@ gap = {'delta_alt':delta_alt,'delta_lat':delta_lat,'delta_lon':delta_lon,
 
 
 hs.savemat(fp+'ORACLES_2016_gap_distance.mat',gap)
+
+
+# ### Load the delta gap data
+
+# In[9]:
+
+
+gap = hs.loadmat(fp+'ORACLES_2016_gap_distance.mat')
+
+
+# In[10]:
+
+
+gap.keys()
+
+
+# In[11]:
+
+
+locals().update(gap)
 
 
 # # Calculate the fine mode and coarse mode aod
