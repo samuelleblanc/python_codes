@@ -1687,20 +1687,32 @@ def combine_wvl(dat1,dat2):
     """
     import numpy as np
     dat = dat1
-    if not (dat1['phi']==dat2['phi']):
-        print '*** Possible problem, the two arrays do not match in phi'
+    try: 
+        if not (dat1['phi']==dat2['phi']):
+            print '*** Possible problem, the two arrays do not match in phi'
+    except: 
+        pass
     if not (dat1['zout']==dat2['zout']):
         print '*** Possible problem, the two arrays do not match in zout'
-    if not (dat1['umu']==dat2['umu']):
-        print '*** Possible problem, the two arrays do not match in umu'
-    dat['rad_avg'] = np.vstack((dat1['rad_avg'],dat2['rad_avg']))
+    try:
+        if not (dat1['umu']==dat2['umu']):
+            print '*** Possible problem, the two arrays do not match in umu'
+    except:
+        pass
+    try:
+        dat['rad_avg'] = np.vstack((dat1['rad_avg'],dat2['rad_avg']))
+    except:
+        pass
     dat['direct_down'] = np.vstack((dat1['direct_down'],dat2['direct_down']))
     dat['diffuse_up'] = np.vstack((dat1['diffuse_up'],dat2['diffuse_up']))
     dat['diffuse_down'] = np.vstack((dat1['diffuse_down'],dat2['diffuse_down']))
     dat['int_dif_up'] = np.vstack((dat1['int_dif_up'],dat2['int_dif_up']))
     dat['int_dir_dn'] = np.vstack((dat1['int_dir_dn'],dat2['int_dir_dn']))
     dat['int_dif_dn'] = np.vstack((dat1['int_dif_dn'],dat2['int_dif_dn']))
-    dat['rad'] = np.vstack((dat1['rad'],dat2['rad']))
+    try:
+        dat['rad'] = np.vstack((dat1['rad'],dat2['rad']))
+    except:
+        pass
     dat['wvl'] = np.hstack((dat1['wvl'],dat2['wvl']))
     return dat
 
@@ -1710,7 +1722,7 @@ def combine_wvl(dat1,dat2):
 
 def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
              phase=['wc','ic'],fmt='lut_sza{sza:02d}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat',
-             split_wvl=True):
+             split_wvl=True,numrad=1):
     """
     Purpose:
     
@@ -1731,6 +1743,7 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
              If file name does not require any of these, program doe snot freeze by omission 
         split_wvl: (defaults to True) if set then files are split per wavelength 
                    loads two seperate file per combination of tau, ref, sza, and phase
+        numrad: (number of radiance values to read, defaults to 1)
         
     Outputs:
     
@@ -1764,17 +1777,18 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
     #test of single load of file
     try:
         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
-                                  zout=zout,num_rad=1)
+                                  zout=zout,num_rad=numrad)
     except:
+        print 'trying backup first run on file:'+fp_out
         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=0)),
-                                  zout=zout,num_rad=1)
+                                  zout=zout,num_rad=numrad)
     if split_wvl:
         try:
             dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=1)),
-                                      zout=zout,num_rad=1)
+                                      zout=zout,num_rad=numrad)
         except:
             dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=1)),
-                                      zout=zout,num_rad=1)
+                                      zout=zout,num_rad=numrad)
         dat = RL.combine_wvl(dat1,dat2)
     else:
         dat = dat1
@@ -1798,14 +1812,17 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
                 for ip,p in enumerate(phase):
                     try:
                         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=0)),
-                                                  zout=zout,num_rad=1)
+                                                  zout=zout,num_rad=numrad)
                         if split_wvl:
                             dat2 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=r,tau=t,sza=s,phase=p,iwvl=1)),
-                                                      zout=zout,num_rad=1)            
+                                                      zout=zout,num_rad=numrad)            
                             dat1 = RL.combine_wvl(dat1,dat2)
                     except IOError:
                         continue
-                    output['rad'][ip,:,:,ir,it,iz] = dat1['rad']
+                    try:
+                        output['rad'][ip,:,:,ir,it,iz] = dat1['rad']
+                    except:
+                        pass
                     output['irr_up'][ip,:,:,ir,it,iz] = dat1['diffuse_up']
                     output['irr_dn'][ip,:,:,ir,it,iz] = dat1['direct_down']+dat1['diffuse_down']
                     output['irr_dn_diff'][ip,:,:,ir,it,iz] = dat1['diffuse_down']

@@ -101,6 +101,7 @@ parser.add_argument('-t','--tmp_folder',nargs='?',help='The path to the temp dir
 parser.add_argument('-v','--verbose',help='If set, outputs comments about the progress',action='store_true',default=False)
 parser.add_argument('-j','--splitindex',
                     help='add extra level of index splitting, on addition to -i, split up the work on each node /COD and per 10/ext',action='store_true',default=False)
+parser.add_argument('-m','--match',help='if set, matches the index value to all other ext, ssa, asy, for use in debugging',action='store_true',default=False)
 in_ = vars(parser.parse_args())
 doread = in_.get('doread',False)
 dowrite = in_.get('dowrite',False)
@@ -108,6 +109,7 @@ i = in_.get('index',0)
 shortread = in_.get('shortread',False)
 verbose = in_.get('verbose',False)
 j_index = in_.get('splitindex',False)
+match = in_.get('match',False)
 
 
 # In[ ]:
@@ -213,7 +215,7 @@ cloud['ref'] = np.nanmean(input_mmm['MODIS_effrad_mean'][0,0][ia1:ia2,io1:io2])
 # In[ ]:
 
 
-pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar')
+pmom_solar = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='solar',deltascale=False)
 pmom_thermal = RL.make_pmom_inputs(fp_rtm=fp_pmom,source='thermal')
 max_nmom=20
 pmom_solar['max_nmoms'] = max_nmom
@@ -279,6 +281,9 @@ else:
 # In[ ]:
 
 
+if match:
+    iee = [i]
+
 if verbose:
     print 'Running through the permutations'
 b = []
@@ -322,6 +327,9 @@ for icod,c in enumerate(codd):
         if not len(aero['ext'])==len(aero['wvl_arr']):
             aero['ext'] = np.append(aero['ext'],e[-1])
         for issa,s in enumerate(ssa):
+            if match:
+                if not issa in iee:
+                    continue
             aero['ssa'] = s
             try: aero['ssa'][aero['ssa']<0.0] = 0.0
             except: pass
@@ -330,6 +338,9 @@ for icod,c in enumerate(codd):
             if not len(aero['ssa'])==len(aero['wvl_arr']):
                 aero['ssa'] = np.append(aero['ssa'],s[-1])
             for iasy,a in enumerate(asy):
+                if match:
+                    if not iasy in iee:
+                        continue
                 aero['asy'] = a
 
                 #sanitize inputs after adding subtracting standard deviations

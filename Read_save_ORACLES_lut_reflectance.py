@@ -77,14 +77,15 @@ vv = 'v5_irr'
 
 
 # try to read from the saved version file
-from load_utils import load_from_json
+from load_utils import load_from_json, deep_convert_dict
 try:
     d = load_from_json(fp+'ORACLES_lut_{}.txt'.format(vv))
-    sza = d['lut']['sza']
-    tau = d['lut']['tau']
-    ref = d['lut']['ref']
+    d = deep_convert_dict(d)
+    sza = d['lut_details']['sza']
+    tau = d['lut_details']['tau']
+    ref = d['lut_details']['ref']
     zout = d['geo']['zout']
-    fmt = d['lut']['format']
+    fmt = d['lut_details']['format']
     mu = np.round(1.0/np.cos(sza*np.pi/180.0))
     use_json = True
 except ValueError: # not a json file try old way
@@ -120,7 +121,7 @@ fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   phase=['wc'],
                   fmt=fmt,
-                  split_wvl=True)
+                  split_wvl=True,numrad=0)
 
 
 # In[ ]:

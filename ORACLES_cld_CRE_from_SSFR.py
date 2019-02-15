@@ -224,6 +224,7 @@ wv = np.array(aero['wvl_arr'])
 # In[26]:
 
 
+aero['wvl_arr'][-1] = 5600.0
 wv[-1] = 5600.0
 
 
@@ -279,7 +280,7 @@ if not do_read:
         cloud['write_moments_file'] = True
         ext = np.exp(np.polyval([ar['a2'][i],ar['a1'][i],ar['a0'][i]],np.log(wv)))/3.0
         aero['ext'][0,:] = ext
-        
+        aero['file_name'] = None
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
         aero['file_name'] = None
@@ -287,6 +288,7 @@ if not do_read:
 
         f_in = '{name}_{vv}_ssfr_{i:05d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
         cloud['tau'] = 0.0
+        aero['file_name'] = None
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True,max_nmom=20,solver='rodents')
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
@@ -342,9 +344,12 @@ else:
             continue
         #print '\r{}..'.format(i)
         pbar.update()
-        f_in = '{name}_{vv}_ssfr_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
-        s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
-        f_in = '{name}_{vv}_ssfr_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+        f_in = '{name}_{vv}_ssfr_{i:05d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        try:
+            s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+        except:
+            continue
+        f_in = '{name}_{vv}_ssfr_{i:05d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
         sc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
         star_aero_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']

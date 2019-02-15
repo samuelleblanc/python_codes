@@ -211,7 +211,7 @@ print f_list.name
 for s in sza:
     for t in tau:
         for r in ref:
-            fname = 'lut_irr_sza%02i_tau%06.2f_ref%04.1f' % (s,t,r)
+            fname = 'lut_irr_sza%04.1f_tau%06.2f_ref%04.1f' % (s,t,r)
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
@@ -244,8 +244,8 @@ for s in sza:
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
             print s,t,r
-        break
-    break
+        #break
+    #break
 
 
 # In[ ]:
