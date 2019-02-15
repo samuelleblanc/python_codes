@@ -1182,7 +1182,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',source='
 
 def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec',fp_output=None,
                     wvl_file_sol=None,wvl_file_thm=None,aero_clear=False,version='v1',stdfac_dict={},max_nmom=None,list_only=False,
-                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON'],deltascale=True):
+                    start_lat=None,start_lon=None,mmmlist=['DJF','MAM','JJA','SON'],deltascale=True,zaero=[3.0,4.0],zcld=[2.0,3.0]):
     """
     Purpose:
     
@@ -1248,6 +1248,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 - changed to have seperate path and list file for each mmm
         MOdified: Samuel LeBlanc, 2017-03-06, Santa Cruz, CA
                 - added the version keyword for version tracking
+        Modofied: Samuel LeBlanc, 2019-02-14, NASA Ames, CA
+                - added zaero and zcld keywords in the function call to modify the aerosol and cloud heights.
         
     """
     import numpy as np
@@ -1268,8 +1270,8 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         pmom_solar['max_nmoms'],pmom_thermal['max_nmoms'] = False,False
         
     geo = {'zout':[0,3,100],'year':2007,'day':15,'minute':0,'second':0}
-    aero = {'z_arr':[3.0,4.0]}
-    cloud = {'ztop':3.0,'zbot':2.0,'phase':'wc','write_moments_file':True}
+    aero = {'z_arr':zaero}
+    cloud = {'ztop':zcld[1],'zbot':zcld[0],'phase':'wc','write_moments_file':True}
     source = {'integrate_values':True,'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/','run_fuliou':True}
     albedo = {'create_albedo_file':False}
     if not fp_output:
