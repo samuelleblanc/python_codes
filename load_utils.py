@@ -1285,6 +1285,73 @@ def deep_convert_dict(layer):
     return to_ret
 
 
+# In[ ]:
+
+
+def load_hdf_raster1(datfile):
+    """
+    Name:
+
+        load_hdf_raster1
+    
+    Purpose:
+
+        To load the first raster of the hdf file. 
+        To be used when load_hdf and load_hdf_sd did not work
+        Brute force load first raster using GDAL
+    
+    Calling Sequence:
+
+        dat = load_hdf_raster1(datfile) 
+    
+    Input: 
+  
+        datfile: full path and name of hdf file
+    
+    Output:
+
+        dat: numpy array of values
+    
+    Keywords: 
+
+       none
+    
+    Dependencies:
+
+        numpy
+        OSGEO, GDAL
+    
+    Required files:
+   
+        dat file
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2019-02-18, Santa Cruz, CA
+        
+    """
+    import numpy as np
+    from osgeo import gdal
+    import os
+    if not(os.path.isfile(datfile)):
+        raise IOError('Data file {} not found!'.format(datfile))
+    datsds = gdal.Open(datfile)
+    rr = datsds.GetRasterBand(1) 
+    g = rr.ReadAsArray()
+    scale = rr.GetScale()
+    offset = rr.GetOffset()
+    nan = rr.GetNoDataValue()
+    dat = g.astype(float)
+    dat[dat==nan] = np.nan
+    dat = dat*scale+offset
+    del datsds
+    return dat    
+
+
 # Testing of the script:
 
 # In[4]:
