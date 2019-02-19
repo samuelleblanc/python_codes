@@ -1326,9 +1326,14 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
 
         fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
         print 'Getting albedo files: '+fpa
-        alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
-        print 'done loading albedo files'
-        alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
+        try:
+            alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
+            print 'done loading albedo files'
+            alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
+        except:
+            alb_geo = lm.load_hdf_raster1(fpa)
+            print 'done loading albedo files using raster 1'
+            alb_geo_sub = np.nanmean(np.nanmean(alb_geo.reshape([48,21600/48,75,43200/75]),3),1)        
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
         
