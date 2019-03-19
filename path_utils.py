@@ -148,7 +148,7 @@ def listpath():
 # In[62]:
 
 
-def getpath(s='research',make_path=False,path='',verbose=False):
+def getpath(s='research',make_path=False,path='',verbose=True):
     """
     Purpose:  
         return the path named in the json file, or if not there, an educated guess of the path
@@ -164,7 +164,7 @@ def getpath(s='research',make_path=False,path='',verbose=False):
                     ignored if s is already in path
         path: (string, default empty) if set to a path, and make_path is True, will overwrite default make_path behavior and 
                 save a named path defined by path (understands if absolute path or relative to Research directory)
-        verbose: (boolean, default False) if True, prints out the the name and the path used
+        verbose: (boolean, default True) if True, prints out the the name and the path used
 
     Dependencies:
         - os
