@@ -445,7 +445,7 @@ class Sp:
 
     """    
     import numpy as np
-    def __init__(self,s,irrad=False,verbose=True,liq_only=False,ice_only=False):
+    def __init__(self,s,irrad=False,verbose=True,liq_only=False,ice_only=False,sza=None):
         import numpy as np
         self.verbose = verbose
         if 'nm' in s:
@@ -453,7 +453,11 @@ class Sp:
         if 'zenlambda' in s:
             self.wvl = s['zenlambda']
         if 'wvl' in s:
-            self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
+            try:
+                self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
+            except TypeError:
+                s['wvl'] = [s['wvl']]
+                self.wvl = np.array([item for sublist in s['wvl'] for item in sublist])
         if 'w' in s:
             self.wvl = np.array([item for sublist in s['w'] for item in sublist])
         if self.wvl[0] < 100.0:
