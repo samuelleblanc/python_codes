@@ -44,7 +44,7 @@
 
 # # Import the required python modules and set paths
 
-# In[1]:
+# In[2]:
 
 
 import scipy.io as sio
@@ -52,17 +52,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 get_ipython().magic(u'matplotlib notebook')
-import path
+#import path
 
 
-# In[6]:
+# In[3]:
 
 
 import load_utils as lu
 from path_utils import getpath
 
 
-# In[7]:
+# In[4]:
 
 
 fp = getpath('ORACLES')
@@ -290,6 +290,309 @@ d['dt'] = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(d['Julian_Day'])]
 plt.figure()
 plt.plot(d['dt'],d['AOT_500'],'.')
 plt.grid()
+
+
+# ## Load 2018 Misamfu
+
+# In[7]:
+
+
+fp
+
+
+# In[8]:
+
+
+dm = lu.load_aeronet(fp+'data_other_2018/AERONET/20181219_20181219_Misamfu.lev15',version=3)
+
+
+# In[12]:
+
+
+km = dm.keys()
+km.sort()
+
+
+# In[13]:
+
+
+km
+
+
+# In[94]:
+
+
+dm['Site_Elevationm'], dm['Site_LatitudeDegrees'], dm['Site_LongitudeDegrees']
+
+
+# In[15]:
+
+
+nm = [float(k[4:-2]) for k in km if (k.startswith('AOD_')&k.endswith('nm'))]
+nm.sort()
+
+
+# In[16]:
+
+
+nm
+
+
+# In[20]:
+
+
+maods = [k for k in km if (k.startswith('AOD_')&k.endswith('nm'))]
+nat_sort(maods)
+
+
+# In[22]:
+
+
+m = {}
+m['nm'] = nm
+m['keys'] = maods
+
+
+# In[23]:
+
+
+maod = []
+for i in xrange(len(dm['Timehhmmss'])):
+    u = [dm[d][i] for d in maods]
+    maod.append(u)
+m['aod'] = np.array(maod)
+
+
+# In[24]:
+
+
+m['aod'].shape
+
+
+# In[31]:
+
+
+m['aod'][m['aod']==-999.0]=np.nan
+
+
+# In[33]:
+
+
+plt.figure()
+plt.plot(m['nm'],m['aod'].T,'x')
+
+
+# In[93]:
+
+
+for i,aa in enumerate(np.nanmean(m['aod'][6:9,:].T,axis=1)):
+    if np.isfinite(aa):
+        print m['nm'][i],aa
+
+
+# ## Load the El Farafa 2018
+
+# In[34]:
+
+
+e = lu.load_aeronet(fp+'data_other_2018/AERONET/20180102_20180102_El_Farafra.lev20',version=3)
+
+
+# In[63]:
+
+
+e['Site_Elevationm'],e['Site_LatitudeDegrees'],e['Site_LongitudeDegrees']
+
+
+# In[62]:
+
+
+ke
+
+
+# In[36]:
+
+
+ke = e.keys()
+ke.sort()
+nm = [float(k[4:-2]) for k in ke if (k.startswith('AOD_')&k.endswith('nm'))]
+nm.sort()
+
+
+# In[37]:
+
+
+eaods = [k for k in ke if (k.startswith('AOD_')&k.endswith('nm'))]
+nat_sort(eaods)
+
+
+# In[38]:
+
+
+em = {}
+em['nm'] = nm
+em['keys'] = eaods
+
+
+# In[39]:
+
+
+eaod = []
+for i in xrange(len(e['Timehhmmss'])):
+    u = [e[d][i] for d in eaods]
+    eaod.append(u)
+em['aod'] = np.array(eaod)
+
+
+# In[40]:
+
+
+em['aod'][em['aod']==-999.0]=np.nan
+
+
+# In[43]:
+
+
+em['aod'].shape
+
+
+# In[64]:
+
+
+em['nm']
+
+
+# In[60]:
+
+
+em['aod'][-1,:]
+
+
+# In[61]:
+
+
+plt.figure()
+plt.plot(em['nm'],em['aod'][-5:-1,:].T,'x')
+
+
+# ## Load from Ragged point 2018
+
+# In[75]:
+
+
+r = lu.load_aeronet(fp+'data_other_2018/AERONET/20180923_20180923_Ragged_Point.lev15',version=3)
+
+
+# In[76]:
+
+
+kr = r.keys()
+kr.sort()
+nm = [float(k[4:-2]) for k in kr if (k.startswith('AOD_')&k.endswith('nm'))]
+nm.sort()
+
+
+# In[77]:
+
+
+raods = [k for k in kr if (k.startswith('AOD_')&k.endswith('nm'))]
+nat_sort(raods)
+
+
+# In[78]:
+
+
+rm = {}
+rm['nm'] = nm
+rm['keys'] = raods
+
+
+# In[79]:
+
+
+raod = []
+for i in xrange(len(r['Timehhmmss'])):
+    u = [r[d][i] for d in raods]
+    raod.append(u)
+rm['aod'] = np.array(raod)
+
+
+# In[80]:
+
+
+rm['aod'][rm['aod']==-999.0]=np.nan
+rm['aod'].shape
+
+
+# In[83]:
+
+
+plt.figure()
+plt.plot(rm['nm'],rm['aod'][0:5,:].T,'x')
+
+
+# In[88]:
+
+
+for i,aa in enumerate(np.nanmean(rm['aod'][0:1,:].T,axis=1)):
+    if np.isfinite(aa):
+        print rm['nm'][i],aa
+
+
+# ## Load the La Parguera 2018 (near Barbados)
+
+# In[66]:
+
+
+p = lu.load_aeronet(fp+'data_other_2018/AERONET/20180926_20180926_La_Parguera.lev20',version=3)
+
+
+# In[67]:
+
+
+kp = p.keys()
+kp.sort()
+nm = [float(k[4:-2]) for k in kp if (k.startswith('AOD_')&k.endswith('nm'))]
+nm.sort()
+
+
+# In[68]:
+
+
+paods = [k for k in kp if (k.startswith('AOD_')&k.endswith('nm'))]
+nat_sort(paods)
+
+
+# In[69]:
+
+
+pm = {}
+pm['nm'] = nm
+pm['keys'] = paods
+
+
+# In[70]:
+
+
+paod = []
+for i in xrange(len(p['Timehhmmss'])):
+    u = [p[d][i] for d in paods]
+    paod.append(u)
+pm['aod'] = np.array(paod)
+
+
+# In[71]:
+
+
+pm['aod'][pm['aod']==-999.0]=np.nan
+pm['aod'].shape
+
+
+# In[74]:
+
+
+plt.figure()
+plt.plot(pm['nm'],pm['aod'][5:10,:].T,'x')
 
 
 # # Plot out the AOD spectra for each point
