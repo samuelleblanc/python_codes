@@ -673,3 +673,35 @@ def sub_note(note,ax=None,out=False,dx=0.0,dy=0.0):
         transform=ax.transAxes,
         color='k', fontsize=18,zorder=1,alpha=0.7)
 
+
+# In[1]:
+
+
+def set_box_whisker_color(cl,bp,binned_ndays):
+    'To change the color (cl=colormap) of box and whisker plots (bp=box_whisker plot artists) to denote the number of samples (binned_ndays=number of samples)'
+    import numpy as np
+    bndm = np.nanmax(binned_ndays)*1.0
+    for j,b in enumerate(bp['boxes']):
+        b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
+        b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
+        #b.set_alpha(0.4)
+    for j,b in enumerate(bp['means']):
+        b.set_marker('.')
+        b.set_color('None')
+        b.set_markerfacecolor('darkgreen')
+        b.set_markeredgecolor('darkgreen')
+        b.set_alpha(0.6)
+    for j,b in enumerate(bp['whiskers']):
+        b.set_linestyle('-')
+        b.set_color('pink') #gr(binned_ndays[j]*1.0/bndm))
+        b.set_alpha(0.7)
+    for j,b in enumerate(bp['caps']):
+        b.set_alpha(0.7)
+        b.set_color('pink')#gr(binned_ndays[j]*1.0/bndm))
+    for j,b in enumerate( bp['medians']):
+        b.set_linewidth(4)
+        b.set_color('gold')
+        b.set_alpha(0.4)
+    
+    return
+
