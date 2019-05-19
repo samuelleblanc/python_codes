@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -64,20 +64,20 @@ import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 
 
-# In[3]:
+# In[2]:
 
 
 import scipy.stats as st
 from mpl_toolkits.basemap import Basemap
 
 
-# In[4]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[5]:
+# In[4]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
@@ -88,13 +88,13 @@ fp
 
 # ## Load the 2016 data
 
-# In[6]:
+# In[5]:
 
 
 ar6 = hs.loadmat(fp+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
 
 
-# In[7]:
+# In[6]:
 
 
 ar6['flac'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)
@@ -102,7 +102,7 @@ ar6['flacr'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&(ar6['fl_routine'])
 ar6['flaco'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&~(ar6['fl_routine'])
 
 
-# In[8]:
+# In[7]:
 
 
 ar6['flr'] = (ar6['qual_flag']==0) & (ar6['fl_routine'])
@@ -112,13 +112,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # ## Load the 2017 data
 
-# In[9]:
+# In[8]:
 
 
 ar7 = hs.loadmat(fp+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
 
 
-# In[10]:
+# In[9]:
 
 
 ar7['flac'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)
@@ -126,7 +126,7 @@ ar7['flacr'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&(ar7['fl_routine'])
 ar7['flaco'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&~(ar7['fl_routine'])
 
 
-# In[11]:
+# In[10]:
 
 
 ar7['flr'] = (ar7['qual_flag']==0) & (ar7['fl_routine'])
@@ -136,13 +136,13 @@ ar7['fl'] = (ar7['qual_flag']==0)
 
 # ## Load the 2018 data
 
-# In[12]:
+# In[11]:
 
 
 ar8 = hs.loadmat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv='R1'))
 
 
-# In[13]:
+# In[12]:
 
 
 ar8['flac'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)  
@@ -150,7 +150,7 @@ ar8['flacr'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&(ar8['fl_routine']
 ar8['flaco'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&~(ar8['fl_routine']) 
 
 
-# In[14]:
+# In[13]:
 
 
 ar8['flr'] = (ar8['qual_flag']==0) & (ar8['fl_routine'])
@@ -160,13 +160,13 @@ ar8['fl'] = (ar8['qual_flag']==0)
 
 # # Now plot the data together
 
-# In[15]:
+# In[14]:
 
 
 len(ar6['AOD0501'][ar6['fl']]), len(ar7['AOD0501'][ar7['fl']]), len(ar8['AOD0501'][ar8['fl']])
 
 
-# In[16]:
+# In[15]:
 
 
 np.nanmean(ar6['AOD0501'][ar6['fl']]),np.nanmean(ar7['AOD0501'][ar7['fl']]),np.nanmean(ar8['AOD0501'][ar8['fl']])
@@ -552,28 +552,28 @@ plt.savefig(fp+'plot_all/AOD_oceanc_latitude_2016_2017_2018.png',dpi=600,transpa
 
 # ## Setup the vertical angtrom profiles
 
-# In[28]:
+# In[16]:
 
 
 ar6['fl_QA_angs'] = ar6['fl_QA'] & (ar6['AOD0501']>0.1)
 ar6['fl_QA_angs_aca'] = ar6['flac'] & (ar6['AOD0501']>0.1) & (ar6['GPS_Alt']>300.0)
 
 
-# In[29]:
+# In[17]:
 
 
 ar7['fl_QA_angs'] = ar7['fl_QA'] & (ar7['AOD0501']>0.1)
 ar7['fl_QA_angs_aca'] = ar7['flac'] & (ar7['AOD0501']>0.1) & (ar7['GPS_Alt']>300.0)
 
 
-# In[30]:
+# In[18]:
 
 
 ar8['fl_QA_angs'] = ar8['fl_QA'] & (ar8['AOD0501']>0.1)
 ar8['fl_QA_angs_aca'] = ar8['flac'] & (ar8['AOD0501']>0.1) & (ar8['GPS_Alt']>300.0)
 
 
-# In[31]:
+# In[19]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70):
@@ -587,7 +587,7 @@ def make_bined_alt(x,alt,days,fl,n=70):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[32]:
+# In[20]:
 
 
 def set_box_whisker_color(cl,bp,binned_ndays):
@@ -617,7 +617,7 @@ def set_box_whisker_color(cl,bp,binned_ndays):
     return
 
 
-# In[33]:
+# In[21]:
 
 
 binned_ang6,binned_alt6,binned_num6,binned_ndays6 = make_bined_alt(ar6['AOD_angstrom_470_865'],
@@ -781,7 +781,7 @@ plt.savefig(fp+'plot_all/ORACLES2018_4STAR_Angstrom_2wvl_vertical_cb.png',
 
 # ## Prepare the AOD profiles
 
-# In[38]:
+# In[22]:
 
 
 binned_aod6,binned_alta6,binned_numa6,binned_ndaysa6 = make_bined_alt(ar6['AOD0501'],
@@ -945,14 +945,14 @@ plt.savefig(fp+'plot_all/ORACLES2018_4STAR_AOD_vertical_cb.png',
 
 # ## Set the region and times
 
-# In[42]:
+# In[23]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[43]:
+# In[24]:
 
 
 ar6['flq'] = ar6['flac'] & (ar6['Latitude']>lat1) & (ar6['Latitude']<lat2) & (ar6['Longitude']>lon1) & (ar6['Longitude']<lon2) & (ar6['qual_flag']==0)& (ar6['AOD0501']<1.5)
@@ -960,7 +960,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[44]:
+# In[25]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -971,7 +971,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[45]:
+# In[26]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -979,7 +979,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[46]:
+# In[27]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -990,7 +990,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[47]:
+# In[28]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -998,7 +998,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[48]:
+# In[29]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1011,7 +1011,7 @@ ar8['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar8['Start_
 
 # ## Plot the time series of the region
 
-# In[49]:
+# In[30]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -1023,7 +1023,7 @@ for d in bin_days6:
     bin_num6.append(len(ar6['AOD0501'][ar6['flq']][flh]))
 
 
-# In[50]:
+# In[31]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -1035,7 +1035,7 @@ for d in bin_days7:
     bin_num7.append(len(ar7['AOD0501'][ar7['flq']][flh]))
 
 
-# In[51]:
+# In[32]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -1117,13 +1117,13 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly.png',
 
 # ## Add a map of the region
 
-# In[53]:
+# In[33]:
 
 
 from mpl_toolkits.basemap import Basemap
 
 
-# In[54]:
+# In[34]:
 
 
 def mapfig(ax=plt.gca()):
@@ -1234,32 +1234,32 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly_hist_map.png',
 
 # # Plot wavelength AOD spectra
 
-# In[56]:
+# In[35]:
 
 
 kar6 = ar6.keys()
 kar6.sort()
 
 
-# In[57]:
+# In[36]:
 
 
 nn = [i for i in kar6  if i[0]=='A']
 
 
-# In[58]:
+# In[37]:
 
 
 nn[0:24]
 
 
-# In[59]:
+# In[38]:
 
 
 nn.pop(13)
 
 
-# In[60]:
+# In[39]:
 
 
 ar6['aods'] = np.array([ar6[i] for i in nn[0:23]]).T
@@ -1267,7 +1267,7 @@ ar7['aods'] = np.array([ar7[i] for i in nn[0:23]]).T
 ar8['aods'] = np.array([ar8[i] for i in nn[0:23]]).T
 
 
-# In[61]:
+# In[40]:
 
 
 ar6['meanaod'] = np.nanmean(ar6['aods'][ar6['flac'],:],axis=0)
@@ -1275,7 +1275,7 @@ ar6['medianaod'] = np.nanmedian(ar6['aods'][ar6['flac'],:],axis=0)
 ar6['stdaod'] = np.nanstd(ar6['aods'][ar6['flac'],:],axis=0)
 
 
-# In[62]:
+# In[41]:
 
 
 ar7['meanaod'] = np.nanmean(ar7['aods'][ar7['flac'],:],axis=0)
@@ -1283,7 +1283,7 @@ ar7['medianaod'] = np.nanmedian(ar7['aods'][ar7['flac'],:],axis=0)
 ar7['stdaod'] = np.nanstd(ar7['aods'][ar7['flac'],:],axis=0)
 
 
-# In[63]:
+# In[42]:
 
 
 ar8['meanaod'] = np.nanmean(ar8['aods'][ar8['flac'],:],axis=0)
@@ -1291,7 +1291,7 @@ ar8['medianaod'] = np.nanmedian(ar8['aods'][ar8['flac'],:],axis=0)
 ar8['stdaod'] = np.nanstd(ar8['aods'][ar8['flac'],:],axis=0)
 
 
-# In[64]:
+# In[43]:
 
 
 ar6['meanAE'] = np.nanmean(ar6['AOD_angstrom_470_865'][ar6['flac']])
@@ -1302,7 +1302,7 @@ ar7['stdAE'] = np.nanstd(ar7['AOD_angstrom_470_865'][ar7['flac']])
 ar8['stdAE'] = np.nanstd(ar8['AOD_angstrom_470_865'][ar8['flac']])
 
 
-# In[65]:
+# In[44]:
 
 
 wvls = [355.0,380.0,452.0,470.0,501.0,520.0,530.0,532.0,550.0,606.0,620.0,660.0,675.0,
@@ -1349,7 +1349,7 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_spectr_R1.png',
 
 # ## Setup the statistics
 
-# In[67]:
+# In[45]:
 
 
 ar6['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar6['Latitude'][ar6['flac']],ar6['Longitude'][ar6['flac']],
@@ -1358,7 +1358,7 @@ ar6['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar6['Latitude'][ar6['flac']],a
 ar6['bin_mean'] = np.ma.masked_array(ar6['bin_mean'],np.isnan(ar6['bin_mean']))
 
 
-# In[68]:
+# In[46]:
 
 
 ar7['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar7['Latitude'][ar7['flac']],ar7['Longitude'][ar7['flac']],
@@ -1367,7 +1367,7 @@ ar7['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar7['Latitude'][ar7['flac']],a
 ar7['bin_mean'] = np.ma.masked_array(ar7['bin_mean'],np.isnan(ar7['bin_mean']))
 
 
-# In[69]:
+# In[47]:
 
 
 ar8['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar8['Latitude'][ar8['flac']],ar8['Longitude'][ar8['flac']],
@@ -1376,13 +1376,13 @@ ar8['bin_mean'],xe,ye,bn = st.binned_statistic_2d(ar8['Latitude'][ar8['flac']],a
 ar8['bin_mean'] = np.ma.masked_array(ar8['bin_mean'],np.isnan(ar8['bin_mean']))
 
 
-# In[70]:
+# In[48]:
 
 
 uniq_cnt = lambda x: len(np.unique(x))
 
 
-# In[71]:
+# In[49]:
 
 
 ar6['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar6['Latitude'][ar6['flac']],ar6['Longitude'][ar6['flac']],
@@ -1391,7 +1391,7 @@ ar6['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar6['Latitude'][ar6['flac']]
 ar6['bin_nday'] = np.ma.masked_array(ar6['bin_nday'],np.isnan(ar6['bin_nday']))
 
 
-# In[72]:
+# In[50]:
 
 
 ar7['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar7['Latitude'][ar7['flac']],ar7['Longitude'][ar7['flac']],
@@ -1400,7 +1400,7 @@ ar7['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar7['Latitude'][ar7['flac']]
 ar7['bin_nday'] = np.ma.masked_array(ar7['bin_nday'],np.isnan(ar7['bin_nday']))
 
 
-# In[73]:
+# In[51]:
 
 
 ar8['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar8['Latitude'][ar8['flac']],ar8['Longitude'][ar8['flac']],
@@ -1409,7 +1409,7 @@ ar8['bin_nday'],xed,yed,bn = st.binned_statistic_2d(ar8['Latitude'][ar8['flac']]
 ar8['bin_nday'] = np.ma.masked_array(ar8['bin_nday'],np.isnan(ar8['bin_nday']))
 
 
-# In[74]:
+# In[52]:
 
 
 ia6 = np.where((ar6['bin_nday'].data>0.0))
@@ -1419,13 +1419,13 @@ ia8 = np.where((ar8['bin_nday'].data>0.0))
 
 # ## Plot on a map
 
-# In[75]:
+# In[53]:
 
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-# In[76]:
+# In[54]:
 
 
 def mapfig(ax=plt.gca()):
@@ -1437,7 +1437,7 @@ def mapfig(ax=plt.gca()):
     return m
 
 
-# In[77]:
+# In[55]:
 
 
 np.linspace(-26,4,11)
@@ -1577,7 +1577,7 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
 
 # ## Set up the function and variables
 
-# In[16]:
+# In[56]:
 
 
 def get_gap(index,alt,lat,lon,days,aod,ang):
@@ -1615,7 +1615,7 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     return d
 
 
-# In[17]:
+# In[57]:
 
 
 ar6['fl_acaod_noQA'] = ar6['flag_acaod']==1
@@ -1623,7 +1623,7 @@ ii_flacaod6 = np.where(ar6['fl_acaod_noQA'])[0]
 ii_flacaod6[0]
 
 
-# In[18]:
+# In[58]:
 
 
 ar7['fl_acaod_noQA'] = ar7['flag_acaod']==1
@@ -1631,7 +1631,7 @@ ii_flacaod7 = np.where(ar7['fl_acaod_noQA'])[0]
 ii_flacaod7[0]
 
 
-# In[19]:
+# In[59]:
 
 
 ar8['fl_acaod_noQA'] = ar8['flag_acaod']==1
@@ -1639,7 +1639,7 @@ ii_flacaod8 = np.where(ar8['fl_acaod_noQA'])[0]
 ii_flacaod8[0]
 
 
-# In[20]:
+# In[60]:
 
 
 gap6 = get_gap(ii_flacaod6,ar6['GPS_Alt'],ar6['Latitude'],ar6['Longitude'],ar6['days'],ar6['AOD0501'],ar6['AOD_angstrom_470_865'])
@@ -1647,7 +1647,7 @@ gap7 = get_gap(ii_flacaod7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7['
 gap8 = get_gap(ii_flacaod8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[144]:
+# In[61]:
 
 
 def make_bined_x(x,alt,days,fl,bins=[]):
@@ -1667,7 +1667,7 @@ def make_bined_x(x,alt,days,fl,bins=[]):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[27]:
+# In[62]:
 
 
 i6 = np.isfinite(gap6['dalt'])
@@ -1675,13 +1675,13 @@ i7 = np.isfinite(gap7['dalt'])
 i8 = np.isfinite(gap8['dalt'])
 
 
-# In[164]:
+# In[63]:
 
 
 bins = np.linspace(0.5,-24.5,26)
 
 
-# In[248]:
+# In[64]:
 
 
 bgap6_alt,bgap6_lat,bgap6_num,bgap6_ndays = make_bined_x(gap6['dalt'],
@@ -1694,7 +1694,7 @@ bgap8_alt,bgap8_lat,bgap8_num,bgap8_ndays = make_bined_x(gap8['dalt'],
 
 # ### Redo or separating routine and others
 
-# In[249]:
+# In[65]:
 
 
 ar6['fl_acaod_noQAr'] = (ar6['flag_acaod']==1) & (ar6['fl_routine'])
@@ -1711,7 +1711,7 @@ gapr7 = get_gap(ii_flacaodr7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapr8 = get_gap(ii_flacaodr8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[250]:
+# In[66]:
 
 
 ir6 = np.isfinite(gapr6['dalt'])
@@ -1719,7 +1719,7 @@ ir7 = np.isfinite(gapr7['dalt'])
 ir8 = np.isfinite(gapr8['dalt'])
 
 
-# In[251]:
+# In[67]:
 
 
 bgapr6_alt,bgapr6_lat,bgapr6_num,bgapr6_ndays = make_bined_x(gapr6['dalt'],
@@ -1730,7 +1730,7 @@ bgapr8_alt,bgapr8_lat,bgapr8_num,bgapr8_ndays = make_bined_x(gapr8['dalt'],
                                                            gapr8['dlat'],gapr8['dlat_ndays'],ir8,bins=bins)
 
 
-# In[252]:
+# In[68]:
 
 
 ar6['fl_acaod_noQAo'] = (ar6['flag_acaod']==1) & (~ar6['fl_routine'])
@@ -1747,7 +1747,7 @@ gapo7 = get_gap(ii_flacaodo7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapo8 = get_gap(ii_flacaodo8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[253]:
+# In[69]:
 
 
 io6 = np.isfinite(gapo6['dalt'])
@@ -1755,7 +1755,7 @@ io7 = np.isfinite(gapo7['dalt'])
 io8 = np.isfinite(gapo8['dalt'])
 
 
-# In[254]:
+# In[70]:
 
 
 bgapo6_alt,bgapo6_lat,bgapo6_num,bgapo6_ndays = make_bined_x(gapo6['dalt'],
@@ -1768,7 +1768,7 @@ bgapo8_alt,bgapo8_lat,bgapo8_num,bgapo8_ndays = make_bined_x(gapo8['dalt'],
 
 # ## Plot the gap distances
 
-# In[101]:
+# In[71]:
 
 
 plt.figure()
@@ -2003,13 +2003,13 @@ plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_oceanic.png',
 
 # ## compare gap distance to AOD
 
-# In[368]:
+# In[72]:
 
 
 import plotting_utils as pu
 
 
-# In[27]:
+# In[73]:
 
 
 plt.figure()
@@ -2061,7 +2061,7 @@ plt.xlim([0,20])
 plt.legend(frameon=False)
 
 
-# In[379]:
+# In[74]:
 
 
 plt.figure()
@@ -2080,6 +2080,39 @@ plt.legend(frameon=False)
 
 plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_vs_AOD_points.png',
             transparent=True,dpi=500)
+
+
+# In[85]:
+
+
+np.corrcoef(gap6['daod'],gap6['dalt'])[0,1]**2,np.corrcoef(gap7['daod'],gap7['dalt'])[0,1]**2,np.corrcoef(gap8['daod'],gap8['dalt'])[0,1]**2
+
+
+# In[76]:
+
+
+plt.figure()
+plt.plot(gap6['dang'],gap6['dalt'],'r.',label='2016')
+pu.plot_lin(gap6['dang'],gap6['dalt'],color='r')
+plt.plot(gap7['dang'],gap7['dalt'],'gx',label='2017')
+pu.plot_lin(gap7['dang'],gap7['dalt'],color='g')
+plt.plot(gap8['dang'],gap8['dalt'],'b+',label='2018')
+pu.plot_lin(gap8['dang'],gap8['dalt'],color='b')
+plt.xlabel('Angstrom Exponent')
+plt.ylabel('Gap extent [m]')
+plt.title('Gap extent as a function of Angstrom')
+plt.xlim([0,1.2])
+plt.ylim([-5,2000])
+plt.legend(frameon=False)
+
+plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_vs_Angstrom_points.png',
+            transparent=True,dpi=500)
+
+
+# In[84]:
+
+
+np.corrcoef(gap6['dang'],gap6['dalt'])[0,1]**2,np.corrcoef(gap7['dang'],gap7['dalt'])[0,1]**2,np.corrcoef(gap8['dang'],gap8['dalt'])[0,1]**2
 
 
 # ## Build AOD distributions vs. gap extent

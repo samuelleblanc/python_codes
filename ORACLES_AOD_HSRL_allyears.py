@@ -64,26 +64,26 @@ import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 
 
-# In[5]:
+# In[2]:
 
 
 import load_utils as lu
 
 
-# In[2]:
+# In[3]:
 
 
 import scipy.stats as st
 from mpl_toolkits.basemap import Basemap
 
 
-# In[3]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[5]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
@@ -94,19 +94,19 @@ fp
 
 # ## Load the 2016 data
 
-# In[8]:
+# In[6]:
 
 
 fp6 = fp+'data_other/HSRL/'
 
 
-# In[14]:
+# In[11]:
 
 
 f6_hsrl = os.listdir(fp6)
 
 
-# In[274]:
+# In[12]:
 
 
 s6 = {}
@@ -129,19 +129,19 @@ for i,f in enumerate(f6_hsrl):
     s6[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[162]:
+# In[13]:
 
 
 len(s6)
 
 
-# In[275]:
+# In[14]:
 
 
 s6.keys()
 
 
-# In[276]:
+# In[15]:
 
 
 s6['s20160819'].keys()
@@ -192,7 +192,7 @@ plt.plot(s[3]['lon'],s[3]['lat'],'.')
 
 # ### Save to a file
 
-# In[279]:
+# In[16]:
 
 
 hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD.mat',s6)
@@ -200,25 +200,25 @@ hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD.mat',s6)
 
 # ## Load the 2017 data
 
-# In[144]:
+# In[7]:
 
 
 fp7 = fp+'data_other_2017/HSRL/'
 
 
-# In[145]:
+# In[18]:
 
 
 f7_hsrl = os.listdir(fp7)
 
 
-# In[280]:
+# In[19]:
 
 
 f7_hsrl
 
 
-# In[281]:
+# In[20]:
 
 
 s7 = {}
@@ -248,13 +248,13 @@ for i,f in enumerate(f7_hsrl):
     s7[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[282]:
+# In[21]:
 
 
 s7.keys()
 
 
-# In[283]:
+# In[22]:
 
 
 s7['s20170819'].keys()
@@ -281,7 +281,7 @@ for sk in s7.keys():
 
 # ### Save the file
 
-# In[285]:
+# In[23]:
 
 
 hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD.mat',s7)
@@ -289,13 +289,13 @@ hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD.mat',s7)
 
 # ## Load the 2018 data
 
-# In[209]:
+# In[8]:
 
 
 fp8 = fp+'data_other_2018/HSRL/'
 
 
-# In[183]:
+# In[25]:
 
 
 f8_hsrl = []
@@ -304,13 +304,13 @@ for f8l in os.listdir(fp8):
         f8_hsrl.append(f8l)
 
 
-# In[184]:
+# In[26]:
 
 
 f8_hsrl
 
 
-# In[286]:
+# In[27]:
 
 
 s8 = {}
@@ -340,13 +340,13 @@ for i,f in enumerate(f8_hsrl):
     s8[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[287]:
+# In[28]:
 
 
 s8.keys()
 
 
-# In[288]:
+# In[29]:
 
 
 s8['s20181005'].keys()
@@ -374,7 +374,7 @@ for sk in s8.keys():
 
 # ### Save the file
 
-# In[290]:
+# In[30]:
 
 
 hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD.mat',s8)
@@ -384,7 +384,7 @@ hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD.mat',s8)
 
 # ## For 2016
 
-# In[411]:
+# In[31]:
 
 
 hr6 = {}
@@ -396,7 +396,7 @@ for n in s6[k6[0]].keys():
         hr6[n] = np.array([])
 
 
-# In[412]:
+# In[32]:
 
 
 for i,d in enumerate(s6.keys()):
@@ -406,13 +406,13 @@ for i,d in enumerate(s6.keys()):
         hr6[n] = np.append(hr6[n],s6[d][n])
 
 
-# In[413]:
+# In[33]:
 
 
 hr6.keys() 
 
 
-# In[414]:
+# In[34]:
 
 
 len(hr6['acaod_355']),len(hr6['date'])
@@ -420,7 +420,7 @@ len(hr6['acaod_355']),len(hr6['date'])
 
 # ## For 2017
 
-# In[407]:
+# In[35]:
 
 
 hr7 = {}
@@ -432,7 +432,7 @@ for n in s7[k7[0]].keys():
         hr7[n] = np.array([])
 
 
-# In[408]:
+# In[36]:
 
 
 for i,d in enumerate(s7.keys()):
@@ -442,13 +442,13 @@ for i,d in enumerate(s7.keys()):
         hr7[n] = np.append(hr7[n],s7[d][n])
 
 
-# In[409]:
+# In[37]:
 
 
 hr7.keys()
 
 
-# In[410]:
+# In[38]:
 
 
 len(hr7['acaod_355']), len(hr7['date'])
@@ -456,7 +456,7 @@ len(hr7['acaod_355']), len(hr7['date'])
 
 # ## For 2018
 
-# In[415]:
+# In[39]:
 
 
 hr8 = {}
@@ -468,7 +468,7 @@ for n in s8[k8[0]].keys():
         hr8[n] = np.array([])
 
 
-# In[416]:
+# In[40]:
 
 
 for i,d in enumerate(s8.keys()):
@@ -477,19 +477,19 @@ for i,d in enumerate(s8.keys()):
         hr8[n] = np.append(hr8[n],s8[d][n])
 
 
-# In[417]:
+# In[41]:
 
 
 hr8.keys()
 
 
-# In[418]:
+# In[42]:
 
 
 len(hr8['acaod_355']),len(hr8['date'])
 
 
-# In[419]:
+# In[43]:
 
 
 hr8['fl']
@@ -497,22 +497,42 @@ hr8['fl']
 
 # ## Now save these new combined arrays
 
-# In[420]:
+# In[44]:
 
 
 hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD_arr.mat',hr6)
 
 
-# In[421]:
+# In[45]:
 
 
 hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD_arr.mat',hr7)
 
 
-# In[422]:
+# In[46]:
 
 
 hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat',hr8)
+
+
+# ## Alternatively load the saved files
+
+# In[9]:
+
+
+hr6 = hs.loadmat(fp6+'ORACLES_2016_HSRL_ACAOD_arr.mat')
+
+
+# In[12]:
+
+
+hr7 = hs.loadmat(fp7+'ORACLES_2017_HSRL_ACAOD_arr.mat')
+
+
+# In[11]:
+
+
+hr8 = hs.loadmat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat')
 
 
 # # Now make nice plots
@@ -559,14 +579,14 @@ plt.savefig(fp+'plot_all/HSRL_AOD_Above_cloud_normed_histogram_2018_2017_2016.pn
 
 # ## Plot out AOD vs. DOY for regional subset (all 3 years)
 
-# In[446]:
+# In[13]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[448]:
+# In[14]:
 
 
 hr6['flq'] =  (hr6['lat']>lat1) & (hr6['lat']<lat2) & (hr6['lon']>lon1) & (hr6['lon']<lon2) & (hr6['acaod_532']<1.5)
@@ -574,7 +594,7 @@ hr7['flq'] = hr7['fl'] & (hr7['lat']>lat1) & (hr7['lat']<lat2) & (hr7['lon']>lon
 hr8['flq'] = hr8['fl'] & (hr8['lat']>lat1) & (hr8['lat']<lat2) & (hr8['lon']>lon1) & (hr8['lon']<lon2) & (hr8['acaod_532']<1.5)
 
 
-# In[456]:
+# In[15]:
 
 
 hr6['ndtime2'] = np.array([datetime(2018,int((d-20160000)/100.0),int(d%100),int(hr6['time'][i]),
@@ -585,7 +605,7 @@ hr8['ndtime2'] = np.array([datetime(2018,int((d-20180000)/100.0),int(d%100),int(
                           int((hr8['time'][i]-float(int(hr8['time'][i])))*60)) for i,d in enumerate(hr8['date'])])
 
 
-# In[457]:
+# In[16]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -597,7 +617,7 @@ for d in bin_days6:
     bin_num6.append(len(hr6['acaod_532'][hr6['flq']][flh]))
 
 
-# In[458]:
+# In[17]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -609,7 +629,7 @@ for d in bin_days7:
     bin_num7.append(len(hr7['acaod_532'][hr7['flq']][flh]))
 
 
-# In[459]:
+# In[18]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -677,7 +697,7 @@ plt.fill_between(xss, yss, yss2,color='gold',alpha=0.7)
 #plt.Polygon(xss,yss,edgecolor='None',color='gold',alpha=0.3)
 
 
-# In[468]:
+# In[19]:
 
 
 def set_box_whisker_color(cl,bp,binned_ndays):
@@ -782,13 +802,13 @@ plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_monthly_hist_map.png',
 
 # ## Set up mapping statistics
 
-# In[309]:
+# In[20]:
 
 
 uniq_cnt = lambda x: len(np.unique(x))
 
 
-# In[551]:
+# In[21]:
 
 
 fl6 = np.isfinite(hr6['acaod_532'])& np.isfinite(hr6['lat'])& np.isfinite(hr6['lon'])
@@ -796,7 +816,7 @@ fl7 = (hr7['fl']) & np.isfinite(hr7['acaod_532'])& np.isfinite(hr7['lat'])& np.i
 fl8 = (hr8['fl']) & np.isfinite(hr8['acaod_532'])& np.isfinite(hr8['lat'])& np.isfinite(hr8['lon'])
 
 
-# In[552]:
+# In[22]:
 
 
 hr6['bin_mean'],xe6,ye6,bn = st.binned_statistic_2d(hr6['lat'][fl6],hr6['lon'][fl6],
@@ -808,7 +828,7 @@ hr6['bin_nday'],xe6,ye6,bn = st.binned_statistic_2d(hr6['lat'][fl6],hr6['lon'][f
 hr6['bin_nday'] = np.ma.masked_array(hr6['bin_nday'],np.isnan(hr6['bin_nday']))
 
 
-# In[553]:
+# In[23]:
 
 
 hr7['bin_mean'],xe7,ye7,bn = st.binned_statistic_2d(hr7['lat'][fl7],hr7['lon'][fl7],
@@ -819,7 +839,7 @@ hr7['bin_nday'],xe7,ye7,bn = st.binned_statistic_2d(hr7['lat'][fl7],hr7['lon'][f
 hr7['bin_nday'] = np.ma.masked_array(hr7['bin_nday'],np.isnan(hr7['bin_nday']))
 
 
-# In[554]:
+# In[24]:
 
 
 hr8['bin_mean'],xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl8],hr8['lon'][fl8],
@@ -830,19 +850,19 @@ hr8['bin_nday'],xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl8],hr8['lon'][f
 hr8['bin_nday'] = np.ma.masked_array(hr8['bin_nday'],np.isnan(hr8['bin_nday']))
 
 
-# In[555]:
+# In[25]:
 
 
 hr7['bin_mean'].sum()
 
 
-# In[556]:
+# In[26]:
 
 
 len(hr7['lat'])
 
 
-# In[557]:
+# In[27]:
 
 
 ia6 = np.where((hr6['bin_nday'].data>0.0))
@@ -852,13 +872,13 @@ ia8 = np.where((hr8['bin_nday'].data>0.0))
 
 # ## Make map plotting
 
-# In[241]:
+# In[28]:
 
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-# In[242]:
+# In[29]:
 
 
 def mapfig(ax=plt.gca()):
@@ -935,7 +955,7 @@ cb.set_label('Mean HSRL ACAOD$_{{532nm}}$')
 plt.tight_layout(rect=[0.02,0,1,1],w_pad=3)
 
 
-# In[ ]:
+# In[66]:
 
 
 fig,ax = plt.subplots(1,3,figsize=(15,5))
@@ -943,7 +963,7 @@ ax = ax.flatten()
 
 ax1 = ax[0]
 m = mapfig(ax=ax1)
-mx,my = m(ye,xe)
+mx,my = m(ye6,xe6)
 p = ax1.scatter(mx[ia6[1]],my[ia6[0]],hr6['bin_nday'].data[ia6[0],ia6[1]]*35,
                 c=hr6['bin_mean'].data[ia6[0],ia6[1]],
                marker='s',edgecolor='None',cmap='plasma',vmin=0.0,vmax=0.8)
@@ -958,7 +978,7 @@ ax1.legend(points, labels, scatterpoints=1,frameon=False,loc='center left',handl
 
 ax2 = ax[1]
 m = mapfig(ax=ax2)
-mx,my = m(ye,xe)
+mx,my = m(ye7,xe7)
 p = ax2.scatter(mx[ia7[1]],my[ia7[0]],hr7['bin_nday'].data[ia7[0],ia7[1]]*35,
                 c=hr7['bin_mean'].data[ia7[0],ia7[1]],
                marker='s',edgecolor='None',cmap='plasma',vmin=0.0,vmax=0.8)
@@ -967,7 +987,7 @@ ax2.set_title('Aug. 2017')
 
 ax3 = ax[2]
 m = mapfig(ax=ax3)
-mx,my = m(ye,xe)
+mx,my = m(ye8,xe8)
 p = ax3.scatter(mx[ia8[1]],my[ia8[0]],hr8['bin_nday'].data[ia8[0],ia8[1]]*35,
                 c=hr8['bin_mean'].data[ia8[0],ia8[1]],
                marker='s',edgecolor='None',cmap='plasma',vmin=0.0,vmax=0.8)
@@ -984,6 +1004,237 @@ cb.set_label('Mean AOD$_{{532nm}}$')
 plt.tight_layout(rect=[0.02,0,1,1],w_pad=3)
 
 
-#plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_3map_stats_R1.png',
-#            transparent=True,dpi=500)
+plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_3map_stats_R1.png',
+            transparent=True,dpi=500)
+
+
+# # Now build maps by binning per day
+
+# In[33]:
+
+
+days6 = np.unique(hr6['date'])
+days7 = np.unique(hr7['date'])
+days8 = np.unique(hr8['date'])
+
+
+# In[37]:
+
+
+aod_bins6 = []
+for i,d in enumerate(days6):
+    fl6 = np.isfinite(hr6['acaod_532'])& np.isfinite(hr6['lat'])& np.isfinite(hr6['lon']) & (hr6['date']==d)
+    ab,xe6,ye6,bn = st.binned_statistic_2d(hr6['lat'][fl6],hr6['lon'][fl6],
+                                    hr6['acaod_532'][fl6],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_bins6.append(ab)
+
+
+# In[35]:
+
+
+len(aod_bins)
+
+
+# In[38]:
+
+
+aod_bins7 = []
+for i,d in enumerate(days7):
+    fl7 = (hr7['fl']) & np.isfinite(hr7['acaod_532'])& np.isfinite(hr7['lat'])& np.isfinite(hr7['lon']) & (hr7['date']==d)
+    ab,xe7,ye7,bn = st.binned_statistic_2d(hr7['lat'][fl7],hr7['lon'][fl7],
+                                    hr7['acaod_532'][fl7],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_bins7.append(ab)
+
+
+# In[39]:
+
+
+aod_bins8 = []
+for i,d in enumerate(days8):
+    fl8 = (hr8['fl']) & np.isfinite(hr8['acaod_532'])& np.isfinite(hr8['lat'])& np.isfinite(hr8['lon']) & (hr8['date']==d)
+    ab,xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl7],hr8['lon'][fl7],
+                                    hr8['acaod_532'][fl7],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_bins8.append(ab)
+
+
+# # Load the 4STAR data
+
+# In[40]:
+
+
+ar6 = hs.loadmat(fp+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
+
+
+# In[41]:
+
+
+ar6['flac'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)
+ar6['flacr'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&(ar6['fl_routine'])
+ar6['flaco'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&~(ar6['fl_routine'])
+
+
+# In[42]:
+
+
+ar6['flr'] = (ar6['qual_flag']==0) & (ar6['fl_routine'])
+ar6['flo'] = (ar6['qual_flag']==0) & ~(ar6['fl_routine'])
+ar6['fl'] = (ar6['qual_flag']==0)
+
+
+# In[43]:
+
+
+ar7 = hs.loadmat(fp+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
+
+
+# In[44]:
+
+
+ar7['flac'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)
+ar7['flacr'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&(ar7['fl_routine'])
+ar7['flaco'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&~(ar7['fl_routine'])
+
+
+# In[45]:
+
+
+ar7['flr'] = (ar7['qual_flag']==0) & (ar7['fl_routine'])
+ar7['flo'] = (ar7['qual_flag']==0) & ~(ar7['fl_routine'])
+ar7['fl'] = (ar7['qual_flag']==0)
+
+
+# In[46]:
+
+
+ar8 = hs.loadmat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv='R1'))
+
+
+# In[47]:
+
+
+ar8['flac'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)  
+ar8['flacr'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&(ar8['fl_routine']) 
+ar8['flaco'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&~(ar8['fl_routine'])
+
+
+# In[48]:
+
+
+ar8['flr'] = (ar8['qual_flag']==0) & (ar8['fl_routine'])
+ar8['flo'] = (ar8['qual_flag']==0) & (ar8['fl_routine']==False)
+ar8['fl'] = (ar8['qual_flag']==0)
+
+
+# ## Now subset 4STAR AOD for each of the days 
+
+# In[49]:
+
+
+ar6.keys()
+
+
+# In[51]:
+
+
+daysa6 = np.unique(ar6['days'])
+daysa7 = np.unique(ar7['days'])
+daysa8 = np.unique(ar8['days'])
+
+
+# In[53]:
+
+
+aod_binsa6 = []
+for i,d in enumerate(daysa6):
+    fl6 = np.isfinite(ar6['AOD0532'])& np.isfinite(ar6['Latitude'])& np.isfinite(ar6['Longitude']) & (ar6['days']==d) & ar6['flac']
+    ab,xe6,ye6,bn = st.binned_statistic_2d(ar6['Latitude'][fl6],ar6['Longitude'][fl6],
+                                    ar6['AOD0532'][fl6],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_binsa6.append(ab)
+
+
+# In[55]:
+
+
+aod_binsa7 = []
+for i,d in enumerate(daysa7):
+    fl7 = np.isfinite(ar7['AOD0532'])& np.isfinite(ar7['Latitude'])& np.isfinite(ar7['Longitude']) & (ar7['days']==d) & ar7['flac']
+    ab,xe7,ye7,bn = st.binned_statistic_2d(ar7['Latitude'][fl7],ar7['Longitude'][fl7],
+                                    ar7['AOD0532'][fl7],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_binsa7.append(ab)
+
+
+# In[57]:
+
+
+aod_binsa8 = []
+for i,d in enumerate(daysa8):
+    fl8 = np.isfinite(ar8['AOD0532'])& np.isfinite(ar8['Latitude'])& np.isfinite(ar8['Longitude']) & (ar8['days']==d) & ar8['flac']
+    ab,xe8,ye8,bn = st.binned_statistic_2d(ar8['Latitude'][fl8],ar8['Longitude'][fl8],
+                                    ar8['AOD0532'][fl8],bins=36,range=[[-25,2],[-16,16]])
+    ab = np.ma.masked_array(ab,np.isnan(ab))
+    aod_binsa8.append(ab)
+
+
+# # Combine the scatter plots for each day
+
+# In[60]:
+
+
+days7, daysa7
+
+
+# In[61]:
+
+
+ddaysa6 = [20160824.0,20160825.0,20160827.0,20160830.0,20160831.0,20160902.0,20160904.0,20160906.0,20160908.0,
+       20160910.0,20160912.0,20160914.0,20160918.0,20160920.0,20160924.0,20160925.0,20160927.0,20160930.0]
+ddaysa7 = [20170801.0,20170802.0,20170807.0,20170809.0, 20170812.0,20170813.0,20170815.0,20170817.0,20170818.0,20170819.0,20170821.0,
+        20170824.0,20170826.0,20170828.0,20170830.0,20170831.0,20170902.0,20170903.0,20170904.0]
+ddaysa8 = [20180921.0,20180922.0,20180924.0,20180927.0,20180930.0,20181002.0,20181003.0,20181005.0,20181007.0,20181010.0,20181012.0,
+        20181015.0,20181017.0,20181019.0,20181021.0,20181023.0,20181025.0,20181026.0,20181027.0]
+
+
+# In[70]:
+
+
+for i,d in enumerate(daysa7):
+    j = np.where(days7==ddaysa7[int(d)])[0]
+    if len(j)<1:
+        continue
+    plt.figure()
+    plt.scatter(aod_binsa7[i],aod_bins7[j],s=20,c=xe7)
+    plt.xlabel('4STAR AOD 532 nm')
+    plt.ylabel('HSRL AOD 532 nm')
+    plt.title('For day: {:8.0f}'.format(ddaysa7[int(d)]))
+    if i>8: break
+
+
+# In[67]:
+
+
+np.where(days7==ddaysa7[int(d)])[0]
+
+
+# In[73]:
+
+
+
+xe7
+
+
+# In[76]:
+
+
+aod_binsa7[i].shape
+
+
+# In[77]:
+
+
+xe7.shape
 
