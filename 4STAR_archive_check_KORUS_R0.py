@@ -10,6 +10,7 @@
 
 # In[1]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -23,15 +24,18 @@ from Sp_parameters import smooth
 
 # In[2]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[3]:
 
+
 fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
 # In[4]:
+
 
 vr='R0'
 
@@ -39,6 +43,7 @@ vr='R0'
 # # load the files
 
 # In[5]:
+
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160512','20160516','20160517','20160519','20160521','20160524',
@@ -48,15 +53,18 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
 
 # In[23]:
 
+
 days = ['20160501','20160506','20160512','20160517','20160526','20160614']
 
 
 # In[6]:
 
+
 days = ['20160516']
 
 
 # In[6]:
+
 
 outaod_RA = []
 outaod_head_RA = []
@@ -76,6 +84,7 @@ for d in days:
 
 # In[6]:
 
+
 for i,s in enumerate(outaod_head_RA[0]):
     for ig,g in enumerate(outaod_head_RA):
         if not s==g[i]:
@@ -87,6 +96,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 
 # In[8]:
 
+
 print 'day:       AOD RA     GAS RA'
 for i,d in enumerate(days):
     try:
@@ -97,30 +107,36 @@ for i,d in enumerate(days):
 
 # In[7]:
 
+
 outaod_head_RA[0]
 
 
 # In[9]:
+
 
 outgas_head_RA[0]
 
 
 # In[8]:
 
+
 nm = outaod_RA[0].dtype.names
 
 
 # In[9]:
+
 
 nm
 
 
 # In[10]:
 
+
 wl = nm[6:-1]
 
 
 # In[11]:
+
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -130,15 +146,18 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
 
 # In[104]:
 
+
 import cmaps
 
 
 # In[105]:
 
+
 cmaps.cmaps()
 
 
 # In[12]:
+
 
 for a in wl:
     print a
@@ -146,10 +165,12 @@ for a in wl:
 
 # In[13]:
 
+
 wl = wl[0:16]
 
 
 # In[14]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -184,25 +205,24 @@ for i,d in enumerate(days):
 
 # In[14]:
 
+
 nm[4]
 
 
-# In[ ]:
-
-
-
-
 # In[15]:
+
 
 fl = np.where(outaod_RA[i][nm[4]]==1)[0]
 
 
 # In[16]:
 
+
 fl.shape
 
 
 # In[18]:
+
 
 for i,d in enumerate(days):
     if i>0: break
@@ -242,6 +262,7 @@ for i,d in enumerate(days):
 
 # In[ ]:
 
+
 for i,d in enumerate(days):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
     ax = ax.ravel()
@@ -275,10 +296,12 @@ for i,d in enumerate(days):
 
 # In[17]:
 
+
 outgas_RA[0].dtype.names
 
 
 # In[36]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(7,sharex=True,figsize=(9,5))
@@ -317,6 +340,7 @@ for i,d in enumerate(days):
 
 # In[18]:
 
+
 ar = {}
 for n in nm:
     ar[n] = np.array([])
@@ -324,10 +348,12 @@ for n in nm:
 
 # In[19]:
 
+
 ar['days'] = np.array([])
 
 
 # In[20]:
+
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(outaod_RA[i]['Start_UTC'])+i)
@@ -337,6 +363,7 @@ for i,d in enumerate(days):
 
 # In[21]:
 
+
 ar['GPS_Alt'].shape
 
 
@@ -344,10 +371,12 @@ ar['GPS_Alt'].shape
 
 # In[31]:
 
+
 import hdf5storage as hs
 
 
 # In[33]:
+
 
 hs.savemat(fp+'/aod_ict/all_aod_KORUS_ict.mat',ar)
 
@@ -356,30 +385,36 @@ hs.savemat(fp+'/aod_ict/all_aod_KORUS_ict.mat',ar)
 
 # In[22]:
 
+
 ar['fl_QA'] = ar['qual_flag']==0
 
 
 # In[23]:
+
 
 ar['fl'] = ar['fl_QA']
 
 
 # In[24]:
 
+
 ar['fl_alt'] = ar['GPS_Alt']<=1500
 
 
 # In[25]:
+
 
 ar['fl_alt1'] = ar['GPS_Alt']<=600
 
 
 # In[26]:
 
+
 ar['fl1'] = ar['fl_QA']&ar['fl_alt']
 
 
 # In[27]:
+
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt1']
 
@@ -388,10 +423,12 @@ ar['fl2'] = ar['fl_QA']&ar['fl_alt1']
 
 # In[28]:
 
+
 from plotting_utils import prelim
 
 
 # In[29]:
+
 
 plt.figure()
 plt.hist(ar['AOD0501'][ar['fl']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='g',label='all')
@@ -409,15 +446,12 @@ plt.savefig(fp+'aod_ict/{vv}_AOD_histogram.png'.format(vv=vr),dpi=600,transparen
 
 # In[29]:
 
+
 np.nanmean(ar['AOD0501'][ar['fl2']])
 
 
 # In[30]:
 
+
 np.nanmedian(ar['AOD0501'][ar['fl2']])
-
-
-# In[ ]:
-
-
 
