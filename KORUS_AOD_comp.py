@@ -47,6 +47,7 @@
 
 # In[1]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -62,11 +63,13 @@ from datetime import datetime
 
 # In[2]:
 
+
 import hdf5storage as hs
 import tables
 
 
 # In[3]:
+
 
 from mpl_toolkits.basemap import Basemap,cm
 get_ipython().magic(u'matplotlib notebook')
@@ -74,6 +77,7 @@ fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
 # In[43]:
+
 
 daystr = '20160511'
 daystr_goci = '20160512'
@@ -85,10 +89,12 @@ daystr_goci = '20160512'
 
 # In[44]:
 
+
 f_star = fp+'data\\{}starsun.mat'.format(daystr)
 
 
 # In[45]:
+
 
 try:
     s = sio.loadmat(f_star+'_small.mat')
@@ -100,15 +106,18 @@ except NotImplementedError:
 
 # In[46]:
 
+
 s.keys()
 
 
 # In[47]:
 
+
 s['utc'] = lm.toutc(lm.mat2py_time(s['t']))
 
 
 # In[48]:
+
 
 s['tau_aero'].shape
 
@@ -117,15 +126,18 @@ s['tau_aero'].shape
 
 # In[49]:
 
+
 f_info = 'C:\Users\sleblan2\Research\\4STAR_codes\data_folder\\'
 
 
 # In[50]:
 
+
 finf = f_info+'starinfo_{}.m'.format(daystr)
 
 
 # In[51]:
+
 
 with open(finf, 'r') as inF:
     for line in inF:
@@ -136,20 +148,24 @@ with open(finf, 'r') as inF:
 
 # In[52]:
 
+
 f_flag
 
 
 # In[53]:
+
 
 sflag = sio.loadmat(f_info+f_flag)
 
 
 # In[54]:
 
+
 flag = sflag['manual_flags']['screen'][0][0][:,0]
 
 
 # In[55]:
+
 
 flag.shape
 
@@ -158,6 +174,7 @@ flag.shape
 
 # In[56]:
 
+
 s['tau_aero'][flag==1,:]=np.nan
 
 
@@ -165,20 +182,24 @@ s['tau_aero'][flag==1,:]=np.nan
 
 # In[57]:
 
+
 fp_goci = fp+'sat/GOCI//{}/'.format(daystr_goci)
 
 
 # In[58]:
+
 
 fpl = os.listdir(fp_goci)
 
 
 # In[59]:
 
+
 fpl
 
 
 # In[60]:
+
 
 gg = []
 gg_head = []
@@ -204,40 +225,48 @@ for f in fpl:
 
 # In[61]:
 
+
 gt['aod550'].shape
 
 
 # In[62]:
+
 
 gt['QA'].shape
 
 
 # In[63]:
 
+
 gt.keys()
 
 
 # In[253]:
+
 
 gth.keys()
 
 
 # In[254]:
 
+
 gth['aod550']
 
 
 # In[64]:
+
 
 len(gg)
 
 
 # In[65]:
 
+
 fpl
 
 
 # In[66]:
+
 
 gg[4]['julian']
 
@@ -246,30 +275,36 @@ gg[4]['julian']
 
 # In[67]:
 
+
 fp
 
 
 # In[28]:
+
 
 reload(lm)
 
 
 # In[29]:
 
+
 fa = fp+'aeronet/AOT/LEV10/ALL_POINTS/'
 
 
 # In[30]:
+
 
 aero = lm.load_multi_aeronet(fa)
 
 
 # In[31]:
 
+
 ilatest = lm.aeronet_subset(aero)
 
 
 # In[32]:
+
 
 plt.figure()
 plt.scatter(aero['long'],aero['lat'],c=aero['AOT_500'][ilatest],
@@ -277,6 +312,7 @@ plt.scatter(aero['long'],aero['lat'],c=aero['AOT_500'][ilatest],
 
 
 # In[33]:
+
 
 plt.figure()
 m = Basemap(projection='stere',lon_0=128,lat_0=36.0,
@@ -299,6 +335,7 @@ cbar.set_label('AOD 500 nm')
 
 # In[68]:
 
+
 utcs = []
 iaero = []
 istar = []
@@ -316,10 +353,12 @@ for i in range(len(gg)):
 
 # In[69]:
 
+
 utcs
 
 
 # In[70]:
+
 
 for i,u in enumerate(utcs):
     print istar[i].sum()
@@ -328,6 +367,7 @@ for i,u in enumerate(utcs):
 # # Start making different plots/maps
 
 # In[71]:
+
 
 #set up a easy plotting function
 def make_map(ax=plt.gca()):
@@ -347,6 +387,7 @@ def make_map(ax=plt.gca()):
 
 # In[225]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
 x,y = m(gg[0]['lon'],gg[0]['lat'])
@@ -365,6 +406,7 @@ plt.savefig(fp+'plot/{}_GOCI_map_AOD.png'.format(daystr_goci),dpi=600,transparen
 
 # In[263]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
 x,y = m(gg[0]['lon'],gg[0]['lat'])
@@ -379,6 +421,7 @@ plt.savefig(fp+'plot/{}_GOCI_map_AOD.png'.format(daystr_goci),dpi=600,transparen
 
 # In[56]:
 
+
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
 x,y = m(gg['lon'],gg['lat'])
@@ -391,6 +434,7 @@ cbar.set_label('Observation Time')
 
 
 # In[59]:
+
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
@@ -407,6 +451,7 @@ cbar.set_label('Quality flag')
 
 # In[36]:
 
+
 plt.figure()
 plt.plot(s['utc'],s['tau_aero'][:,450])
 plt.ylabel('4STAR AOD at {} nm'.format(s['w'][0][469]*1000.0))
@@ -415,25 +460,30 @@ plt.xlabel('UTC [H]')
 
 # In[61]:
 
+
 ig = gg['QA']==3
 
 
 # In[62]:
+
 
 ig.shape
 
 
 # In[63]:
 
+
 gg['aod550'].shape
 
 
 # In[64]:
 
+
 gg['aod550'][ig]=np.nan
 
 
 # In[67]:
+
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
@@ -457,10 +507,12 @@ plt.savefig(fp+'plot/20160505_GOCI_4STAR_map_AOD.png',dpi=600,transparent=True)
 
 # In[37]:
 
+
 fp
 
 
 # In[38]:
+
 
 fig,ax = plt.subplots(1,1,figsize=(11,8))
 m = make_map(ax)
@@ -489,21 +541,25 @@ m.scatter(xa,ya,c=anet['AOT_500'][il],cmap=plt.cm.rainbow,marker='s',vmin=clevel
 
 # In[151]:
 
+
 import scipy.ndimage as snim
 
 
 # In[206]:
+
 
 istar[i][0]
 
 
 # In[343]:
 
+
 plt.figure()
 plt.plot(s['utc'][istar[i]],s['tau_aero'][istar[i],469],'x')
 
 
 # In[361]:
+
 
 u = utcs[-1]
 i = 7
@@ -540,6 +596,7 @@ plt.savefig(fp+'plot/{}_4STAR_aeronet_map_AOD.png'.format(daystr),dpi=600,transp
 
 
 # In[363]:
+
 
 u = utcs[-1]
 i = 7
@@ -580,6 +637,7 @@ plt.savefig(fp+'plot/{}_4STAR_aeronet_map_AOD_cf.png'.format(daystr),dpi=600,tra
 
 # In[365]:
 
+
 for i,u in enumerate(utcs):
     fig,ax = plt.subplots(1,1,figsize=(11,8))
     m = make_map(ax)
@@ -610,15 +668,18 @@ for i,u in enumerate(utcs):
 
 # In[351]:
 
+
 ga.shape
 
 
 # In[237]:
 
+
 x.shape
 
 
 # In[238]:
+
 
 y.shape
 
@@ -627,15 +688,18 @@ y.shape
 
 # In[72]:
 
+
 import map_utils as mu
 
 
 # In[73]:
 
+
 goci_ind = mu.map_ind(gg[0]['lon'],gg[0]['lat'],s['Lon'],s['Lat'])
 
 
 # In[74]:
+
 
 print goci_ind.shape
 print s['Lon'].shape
@@ -646,11 +710,13 @@ print gg[0]['lon'].shape
 
 # In[76]:
 
+
 s_aero = s['tau_aero'][istar[-1],463]
 s_utc = s['utc'][istar[-1]]
 
 
 # In[77]:
+
 
 plt.figure()
 plt.plot(s_utc[s_aero<0.45],s_aero[s_aero<0.45],'xr',label='4STAR')
@@ -671,15 +737,18 @@ plt.savefig(fp+'plot/{}_GOCI_4STAR_utc_AOD.png'.format(daystr),dpi=600,transpare
 
 # In[357]:
 
+
 gaod = np.concatenate(goci_aod).flatten()
 
 
 # In[358]:
 
+
 bins = np.linspace(0,0.5,31)
 
 
 # In[359]:
+
 
 plt.figure()
 plt.hist(s['tau_aero'][istar[-1],463],bins=bins,histtype='stepfilled',normed=True,alpha=0.5,color='r',label='4STAR',edgecolor='None')
@@ -695,10 +764,12 @@ plt.savefig(fp+'plot/{}_GOCI_4STAR_AOD_hist.png'.format(daystr),dpi=600,transpar
 
 # In[136]:
 
+
 import hdf5storage as hs
 
 
 # In[137]:
+
 
 dict_out = {u's':s,u'istar':istar,u'istar_steps':istar_steps,
             u'goci':gg,u'utcs':utcs,u'goci_ind':goci_ind,u'gaod':gaod,
@@ -707,16 +778,13 @@ dict_out = {u's':s,u'istar':istar,u'istar_steps':istar_steps,
 
 # In[ ]:
 
+
 import cPickle as pickle
 pickle.dump(dict_out,open(fp+'{}_GOCI_Aeronet_4STAR.p'.format(daystr),"wb"))
 
 
 # In[138]:
 
+
 hs.savemat(fp+'{}_GOCI_Aeronet_4STAR.mat',dict_out)
-
-
-# In[ ]:
-
-
 

@@ -42,6 +42,7 @@
 
 # In[1]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -50,16 +51,19 @@ import matplotlib.pyplot as plt
 
 # In[7]:
 
+
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
 
 
 # In[2]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[3]:
+
 
 fp = 'C:\\Users\\sleblan2\\Research\\KORUS-AQ\\'
 
@@ -70,6 +74,7 @@ fp = 'C:\\Users\\sleblan2\\Research\\KORUS-AQ\\'
 
 # In[5]:
 
+
 days = ['20160501','20160503','20160504','20160506',
         '20160510','20160511','20160512','20160513',
         '20160514','20160515','20160516','20160517',
@@ -79,6 +84,7 @@ days = ['20160501','20160503','20160504','20160506',
 
 
 # In[8]:
+
 
 outaod_RA = []
 outaod_head_RA = []
@@ -91,10 +97,6 @@ for d in days:
 
 # In[10]:
 
+
 dumps(np.array([0.8,0.9,0.95,0.99]))
-
-
-# In[ ]:
-
-
 
