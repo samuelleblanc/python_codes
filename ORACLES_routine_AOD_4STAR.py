@@ -2752,12 +2752,6 @@ np.nanmean(s['AOD1020'][s['fl_both']]), np.nanmedian(s['AOD1020'][s['fl_both']])
 
 # ### Combined histogram at 2 wvl, in stacked bars
 
-# In[35]:
-
-
-reload(pu)
-
-
 # In[193]:
 
 

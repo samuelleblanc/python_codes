@@ -64,7 +64,7 @@
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+#matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpltools import color
@@ -77,14 +77,21 @@ import Sp_parameters as Sp
 import load_utils as lm
 IPython.InteractiveShell.cache_size = 0
 # set the basic directory path
-fp='C:/Users/sleblan2/Research/ARISE/'
+from path_utils import getpath
+#fp='C:/Users/sleblan2/Research/ARISE/'
+
+
+# In[6]:
+
+
+fp = getpath('ARISE',make_path=True)
 
 
 # # Load varous data
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[2]:
+# In[7]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.hdf'
@@ -141,14 +148,14 @@ plt_amsr_zoom()
 
 # ## Load C130 nav data
 
-# In[2]:
+# In[8]:
 
 
 fnav = fp+'c130/20140919_ARISE_Flight_13/arise-C130-Hskping_c130_20140919_RA_Preliminary.ict'
 nav,nav_header = lm.load_ict(fnav,return_header=True)
 
 
-# In[3]:
+# In[9]:
 
 
 nav_header
