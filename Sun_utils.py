@@ -590,12 +590,38 @@ def get_angstrom(aod,wvl_in,wvl_out,polynum=4):
     return angs
 
 
+# In[1]:
+
+
+def calc_angs(time,w,aod):
+    'Program to calculate the angstrom exponent by fitting linearly on the aod'
+    import numpy as np
+    from linfit import linfit
+    from tqdm import tqdm_notebook as tqdm
+    ang = np.zeros_like(time)
+    if not (np.array(w).shape[0] == aod.shape[0]): raise ValueError('Size of AOD and wavelenght arrays not consistent')
+    pbar = tqdm(total=len(time)+2)
+    pbar.update(1)
+    for i,t in enumerate(time):
+        try:
+            c,cm = linfit(np.log10(w),-np.log10(aod[:,i]))
+            p = np.array([c[1],c[0]])
+            ang[i] = c[0] 
+        except:
+            ang[i] = np.nan
+        pbar.update(1)
+    pbar.update(1)
+    if not any(np.isfinite(ang)):
+        raise ValueError('No Angstrom Exponent value returned valid')
+    return ang
+
+
 # # The Spectral deconvolution algorithm for fine/coarse mode fraction
 
-# In[8]:
+# In[3]:
 
 
-def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing=False):
+def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=False,bias_corr=True):
     """
     Purpose:  
         Compute the total, fine and coarse mode aerosol optical depth (AOD), the total and fine mode Angstrom exponents (alpha),
@@ -606,11 +632,12 @@ def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing
     Input:
         aod: array of aerosol optical depth, with one of the array length related to 
              the wavelength they are used to be described (wvl_in)
-        wvl_in: wavelengths (in nm) relating to the spectra of aod
-        ref_wvl: (defaults to 500 nm), the reference wavelength [nm] to use for sda
+        wvl_in: wavelengths (in microns) relating to the spectra of aod
+        ref_wvl: (defaults to 0.5 micron), the reference wavelength [micron] to use for sda
         polynum: (defaults to 2) number of coefficients for best fit polynomial decomposition of log(aod) vs log(wvl) 
         compute_errors: (defaults to False) if True computes the errors and returns another array
         physical_forcing: (defaults to False) if True determines whether a physical forcing correction is applied
+        bias_corr: (defaults to True) if True, sets the bias correction of the calculated values from fine/coarse mode tau
         
     Output:
         dictionary with these values:
@@ -720,7 +747,7 @@ def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing
     for i in xrange(n):
         #if i>55446:
         #    import pdb; pdb.set_trace()
-        t,e,tf,tc,al,alp,pl = calc_orig_tauc_tauf(ac[:,i,0],wvl_in,ref_wvl=500.0,
+        t,e,tf,tc,al,alp,pl = calc_orig_tauc_tauf(ac[:,i,0],wvl_in,ref_wvl=ref_wvl,
                                                   polynum=polynum,alpha_c=alpha_c,alphap_c=alphap_c)
 
         poly.append(pl)
@@ -731,10 +758,11 @@ def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing
         tauf.append(tf)
         tauc.append(tc)
         
-        if polynum == 2: # the bias correction was only developed for the default second order fit 
-            tf, tc = bias_corr_tauf_tauc(tau[i],eta[i],alpha[i],alphap[i],alpha_c=alpha_c,alphap_c=alphap_c)
-            tauf[i] = tf
-            tauc[i] = tc
+        if bias_corr:
+            if polynum == 2: # the bias correction was only developed for the default second order fit 
+                tf, tc = bias_corr_tauf_tauc(tau[i],eta[i],alpha[i],alphap[i],ref_wvl=ref_wvl,alpha_c=alpha_c,alphap_c=alphap_c)
+                tauf[i] = tf
+                tauc[i] = tc
         pbar.update(1)
 
     tauf = np.array(tauf)
@@ -743,8 +771,9 @@ def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing
     poly = np.array(poly)
     alpha = np.array(alpha)
     alphap = np.array(alphap)
+    eta = np.array(eta)
     
-    out = {'tauf':tauf,'tauc':tauc,'tau':tau,'poly':poly,'alpha':alpha,'alphap':alphap}
+    out = {'tauf':tauf,'tauc':tauc,'tau':tau,'poly':poly,'alpha':alpha,'alphap':alphap,'eta':eta}
     pbar.update(1)
     
     return out
@@ -752,10 +781,10 @@ def sda(aod,wvl_in,ref_wvl=500.0,polynum=2,compute_errors=False,physical_forcing
     
 
 
-# In[ ]:
+# In[2]:
 
 
-def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=500.0,polynum=2,alpha_c=0.15,alphap_c=0.0):
+def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=0.5,polynum=2,alpha_c=0.15,alphap_c=0.0):
     """
     Purpose:  
         Compute the total, fine and coarse mode aerosol optical depth (AOD), 
@@ -769,7 +798,7 @@ def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=500.0,polynum=2,alpha_c=0.15,alphap_c
     Input:
         aod: 1-d array of aerosol optical dept at each the wavelength they are used to be described (wvl_in)
         wvl_in: wavelengths (in nm) relating to the spectra of aod
-        ref_wvl: (defaults to 500 nm), the reference wavelength [nm] to use for sda
+        ref_wvl: (defaultsto 0.5 micron), the reference wavelength [micron] to use for sda
         polynum: (defaults to 2) number of coefficients for best fit polynomial decomposition of log(aod) vs log(wvl) 
         alpha_c: (defaults to 0.15) angstrom constant for fine/coarse mode seperation
         alphap_c: (defaults to 0.0) derivative of angstrom constant for fine/coarse mode seperation
@@ -811,19 +840,22 @@ def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=500.0,polynum=2,alpha_c=0.15,alphap_c
     c = (c_lower + c_upper)/2
     b_star = b + 2*alpha_c*a
     c_star = c - alphap_c + b*alpha_c + a*alpha_c**2.0
+    #print 'c_star: {}'.format(c_star)
     
     pl = su.logaod_polyfit(wvl_in,aod,polynum=polynum)
     
     # compute the aod at the reference wavelength
-    ar = polyval(poly[i],np.log(ref_wvl))
+    ar = polyval(pl,np.log(ref_wvl))
     tau = np.exp(ar)
 
     # compute alpha
+    alpha = 0.0
     for i_d in xrange(1,polynum+1):
         expon = polynum-i_d
         alpha = alpha - (expon+1)*pl[i_d-1]*np.log(ref_wvl)**expon
 
     # compute alphapà
+    alphap = 0.0
     for i_d in xrange(2,polynum+1):
         expon = polynum-i_d
         alphap = alphap - (expon+1)*(expon+2)*pl[i_d-2]*np.log(ref_wvl)**expon
@@ -835,6 +867,7 @@ def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=500.0,polynum=2,alpha_c=0.15,alphap_c
     alpha_f = ((t + b_star) + np.sqrt((t + b_star)**2.0 + 4*(1 - a)*c_star))/(2*(1 - a)) + alpha_c
     alpha_f_offset = alpha_f - alpha_c
     eta = alpha_offset/alpha_f_offset
+    #print 'alpha_offset: {}, alpha_f_offset: {}'.format(alpha_offset,alpha_f_offset)
     tau_f = eta*tau
     tau_c = tau - tau_f
     
@@ -844,7 +877,7 @@ def calc_orig_tauc_tauf(aod,wvl_in,ref_wvl=500.0,polynum=2,alpha_c=0.15,alphap_c
 # In[ ]:
 
 
-def bias_corr_tauf_tauc(tau,eta,alpha,alphap,alpha_c=0.15,alphap_c=0.0):
+def bias_corr_tauf_tauc(tau,eta,alpha,alphap,ref_wvl=0.5,alpha_c=0.15,alphap_c=0.0):
     """
     Purpose:  
         Bias correction of the tauf and tauc
@@ -854,7 +887,7 @@ def bias_corr_tauf_tauc(tau,eta,alpha,alphap,alpha_c=0.15,alphap_c=0.0):
     Input:
         aod: 1-d array of aerosol optical dept at each the wavelength they are used to be described (wvl_in)
         wvl_in: wavelengths (in nm) relating to the spectra of aod
-        ref_wvl: (defaults to 500 nm), the reference wavelength [nm] to use for sda
+        ref_wvl: (defaults to 0.5 micron), the reference wavelength [micron] to use for sda
         polynum: (defaults to 2) number of coefficients for best fit polynomial decomposition of log(aod) vs log(wvl) 
         alpha_c: (defaults to 0.15) angstrom constant for fine/coarse mode seperation
         alphap_c: (defaults to 0.0) derivative of angstrom constant for fine/coarse mode seperation

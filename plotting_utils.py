@@ -677,13 +677,20 @@ def sub_note(note,ax=None,out=False,dx=0.0,dy=0.0):
 # In[1]:
 
 
-def set_box_whisker_color(cl,bp,binned_ndays):
-    'To change the color (cl=colormap) of box and whisker plots (bp=box_whisker plot artists) to denote the number of samples (binned_ndays=number of samples)'
+def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False):
+    'To change the color (cl=colormap) of box and whisker plots (bp=box_whisker plot artists) to denote the number of samples (binned_ndays=number of samples), if colors dont start at zero, set color_not_start_at_zero to True' 
     import numpy as np
     bndm = np.nanmax(binned_ndays)*1.0
+    if color_not_start_at_zero: 
+        minb = np.nanmin(binned_ndays)*1.0
+        bndm = np.nanmax(binned_ndays)*1.0 - minb
     for j,b in enumerate(bp['boxes']):
-        b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
-        b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
+        if color_not_start_at_zero:
+            b.set_facecolor(cl((binned_ndays[j]*1.0-minb)/bndm))
+            b.set_edgecolor(cl((binned_ndays[j]*1.0-minb)/bndm))
+        else:
+            b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
+            b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
         #b.set_alpha(0.4)
     for j,b in enumerate(bp['means']):
         b.set_marker('.')
