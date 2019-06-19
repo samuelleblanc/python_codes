@@ -95,35 +95,35 @@ fp = getpath('ORACLES')
 fp
 
 
-# In[8]:
+# In[18]:
 
 
-vv = 'R2'
+vv = 'R3'
 
 
 # # Load files
 
 # ## 4STAR ict
 
-# In[19]:
+# In[20]:
 
 
-s = hs.loadmat(fp+'/aod_ict/{vv}/all_aod_ict_{vv}.mat'.format(vv=vv))
+s = hs.loadmat(fp+'/aod_ict/v8/{vv}/all_aod_ict_{vv}_2016.mat'.format(vv=vv))
 
 
-# In[10]:
+# In[21]:
 
 
 s.keys()
 
 
-# In[20]:
+# In[22]:
 
 
 days = np.unique(s['days'])
 
 
-# In[21]:
+# In[23]:
 
 
 len(s['fl_QA'])
@@ -138,7 +138,7 @@ fdat = getpath('4STAR_data')
 fdat
 
 
-# In[23]:
+# In[12]:
 
 
 flag_acaod = []
@@ -159,7 +159,7 @@ for j in days:
         flag_acaod_t.append([])
 
 
-# In[24]:
+# In[13]:
 
 
 s['fl_acaod'] = np.zeros_like(s['fl_QA'])
@@ -185,25 +185,31 @@ for i,j in enumerate(days):
                 s['fl_acaod_noQA'][iu] = (fa[:,0]==1)
 
 
-# In[25]:
-
-
-len(s['fl_acaod'])
-
-
 # In[26]:
 
 
-s['fl_acaod'] = s['fl_acaod'] & (s['AOD0501']<4.0)
+len(s['flag_acaod'])
 
 
 # In[27]:
 
 
+s['fl_acaod'] = s['flag_acaod']
+
+
+# In[29]:
+
+
+s['fl_acaod'] = (s['fl_acaod']==1) & (s['AOD0501']<4.0)
+
+
+# In[30]:
+
+
 len(s['fl_QA'])
 
 
-# In[28]:
+# In[31]:
 
 
 s['fl_below5'] = (s['fl_QA']) & (s['GPS_Alt']<5000.0)
@@ -2146,7 +2152,7 @@ plt.title('ORACLES 2016 4STAR AOD')
 plt.legend(frameon=False)
 
 
-# In[121]:
+# In[38]:
 
 
 s['fl6'] = s['fl_alt_6'] & s['fl_QA'] 
@@ -2609,7 +2615,7 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_AOD_angstrom_histogram_comb.png',
 np.nanmean(s['AOD0501'][s['fl_acaod']]), np.nanmedian(s['AOD0501'][s['fl_acaod']]), np.nanstd(s['AOD0501'][s['fl_acaod']]),len(s['AOD0501'][s['fl_acaod']])
 
 
-# In[136]:
+# In[40]:
 
 
 s['fl6b'] = s['fl6'] & (s['AOD1020']<1.5)
@@ -2816,6 +2822,30 @@ plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_AOD_2wvl_histogram_stack.png',
             transparent=True,dpi=500)
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_AOD_2wvl_histogram_stack.pdf')
 plt.savefig(fp+'plot_v3/ORACLES2016_4STAR_AOD_2wvl_histogram_stack.eps')
+
+
+# In[41]:
+
+
+np.nanmax(s['AOD0501'][s['fl6b']]),np.nanmax(s['AOD0501'][s['fl_acaod']])
+
+
+# In[42]:
+
+
+np.nanmin(s['AOD0501'][s['fl6b']]),np.nanmin(s['AOD0501'][s['fl_acaod']])
+
+
+# In[45]:
+
+
+np.nanmin(s['AOD1020'][s['fl_acaodb']]), np.nanmax(s['AOD1020'][s['fl_acaodb']])
+
+
+# In[44]:
+
+
+s['fl_acaodb'] = s['fl_acaod'] & (s['AOD1020']>0.0) & (s['AOD1020']< 1.2)
 
 
 # ## Create a histogram of Angstrom at 2 wavelengths
