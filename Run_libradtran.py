@@ -488,14 +488,14 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         try:
             if len(moments.shape)>1:
                 output.write('%f\t%f\t%1.6f\t%s \n' % 
-                             (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:nmom[iw]])])))
+                             (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:int(nmom[iw])])])))
             else:
                 st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
-                              " ".join(['{:1.5g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:nmom[iw]])]))
+                              " ".join(['{:1.5g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
                 if len(st)>1000000:
                     st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
-                              " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:nmom[iw]])]))
-                    an = len(moments[iw][0,0:nmom[iw]])-1
+                              " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
+                    an = len(moments[iw][0,0:int(nmom[iw])])-1
                     print 'trying to reduce size', len(st), an
                     while len(st)>1000000:
                         df = int((len(st)-1000000)/10)
