@@ -72,13 +72,13 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
-# In[207]:
+# In[5]:
 
 
 from scipy import interpolate
 
 
-# In[5]:
+# In[6]:
 
 
 fp = getpath('ORACLES')
@@ -87,7 +87,7 @@ fp
 
 # # Load files
 
-# In[9]:
+# In[7]:
 
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908',
@@ -96,7 +96,7 @@ days = ['20160830','20160831','20160902','20160904','20160906','20160908',
 
 # ## Load the SSFR ict files for 2016
 
-# In[26]:
+# In[8]:
 
 
 ssfr_a, ssfr_ah = [],[]
@@ -106,13 +106,13 @@ for d in days:
     ssfr_ah.append(sfh)
 
 
-# In[12]:
+# In[10]:
 
 
 ssfr_ah[0]
 
 
-# In[13]:
+# In[11]:
 
 
 ssfr_a[0]
@@ -120,7 +120,7 @@ ssfr_a[0]
 
 # ## Load the 4STAR files with flagacaod
 
-# In[25]:
+# In[12]:
 
 
 star_a, star_ah = [],[]
@@ -130,13 +130,13 @@ for d in days:
     star_ah.append(sfh)
 
 
-# In[18]:
+# In[13]:
 
 
 ssfr_a[3]['Start_UTC'][100]
 
 
-# In[271]:
+# In[14]:
 
 
 star_ah[4]
@@ -144,7 +144,7 @@ star_ah[4]
 
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
-# In[243]:
+# In[15]:
 
 
 for i,d in enumerate(days):
@@ -163,7 +163,7 @@ for i,d in enumerate(days):
     ssfr_a[i]['a0'] = a0
 
 
-# In[220]:
+# In[16]:
 
 
 ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
@@ -185,13 +185,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[249]:
+# In[17]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[250]:
+# In[18]:
 
 
 ar = {}
@@ -199,13 +199,13 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[251]:
+# In[19]:
 
 
 ar['days'] = np.array([])
 
 
-# In[252]:
+# In[20]:
 
 
 for i,d in enumerate(days):
@@ -220,7 +220,7 @@ for i,d in enumerate(days):
 
 # # Format the LUT and data for retrievals
 
-# In[253]:
+# In[21]:
 
 
 class so:
@@ -229,7 +229,7 @@ class so:
 
 # ## Set up the data
 
-# In[254]:
+# In[22]:
 
 
 ar['meas'] = so
@@ -239,7 +239,7 @@ ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[255]:
+# In[23]:
 
 
 # filter out the bad data. 
@@ -248,10 +248,105 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[256]:
+# In[24]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
+
+
+# ## Plot the histogram of cloud reflectances
+
+# In[71]:
+
+
+plt.figure()
+
+plt.hist([ar['meas'].Rvis[igood],ar['meas'].Rnir[igood]],bins=30,edgecolor='None',color=['b','r'],alpha=0.7,normed=True,label=['500 nm','1650 nm'])
+
+plt.ylabel('Normalized counts')
+plt.xlabel('Cloud Reflectance')
+plt.title('Cloud Albedo under aerosol For ORACLES 2016 from P3')
+plt.xlim([0,1])
+
+
+plt.axvline(np.nanmean(ar['meas'].Rvis[igood]),color='b')
+plt.axvline(np.nanmedian(ar['meas'].Rvis[igood]),color='b',linestyle='--')
+plt.axvline(np.nanmean(ar['meas'].Rnir[igood]),color='r')
+plt.axvline(np.nanmedian(ar['meas'].Rnir[igood]),color='r',linestyle='--')
+
+plt.axvline(-0.1,color='k',alpha=0.7,label='Mean')
+plt.axvline(-0.1,color='k',alpha=0.7,linestyle='--',label='Median')
+
+plt.legend(frameon=False)
+
+plt.savefig(fp+'plot/Cloud_reflectance_ORACLES_2016.png',dpi=600,transparent=True)
+
+
+# In[44]:
+
+
+plt.figure()
+plt.hist2d(ar['meas'].Rvis[igood],ar['meas'].sza[igood],bins=40,range=[[0,1],[0,90]])
+plt.ylabel('SZA')
+plt.xlabel('Cloud reflectance at 500 nm')
+cb = plt.colorbar()
+cb.set_label('Counts')
+plt.savefig(fp+'plot/ORACLES_2016_2dhist_SZA_vs_cloud_refl500.png',dpi=600,transparent=True)
+
+
+# In[45]:
+
+
+plt.figure()
+plt.hist2d(ar['meas'].Rnir[igood],ar['meas'].sza[igood],bins=40,range=[[0,1],[0,90]])
+plt.ylabel('SZA')
+plt.xlabel('Cloud reflectance at 1650 nm')
+cb = plt.colorbar()
+cb.set_label('Counts')
+plt.savefig(fp+'plot/ORACLES_2016_2dhist_SZA_vs_cloud_refl1650.png',dpi=600,transparent=True)
+
+
+# In[70]:
+
+
+[fig, ax] = plt.subplots(1,3,figsize=(10,3))
+ax[0].hist([ar['meas'].Rvis[igood],ar['meas'].Rnir[igood]],bins=30,edgecolor='None',color=['b','r'],alpha=0.7,label=['500 nm','1650 nm'])
+ax[0].set_xlim(0,1)
+ax[0].set_xlabel('Cloud Reflectance')
+ax[0].set_ylabel('Counts')
+ax[0].axvline(np.nanmean(ar['meas'].Rvis[igood]),color='b')
+ax[0].axvline(np.nanmedian(ar['meas'].Rvis[igood]),color='b',linestyle='--')
+ax[0].axvline(np.nanmean(ar['meas'].Rnir[igood]),color='r')
+ax[0].axvline(np.nanmedian(ar['meas'].Rnir[igood]),color='r',linestyle='--')
+
+ax[0].axvline(-0.1,color='k',alpha=0.7,label='Mean')
+ax[0].axvline(-0.1,color='k',alpha=0.7,linestyle='--',label='Median')
+ax[0].legend(frameon=False)
+
+ax[1].set_title('Cloud Albedo under aerosol For ORACLES 2016 from P3')
+
+
+# In[ ]:
+
+
+ax[0].
+
+
+# In[57]:
+
+
+plt.figure()
+plt.hist2d(ar['meas'].Rvis[igood],ar['AOD_500'][igood],bins=40,range=[[0,1],[0,0.8]],cmap=plt.cm.plasma)
+plt.ylabel('AOD$_{{500}}$')
+plt.xlabel('Cloud reflectance at 500 nm')
+cb = plt.colorbar()
+cb.set_label('Counts')
+
+
+# In[47]:
+
+
+ar.keys()
 
 
 # ## set up the LUT
