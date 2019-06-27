@@ -238,12 +238,14 @@ if not do_read:
                         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                                    verbose=False,make_base=False,set_quiet=True)
                         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+                        aero['file_name'] = None
 
                         f_in = '{name}_{vv}_{ic:02d}{ir:02d}{je:02d}{js:02d}{ja:02d}_withaero_clear.dat'.format(**fm)
                         cloud['tau'] = 0.0
                         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                                    verbose=False,make_base=False,set_quiet=True)
                         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+                        aero['file_name'] = None
 
                         f_in = '{name}_{vv}_{ic:02d}{ir:02d}{je:02d}{js:02d}{ja:02d}_noaero.dat'.format(**fm)
                         cloud['tau'] = c
@@ -254,12 +256,14 @@ if not do_read:
                         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                                    verbose=False,make_base=False,set_quiet=True)
                         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+                        aero['file_name'] = None
 
                         f_in = '{name}_{vv}_{ic:02d}{ir:02d}{je:02d}{js:02d}{ja:02d}_noaero_clear.dat'.format(**fm)
                         cloud['tau'] = 0.0
                         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                                    verbose=False,make_base=False,set_quiet=True)
                         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+                        aero['file_name'] = None
                         
                         print 'cod:{ic:02d}, ref:{ir:02d}, ext:{je:02d}, ssa:{js:02d}, asy:{ja:02d}'.format(**fm)
 
