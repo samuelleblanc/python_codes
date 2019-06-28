@@ -72,6 +72,12 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
+# In[99]:
+
+
+import plotting_utils as pu
+
+
 # In[5]:
 
 
@@ -144,7 +150,7 @@ star_ah[4]
 
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
-# In[15]:
+# In[72]:
 
 
 for i,d in enumerate(days):
@@ -155,6 +161,8 @@ for i,d in enumerate(days):
     ssfr_a[i]['sza'] = np.arccos(1.0/am)*180.0/np.pi
     aod = nearest_neighbor(star_a[i]['Start_UTC'],star_a[i]['AOD0501'],ssfr_a[i]['Start_UTC'],dist=3.0/3600.0)
     ssfr_a[i]['AOD_500'] = aod
+    aod5 = nearest_neighbor(star_a[i]['Start_UTC'],star_a[i]['AOD0550'],ssfr_a[i]['Start_UTC'],dist=3.0/3600.0)
+    ssfr_a[i]['AOD_550'] = aod5
     a2 = nearest_neighbor(star_a[i]['Start_UTC'],star_a[i]['AOD_polycoef_a2'],ssfr_a[i]['Start_UTC'],dist=3.0/3600.0)
     ssfr_a[i]['a2'] = a2
     a1 = nearest_neighbor(star_a[i]['Start_UTC'],star_a[i]['AOD_polycoef_a1'],ssfr_a[i]['Start_UTC'],dist=3.0/3600.0)
@@ -163,7 +171,7 @@ for i,d in enumerate(days):
     ssfr_a[i]['a0'] = a0
 
 
-# In[16]:
+# In[73]:
 
 
 ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
@@ -185,13 +193,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[17]:
+# In[74]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[18]:
+# In[75]:
 
 
 ar = {}
@@ -199,13 +207,13 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[19]:
+# In[76]:
 
 
 ar['days'] = np.array([])
 
 
-# In[20]:
+# In[77]:
 
 
 for i,d in enumerate(days):
@@ -220,7 +228,7 @@ for i,d in enumerate(days):
 
 # # Format the LUT and data for retrievals
 
-# In[21]:
+# In[78]:
 
 
 class so:
@@ -229,7 +237,7 @@ class so:
 
 # ## Set up the data
 
-# In[22]:
+# In[79]:
 
 
 ar['meas'] = so
@@ -239,7 +247,7 @@ ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[23]:
+# In[80]:
 
 
 # filter out the bad data. 
@@ -248,7 +256,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[24]:
+# In[81]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -343,10 +351,302 @@ cb = plt.colorbar()
 cb.set_label('Counts')
 
 
-# In[47]:
+# ## Get the DARE parameterization
+
+# In[82]:
 
 
-ar.keys()
+fp
+
+
+# In[83]:
+
+
+sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
+
+
+# From Sabrina Cochrane on 2019-06-27, 2:23pm
+# 
+# Here they are! The variables are l0, l1, l2, q0, q1, q2, crit_alb. Note this is valid for a SZA of 20 and for one retrieval from 20160920 (let me know if you need the ssa/g values.)
+# 
+# In case you need it, here is how I calculated SARE:
+# 
+#          l_term=l0+l1*(albedo550-critical_albedo)+l2*(albedo55-critical_albedo)^2
+#          q_term=q0+q1*(albedo550-critical_albedo)+q2*albedo-critical_albedo)^2
+#          sare=l_term*aod550+q_term*[aod550]^2
+# 
+# Let me know if you have questions or need any more info,
+# Sabrina
+
+# In[84]:
+
+
+sare.keys()
+
+
+# In[85]:
+
+
+sare
+
+
+# In[105]:
+
+
+sare['sza'] = [20.0]
+
+
+# In[118]:
+
+
+def sare_fx(alb,aod,sare,sza):
+    'Function to calculate the Scalable Aerosol Radiative Effect (SARE) from Cochrane et al., 2019 in prep'
+    #i = np.argmin(abs(np.array(sare['sza'])-sza))
+    #if i==0:
+    l_term = sare['l0']+sare['l1']*(alb-sare['crit_alb'])+sare['l2']*(alb-sare['crit_alb'])**2.0
+    q_term = sare['q0']+sare['q1']*(alb-sare['crit_alb'])+sare['q2']*(alb-sare['crit_alb'])**2.0
+    #else:
+    #    l_term = sare['l0'][i]+sare['l1'][i]*(alb-sare['crit_alb'][i])+sare['l2'][i]*(alb-sare['crit_alb'][i])**2.0
+    #    q_term = sare['q0'][i]+sare['q1'][i]*(alb-sare['crit_alb'][i])+sare['q2'][i]*(alb-sare['crit_alb'][i])**2.0
+    return l_term*aod + q_term*(aod)**2.0
+
+
+# In[119]:
+
+
+dare = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sare,ar['meas'].sza[igood])
+
+
+# In[92]:
+
+
+np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
+
+
+# In[229]:
+
+
+plt.figure()
+plt.hist(dare,bins=30,edgecolor='None',alpha=0.7,color='g',range=(np.nanmin(dare),np.nanmax(dare)),zorder=10)
+plt.xlabel('DARE [w/m^2]')
+plt.ylabel('counts')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+
+plt.axvline(0,color='k',alpha=0.5,linestyle='--',zorder = -10)
+plt.axvline(np.nanmean(dare),color='g',label='mean')
+plt.axvline(np.nanmedian(dare),color='g',linestyle='--',label='median')
+plt.legend(frameon=False)
+pu.prelim()
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_hist.png',dpi=600,transparent=True)
+
+
+# In[223]:
+
+
+plt.figure()
+plt.hist2d(dare,ar['meas'].sza[igood],bins=40,range=[[-70,150],[0,90]],cmap=plt.cm.Greens)
+plt.ylabel('SZA [$^\\circ$]')
+plt.xlabel('DARE [W/m$^2$]')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+
+cb = plt.colorbar()
+cb.set_label('counts')
+pu.prelim()
+
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_SZA.png',dpi=600,transparent=True)
+
+
+# In[224]:
+
+
+plt.figure()
+plt.hist2d(dare,ar['LAT'][igood],bins=40,range=[[-70,150],[-24,-8]],cmap=plt.cm.PuRd)
+plt.ylabel('Latitude [$^\\circ$]')
+plt.xlabel('DARE [W/m$^2$]')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+
+cb = plt.colorbar()
+cb.set_label('counts')
+pu.prelim()
+
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_lat.png',dpi=600,transparent=True)
+
+
+# In[227]:
+
+
+plt.figure()
+plt.plot(dare,ar['LAT'][igood],'+')
+
+
+# In[215]:
+
+
+plt.figure()
+sca = plt.scatter(ar['LON'][igood],ar['LAT'][igood],c=dare,edgecolor='None',s=40,alpha=0.5,cmap=plt.cm.viridis)
+plt.grid()
+plt.xlim(-1,16)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('Latitude [$^\\circ$]')
+cb = plt.colorbar(sca)
+cb.set_label('DARE [W/m$^2$]')
+pu.prelim()
+
+
+# ### Add the model-obs comparison boxes
+
+# The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
+
+# In[ ]:
+
+
+boxes_diag = []
+boxes_ns = []
+boxes_ew = []
+
+
+# In[145]:
+
+
+boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
+boxes_ns_ct = [[10.5,-22.0],[10.5,-20.0],[10.5,-18.0],[10.5,-16.0],[10.5,-14.0],[10.5,-12.0],[10.5,-10.0],[10.5,-8.0]]
+boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.0],[9.0,-8.0],[11.0,-8.0],[13.0,-8.0]]
+
+
+# Corners are [x0,x1,y0,y1]
+
+# In[208]:
+
+
+boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
+
+
+# In[147]:
+
+
+boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
+
+
+# In[148]:
+
+
+boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
+
+
+# In[149]:
+
+
+boxes_diag
+
+
+# In[150]:
+
+
+boxes_ew
+
+
+# In[209]:
+
+
+boxes_ns
+
+
+# In[158]:
+
+
+bins_diag = []
+for i,b in enumerate(boxes_diag):
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
+    bins_diag.append(dare[ia])
+
+
+# In[210]:
+
+
+bins_ns = []
+for i,b in enumerate(boxes_ns):
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
+    bins_ns.append(dare[ia])
+
+
+# In[161]:
+
+
+bins_ew = []
+for i,b in enumerate(boxes_ew):
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
+    bins_ew.append(dare[ia])
+
+
+# In[162]:
+
+
+len(boxes_diag),len(bins_diag)
+
+
+# In[225]:
+
+
+[fig,ax] = plt.subplots(1,8,figsize=(13,3))
+
+for i,b in enumerate(boxes_diag_ct):
+    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
+    ax[i].axhline(np.nanmean(bins_diag[i]),color='g',label='mean')
+    ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
+    xmin, xmax = ax[i].get_xlim()
+    ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
+    if i>0:
+        [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
+    ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
+    if i%2: pu.prelim(ax[i])
+ax[0].set_ylabel('DARE [W/m$^2$]')
+fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - 4STAR+SSFR SARE param for SZA of 20 only')
+fig.tight_layout()
+plt.savefig(fp+'plot/ORACLES_2016_DARE_diag_boxes.png',dpi=600,transparent=True)
+
+
+# In[226]:
+
+
+[fig,ax] = plt.subplots(1,8,figsize=(13,3))
+
+for i,b in enumerate(boxes_ns_ct):
+    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
+    ax[i].axhline(np.nanmean(bins_ns[i]),color='b',label='mean')
+    ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
+    xmin, xmax = ax[i].get_xlim()
+    ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
+    if i>0:
+        [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
+    ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
+    if i%2: pu.prelim(ax[i])
+ax[0].set_ylabel('DARE [W/m$^2$]')
+fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - 4STAR+SSFR SARE param for SZA of 20 only')
+fig.tight_layout()
+plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes.png',dpi=600,transparent=True)
+
+
+# In[220]:
+
+
+plt.figure()
+sca = plt.scatter(ar['LON'][igood],ar['LAT'][igood],c=dare,edgecolor='None',s=40,alpha=0.5,cmap=plt.cm.viridis)
+plt.grid()
+plt.xlim(-1,16)
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('Latitude [$^\\circ$]')
+cb = plt.colorbar(sca)
+cb.set_label('DARE [W/m$^2$]')
+pu.prelim()
+
+for i,b in enumerate(boxes_ns): 
+    plt.plot([b[0],b[0],b[1],b[1],b[0]],[b[2],b[3],b[3],b[2],b[2]],'-b')
+for i,b in enumerate(boxes_diag): 
+    plt.plot([b[0],b[0],b[1],b[1],b[0]],[b[2],b[3],b[3],b[2],b[2]],'-g')
+
+plt.ylim(-25,-7)
+plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR')
+plt.savefig(fp+'plot/ORACLES_2016_DARE_map_param.png',dpi=600,transparent=True)
 
 
 # ## set up the LUT
