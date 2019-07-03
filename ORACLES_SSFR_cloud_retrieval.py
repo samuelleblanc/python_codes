@@ -72,19 +72,19 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
-# In[99]:
+# In[5]:
 
 
 import plotting_utils as pu
 
 
-# In[5]:
+# In[6]:
 
 
 from scipy import interpolate
 
 
-# In[6]:
+# In[7]:
 
 
 fp = getpath('ORACLES')
@@ -93,7 +93,7 @@ fp
 
 # # Load files
 
-# In[7]:
+# In[37]:
 
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908',
@@ -102,7 +102,7 @@ days = ['20160830','20160831','20160902','20160904','20160906','20160908',
 
 # ## Load the SSFR ict files for 2016
 
-# In[8]:
+# In[9]:
 
 
 ssfr_a, ssfr_ah = [],[]
@@ -126,7 +126,7 @@ ssfr_a[0]
 
 # ## Load the 4STAR files with flagacaod
 
-# In[12]:
+# In[11]:
 
 
 star_a, star_ah = [],[]
@@ -136,7 +136,7 @@ for d in days:
     star_ah.append(sfh)
 
 
-# In[13]:
+# In[12]:
 
 
 ssfr_a[3]['Start_UTC'][100]
@@ -150,7 +150,7 @@ star_ah[4]
 
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
-# In[72]:
+# In[13]:
 
 
 for i,d in enumerate(days):
@@ -171,7 +171,7 @@ for i,d in enumerate(days):
     ssfr_a[i]['a0'] = a0
 
 
-# In[73]:
+# In[14]:
 
 
 ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
@@ -193,13 +193,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[74]:
+# In[17]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[75]:
+# In[18]:
 
 
 ar = {}
@@ -207,13 +207,13 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[76]:
+# In[19]:
 
 
 ar['days'] = np.array([])
 
 
-# In[77]:
+# In[20]:
 
 
 for i,d in enumerate(days):
@@ -228,7 +228,7 @@ for i,d in enumerate(days):
 
 # # Format the LUT and data for retrievals
 
-# In[78]:
+# In[15]:
 
 
 class so:
@@ -237,7 +237,7 @@ class so:
 
 # ## Set up the data
 
-# In[79]:
+# In[21]:
 
 
 ar['meas'] = so
@@ -247,7 +247,7 @@ ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[80]:
+# In[22]:
 
 
 # filter out the bad data. 
@@ -256,7 +256,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[81]:
+# In[23]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -353,13 +353,13 @@ cb.set_label('Counts')
 
 # ## Get the DARE parameterization
 
-# In[82]:
+# In[24]:
 
 
 fp
 
 
-# In[83]:
+# In[25]:
 
 
 sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
@@ -378,25 +378,25 @@ sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
 # Let me know if you have questions or need any more info,
 # Sabrina
 
-# In[84]:
+# In[26]:
 
 
 sare.keys()
 
 
-# In[85]:
+# In[27]:
 
 
 sare
 
 
-# In[105]:
+# In[28]:
 
 
 sare['sza'] = [20.0]
 
 
-# In[118]:
+# In[29]:
 
 
 def sare_fx(alb,aod,sare,sza):
@@ -411,13 +411,13 @@ def sare_fx(alb,aod,sare,sza):
     return l_term*aod + q_term*(aod)**2.0
 
 
-# In[119]:
+# In[30]:
 
 
 dare = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sare,ar['meas'].sza[igood])
 
 
-# In[92]:
+# In[31]:
 
 
 np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
@@ -647,6 +647,64 @@ for i,b in enumerate(boxes_diag):
 plt.ylim(-25,-7)
 plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR')
 plt.savefig(fp+'plot/ORACLES_2016_DARE_map_param.png',dpi=600,transparent=True)
+
+
+# ## Save to file for easier loading
+
+# In[32]:
+
+
+ar.keys()
+
+
+# In[36]:
+
+
+ar['days']
+
+
+# In[38]:
+
+
+days
+
+
+# In[39]:
+
+
+from datetime import datetime
+
+
+# In[45]:
+
+
+doy = np.array([datetime.strptime(days[int(a)],'%Y%m%d').timetuple().tm_yday for a in ar['days']])
+
+
+# In[46]:
+
+
+doy
+
+
+# In[48]:
+
+
+out = {'sza':ar['sza'][igood],'dare':dare,'lon':ar['LON'][igood],'lat':ar['LAT'][igood],
+       'albedo_0500':ar['meas'].Rvis[igood],'albedo_1650':ar['meas'].Rnir[igood],'AOD_550':ar['AOD_550'][igood],
+       'UTC':ar['Start_UTC'][igood],'alt':ar['ALT'][igood],'day_of_year':doy}
+
+
+# In[60]:
+
+
+np.save(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong.npy',out,allow_pickle=True)
+
+
+# In[61]:
+
+
+in_ = np.load(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong.npy',allow_pickle=True).item()
 
 
 # ## set up the LUT
