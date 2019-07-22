@@ -93,7 +93,7 @@ fp
 
 # # Load files
 
-# In[37]:
+# In[8]:
 
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908',
@@ -126,7 +126,7 @@ ssfr_a[0]
 
 # ## Load the 4STAR files with flagacaod
 
-# In[11]:
+# In[10]:
 
 
 star_a, star_ah = [],[]
@@ -136,13 +136,13 @@ for d in days:
     star_ah.append(sfh)
 
 
-# In[12]:
+# In[11]:
 
 
 ssfr_a[3]['Start_UTC'][100]
 
 
-# In[14]:
+# In[12]:
 
 
 star_ah[4]
@@ -193,13 +193,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[17]:
+# In[18]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[18]:
+# In[19]:
 
 
 ar = {}
@@ -207,13 +207,13 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[19]:
+# In[20]:
 
 
 ar['days'] = np.array([])
 
 
-# In[20]:
+# In[21]:
 
 
 for i,d in enumerate(days):
@@ -237,7 +237,7 @@ class so:
 
 # ## Set up the data
 
-# In[21]:
+# In[22]:
 
 
 ar['meas'] = so
@@ -247,7 +247,7 @@ ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[22]:
+# In[23]:
 
 
 # filter out the bad data. 
@@ -256,7 +256,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[23]:
+# In[24]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -353,13 +353,13 @@ cb.set_label('Counts')
 
 # ## Get the DARE parameterization
 
-# In[24]:
+# In[25]:
 
 
 fp
 
 
-# In[25]:
+# In[26]:
 
 
 sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
@@ -378,25 +378,25 @@ sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
 # Let me know if you have questions or need any more info,
 # Sabrina
 
-# In[26]:
+# In[27]:
 
 
 sare.keys()
 
 
-# In[27]:
+# In[30]:
 
 
 sare
 
 
-# In[28]:
+# In[29]:
 
 
 sare['sza'] = [20.0]
 
 
-# In[29]:
+# In[31]:
 
 
 def sare_fx(alb,aod,sare,sza):
@@ -411,13 +411,13 @@ def sare_fx(alb,aod,sare,sza):
     return l_term*aod + q_term*(aod)**2.0
 
 
-# In[30]:
+# In[32]:
 
 
 dare = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sare,ar['meas'].sza[igood])
 
 
-# In[31]:
+# In[33]:
 
 
 np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
@@ -497,7 +497,7 @@ pu.prelim()
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[ ]:
+# In[34]:
 
 
 boxes_diag = []
@@ -505,7 +505,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[145]:
+# In[35]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -651,13 +651,13 @@ plt.savefig(fp+'plot/ORACLES_2016_DARE_map_param.png',dpi=600,transparent=True)
 
 # ## Save to file for easier loading
 
-# In[32]:
+# In[36]:
 
 
 ar.keys()
 
 
-# In[36]:
+# In[37]:
 
 
 ar['days']
@@ -675,36 +675,43 @@ days
 from datetime import datetime
 
 
-# In[45]:
+# In[40]:
 
 
 doy = np.array([datetime.strptime(days[int(a)],'%Y%m%d').timetuple().tm_yday for a in ar['days']])
 
 
-# In[46]:
+# In[41]:
 
 
 doy
 
 
-# In[48]:
+# In[42]:
 
 
 out = {'sza':ar['sza'][igood],'dare':dare,'lon':ar['LON'][igood],'lat':ar['LAT'][igood],
        'albedo_0500':ar['meas'].Rvis[igood],'albedo_1650':ar['meas'].Rnir[igood],'AOD_550':ar['AOD_550'][igood],
-       'UTC':ar['Start_UTC'][igood],'alt':ar['ALT'][igood],'day_of_year':doy}
+       'UTC':ar['Start_UTC'][igood],'alt':ar['ALT'][igood],'day_of_year':doy[igood]}
 
 
-# In[60]:
+# In[46]:
 
 
-np.save(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong.npy',out,allow_pickle=True)
+np.save(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong_v2.npy',out,allow_pickle=True)
 
 
-# In[61]:
+# In[47]:
 
 
-in_ = np.load(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong.npy',allow_pickle=True).item()
+for k in out.keys():
+    print k,out[k].shape
+
+
+# In[48]:
+
+
+in_ = np.load(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong_v2.npy',allow_pickle=True).item()
 
 
 # ## set up the LUT
