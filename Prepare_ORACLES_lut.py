@@ -161,8 +161,10 @@ source = {'wvl_range':[350,1750],
           'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
           'atm_file':'/u/sleblan2/ORACLES/atmos_20170815.dat',
           'zenith':True}
-albedo = {'create_albedo_file':False,
-          'sea_surface_albedo':True,
+albedo = {'create_albedo_file':True,
+          'sea_surface_albedo':False,
+          'alb':[0.0589,0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558],
+          'alb_wvl':[380.0,415.0,440.0,500.0,675.0,870.0,990.0,1020.0,1064.0,1250.0,1650.0,2100.0],
           'wind_speed':5.0}
 
 
@@ -241,7 +243,8 @@ for s in sza:
                 source['slit_file'] = f_slit_nir
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
-                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
+                f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')     
+                albedo['create_albedo_file'] = False
             print s,t,r
         break
     break
