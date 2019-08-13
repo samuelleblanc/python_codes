@@ -85,7 +85,7 @@ else:
 # In[17]:
 
 
-vv = 'v4'
+vv = 'v5_midaod'
 mu = np.arange(1.02,3.4,0.15)
 mu.shape
 
@@ -130,6 +130,7 @@ pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=True)
 
 
 aero = load_from_json(fp+'aero_file_v4.txt')
+aero['ext'] = aero['ext']*0.5/aero['ext'][0,3]
 
 
 # In[70]:
@@ -163,7 +164,7 @@ source = {'wvl_range':[350,1750],
           'zenith':True}
 albedo = {'create_albedo_file':True,
           'sea_surface_albedo':False,
-          'alb':[0.0589,0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558],
+          'alb':[0.0592,0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558],
           'alb_wvl':[380.0,415.0,440.0,500.0,675.0,870.0,990.0,1020.0,1064.0,1250.0,1650.0,2100.0],
           'wind_speed':5.0}
 
@@ -246,8 +247,8 @@ for s in sza:
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')     
                 albedo['create_albedo_file'] = False
             print s,t,r
-        break
-    break
+#        break
+#    break
 
 
 # In[ ]:
