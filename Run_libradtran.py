@@ -923,7 +923,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     if verbose: print '..write out the albedo values'
     if albedo['create_albedo_file']:
         albedo['albedo_file'] = output_file+'_alb'
-        write_albedo_file(albedo['albedo_file'],source['alb_wvl'],source['alb'])
+        write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'])
         output.write('albedo_file %s\n' % albedo['albedo_file'])
     elif albedo.get('albedo_file'):
         output.write('albedo_file %s\n' % albedo['albedo_file'])
