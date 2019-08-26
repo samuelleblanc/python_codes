@@ -124,6 +124,49 @@ ssfr_ah[0]
 ssfr_a[0]
 
 
+# In[18]:
+
+
+ialt = ssfr_a[5]['ALT']<500.0
+
+
+# In[22]:
+
+
+plt.figure()
+plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['UP500'][ialt]/ssfr_a[5]['DN500'][ialt],'.')
+plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['DN500'][ialt],'.')
+
+
+# In[23]:
+
+
+iflt = (ssfr_a[5]['Start_UTC']>11.4692) & (ssfr_a[5]['Start_UTC']<11.5)
+
+
+# In[30]:
+
+
+sk =  ssfr_a[5].keys()
+sk.sort()
+for k in sk:
+    if 'DN' in k:
+        print k, np.nanmean(ssfr_a[5][k.replace('DN','UP')][iflt])/np.nanmean(ssfr_a[5][k][iflt])
+
+
+# In[31]:
+
+
+albedo_wvl = [415.0,440.0,500.0,675.0,870.0,990.0,1020.0,1064.0,1250.0,1650.0,2100.0]
+albedos = [0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558]
+
+
+# In[32]:
+
+
+albedo_wvl,albedos
+
+
 # ## Load the 4STAR files with flagacaod
 
 # In[10]:
@@ -193,13 +236,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[18]:
+# In[12]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[19]:
+# In[13]:
 
 
 ar = {}
@@ -207,13 +250,13 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[20]:
+# In[14]:
 
 
 ar['days'] = np.array([])
 
 
-# In[21]:
+# In[15]:
 
 
 for i,d in enumerate(days):
@@ -228,7 +271,7 @@ for i,d in enumerate(days):
 
 # # Format the LUT and data for retrievals
 
-# In[15]:
+# In[16]:
 
 
 class so:
@@ -237,7 +280,7 @@ class so:
 
 # ## Set up the data
 
-# In[22]:
+# In[17]:
 
 
 ar['meas'] = so
@@ -377,6 +420,9 @@ sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
 # 
 # Let me know if you have questions or need any more info,
 # Sabrina
+# 
+# Cases for 9, spanning 2016 and 2017. related ssa, and g. Each case for 0-80 SZA. Range of calculated AOD, tied 550
+# Parameterization, for 0-80 sza, there is an aaod parameterisation. 
 
 # In[27]:
 
