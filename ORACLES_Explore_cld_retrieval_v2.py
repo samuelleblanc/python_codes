@@ -42,7 +42,7 @@
 #  
 #      Written: by Samuel LeBlanc, NASA Ames, Moffett Field, CA, 2016-10-26
 #      Modified: Samuel LeBlanc, Sanata Cruz, 2019-08-26
-#                - based on original notebooké
+#                - based on original notebook
 
 # # Import of modules
 
@@ -71,17 +71,23 @@ from path_utils import getpath
 # In[3]:
 
 
-fo = getpath('ORACLES')
+from Sp_parameters import smooth
 
 
 # In[4]:
+
+
+fo = getpath('ORACLES')
+
+
+# In[5]:
 
 
 fp = fo+'starzen/'
 fp_plot = fo+'plot/'
 
 
-# In[5]:
+# In[6]:
 
 
 fp, fp_plot
@@ -95,15 +101,15 @@ fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
 fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 
-# In[6]:
+# In[7]:
 
 
-vr = 'R1'
+vr = 'R2'
 
 
 # # Load the files
 
-# In[7]:
+# In[8]:
 
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -113,11 +119,11 @@ dds = ['20160827','20160830','20160831','20160902','20160904','20160906','201609
 # In[9]:
 
 
-rts_low, rts_mid, rts_80, rts_65 = [],[],[],[]
+rts_low, rts_mid, rts_80, rts_65, rts_05, rts_10, rts_15 = [],[],[],[],[],[],[]
 sps = []
 
 
-# In[45]:
+# In[10]:
 
 
 for daystr in dds:
@@ -129,7 +135,7 @@ for daystr in dds:
     sps.append(sp)
 
 
-# In[46]:
+# In[11]:
 
 
 for daystr in dds:
@@ -139,7 +145,7 @@ for daystr in dds:
     rts_mid.append(rt)
 
 
-# In[47]:
+# In[12]:
 
 
 for daystr in dds:
@@ -149,7 +155,7 @@ for daystr in dds:
     rts_65.append(rt)
 
 
-# In[48]:
+# In[13]:
 
 
 for daystr in dds:
@@ -159,33 +165,63 @@ for daystr in dds:
     rts_80.append(rt)
 
 
-# ## Load the cloud probe incloud flag
-
 # In[14]:
 
 
-from load_utils import mat2py_time,toutc
+for daystr in dds:
+    print daystr
+    rt = []
+    rt = hs.loadmat(fp+'v5_05aod/{}_zen_cld_retrieved.mat'.format(daystr))
+    rts_05.append(rt)
 
 
 # In[15]:
 
 
+for daystr in dds:
+    print daystr
+    rt = []
+    rt = hs.loadmat(fp+'v5_10aod/{}_zen_cld_retrieved.mat'.format(daystr))
+    rts_10.append(rt)
+
+
+# In[23]:
+
+
+for daystr in dds:
+    print daystr
+    rt = []
+    rt = hs.loadmat(fp+'v5_15aod/{}_zen_cld_retrieved.mat'.format(daystr))
+    rts_15.append(rt)
+
+
+# ## Load the cloud probe incloud flag
+
+# In[17]:
+
+
+from load_utils import mat2py_time,toutc
+
+
+# In[18]:
+
+
 p = sio.netcdf_file(fp+'..//data_other//oracles.cloud.timings.nc','r')
 
 
-# In[16]:
+# In[19]:
 
 
 p.variables
 
 
-# In[17]:
+# In[20]:
 
 
 p.variables['timevec_20160914'].data
 
 
-# In[18]:
+# In[21]:
 
 
 t_0914 = mat2py_time(p.variables['timevec_20160914'].data)
@@ -200,7 +236,7 @@ plt.plot(t_0914,p.variables['cloud_time_20160914'].data,'x')
 
 # ## Load the AOD ict files
 
-# In[19]:
+# In[22]:
 
 
 ar6 = hs.loadmat(fo+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
@@ -216,13 +252,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # # Start plotting the results
 
-# In[20]:
+# In[33]:
 
 
 rt.keys()
 
 
-# In[21]:
+# In[34]:
 
 
 plt.figure()
@@ -295,7 +331,7 @@ np.nanmean(sp.norm[i,ii])
 
 # ## Plot some of the sza for each day to ensure good fitting of lut
 
-# In[70]:
+# In[35]:
 
 
 plt.figure()
@@ -306,14 +342,14 @@ plt.plot(sps[7].utc,sps[7].sza,'x-')
 
 # ## Filter out data points where nir and vis spectrometers don't match
 
-# In[23]:
+# In[24]:
 
 
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
-# In[49]:
+# In[25]:
 
 
 for i,daystr in enumerate(dds):
@@ -330,17 +366,20 @@ for i,daystr in enumerate(dds):
     rts_65[i]['fl_match'] = rts_low[i]['delta']<0.06
     rts_80[i]['delta'] = abs(nvis-nnir)
     rts_80[i]['fl_match'] = rts_low[i]['delta']<0.06
+    rts_05[i]['fl_match'] = rts_low[i]['delta']<0.06
+    rts_10[i]['fl_match'] = rts_low[i]['delta']<0.06
+    rts_15[i]['fl_match'] = rts_low[i]['delta']<0.06
 
 
 # ## Now filter out the times which were at too high altitude
 
-# In[50]:
+# In[26]:
 
 
 fl_alt = rt['alt']<1000.0
 
 
-# In[51]:
+# In[27]:
 
 
 for i,daystr in enumerate(dds):
@@ -349,18 +388,20 @@ for i,daystr in enumerate(dds):
     rts_mid[i]['fl_alt'] = rts_mid[i]['alt'][:,0]<1000.0
     rts_65[i]['fl_alt'] = rts_65[i]['alt'][:,0]<1000.0
     rts_80[i]['fl_alt'] = rts_80[i]['alt'][:,0]<1000.0
-    
+    rts_05[i]['fl_alt'] = rts_80[i]['fl_alt']
+    rts_10[i]['fl_alt'] = rts_80[i]['fl_alt']
+    rts_15[i]['fl_alt'] = rts_80[i]['fl_alt']
 
 
 # ## Filter for in cloud
 
-# In[52]:
+# In[28]:
 
 
 from write_utils import nearest_neighbor
 
 
-# In[53]:
+# In[29]:
 
 
 for i,daystr in enumerate(dds):
@@ -375,19 +416,22 @@ for i,daystr in enumerate(dds):
     print daystr,rts_low[i]['utc'].shape,rts_low[i]['utc'][rts_low[i]['fl_incld']].shape,        float(rts_low[i]['utc'][rts_low[i]['fl_incld']].shape[0])/ float(rts_low[i]['utc'].shape[0])*100.0
 
 
-# In[54]:
+# In[30]:
 
 
 for i,daystr in enumerate(dds):
     rts_mid[i]['fl_incld'] = rts_low[i]['fl_incld']
     rts_65[i]['fl_incld'] = rts_low[i]['fl_incld']
     rts_80[i]['fl_incld'] = rts_low[i]['fl_incld']
+    rts_15[i]['fl_incld'] = rts_low[i]['fl_incld']
+    rts_10[i]['fl_incld'] = rts_low[i]['fl_incld']
+    rts_05[i]['fl_incld'] = rts_low[i]['fl_incld']
     
 
 
 # ## Filter for high ki squared residuals
 
-# In[55]:
+# In[31]:
 
 
 for i,daystr in enumerate(dds):
@@ -397,11 +441,14 @@ for i,daystr in enumerate(dds):
     rts_mid[i]['fl_ki'] = rts_mid[i]['ki']<0.6
     rts_65[i]['fl_ki'] = rts_65[i]['ki']<0.6
     rts_80[i]['fl_ki'] = rts_80[i]['ki']<0.6
+    rts_05[i]['fl_ki'] = rts_05[i]['ki']<0.6
+    rts_10[i]['fl_ki'] = rts_10[i]['ki']<0.6
+    rts_15[i]['fl_ki'] = rts_15[i]['ki']<0.6
 
 
 # ## Combine the filters
 
-# In[56]:
+# In[32]:
 
 
 tot=0
@@ -415,9 +462,12 @@ for i,daystr in enumerate(dds):
     rts_mid[i]['fl'] = rts_mid[i]['fl_match'] & rts_mid[i]['fl_alt'] & rts_mid[i]['fl_incld'] & rts_mid[i]['fl_ki']
     rts_65[i]['fl'] = rts_65[i]['fl_match'] & rts_65[i]['fl_alt'] & rts_65[i]['fl_incld'] & rts_65[i]['fl_ki']
     rts_80[i]['fl'] = rts_80[i]['fl_match'] & rts_80[i]['fl_alt'] & rts_80[i]['fl_incld'] & rts_80[i]['fl_ki']
+    rts_05[i]['fl'] = rts_05[i]['fl_match'] & rts_05[i]['fl_alt'] & rts_05[i]['fl_incld'] & rts_05[i]['fl_ki']
+    rts_10[i]['fl'] = rts_10[i]['fl_match'] & rts_10[i]['fl_alt'] & rts_10[i]['fl_incld'] & rts_10[i]['fl_ki']
+    rts_15[i]['fl'] = rts_15[i]['fl_match'] & rts_15[i]['fl_alt'] & rts_15[i]['fl_incld'] & rts_15[i]['fl_ki']
 
 
-# In[57]:
+# In[33]:
 
 
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
@@ -425,13 +475,13 @@ print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 # # Now plot each retrieved product, filtered
 
-# In[41]:
+# In[34]:
 
 
 from Sp_parameters import smooth
 
 
-# In[58]:
+# In[36]:
 
 
 for i,daystr in enumerate(dds):
@@ -439,10 +489,13 @@ for i,daystr in enumerate(dds):
     ax1 = plt.subplot(211)
     ax2 = plt.subplot(212,sharex=ax1)
     ax1.plot(rts_low[i]['utc'],rts_low[i]['tau'],'b.',label='all low')
-    ax1.plot(rts_low[i]['utc'][rts_low[i]['fl']],rts_low[i]['tau'][rts_low[i]['fl']],'go',label='filtered low')
-    ax1.plot(rts_mid[i]['utc'][rts_mid[i]['fl']],rts_mid[i]['tau'][rts_mid[i]['fl']],'rs',label='filtered mid')
-    ax1.plot(rts_65[i]['utc'][rts_65[i]['fl']],rts_65[i]['tau'][rts_65[i]['fl']],'y*',label='filtered 0.65')
-    ax1.plot(rts_80[i]['utc'][rts_80[i]['fl']],rts_80[i]['tau'][rts_80[i]['fl']],'mv',label='filtered 0.80')
+    ax1.plot(rts_low[i]['utc'][rts_low[i]['fl']],rts_low[i]['tau'][rts_low[i]['fl']],'go',markeredgecolor='None',label='filtered low')
+    ax1.plot(rts_mid[i]['utc'][rts_mid[i]['fl']],rts_mid[i]['tau'][rts_mid[i]['fl']],'rs',markeredgecolor='None',label='filtered mid')
+    ax1.plot(rts_65[i]['utc'][rts_65[i]['fl']],rts_65[i]['tau'][rts_65[i]['fl']],'y*',markeredgecolor='None',label='filtered 0.65')
+    ax1.plot(rts_80[i]['utc'][rts_80[i]['fl']],rts_80[i]['tau'][rts_80[i]['fl']],'mv',markeredgecolor='None',label='filtered 0.80')
+    ax1.plot(rts_05[i]['utc'][rts_05[i]['fl']],rts_05[i]['tau'][rts_05[i]['fl']],'c+',label='filtered 0.05')
+    ax1.plot(rts_10[i]['utc'][rts_10[i]['fl']],rts_10[i]['tau'][rts_10[i]['fl']],'kx',label='filtered 0.10')
+    ax1.plot(rts_15[i]['utc'][rts_15[i]['fl']],rts_15[i]['tau'][rts_15[i]['fl']],'wo',label='filtered 0.15')
     try:
         ax1.plot(rts_low[i]['utc'][rts_low[i]['fl']],smooth(rts_low[i]['tau'][rts_low[i]['fl']],6),'kx',label='smooth low')
     except:
@@ -456,6 +509,10 @@ for i,daystr in enumerate(dds):
         ax2.plot(rts_low[i]['utc'][rts_low[i]['fl']],smooth(rts_low[i]['ref'][rts_low[i]['fl']],6),'kx')
     except:
         pass
+    ax2.plot(rts_80[i]['utc'][rts_80[i]['fl']],rts_80[i]['ref'][rts_80[i]['fl']],'mv',markeredgecolor='None',label='filtered 0.80')
+    ax2.plot(rts_05[i]['utc'][rts_05[i]['fl']],rts_05[i]['ref'][rts_05[i]['fl']],'c+',label='filtered 0.05')
+    ax2.plot(rts_10[i]['utc'][rts_10[i]['fl']],rts_10[i]['ref'][rts_10[i]['fl']],'kx',label='filtered 0.10')
+    ax2.plot(rts_15[i]['utc'][rts_15[i]['fl']],rts_15[i]['ref'][rts_15[i]['fl']],'wo',label='filtered 0.15')
     ax2.set_ylabel('ref')
     ax2.set_xlabel('UTC')
     ax1.set_title(daystr)
@@ -489,63 +546,223 @@ for i,daystr in enumerate(dds):
     plt.xlabel('low ref')
 
 
-# In[22]:
+# ## Now select the values of tau dependant on the ACAOD
+
+# In[37]:
+
+
+ar6.keys()
+
+
+# In[38]:
+
+
+ar6['Start_UTC']
+
+
+# In[39]:
+
+
+ar6['days']
+
+
+# In[40]:
+
+
+days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
+
+
+# In[41]:
+
+
+dds
+
+
+# In[42]:
 
 
 for i,daystr in enumerate(dds):
-    try:
-        rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
-        rts[i]['ref_fl'] = smooth(rts[i]['ref'][rts[i]['fl']],6)
-    except:
-        print 'except',i
-        rts[i]['tau_fl'] = rts[i]['tau'][rts[i]['fl']]
-        rts[i]['ref_fl'] = rts[i]['ref'][rts[i]['fl']]
-    rts[i]['lat_fl'] = rts[i]['lat'][rts[i]['fl']]
-    rts[i]['lon_fl'] = rts[i]['lon'][rts[i]['fl']]
-    rts[i]['alt_fl'] = rts[i]['alt'][rts[i]['fl']]
-    rts[i]['utc_fl'] = rts[i]['utc'][rts[i]['fl']]
-
-
-# In[23]:
-
-
-rt.keys()
-
-
-# # Now write these values to ict file
-
-# In[24]:
-
-
-import write_utils as wu
+    rts_low[i]['acaod'] = rts_low[i]['utc']*0.0
+    idd = (ar6['days']==float(i+2)) & (ar6['fl_QA']==1) & (ar6['flag_acaod']==1) & (ar6['AOD0501']<2.0)
+    if not any(idd): 
+        print daystr, 'False'
+        continue
+    rts_low[i]['acaod'] = nearest_neighbor(ar6['Start_UTC'][idd],ar6['AOD0501'][idd],rts_low[i]['utc'],dist=15.0/60.0)
+    print daystr,rts_low[i]['utc'].shape,np.nanmin(rts_low[i]['acaod']),np.nanmax(rts_low[i]['acaod']),np.nanmean(rts_low[i]['acaod'])
 
 
 # In[46]:
 
 
-hdict = {'PI':'Jens Redemann',
+aod_luts = [0.15,0.3,0.45,0.6,1.5,1.95,2.4]
+
+
+# In[47]:
+
+
+acaod_index = []
+for i,dayst in enumerate(dds): acaod_index.append([np.abs(aod_luts-a).argmin() for a in rts_low[i]['acaod']])
+
+
+# In[48]:
+
+
+acaod_index[4]
+
+
+# In[49]:
+
+
+i = 4
+tmpt = np.array([rts_05[i]['tau'],rts_10[i]['tau'],rts_15[i]['tau'],rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']])
+
+
+# In[50]:
+
+
+tmpt.shape
+
+
+# In[52]:
+
+
+np.array(acaod_index[4]).shape
+
+
+# In[58]:
+
+
+ta = np.array([tmpt[a,j] for j,a in enumerate(acaod_index[i])])
+
+
+# In[59]:
+
+
+ta.shape
+
+
+# In[62]:
+
+
+plt.figure()
+plt.plot(ta,'o',label='sub')
+plt.plot(rts_05[i]['tau'],label='05')
+plt.plot(rts_low[i]['tau'],'+',label='low')
+plt.legend()
+
+
+# In[65]:
+
+
+rts = rts_mid
+
+
+# In[66]:
+
+
+for i,daystr in enumerate(dds):
+    ta, re = [],[]
+    tmpt = np.array([rts_05[i]['tau'],rts_10[i]['tau'],rts_15[i]['tau'],rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']])
+    tmpr = np.array([rts_05[i]['ref'],rts_10[i]['ref'],rts_15[i]['ref'],rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']])
+    ta = np.array([tmpt[a,j] for j,a in enumerate(acaod_index[i])])
+    re = np.array([tmpr[a,j] for j,a in enumerate(acaod_index[i])])
+    rts[i]['tau'] = ta
+    rts[i]['ref'] = re
+
+
+# In[67]:
+
+
+for i,daystr in enumerate(dds):
+    try:
+        rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts_mid[i]['fl']],6,old=True)
+        rts[i]['ref_fl'] = smooth(rts[i]['ref'][rts_mid[i]['fl']],6,old=True)
+    except TypeError:
+        print 'except',i
+        rts[i]['tau_fl'] = rts[i]['tau'][rts_mid[i]['fl']]
+        rts[i]['ref_fl'] = rts[i]['ref'][rts_mid[i]['fl']]
+    rts[i]['lat_fl'] = rts_mid[i]['lat'][rts_mid[i]['fl']]
+    rts[i]['lon_fl'] = rts_mid[i]['lon'][rts_mid[i]['fl']]
+    rts[i]['alt_fl'] = rts_mid[i]['alt'][rts_mid[i]['fl']]
+    rts[i]['utc_fl'] = rts_mid[i]['utc'][rts_mid[i]['fl']]
+    
+    rts[i]['tau_err'] = np.nanmax([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)                          - np.nanmin([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)
+    rts[i]['tau_err_fl'] = smooth(rts_mid[i]['tau_err'][rts_mid[i]['fl']],6,old=True)
+    rts[i]['ref_err'] = np.nanmax([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)                          - np.nanmin([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)
+    rts[i]['ref_err_fl'] = smooth(rts_mid[i]['ref_err'][rts_mid[i]['fl']],6,old=True)
+    
+    rts[i]['LWP_fl'] = 5.0/9.0 * rts[i]['tau_fl']* rts[i]['ref_fl']
+    rts[i]['LWP_err_fl'] = np.sqrt((5.0/9.0 * rts[i]['ref_fl'] * rts[i]['tau_err_fl'])**2.0+                                   (5.0/9.0 * rts[i]['tau_fl'] * rts[i]['ref_err_fl'])**2.0)
+    rts[i]['LWP'] = 5.0/9.0 * rts[i]['tau']* rts[i]['ref']
+    rts[i]['LWP_err'] = np.sqrt((5.0/9.0 * rts[i]['ref'] * rts[i]['tau_err'])**2.0+                                (5.0/9.0 * rts[i]['tau'] * rts[i]['ref_err'])**2.0)
+    
+
+
+# In[105]:
+
+
+#for i,daystr in enumerate(dds):
+#    try:
+#        rts_mid[i]['tau_fl'] = smooth(rts_mid[i]['tau'][rts_mid[i]['fl']],6,old=True)
+#        rts_mid[i]['ref_fl'] = smooth(rts_mid[i]['ref'][rts_mid[i]['fl']],6,old=True)
+#    except TypeError:
+#        print 'except',i
+#        rts_mid[i]['tau_fl'] = rts_mid[i]['tau'][rts_mid[i]['fl']]
+#        rts_mid[i]['ref_fl'] = rts_mid[i]['ref'][rts_mid[i]['fl']]
+    rts_mid[i]['lat_fl'] = rts_mid[i]['lat'][rts_mid[i]['fl']]
+    rts_mid[i]['lon_fl'] = rts_mid[i]['lon'][rts_mid[i]['fl']]
+    rts_mid[i]['alt_fl'] = rts_mid[i]['alt'][rts_mid[i]['fl']]
+    rts_mid[i]['utc_fl'] = rts_mid[i]['utc'][rts_mid[i]['fl']]
+    
+    rts_mid[i]['tau_err'] = np.nanmax([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)                          - np.nanmin([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)
+    rts_mid[i]['tau_err_fl'] = smooth(rts_mid[i]['tau_err'][rts_mid[i]['fl']],6,old=True)
+    rts_mid[i]['ref_err'] = np.nanmax([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)                          - np.nanmin([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)
+    rts_mid[i]['ref_err_fl'] = smooth(rts_mid[i]['ref_err'][rts_mid[i]['fl']],6,old=True)
+    
+    rts_mid[i]['LWP_fl'] = 5.0/9.0 * rts_mid[i]['tau_fl']* rts_mid[i]['ref_fl']
+    rts_mid[i]['LWP_err_fl'] = np.sqrt((5.0/9.0 * rts_mid[i]['ref_fl'] * rts_mid[i]['tau_err_fl'])**2.0+                                       (5.0/9.0 * rts_mid[i]['tau_fl'] * rts_mid[i]['ref_err_fl'])**2.0)
+    rts_mid[i]['LWP'] = 5.0/9.0 * rts_mid[i]['tau']* rts_mid[i]['ref']
+    rts_mid[i]['LWP_err'] = np.sqrt((5.0/9.0 * rts_mid[i]['ref'] * rts_mid[i]['tau_err'])**2.0+                                       (5.0/9.0 * rts_mid[i]['tau'] * rts_mid[i]['ref_err'])**2.0)
+    
+
+
+# # Now write these values to ict file
+
+# In[68]:
+
+
+import write_utils as wu
+
+
+# In[69]:
+
+
+hdict = {'PI':'Samuel LeBlanc',
      'Institution':'NASA Ames Research Center',
      'Instrument':'Spectrometers for Sky-Scanning, Sun-Tracking Atmospheric Research (4STAR)',
      'campaign':'ORACLES 2016',
-     'special_comments':'Retrieved cloud properties',
-     'PI_contact':'Jens.Redemann-1@nasa.gov',
+     'special_comments':'Retrieved cloud properties, averaged over 6 seconds of hyperspectral zenith radiance measurements from 4STAR while under clouds.',
+     'PI_contact':'Samuel.leblanc@nasa.gov',
      'platform':'NASA P3',
      'location':'based out of Walvis Bay, Namibia, actual location of measurement included in file',
      'instrument_info':'Derived product from 4STAR zenith measurements',
-     'data_info':'Using the cloud property retrieval method based on spectral transmitted light measurements described by LeBlanc, Pileskie, Schmidt, and Coddington (2015), AMT, modified to include impact of overlying aerosol layer.',
-     'uncertainty':'Uncertainty of retrieved properties will be defined in future archival.',
+     'data_info':'Using the cloud property retrieval method based on spectral transmitted light measurements described by LeBlanc, Pileskie, Schmidt, and Coddington (2015), AMT, https://doi.org/10.5194/amt-8-1361-2015 ,modified to include impact of overlying aerosol layer.',
+     'uncertainty':'See included variables.',
      'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
      'project_info':'ORACLES 2016 deployment; August-September 2016; Walvis Bay, Namibia',
-     'stipulations':'This is the initial public release of the ORACLES-2016 data set. We strongly recommend that you consult the PI, both for updates to the data set, and for the proper and most recent interpretation of the data for specific science use.',
-     'rev_comments':"""R1: Archival for first public release of retrieved cloud properties. Future releases is expected to contain uncertainty estimates. 
+     'stipulations':'This is a public release of the ORACLES-2016 data set. We strongly recommend that you consult the PI, both for updates to the data set, and for the proper and most recent interpretation of the data for specific science use.',
+     'rev_comments':"""R2: Significant retrieval advancement and bug fixes, reducing COD values by about half. Renewed look-up-table creation accounting for actual above cloud AOD values. 
+    Included uncertainties of retrieved products and the calculations of related cloud liquid water path.
+R1: Archival for first public release of retrieved cloud properties. Future releases is expected to contain uncertainty estimates. 
     Same filtering and notes on data quality as previous release. Retrieved cloud properties includes the assumption of the presence of an overlying aerosol layer having AOD=0.36, SSA=0.87, and ASY=0.64 at 500 nm.
 R0: Preliminary archival of cloud properties retrieved from 4STAR sky radiance measurements. Final radiance calibration not yet applied. Filtered out in-cloud data, bad measurements, and high clouds. 
     Data is subject to uncertainties linked to detector stability, transfer efficiency of light through fiber optic cable, and deposition on the instrument window."""
     }
-order = ['LAT','LON','COD','REF']
+order = ['LAT','LON','COD','REF','LWP','COD_err','REF_err','LWP_err']
 
 
-# In[47]:
+# In[70]:
 
 
 for i,daystr in enumerate(dds):
@@ -554,22 +771,26 @@ for i,daystr in enumerate(dds):
           'COD':{'data':rts[i]['tau_fl'],'unit':'None','long_description':'Cloud Optical Depth of overlying cloud'},
           'REF':{'data':rts[i]['ref_fl'],'unit':'micrometer','long_description':'Cloud drop effective radius for liquid clouds'},
           'LAT':{'data':rts[i]['lat'][rts[i]['fl']],'unit':'Degrees','long_description':'Latitude of measurement, negative for Southern hemisphere'},
-          'LON':{'data':rts[i]['lon'][rts[i]['fl']],'unit':'Degrees','long_description':'Longitude of measurement, East is positive, from -180 to 180'}
-          }
+          'LON':{'data':rts[i]['lon'][rts[i]['fl']],'unit':'Degrees','long_description':'Longitude of measurement, East is positive, from -180 to 180'},
+          'COD_err':{'data':rts[i]['tau_err_fl'],'unit':'None','long_description':'Retrieval uncertainty of Cloud Optical Depth'},
+          'REF_err':{'data':rts[i]['ref_err_fl'],'unit':'micrometer','long_description':'Retrieval uncertainty of Cloud effective radius. When uncertainty greater than 2 micrometer, retrieval is considered to have failed.'},
+          'LWP':{'data':rts[i]['LWP_fl'],'unit':'g/meter^2','long_description':'Calculated Liquid Water Path of overlying cloud, (5/9*COD*REF) assuming linearly increasing effective radius with altitude (based on Wood and Hartmann, 2006, J. Clim., https://doi.org/10.1175/JCLI3702.1)'},
+          'LWP_err':{'data':rts[i]['LWP_err_fl'],'unit':'g/meter^2','long_description':'Retrieval uncertainty of Liuid Water Path, based on error propogation of COD_err and ref_err'}
+             }
     d_dict_out = wu.prep_data_for_ict(d_dict,in_var_name='utc',out_var_name='Start_UTC', in_input=True,time_interval=1.0)
-    wu.write_ict(hdict,d_dict_out,filepath=fp+'..//zen_ict/v3/',
-              data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R1',order=order)    
+    wu.write_ict(hdict,d_dict_out,filepath=fp+'..//zen_ict/v5/',
+              data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R2',order=order)    
 
 
 # ## For use of this python, save values to mat files
 
-# In[48]:
+# In[71]:
 
 
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
-# In[49]:
+# In[72]:
 
 
 def dict_keys_to_unicode(d):
@@ -588,18 +809,18 @@ for n in rtss.keys():
         rtss[n] = dict_keys_to_unicode(rtss[n])
 
 
-# In[50]:
+# In[73]:
 
 
-hs.savemat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr),rtss)
+hs.savemat(fp+'..//zen_ict/v5/{}_all_retrieved.mat'.format(vr),rtss)
 
 
 # ## Optionally load the saved mat files
 
-# In[23]:
+# In[115]:
 
 
-rtss = hs.loadmat(fp+'..//zen_ict/v3/{}_all_retrieved.mat'.format(vr))
+rtss = hs.loadmat(fp+'..//zen_ict/v5/{}_all_retrieved.mat'.format(vr))
 
 
 # In[34]:
@@ -618,57 +839,58 @@ elif not rts:
 
 # ## Read the files as a verification
 
-# In[51]:
+# In[74]:
 
 
-vv = 'R1'
+vv = 'R2'
 
 
-# In[52]:
+# In[75]:
 
 
 from load_utils import load_ict
 
 
-# In[53]:
+# In[76]:
 
 
 out_RA = []
 out_head_RA = []
 for d in dds:
-    fname_aod = fp+'..//zen_ict/v3/4STAR-CLD_P3_{}_{vr}.ict'.format(d,vr=vr)
+    fname_aod = fp+'..//zen_ict/v5/4STAR-CLD_P3_{}_{vr}.ict'.format(d,vr=vr)
     tt,th = load_ict(fname_aod,return_header=True)
     out_RA.append(tt)
     out_head_RA.append(th)
 
 
-# In[54]:
+# In[78]:
 
 
-out_head_RA[0]
+out_head_RA[5]
 
 
-# In[55]:
+# In[79]:
 
 
 nm = out_RA[0].dtype.names
 
 
-# In[56]:
+# In[80]:
 
 
 nm
 
 
-# In[87]:
+# In[81]:
 
 
 for i,d in enumerate(dds):
-    fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
+    fig,ax = plt.subplots(3,sharex=True,figsize=(9,6))
     ax = ax.ravel()
     ax[0].set_title('Cloud variables {} saved file for flight {}'.format(vv,d),y=1.25)
     #ax[0].set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(wl))])
     ax[0].plot(out_RA[i][nm[0]],out_RA[i]['COD'],'.')
+    ax[0].errorbar(out_RA[i][nm[0]],out_RA[i]['COD'],yerr=out_RA[i]['COD_err'],linestyle='None',marker='.')
     ax[0].set_ylabel('COD')
     ax[0].set_ylim(0,60)
     ax[0].axhline(0,color='k')
@@ -684,7 +906,7 @@ for i,d in enumerate(dds):
         else:
             ia = np.isfinite(out_RA[i]['LAT'][ii-1200:ii+1200])
             if any(ia):
-                laa = np.interp([1200],np.arange(2400)[ia],out_RA[i]['LAT'][ii-1200:ii+1200][ia])
+                laa = np.interp([1200],np.arange(len(ia))[ia],out_RA[i]['LAT'][ii-1200:ii+1200][ia])
                 if not np.isfinite(laa[0]):
                     xl.append(' ')
                 else:
@@ -694,12 +916,13 @@ for i,d in enumerate(dds):
     axy0.set_xticklabels(xl)
     axy0.set_xlabel('Latitude [$^\\circ$]')
     box = ax[0].get_position()
-    ax[0].set_position([box.x0, box.y0, box.width, box.height*0.88])
-    axy0.set_position([box.x0, box.y0, box.width, box.height*0.88])
+    ax[0].set_position([box.x0, box.y0, box.width, box.height*1.0])
+    axy0.set_position([box.x0, box.y0, box.width, box.height*1.0])
     
     ax[1].plot(out_RA[i][nm[0]],out_RA[i]['REF'],'g.')
+    ax[1].errorbar(out_RA[i][nm[0]],out_RA[i]['REF'],yerr=out_RA[i]['REF_err'],linestyle='None',marker='.')
     ax[1].set_ylabel('r$_{{eff}}$ [$\\mu$m]')
-    ax[1].set_xlabel('UTC [h]')
+    #ax[1].set_xlabel('UTC [h]')
     ax[1].grid()
     axy1 = ax[1].twiny()
     axy1.set_xlim(ax[1].get_xlim())
@@ -712,7 +935,7 @@ for i,d in enumerate(dds):
         else:
             iio = np.isfinite(out_RA[i]['LON'][ii-1200:ii+1200])
             if any(iio):
-                loo = np.interp([1200],np.arange(2400)[iio],out_RA[i]['LON'][ii-1200:ii+1200][iio])
+                loo = np.interp([1200],np.arange(len(iio))[iio],out_RA[i]['LON'][ii-1200:ii+1200][iio])
                 if not np.isfinite(loo[0]):
                     x1l.append(' ')
                 else:
@@ -724,12 +947,21 @@ for i,d in enumerate(dds):
     box = ax[1].get_position()
     ax[1].set_position([box.x0, box.y0, box.width, box.height*0.88])
     axy1.set_position([box.x0, box.y0, box.width, box.height*0.88])
-    plt.savefig(fp+'..//zen_ict/v3/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+    
+    ax[2].plot(out_RA[i][nm[0]],out_RA[i]['LWP'],'r.')
+    ax[2].errorbar(out_RA[i][nm[0]],out_RA[i]['LWP'],yerr=out_RA[i]['LWP_err'],linestyle='None',marker='.',color='r')
+    ax[2].set_ylabel('LWP [g/m$^2$]')
+    ax[2].set_xlabel('UTC [h]')
+    ax[2].grid()
+    box = ax[2].get_position()
+    ax[2].set_position([box.x0, box.y0, box.width, box.height*1.1])
+
+    plt.savefig(fp+'..//zen_ict/v5/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
 
 
 # ## Combine the data into a single array
 
-# In[88]:
+# In[82]:
 
 
 ar = {}
@@ -737,13 +969,13 @@ for n in rts[0].keys():
     ar[n] = np.array([])
 
 
-# In[89]:
+# In[83]:
 
 
 ar['days'] = np.array([])
 
 
-# In[90]:
+# In[84]:
 
 
 for i,d in enumerate(dds):
@@ -754,16 +986,16 @@ for i,d in enumerate(dds):
 
 # ## Save the combined array
 
-# In[91]:
+# In[85]:
 
 
 import hdf5storage as hs
 
 
-# In[92]:
+# In[86]:
 
 
-hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr),ar)
+hs.savemat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vr),ar)
 
 
 # ## Optionally load the all ict file
@@ -772,37 +1004,37 @@ hs.savemat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr),ar)
 
 
 if not 'ar' in locals():
-    ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr))
+    ar = hs.loadmat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vr))
 
 
 # ## plot the data on a map
 
-# In[93]:
+# In[87]:
 
 
 import plotting_utils as pu
 
 
-# In[94]:
+# In[88]:
 
 
 from map_interactive import build_basemap
 
 
-# In[95]:
+# In[89]:
 
 
 rts[i]['tau_fl']
 
 
-# In[96]:
+# In[90]:
 
 
 for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
 
 
-# In[97]:
+# In[91]:
 
 
 fig = plt.figure()
@@ -812,15 +1044,15 @@ sa = []
 for i,daystr in enumerate(dds):
     x,y = m(rts[i]['lon'][rts[i]['fl']][:,0]+i*0.03,rts[i]['lat'][rts[i]['fl']][:,0])
     sca = ax.scatter(x,y,c=rts[i]['tau_fl'],
-              s=10,alpha=0.7,vmin=0.0,vmax=60.0,edgecolor='None')
+              s=20,alpha=0.7,vmin=0.0,vmax=30.0,edgecolor='None')
     sa.append(sca)
 #pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('COD')
-plt.savefig(fp+'..//zen_ict/v3/{}_COD_map.png'.format(vr),transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/{}_COD_map.png'.format(vr),transparent=True,dpi=600)
 
 
-# In[98]:
+# In[92]:
 
 
 fig = plt.figure()
@@ -830,17 +1062,35 @@ sa = []
 for i,daystr in enumerate(dds):
     x,y = m(rts[i]['lon'][rts[i]['fl']][:,0]+i*0.03,rts[i]['lat'][rts[i]['fl']][:,0])
     sca = ax.scatter(x,y,c=rts[i]['ref_fl'],
-              s=10,alpha=0.7,vmin=0.0,vmax=30.0,edgecolor='None',cmap=plt.cm.gist_earth)
+              s=20,alpha=0.7,vmin=0.0,vmax=30.0,edgecolor='None',cmap=plt.cm.gist_earth)
     sa.append(sca)
 #pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('r$_{{eff}}$ [$\\mu$m]')
-plt.savefig(fp+'..//zen_ict/v3/{}_REF_map.png'.format(vr),transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/{}_REF_map.png'.format(vr),transparent=True,dpi=600)
+
+
+# In[93]:
+
+
+fig = plt.figure()
+ax = plt.subplot(111)
+m = build_basemap(lower_left=[-2,-25],upper_right=[15,-8],ax=ax,larger=False)
+sa = []
+for i,daystr in enumerate(dds):
+    x,y = m(rts[i]['lon'][rts[i]['fl']][:,0]+i*0.03,rts[i]['lat'][rts[i]['fl']][:,0])
+    sca = ax.scatter(x,y,c=rts[i]['LWP_fl'],
+              s=20,alpha=0.7,vmin=0.0,vmax=125.0,edgecolor='None',cmap=plt.cm.magma)
+    sa.append(sca)
+#pu.prelim()
+cb = plt.colorbar(sa[0])
+cb.set_label('LWP [g/m$^2$]')
+plt.savefig(fp+'..//zen_ict/v5/{}_LWP_map.png'.format(vr),transparent=True,dpi=600)
 
 
 # ## Plot out some statistics of all retrievals
 
-# In[99]:
+# In[94]:
 
 
 plt.figure()
@@ -851,10 +1101,10 @@ plt.ylabel('COD')
 cb = plt.colorbar()
 cb.set_label('Normalized counts')
 plt.title('4STAR Cloud optical depth for all ORACLES flights')
-plt.savefig(fp+'..//zen_ict/v3/{}_COD_hist_lat.png'.format(vr),transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/{}_COD_hist_lat.png'.format(vr),transparent=True,dpi=600)
 
 
-# In[8]:
+# In[95]:
 
 
 plt.figure()
@@ -865,10 +1115,10 @@ plt.ylabel('COD')
 cb = plt.colorbar()
 cb.set_label('Normalized counts')
 plt.title('4STAR Cloud optical depth for all ORACLES flights')
-plt.savefig(fp+'..//zen_ict/v3/COD_hist_lon.png',transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/COD_hist_lon.png',transparent=True,dpi=600)
 
 
-# In[57]:
+# In[96]:
 
 
 plt.figure()
@@ -880,10 +1130,10 @@ plt.ylim(2,10)
 cb = plt.colorbar()
 cb.set_label('Normalized counts')
 plt.title('4STAR Effective Radius for all ORACLES flights')
-plt.savefig(fp+'..//zen_ict/v3/ref_hist_lon.png',transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/ref_hist_lon.png',transparent=True,dpi=600)
 
 
-# In[58]:
+# In[97]:
 
 
 plt.figure()
@@ -895,7 +1145,7 @@ plt.ylabel('r$_{{eff}}$ [$\\mu$m]')
 cb = plt.colorbar()
 cb.set_label('Normalized counts')
 plt.title('4STAR Effective Radius for all ORACLES flights')
-plt.savefig(fp+'..//zen_ict/v3/ref_hist_lat.png',transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/ref_hist_lat.png',transparent=True,dpi=600)
 
 
 # In[9]:
@@ -909,16 +1159,30 @@ plt.xlabel('COD')
 plt.grid()
 pu.prelim()
 plt.legend(frameon=False)
-plt.savefig(fp+'..//zen_ict/v3/cod_hist.png',transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/cod_hist.png',transparent=True,dpi=600)
 
 
-# In[10]:
+# In[98]:
+
+
+fig = plt.figure()
+plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
+plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='All points')
+plt.ylabel('Normed counts')
+plt.xlabel('COD')
+plt.grid()
+pu.prelim()
+plt.legend(frameon=False)
+plt.savefig(fp+'..//zen_ict/v5/cod_hist.png',transparent=True,dpi=600)
+
+
+# In[99]:
 
 
 ar.keys()
 
 
-# In[11]:
+# In[100]:
 
 
 aam = ar['utc_fl']<12.0
@@ -941,6 +1205,22 @@ plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/v3/cod_hist_pm_am.png',transparent=True,dpi=600)
 
 
+# In[108]:
+
+
+fig = plt.figure()
+plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.3,normed=True,label='filtered')
+plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='All points')
+plt.hist(ar['tau_fl'][aam],bins=30,edgecolor='None',color='b',alpha=0.7,normed=True,label='AM {}'.format(np.nanmean(ar['tau_fl'][aam])))
+plt.hist(ar['tau_fl'][apm],bins=30,edgecolor='None',color='r',alpha=0.7,normed=True,label='PM {}'.format(np.nanmean(ar['tau_fl'][apm])))
+plt.ylabel('Normed counts')
+plt.xlabel('COD')
+plt.grid()
+#pu.prelim()
+plt.legend(frameon=False)
+plt.savefig(fp+'..//zen_ict/v5/cod_hist_pm_am.png',transparent=True,dpi=600)
+
+
 # In[94]:
 
 
@@ -951,6 +1231,18 @@ plt.ylabel('Counts')
 plt.xlabel('COD')
 plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/v3/cod_hist_all.png',transparent=True,dpi=600)
+
+
+# In[102]:
+
+
+fig = plt.figure()
+plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=False,label='filtered')
+plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,70),label='All points')
+plt.ylabel('Counts')
+plt.xlabel('COD')
+plt.legend(frameon=False)
+plt.savefig(fp+'..//zen_ict/v5/cod_hist_all.png',transparent=True,dpi=600)
 
 
 # In[103]:
@@ -979,6 +1271,20 @@ plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/v3/{}_ref_hist.png'.format(vr),transparent=True,dpi=600)
 
 
+# In[105]:
+
+
+fig = plt.figure()
+plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
+plt.hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,30),label='all points')
+plt.ylabel('Normed counts')
+plt.xlabel('r$_{{eff}}$ [$\\mu$m]')
+plt.grid()
+#pu.prelim()
+plt.legend(frameon=False)
+plt.savefig(fp+'..//zen_ict/v5/{}_ref_hist.png'.format(vr),transparent=True,dpi=600)
+
+
 # In[101]:
 
 
@@ -991,10 +1297,16 @@ plt.legend(frameon=False)
 plt.savefig(fp+'..//zen_ict/v3/{}_ref_hist_all.png'.format(vr),transparent=True,dpi=600)
 
 
-# In[132]:
+# In[106]:
 
 
-reload(pu)
+fig = plt.figure()
+plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=False,label='filtered')
+plt.hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,30),label='all points')
+plt.ylabel('Counts')
+plt.xlabel('r$_{{eff}}$ [$\\mu$m]')
+plt.legend(frameon=False)
+plt.savefig(fp+'..//zen_ict/v5/{}_ref_hist_all.png'.format(vr),transparent=True,dpi=600)
 
 
 # In[100]:
@@ -1021,6 +1333,32 @@ plt.legend(frameon=False)
 plt.tight_layout()
 
 plt.savefig(fp+'..//zen_ict/v3/{}_ref_cod_hist.png'.format(vr),transparent=True,dpi=600)
+
+
+# In[107]:
+
+
+fig,ax = plt.subplots(2,1)
+ax = ax.ravel()
+ax[0].hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
+ax[0].hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,70),label='all points')
+ax[0].set_ylabel('Normed counts')
+ax[0].set_xlabel('COD')
+ax[0].grid()
+#pu.prelim(ax=ax[0])
+ax[0].legend(frameon=False)
+
+ax[1].hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
+ax[1].hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=True,range=(0,30),label='all points')
+ax[1].set_ylabel('Normed counts')
+ax[1].set_xlabel('r$_{{eff}}$ [$\\mu$m]')
+plt.grid()
+#pu.prelim(ax=ax[1])
+plt.legend(frameon=False)
+
+plt.tight_layout()
+
+plt.savefig(fp+'..//zen_ict/v5/{}_ref_cod_hist.png'.format(vr),transparent=True,dpi=600)
 
 
 # # Evaluate the Cloud Radiative Effect (CRE) from calculated retrieved values
