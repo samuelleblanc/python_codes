@@ -157,6 +157,8 @@ parser.add_argument('-slides','--makeslides',help='if set, will create a powerpo
                     action='store_true')
 parser.add_argument('-noflt','--nofilter',help='if set, will not filter out bad measurements',
                     action='store_true')
+parser.add_argument('-noretr','--noretrieval',help='if set, will not run the retrieval, only for debugging and plotting',
+                    action='store_true')
 parser.add_argument('-db','--debug',help='if set, turn on debug comments and set_trace() at a few locations',
                     action='store_true')
 parser.add_argument('-refrange','--refrange',help='Sets the range of effective radius to be used in the lut [start end]',
@@ -427,6 +429,14 @@ except Exception as ei:
 
 
 # ### run through the lut for each sza/airmass and create the lut params in hires
+
+# In[ ]:
+
+
+if in_.get('noretrieval',False):
+    print('***Exiting without running retrieval***')
+    quit()
+
 
 # In[ ]:
 
