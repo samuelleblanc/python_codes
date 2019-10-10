@@ -839,19 +839,25 @@ elif not rts:
 
 # ## Read the files as a verification
 
-# In[74]:
+# In[9]:
 
 
 vv = 'R2'
 
 
-# In[75]:
+# In[10]:
 
 
 from load_utils import load_ict
 
 
-# In[76]:
+# In[12]:
+
+
+dds = ['20160920']
+
+
+# In[13]:
 
 
 out_RA = []
@@ -869,19 +875,19 @@ for d in dds:
 out_head_RA[5]
 
 
-# In[79]:
+# In[16]:
 
 
 nm = out_RA[0].dtype.names
 
 
-# In[80]:
+# In[17]:
 
 
 nm
 
 
-# In[81]:
+# In[18]:
 
 
 for i,d in enumerate(dds):
@@ -957,6 +963,41 @@ for i,d in enumerate(dds):
     ax[2].set_position([box.x0, box.y0, box.width, box.height*1.1])
 
     plt.savefig(fp+'..//zen_ict/v5/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[19]:
+
+
+nm
+
+
+# In[40]:
+
+
+plt.figure(figsize=(9,2.5))
+plt.plot(out_RA[0]['LAT'][iu],out_RA[0]['COD'][iu],'og')
+plt.errorbar(out_RA[0]['LAT'][iu],out_RA[0]['COD'][iu],yerr=out_RA[0]['COD_err'][iu],linestyle='None',marker='.',label='08:48-09:52 UTC')
+plt.grid()
+plt.legend(frameon=True)
+plt.xlim(-18.1,-13.9)
+plt.ylim(0,40)
+plt.ylabel('COD')
+plt.xlabel('Latitude ($^\\circ$)')
+plt.title('4STAR Zenith cloud retrievals for 2016-09-20')
+plt.savefig(fp+'..//zen_ict/v5/4STAR-CLD-COD_P3_{}_{vv}.png'.format(d,vv=vv),dpi=600,transparent=True)
+
+
+# In[36]:
+
+
+plt.figure()
+plt.plot(out_RA[0]['Start_UTC'],out_RA[0]['LAT'],'.')
+
+
+# In[37]:
+
+
+iu = (out_RA[0]['Start_UTC']>8.8) & (out_RA[0]['Start_UTC']<9.86)
 
 
 # ## Combine the data into a single array
