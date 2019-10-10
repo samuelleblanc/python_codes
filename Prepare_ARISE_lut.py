@@ -48,16 +48,23 @@
 
 # # Prepare the python environment
 
-# In[2]:
+# In[3]:
+
 
 import numpy as np
 import scipy.io as sio
 import os
 import Run_libradtran as RL
-reload(RL)
+
+
+# In[12]:
+
+
+from load_utils import load_from_json
 
 
 # In[68]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ARISE\\'
@@ -73,44 +80,50 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[84]:
+# In[15]:
 
-vv = 'v3'
-mu = np.arange(2.7,4.0,0.1)
+
+vv = 'v3_wat1'
+mu = np.arange(3.0,4.0,0.1)
 mu.shape
 
 
-# In[139]:
+# In[17]:
 
-sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
+
+sza = np.arccos(1.0/mu)*180.0/np.pi
 #sza = np.arange(40,91,5)
 print(sza)
 
 
-# In[6]:
+# In[18]:
+
 
 tau = np.array([0.1,0.2,0.3,0.5,0.75,1.0,1.25,1.5,1.75,2.0,2.3,2.6,3.0,3.5,4.0,4.5,5.0,
-       6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,22.0,25.0,27.0,30.0,35.0,40.0,50.0])
-ref = np.append(np.append(np.arange(2,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,3.0)))
+       6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,22.0,25.0,27.0,30.0,35.0,40.0,50.0,60.0])
+ref = np.append(np.append(np.arange(2,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,5.0)))
 
 
-# In[7]:
+# In[19]:
+
 
 ref
 
 
-# In[8]:
+# In[20]:
+
 
 print(ref.shape)
 print(tau.shape)
 
 
-# In[70]:
+# In[22]:
+
 
 geo = {'lat':72.02,
        'lon':129.3,
        'doy':262,
-       'zout':[0.2,2.0,100.0]}
+       'zout':[0.1,2.0,100.0]}
 aero = {} # none
 cloud = {'ztop':1.0,
          'zbot':0.5,
@@ -127,7 +140,35 @@ albedo = {'create_albedo_file':False,
           'albedo_file':'/nobackup/sleblan2/dat/albedo_v3_20140919_ice.dat'}
 
 
-# In[60]:
+# In[23]:
+
+
+if vv is 'v3_wat1':
+    cloud['ztop'] = 2.0
+    cloud['zbot'] = 0.5
+    albedo['albedo_file'] = '/nobackup/sleblan2/dat/20140919_surf_alb_water1_pure.dat'
+elif vv is 'v3_wat2':
+    cloud['ztop'] = 1.2
+    cloud['zbot'] = 0.3
+    albedo['albedo_file'] = '/nobackup/sleblan2/dat/20140919_surf_alb_water2_inter.dat'
+elif vv is 'v3_ice_top':
+    cloud['ztop'] = 0.5
+    cloud['zbot'] = 0.1
+    albedo['albedo_file'] = '/nobackup/sleblan2/dat/20140919_surf_alb_ice_top.dat'
+elif vv is 'v3_ice_mid':
+    cloud['ztop'] = 0.8
+    cloud['zbot'] = 0.1
+    albedo['albedo_file'] = '/nobackup/sleblan2/dat/20140919_surf_alb_ice_mid.dat'
+elif vv is 'v3_ice_low':
+    cloud['ztop'] = 1.1
+    cloud['zbot'] = 0.2
+    albedo['albedo_file'] = '/nobackup/sleblan2/dat/20140919_surf_alb_ice_low.dat'
+    
+    
+
+
+# In[24]:
+
 
 RL.print_version_details(fp+'ARISE_lut_%s.txt'%vv,vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza)
@@ -135,17 +176,20 @@ RL.print_version_details(fp+'ARISE_lut_%s.txt'%vv,vv,geo=geo,
 
 # In[71]:
 
+
 fp_in = os.path.join(fp_rtm,'input','%s_ARISE'%vv)
 fp_out = os.path.join(fp_rtm,'output','%s_ARISE'%vv)
 
 
 # In[82]:
 
+
 f_slit_vis = os.path.join(fp_rtm,'4STAR_vis_slit_1nm.dat')
 f_slit_nir = os.path.join(fp_rtm,'4STAR_nir_slit_1nm.dat')
 
 
 # In[72]:
+
 
 if not os.path.exists(fp_in):
     os.makedirs(fp_in)
@@ -155,16 +199,18 @@ if not os.path.exists(fp_out):
 
 # In[79]:
 
+
 f_list = open(os.path.join(fp,'run','ARISE_list_%s.sh'%vv),'w')
 print f_list.name
 
 
 # In[ ]:
 
+
 for s in sza:
     for t in tau:
         for r in ref:
-            fname = 'lut_sza%02i_tau%06.2f_ref%04.1f' % (s,t,r)
+            fname = 'lut_sza%04.1f_tau%06.2f_ref%04.1f' % (s,t,r)
             geo['sza'] = s
             cloud['tau'] = t
             cloud['ref'] = r
@@ -200,6 +246,7 @@ for s in sza:
 
 
 # In[ ]:
+
 
 f_list.close()
 

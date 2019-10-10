@@ -81,17 +81,23 @@ from path_utils import getpath
 #fp='C:/Users/sleblan2/Research/ARISE/'
 
 
-# In[6]:
+# In[2]:
 
 
-fp = getpath('ARISE',make_path=True)
+fp = getpath('ARISE')
+
+
+# In[5]:
+
+
+get_ipython().magic(u'matplotlib notebook')
 
 
 # # Load varous data
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[7]:
+# In[3]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.hdf'
@@ -99,7 +105,7 @@ fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
 
-# In[3]:
+# In[6]:
 
 
 def plt_amsr(ax='None'):
@@ -122,7 +128,7 @@ def plt_amsr(ax='None'):
 m = plt_amsr()
 
 
-# In[4]:
+# In[7]:
 
 
 def plt_amsr_zoom(ax='None',colorbar=True):
@@ -605,20 +611,20 @@ plt.savefig(fp+'plots/20140919_map_zoom_terra.png',dpi=600,transparent=True)
 
 # ## Load MERRA Reanalysis
 
-# In[24]:
+# In[10]:
 
 
-fmerra = fp+'MERRA\MERRA300.prod.assim.inst6_3d_ana_Nv.20140919.SUB.hdf'
+fmerra = fp+'MERRA/MERRA300.prod.assim.inst6_3d_ana_Nv.20140919.SUB.hdf'
 merra,merra_dict = lm.load_hdf_sd(fmerra)
 
 
-# In[42]:
+# In[11]:
 
 
 merra_dict['delp']
 
 
-# In[25]:
+# In[12]:
 
 
 def p2alt(p):
@@ -626,13 +632,13 @@ def p2alt(p):
     return (1.0-np.power(p/1013.25,1.0/5.25588))/2.25577E-5
 
 
-# In[44]:
+# In[13]:
 
 
 p2alt(merra['levels'][-10])
 
 
-# In[45]:
+# In[14]:
 
 
 fig,ax = plt.subplots(1,1)

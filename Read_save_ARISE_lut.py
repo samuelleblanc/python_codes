@@ -47,6 +47,7 @@
 
 # In[9]:
 
+
 import numpy as np
 import Run_libradtran as RL
 import hdf5storage as hs
@@ -54,6 +55,7 @@ import os
 
 
 # In[5]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\ARISE\\'
@@ -69,6 +71,7 @@ else:
 
 # In[6]:
 
+
 vv = 'v3'
 mu = np.arange(2.7,4.0,0.1)
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
@@ -80,10 +83,12 @@ zout = [0.2,2.0,100.0]
 
 # In[7]:
 
+
 fp_out = os.path.join(fp_rtm,'output','%s_ARISE'%vv)
 
 
 # In[ ]:
+
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   phase=['wc','ic'],
@@ -93,10 +98,12 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 
 # In[ ]:
 
+
 print 'Saving matlab file'
 
 
 # In[10]:
+
 
 hs.savemat(fp+'{}_ARISE_lut.mat'.format(vv),dat)
 
