@@ -831,7 +831,7 @@ def load_hdf_sd(FILE_NAME):
     import numpy as np
     from pyhdf.SD import SD, SDC
     print 'Reading file: '+FILE_NAME
-    hdf = SD(FILE_NAME, SDC.READ)
+    hdf = SD(str(FILE_NAME), SDC.READ)
     dat = dict()
     dat_dict = dict()
     for name in hdf.datasets().keys():
