@@ -119,7 +119,7 @@ virtualenv==16.5.0
 virtualenv-clone==0.5.3
 wcwidth==0.1.7
 webencodings==0.5.1
-Werkzeug==0.12.2
+Werkzeug==0.15.3
 widgetsnbextension==3.0.7
 XlsxWriter==1.0.5
 zmq==0.0.0
