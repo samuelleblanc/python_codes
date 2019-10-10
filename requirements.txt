@@ -91,7 +91,7 @@ python-dateutil==2.6.1
 python-openid==2.2.5
 python-pptx==0.6.9
 pytz==2017.3
-PyYAML==3.12
+PyYAML==5.1
 pyzmq==16.0.3
 qtconsole==4.3.1
 scandir==1.6
