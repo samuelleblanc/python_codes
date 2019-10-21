@@ -81,19 +81,20 @@ from path_utils import getpath
 #fp='C:/Users/sleblan2/Research/ARISE/'
 
 
-# In[18]:
+# In[44]:
 
 
 import matplotlib.cm as cm
+import hdf5storage as hs
 
 
-# In[152]:
+# In[3]:
 
 
 fp = getpath('ARISE')
 
 
-# In[3]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
@@ -103,7 +104,7 @@ get_ipython().magic(u'matplotlib notebook')
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[4]:
+# In[5]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.4.hdf'
@@ -111,7 +112,7 @@ fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
 
-# In[5]:
+# In[6]:
 
 
 def plt_amsr(ax='None'):
@@ -133,13 +134,13 @@ def plt_amsr(ax='None'):
     return m
 
 
-# In[6]:
+# In[7]:
 
 
 m = plt_amsr()
 
 
-# In[7]:
+# In[8]:
 
 
 def plt_amsr_zoom(ax='None',colorbar=True):
@@ -148,7 +149,7 @@ def plt_amsr_zoom(ax='None',colorbar=True):
         fig = plt.figure()
     m = Basemap(projection='stere',lat_0=72,lon_0=-128,
                 llcrnrlon=-136,llcrnrlat=71,
-                urcrnrlon=-117.5,urcrnrlat=75,resolution='l')
+                urcrnrlon=-117.5,urcrnrlat=75,resolution='h')
     m.drawcountries()
     m.fillcontinents(color='grey')
     m.drawmeridians(np.linspace(-115,-145,11),labels=[0,0,0,1])
@@ -162,7 +163,7 @@ def plt_amsr_zoom(ax='None',colorbar=True):
     return m
 
 
-# In[8]:
+# In[9]:
 
 
 plt_amsr_zoom()
@@ -170,20 +171,20 @@ plt_amsr_zoom()
 
 # ## Load C130 nav data
 
-# In[9]:
+# In[10]:
 
 
 fnav = fp+'c130/ARISE-C130-Hskping_c130_20140919_R1.ict'
 nav,nav_header = lm.load_ict(fnav,return_header=True)
 
 
-# In[10]:
+# In[11]:
 
 
 nav_header
 
 
-# In[11]:
+# In[12]:
 
 
 nav['Longitude'][nav['Longitude']==0.0] = np.NaN
@@ -212,7 +213,7 @@ m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor
 plt.savefig(fp+'plots_v2/20140919_map_ice_conc.png',dpi=600,transparent=True)
 
 
-# In[16]:
+# In[13]:
 
 
 flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitude']<0.0))[0]
@@ -265,7 +266,7 @@ plt.savefig(fp+'plots_v2/20140919_proile_alt_RH.png',dpi=600,transparent=True)
 
 # ## Load Cloud probe data
 
-# In[23]:
+# In[14]:
 
 
 fprobe = fp+'c130/ARISE-LARGE-PROBES_C130_20140919_R2.ict'
@@ -282,7 +283,7 @@ prb_header
 # 
 # The CDP size distributions are in dN, not dlogD. I make a mistake on that label. Usually I put size distributions into the archive as dNdlogD, but I missed a step in doing that. I will correct that with the next archive file update. 
 
-# In[25]:
+# In[15]:
 
 
 flt_prb = np.where((probe['UTC_mid']>19.0) & (probe['UTC_mid']<23.0))
@@ -311,13 +312,13 @@ plt.savefig(fp+'plots_v2/20140919_proile_alt_ndrop.png',dpi=600,transparent=True
 
 # plotting of drop size distribution
 
-# In[27]:
+# In[16]:
 
 
 bin_diameters = np.array([3,4,5,6,7,8,9,10,11,12,13,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50])
 
 
-# In[28]:
+# In[17]:
 
 
 nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_dNdlogD'],
@@ -332,7 +333,7 @@ nd_dist = np.vstack((probe['CDP01_dNdlogD'],probe['CDP02_dNdlogD'],probe['CDP03_
                      probe['CDP28_dNdlogD'],probe['CDP29_dNdlogD'],probe['CDP30_dNdlogD']))
 
 
-# In[29]:
+# In[18]:
 
 
 nd_dist[nd_dist<0.5] = np.nan
@@ -394,7 +395,7 @@ nd_dist.shape
 nd_dist[:,1000]
 
 
-# In[35]:
+# In[19]:
 
 
 from Sp_parameters import nanmasked
@@ -411,13 +412,13 @@ def calc_ref(nd,diameter):
     return re
 
 
-# In[36]:
+# In[20]:
 
 
 print calc_ref(nd_dist[:,14000],bin_diameters)
 
 
-# In[37]:
+# In[21]:
 
 
 ref = np.zeros(len(nd_dist[0,:]))
@@ -436,7 +437,7 @@ plt.grid()
 plt.savefig(fp+'plots_v2/20140919_utc_probes_ref.png',dpi=600,transparent=True)
 
 
-# In[40]:
+# In[22]:
 
 
 probe_ref = Sp.smooth(ref,10,nan=False,old=True)
@@ -481,14 +482,14 @@ plt.savefig(fp+'plots_v2/20140919_lon_ref_calc.png',dpi=600,transparent=True)
 
 # Get the data from MODIS for the proper day of year
 
-# In[45]:
+# In[23]:
 
 
 from datetime import datetime
 datetime(2014,9,19).timetuple().tm_yday
 
 
-# In[46]:
+# In[24]:
 
 
 fmodis_aqua = fp+'MODIS/MYD06_L2.A2014262.1955.006.2014282222048.hdf'
@@ -498,13 +499,13 @@ fmodis_terra_geo = fp+'MODIS/MOD03.A2014262.2115.006.2014272205802.hdf'
 fviirs = fp+'' #not yet
 
 
-# In[47]:
+# In[25]:
 
 
 aqua,aqua_dicts = lm.load_modis(fmodis_aqua_geo,fmodis_aqua)
 
 
-# In[48]:
+# In[26]:
 
 
 terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
@@ -516,7 +517,7 @@ terra,terra_dicts = lm.load_modis(fmodis_terra_geo,fmodis_terra)
 terra_dicts['tau']
 
 
-# In[52]:
+# In[27]:
 
 
 flt_aqua = np.where(nav['Start_UTC']<19.9)
@@ -572,7 +573,7 @@ plt.title('19:55 UTC')
 plt.savefig(fp+'plots_v2/20140919_map_zoom_aqua.png',dpi=600,transparent=True)
 
 
-# In[55]:
+# In[28]:
 
 
 flt_terra = np.where(nav['Start_UTC']<21.25)
@@ -630,20 +631,20 @@ plt.savefig(fp+'plots_v2/20140919_map_zoom_terra.png',dpi=600,transparent=True)
 
 # ## Load MERRA Reanalysis
 
-# In[114]:
+# In[29]:
 
 
 fmerra = fp+'MERRA/MERRA300.prod.assim.inst6_3d_ana_Nv.20140919.SUB.hdf'
 merra,merra_dict = lm.load_hdf_sd(fmerra)
 
 
-# In[115]:
+# In[30]:
 
 
 merra_dict['delp']
 
 
-# In[116]:
+# In[31]:
 
 
 def p2alt(p):
@@ -651,7 +652,7 @@ def p2alt(p):
     return (1.0-np.power(p/1013.25,1.0/5.25588))/2.25577E-5
 
 
-# In[117]:
+# In[32]:
 
 
 p2alt(merra['levels'][-10])
@@ -684,13 +685,13 @@ m.scatter(nav['Longitude'],nav['Latitude'],latlon=True,zorder=10,s=0.5,edgecolor
 plt.savefig(fp+'plots_v2/20140919_map_wind.png',dpi=600,transparent=True)
 
 
-# In[120]:
+# In[33]:
 
 
 merra['longitude'][50:78]
 
 
-# In[121]:
+# In[34]:
 
 
 print merra['latitude'].shape
@@ -725,7 +726,7 @@ plt.xlabel('Longitude')
 
 # First get the indices in ice concentration linked to the flight path
 
-# In[128]:
+# In[35]:
 
 
 import map_utils as mu
@@ -733,14 +734,14 @@ import map_utils as mu
 
 # Create a lat lon slice to use for correlating the sea ice concentration
 
-# In[129]:
+# In[36]:
 
 
 points_lat = [73.2268,71.817716]
 points_lon = [-135.3189167,-128.407833]
 
 
-# In[130]:
+# In[37]:
 
 
 from scipy import interpolate
@@ -750,7 +751,7 @@ path_lat = flat(np.arange(100))
 path_lon = flon(np.arange(100))
 
 
-# In[132]:
+# In[38]:
 
 
 ind = np.zeros((2,len(path_lat)), dtype=np.int)
@@ -759,7 +760,7 @@ for i,x in enumerate(path_lat):
     ind[:,i] = np.unravel_index(np.nanargmin(np.square(amsr['lat']-x)+np.square(amsr['lon']-360.0-y)),amsr['lat'].shape)
 
 
-# In[133]:
+# In[39]:
 
 
 plt.figure()
@@ -859,7 +860,7 @@ plt.savefig(fp+'plots_v2/20140919_proile_zoom_alt_cloud_ice.png',dpi=600,transpa
 
 # Now get a MERRA profile of winds on top of this.
 
-# ## Load the 4STAR data
+# ## Old - Load the 4STAR data
 
 # In[142]:
 
@@ -994,7 +995,7 @@ lutwat.param_hires()
 lutwat.sp_hires()
 
 
-# ## Plot the 4STAR zenith radiance measurement and model
+# ## Old - Plot the 4STAR zenith radiance measurement and model
 
 # In[27]:
 
@@ -1345,6 +1346,103 @@ plt.xlabel('Longitude')
 plt.legend(frameon=False,loc=2)
 
 
+# ## Load the retrieved 4STAR cloud properties
+
+# In[41]:
+
+
+s = sio.loadmat(fp+'starzen/4STAR_20140919starzen.mat')
+
+
+# In[56]:
+
+
+sps = Sp.Sp(s)
+
+
+# In[45]:
+
+
+rt_wat1 = hs.loadmat(fp+'ret/v3_wat1/20140919_zen_cld_retrieved.mat')
+rt_wat2 = hs.loadmat(fp+'ret/v3_wat2/20140919_zen_cld_retrieved.mat')
+rt_ice_low = hs.loadmat(fp+'ret/v3_ice_low/20140919_zen_cld_retrieved.mat')
+rt_ice_mid = hs.loadmat(fp+'ret/v3_ice_mid/20140919_zen_cld_retrieved.mat')
+rt_ice_top = hs.loadmat(fp+'ret/v3_ice_top/20140919_zen_cld_retrieved.mat')
+
+
+# ### Plot out the retrievals
+
+# In[46]:
+
+
+rt_wat1.keys()
+
+
+# In[52]:
+
+
+plt.figure()
+plt.plot(rt_wat1['lon'],rt_wat1['tau'],'.',label='wat1')
+plt.plot(rt_wat2['lon'],rt_wat2['tau'],'o',label='wat2')
+plt.plot(rt_ice_low['lon'],rt_ice_low['tau'],'+',label='ice_low')
+plt.plot(rt_ice_mid['lon'],rt_ice_mid['tau'],'x',label='ice_mid')
+plt.plot(rt_ice_top['lon'],rt_ice_top['tau'],'v',label='ice_top')
+plt.legend(frameon=False,loc=3)
+plt.ylabel('COD')
+plt.xlabel('Longitude')
+
+
+# In[54]:
+
+
+plt.figure()
+plt.plot(rt_wat1['lon'],rt_wat1['ref'],'.',label='wat1')
+plt.plot(rt_wat2['lon'],rt_wat2['ref'],'o',label='wat2')
+plt.plot(rt_ice_low['lon'],rt_ice_low['ref'],'+',label='ice_low')
+plt.plot(rt_ice_mid['lon'],rt_ice_mid['ref'],'x',label='ice_mid')
+plt.plot(rt_ice_top['lon'],rt_ice_top['ref'],'v',label='ice_top')
+plt.legend(frameon=False,loc=3)
+plt.ylabel('ref')
+plt.xlabel('Longitude')
+
+
+# ### Filter bad data where vis and nir don't match
+
+# In[55]:
+
+
+i_vis = [1061,1062,1064]
+i_nir = [1060,1063]
+
+
+# In[58]:
+
+
+nvis = np.nanmean(sps.norm[:,i_vis],axis=1)
+nnir = np.nanmean(sps.norm[:,i_nir],axis=1)
+rt_wat1['delta'] = abs(nvis-nnir)
+rt_wat1['fl_match'] = rt_wat1['delta']<0.06
+
+print rt_wat1['delta'].shape,rt_wat1['delta'][rt_wat1['fl_match']].shape,    float(rt_wat1['delta'][rt_wat1['fl_match']].shape[0])/ float(rt_wat1['delta'].shape[0])*100.0
+
+rt_wat2['delta'] = abs(nvis-nnir)
+rt_wat2['fl_match'] = rt_wat2['delta']<0.06
+rt_ice_low['delta'] = abs(nvis-nnir)
+rt_ice_low['fl_match'] = rt_ice_low['delta']<0.06
+rt_ice_mid['delta'] = abs(nvis-nnir)
+rt_ice_mid['fl_match'] = rt_ice_mid['delta']<0.06
+rt_ice_top['delta'] = abs(nvis-nnir)
+rt_ice_top['fl_match'] = rt_ice_top['delta']<0.06
+
+
+# ### Filter out high altitude
+
+# In[59]:
+
+
+rt_wat1['alt']
+
+
 # ## Now save the retrieved cloud values
 
 # In[38]:
@@ -1379,7 +1477,7 @@ fpp_out = fp+'retr_sav.p'
 pickle.dump(mdict,open(fpp_out,"wb"))
 
 
-# ### Compile into statistics over water and over ice
+# ## Compile into statistics over water and over ice
 
 # In[47]:
 
