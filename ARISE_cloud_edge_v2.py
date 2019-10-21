@@ -368,6 +368,156 @@ plt.grid()
 plt.savefig(fp+'plots_v2/20140919_utc_dndlogd_zoom.png',dpi=600,transparent=True)
 
 
+# ## Load the SSFR data
+
+# In[126]:
+
+
+ssfr,ssfr_h = lm.load_hdf(fp+'c130/ARISE-SSFR_C130_20140919_R1.h5',all_values=True) 
+
+
+# In[129]:
+
+
+ssfr['nspectra'] = ssfr['//nspectra']
+ssfr['zspectra'] = ssfr['//zspectra']
+
+
+# In[131]:
+
+
+import h5py
+
+
+# In[132]:
+
+
+sh = h5py.File(fp+'c130/ARISE-SSFR_C130_20140919_R1.h5','r')
+
+
+# In[133]:
+
+
+ssfr = {}
+for key in sh.keys():
+    print(key)
+    ssfr[key] = sh[key][:]
+
+
+# In[134]:
+
+
+sh.close()
+
+
+# In[135]:
+
+
+ssfr.keys()
+
+
+# In[136]:
+
+
+from scipy.interpolate import interp1d
+fn = interp1d(ssfr['nadlambda'],ssfr['nspectra'],axis=1,bounds_error=False)
+ssfr['nnspectra'] = fn(ssfr['zenlambda'])
+
+
+# In[137]:
+
+
+wvl = np.arange(350,1701)
+
+
+# In[138]:
+
+
+ssfr['nspectra1'] = fn(wvl)
+
+
+# In[139]:
+
+
+fz = interp1d(ssfr['zenlambda'],ssfr['zspectra'],axis=1,bounds_error=False)
+ssfr['zspectra1'] = fz(wvl)
+
+
+# In[141]:
+
+
+alb = ssfr['nspectra1']/ssfr['zspectra1']
+alb[alb<=0.0] = 0.0
+alb[alb>=1.0] = 1.0
+alb[np.isnan(alb)] = 0.0
+
+
+# In[142]:
+
+
+alb.shape
+
+
+# In[144]:
+
+
+ssfr['utc'].shape
+
+
+# In[145]:
+
+
+ssfr_flt = np.where((ssfr['utc']>19.0) & (ssfr['utc']<23.0))[0]
+
+
+# In[146]:
+
+
+ssfr_flt.shape
+
+
+# In[147]:
+
+
+flt.shape
+
+
+# In[160]:
+
+
+falb = interp1d(alb[:,150],ssfr['utc'],bounds_error=False)
+alb_500 = falb(sps['utc'])
+
+
+# In[161]:
+
+
+alb_500.shape
+
+
+# In[158]:
+
+
+any(np.isnan(alb[:,150]))
+
+
+# In[164]:
+
+
+plt.figure()
+plt.plot(sps['utc'])
+plt.plot(ssfr['utc'],label='ssfr')
+plt.legend()
+
+
+# In[162]:
+
+
+plt.figure()
+plt.plot(sps['utc'],alb_500,'x')
+#plt.plot(ssfr['utc'],alb[:,150],'.')
+
+
 # # Start more detailed analysis
 
 # ## Convert the drop size distribution to $r_{eff}$
@@ -1437,11 +1587,137 @@ rt_ice_top['fl_match'] = rt_ice_top['delta']<0.06
 
 # ### Filter out high altitude
 
-# In[59]:
+# In[63]:
 
 
-rt_wat1['alt']
+rt_wat1['fl_alt'] = rt_wat1['alt']<1200.0
+rt_wat2['fl_alt'] = rt_wat2['alt']<1200.0
+rt_ice_low['fl_alt'] = rt_ice_low['alt']<1200.0
+rt_ice_mid['fl_alt'] = rt_ice_mid['alt']<1200.0
+rt_ice_top['fl_alt'] = rt_ice_top['alt']<1200.0
 
+
+# In[64]:
+
+
+print rt_wat1['fl_alt'].shape,rt_wat1['alt'][rt_wat1['fl_alt']].shape,    float(rt_wat1['alt'][rt_wat1['fl_alt']].shape[0])/ float(rt_wat1['alt'].shape[0])*100.0
+
+
+# ### filter out high Ki squared residuals
+
+# In[66]:
+
+
+plt.figure()
+plt.plot(rt_wat1['ki'],'x')
+
+
+# In[76]:
+
+
+ki_limit = 0.6
+
+
+# In[77]:
+
+
+rt_wat1['fl_ki'] = rt_wat1['ki']<ki_limit
+rt_wat2['fl_ki'] = rt_wat2['ki']<ki_limit
+rt_ice_low['fl_ki'] = rt_ice_low['ki']<ki_limit
+rt_ice_mid['fl_ki'] = rt_ice_mid['ki']<ki_limit
+rt_ice_top['fl_ki'] = rt_ice_top['ki']<ki_limit
+
+
+# In[78]:
+
+
+print rt_wat1['fl_ki'].shape,rt_wat1['ki'][rt_wat1['fl_ki']].shape,    float(rt_wat1['ki'][rt_wat1['fl_ki']].shape[0])/ float(rt_wat1['ki'].shape[0])*100.0
+
+
+# ### Filer out railed values (cod =60 and ref =24)
+
+# In[119]:
+
+
+tau_max = 59.0
+rt_wat1['fl_tau'] = rt_wat1['tau']<tau_max
+rt_wat2['fl_tau'] = rt_wat2['tau']<tau_max
+rt_ice_low['fl_tau'] = rt_ice_low['tau']<tau_max
+rt_ice_mid['fl_tau'] = rt_ice_mid['tau']<tau_max
+rt_ice_top['fl_tau'] = rt_ice_top['tau']<tau_max
+
+
+# In[108]:
+
+
+ref_max = 24.0
+rt_wat1['fl_ref'] = rt_wat1['ref']<ref_max
+rt_wat2['fl_ref'] = rt_wat2['ref']<ref_max
+rt_ice_low['fl_ref'] = rt_ice_low['ref']<ref_max
+rt_ice_mid['fl_ref'] = rt_ice_mid['ref']<ref_max
+rt_ice_top['fl_ref'] = rt_ice_top['ref']<ref_max
+
+
+# In[120]:
+
+
+print 'rt_wat1, tau', float(rt_wat1['tau'][rt_wat1['fl_tau']].shape[0])/float(len(rt_wat1['tau'])) *100.0, '%'
+print 'rt_wat1, ref', float(rt_wat1['ref'][rt_wat1['fl_ref']].shape[0])/float(len(rt_wat1['ref'])) *100.0, '%'
+
+
+# ### Combine the filters
+
+# In[121]:
+
+
+rt_wat1['fl'] = rt_wat1['fl_match'] & rt_wat1['fl_alt'][:,0] & rt_wat1['fl_ki'] & rt_wat1['fl_tau'] & rt_wat1['fl_ref']
+rt_wat2['fl'] = rt_wat2['fl_match'] & rt_wat2['fl_alt'][:,0] & rt_wat2['fl_ki'] & rt_wat2['fl_tau'] & rt_wat2['fl_ref']
+rt_ice_low['fl'] = rt_ice_low['fl_match'] & rt_ice_low['fl_alt'][:,0] & rt_ice_low['fl_ki'] & rt_ice_low['fl_tau'] & rt_ice_low['fl_ref']
+rt_ice_mid['fl'] = rt_ice_mid['fl_match'] & rt_ice_mid['fl_alt'][:,0] & rt_ice_mid['fl_ki'] & rt_ice_mid['fl_tau'] & rt_ice_mid['fl_ref']
+rt_ice_top['fl'] = rt_ice_top['fl_match'] & rt_ice_top['fl_alt'][:,0] & rt_ice_top['fl_ki'] & rt_ice_top['fl_tau'] & rt_ice_top['fl_ref']
+
+
+# In[122]:
+
+
+print 'rt_wat1', float(rt_wat1['tau'][rt_wat1['fl']].shape[0])/float(len(rt_wat1['tau'])) *100.0, '%'
+print 'rt_wat2', float(rt_wat2['tau'][rt_wat2['fl']].shape[0])/float(len(rt_wat2['tau'])) *100.0, '%'
+print 'rt_ice_low', float(rt_ice_low['tau'][rt_ice_low['fl']].shape[0])/float(len(rt_ice_low['tau'])) *100.0, '%'
+print 'rt_ice_mid', float(rt_ice_mid['tau'][rt_ice_mid['fl']].shape[0])/float(len(rt_ice_mid['tau'])) *100.0, '%'
+print 'rt_ice_top', float(rt_ice_top['tau'][rt_ice_top['fl']].shape[0])/float(len(rt_ice_top['tau'])) *100.0, '%'
+
+
+# ### Plot the filtered products
+
+# In[123]:
+
+
+plt.figure()
+plt.plot(rt_wat1['lon'][rt_wat1['fl']],rt_wat1['tau'][rt_wat1['fl']],'.',label='wat1')
+plt.plot(rt_wat2['lon'][rt_wat2['fl']],rt_wat2['tau'][rt_wat2['fl']],'o',label='wat2')
+plt.plot(rt_ice_low['lon'][rt_ice_low['fl']],rt_ice_low['tau'][rt_ice_low['fl']],'+',label='ice_low')
+plt.plot(rt_ice_mid['lon'][rt_ice_mid['fl']],rt_ice_mid['tau'][rt_ice_mid['fl']],'x',label='ice_mid')
+plt.plot(rt_ice_top['lon'][rt_ice_top['fl']],rt_ice_top['tau'][rt_ice_top['fl']],'v',label='ice_top')
+plt.legend(frameon=False,loc=3)
+plt.ylabel('COD')
+plt.xlabel('Longitude')
+
+
+# In[118]:
+
+
+plt.figure()
+plt.plot(rt_wat1['lon'][rt_wat1['fl']],rt_wat1['ref'][rt_wat1['fl']],'.',label='wat1')
+plt.plot(rt_wat2['lon'][rt_wat2['fl']],rt_wat2['ref'][rt_wat2['fl']],'o',label='wat2')
+plt.plot(rt_ice_low['lon'][rt_ice_low['fl']],rt_ice_low['ref'][rt_ice_low['fl']],'+',label='ice_low')
+plt.plot(rt_ice_mid['lon'][rt_ice_mid['fl']],rt_ice_mid['ref'][rt_ice_mid['fl']],'x',label='ice_mid')
+plt.plot(rt_ice_top['lon'][rt_ice_top['fl']],rt_ice_top['ref'][rt_ice_top['fl']],'v',label='ice_top')
+plt.legend(frameon=False,loc=3)
+plt.ylabel('ref')
+plt.xlabel('Longitude')
+
+
+# ### Select values dependent on surface reflectance
 
 # ## Now save the retrieved cloud values
 
