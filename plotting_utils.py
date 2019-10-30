@@ -561,9 +561,19 @@ def color_box(bp, color):
     # Define the elements to color. You can also add medians, fliers and means
     elements = ['boxes','caps','whiskers','medians','means','fliers']
 
+    if type(color) is not list: color = [color]
     # Iterate over each of the elements changing the color
+    if len(color) == len(bp[elements[0]]):
+        colors = color
+    elif len(color)==1:
+        colors = []
+        [colors.extend(color) for i in xrange(len(bp[elements[0]]))]
+        
     for elem in elements:
-        [plt.setp(bp[elem][idx], color=color) for idx in xrange(len(bp[elem]))]
+        if len(bp[elem]) > len(colors):
+            [plt.setp(bp[elem][idx], color=colors[idx/2]) for idx in xrange(len(bp[elem]))]
+        else:
+            [plt.setp(bp[elem][idx], color=colors[idx]) for idx in xrange(len(bp[elem]))]
     return
 
 
