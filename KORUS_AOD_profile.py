@@ -50,7 +50,7 @@
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+#matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
@@ -63,11 +63,18 @@ import load_utils as lm
 # In[2]:
 
 
+from path_utils import getpath
+fp = getpath('KORUS')
+
+
+# In[3]:
+
+
 get_ipython().magic(u'matplotlib notebook')
-fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
+#fp = 'C:/Users/sleblan2/Research/KORUS-AQ/'
 
 
-# In[164]:
+# In[4]:
 
 
 from mpl_toolkits.basemap import Basemap,cm
@@ -79,13 +86,13 @@ from Sp_parameters import deriv, smooth
 # ## Load the 4STAR starsun
 # 
 
-# In[3]:
+# In[5]:
 
 
 f_star = fp+'data\\20160501starsun.mat'
 
 
-# In[4]:
+# In[6]:
 
 
 s = sio.loadmat(f_star)
