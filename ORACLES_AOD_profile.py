@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -2591,4 +2591,10 @@ for line,text in zip(leg.get_lines(), leg.get_texts()):
 plt.title('AOD profile from HSRL2 and 4STAR\n on {} at 11.87 UTC'.format(dd))
 
 plt.savefig(fp+'plot/AOD_Alt_profile_vs_HSRL_{}.png'.format(dd),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 

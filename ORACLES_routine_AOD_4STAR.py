@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -2944,6 +2944,12 @@ plt.savefig(fp+'plot_v2/ORACLES2016_4STAR_Angstrom_2wvl_histogram_comb.png',
             transparent=True,dpi=500)
 
 
+# In[ ]:
+
+
+
+
+
 # ### Remake the angstrom histogram as stacked bars , one with old method, and one with polyfit
 
 # In[191]:
@@ -4176,6 +4182,12 @@ astat2['dcnt'],astat2['xs'],astat2['ys'],astat2['bin'] = st.binned_statistic_2d(
                                                                           bins=26,range=[[-25,-8],[0,16]],
                                                                            statistic=uniq_cnt)
 astat2['dcnt'] = np.ma.masked_array(astat2['dcnt'],np.isnan(astat2['dcnt']))
+
+
+# In[ ]:
+
+
+
 
 
 # In[71]:
@@ -6432,4 +6444,10 @@ plt.figure()
 #plt.hist(dd['tauf'][s['fl_acaod']],bins=25,range=(0,5.0),normed=True)
 plt.hist(dd['tau'][s['fl_acaod']],bins=25,range=(0,1.0),normed=True)
 plt.hist(aods[s['fl_acaod'],4],bins=25,range=(0,1.0),normed=True)
+
+
+# In[ ]:
+
+
+
 
