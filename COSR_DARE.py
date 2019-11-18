@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[119]:
 
 
 import numpy as np
@@ -51,6 +51,7 @@ import hdf5storage as hs
 import scipy.io as sio
 from datetime import datetime
 from scipy.interpolate import UnivariateSpline, interp1d
+from scipy import interpolate 
 import pandas as pd
 
 
@@ -136,37 +137,37 @@ day = in_.get('daystr','20180624')
 ## neph['None'][0][4]
 
 
-# In[8]:
+# In[33]:
 
 
 situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
 
 
-# In[9]:
+# In[34]:
 
 
 situ
 
 
-# In[10]:
+# In[35]:
 
 
 insitu = situ.to_dict('list')
 
 
-# In[11]:
+# In[36]:
 
 
 insitu.keys()
 
 
-# In[12]:
+# In[37]:
 
 
 insitu['ssa_500nm'] = np.array(insitu['totScatCalc_500nm'])/np.array(insitu['extCalc500nm'])
 
 
-# In[14]:
+# In[38]:
 
 
 plt.figure()
@@ -176,19 +177,19 @@ plt.plot(Sp.smooth(insitu['ssa_500nm'],60,old=True),'-r')
 
 # ## Load the 4STAR AOD
 
-# In[16]:
+# In[28]:
 
 
 s = hs.loadmat(fp+'data/4STAR_{}starsun_for_starflag.mat'.format(day))
 
 
-# In[17]:
+# In[29]:
 
 
 s.keys()
 
 
-# In[18]:
+# In[30]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -196,13 +197,14 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 
 # ## Load the skyscan results
 
-# In[19]:
+# In[77]:
 
 
-sky = sio.loadmat(fp+'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat')
+fp_name = '4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
+sky = sio.loadmat(fp+fp_name)
 
 
-# In[20]:
+# In[32]:
 
 
 sky.keys()
@@ -212,7 +214,7 @@ sky.keys()
 
 # ## Plot out the retrieved skyscans
 
-# In[21]:
+# In[81]:
 
 
 plt.figure()
@@ -221,31 +223,33 @@ plt.plot(sky['Wavelength'],sky['g_tot'][0,:],'x-',label='ASY')
 
 plt.legend(frameon=False)
 plt.xlabel('Wavelength [micron]')
+plt.title('4STAR skyscan results from: \n' + fp_name)
+plt.savefig(fp+'plots/4STAR_skyscan_result_20180624_135_SKYP.png',dpi=600,transparent=True)
 
 
 # ## Get the vertical dependence of the extinction
 
-# In[22]:
+# In[40]:
 
 
 gu = pd.to_datetime(situ['DateTimeUTC']).to_list()
 insitu['utc'] = np.array([g.hour+g.minute/60.0+g.second/3600.0 for g in gu])
 
 
-# In[23]:
+# In[41]:
 
 
 from scipy.interpolate import interp1d
 
 
-# In[24]:
+# In[42]:
 
 
 f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
 insitu['alt'] = f_alt(insitu['utc'])
 
 
-# In[25]:
+# In[43]:
 
 
 plt.figure()
@@ -259,16 +263,61 @@ plt.figure()
 plt.plot(insitu['utc'],insitu['alt'])
 
 
-# In[ ]:
+# In[67]:
 
 
-binned_ang,binned_alt,binned_num,binned_ndays = [],[],[],[]
-for i in xrange(70):
-    flaa = (s['GPS_Alt'][s['fl_QA_angs']]>=i*100.0) & (s['GPS_Alt'][s['fl_QA_angs']]<(i+1.0)*100.0)
-    binned_ang.append(s['angs_470_865'][s['fl_QA_angs']][flaa])
-    binned_alt.append(np.mean([i*100.0,(i+1.0)*100.0]))
-    binned_num.append(len(s['angs_470_865'][s['fl_QA_angs']][flaa]))
-    binned_ndays.append(len(np.unique(s['days'][s['fl_QA_angs']][flaa])))
+insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
+
+
+# In[71]:
+
+
+np.isfinite(insitu['extCalc500nm'])
+
+
+# In[160]:
+
+
+binned_ext,binned_alt,binned_num = [],[],[]
+for i in xrange(14):
+    flaa = (insitu['alt']>=i*100.0) & (insitu['alt']<(i+1.0)*100.0) & (np.isfinite(insitu['extCalc500nm']))
+    if flaa.any():
+        binned_ext.append(insitu['extCalc500nm'][flaa])
+        binned_alt.append(np.mean([i*100.0,(i+1.0)*100.0]))
+        binned_num.append(len(insitu['extCalc500nm'][flaa]))
+
+
+# In[162]:
+
+
+plt.figure()
+bp =plt.boxplot(binned_ext,positions=binned_alt,vert=False,showfliers=False,widths=100,showmeans=True,patch_artist=True)
+plt.xlabel('Extinction Calculated 500 nm')
+plt.ylabel('Altitude [m]')
+#plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.',alpha=0.005)
+for b in bp['boxes']:
+    b.set_facecolor('green')
+    b.set_edgecolor('green')
+    b.set_alpha(0.4)
+for b in bp['means']:
+    b.set_marker('o')
+    b.set_color('firebrick')
+    b.set_alpha(0.4)
+for b in bp['whiskers']:
+    b.set_linestyle('-')
+    b.set_color('green')
+    b.set_alpha(0.4)
+for b in bp['caps']:
+    b.set_alpha(0.4)
+    b.set_color('green')
+for b in bp['medians']:
+    b.set_linewidth(4)
+    b.set_color('gold')
+    b.set_alpha(0.4)
+ext_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
+plt.plot(ext_means[:,0],ext_means[:,1],'-k')
+plt.title('In situ calculated extinction CLAP+neph: 20180624')
+plt.savefig(fp+'plots/extinction_vertical_bins_clap_neph_20180624.png',dpi=600,transparent=True)
 
 
 # # Run analysis and prepare variables
