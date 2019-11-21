@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -74,20 +74,20 @@ from path_utils import getpath
 from Sp_parameters import smooth
 
 
-# In[4]:
+# In[9]:
 
 
 fo = getpath('ORACLES')
 
 
-# In[5]:
+# In[10]:
 
 
 fp = fo+'starzen/'
 fp_plot = fo+'plot/'
 
 
-# In[6]:
+# In[11]:
 
 
 fp, fp_plot
@@ -101,7 +101,7 @@ fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
 fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 
-# In[7]:
+# In[12]:
 
 
 vr = 'R2'
@@ -109,21 +109,21 @@ vr = 'R2'
 
 # # Load the files
 
-# In[8]:
+# In[13]:
 
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[9]:
+# In[14]:
 
 
 rts_low, rts_mid, rts_80, rts_65, rts_05, rts_10, rts_15 = [],[],[],[],[],[],[]
 sps = []
 
 
-# In[10]:
+# In[15]:
 
 
 for daystr in dds:
@@ -135,7 +135,7 @@ for daystr in dds:
     sps.append(sp)
 
 
-# In[11]:
+# In[16]:
 
 
 for daystr in dds:
@@ -145,7 +145,7 @@ for daystr in dds:
     rts_mid.append(rt)
 
 
-# In[12]:
+# In[17]:
 
 
 for daystr in dds:
@@ -155,7 +155,7 @@ for daystr in dds:
     rts_65.append(rt)
 
 
-# In[13]:
+# In[18]:
 
 
 for daystr in dds:
@@ -165,7 +165,7 @@ for daystr in dds:
     rts_80.append(rt)
 
 
-# In[14]:
+# In[19]:
 
 
 for daystr in dds:
@@ -175,7 +175,7 @@ for daystr in dds:
     rts_05.append(rt)
 
 
-# In[15]:
+# In[20]:
 
 
 for daystr in dds:
@@ -185,7 +185,7 @@ for daystr in dds:
     rts_10.append(rt)
 
 
-# In[23]:
+# In[21]:
 
 
 for daystr in dds:
@@ -197,37 +197,37 @@ for daystr in dds:
 
 # ## Load the cloud probe incloud flag
 
-# In[17]:
+# In[22]:
 
 
 from load_utils import mat2py_time,toutc
 
 
-# In[18]:
+# In[23]:
 
 
 p = sio.netcdf_file(fp+'..//data_other//oracles.cloud.timings.nc','r')
 
 
-# In[19]:
+# In[24]:
 
 
 p.variables
 
 
-# In[20]:
+# In[25]:
 
 
 p.variables['timevec_20160914'].data
 
 
-# In[21]:
+# In[26]:
 
 
 t_0914 = mat2py_time(p.variables['timevec_20160914'].data)
 
 
-# In[28]:
+# In[27]:
 
 
 plt.figure()
@@ -236,7 +236,7 @@ plt.plot(t_0914,p.variables['cloud_time_20160914'].data,'x')
 
 # ## Load the AOD ict files
 
-# In[22]:
+# In[28]:
 
 
 ar6 = hs.loadmat(fo+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
@@ -252,13 +252,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # # Start plotting the results
 
-# In[33]:
+# In[29]:
 
 
 rt.keys()
 
 
-# In[34]:
+# In[30]:
 
 
 plt.figure()
@@ -286,13 +286,13 @@ plt.figure()
 plt.plot(rts[9]['tau'],rts[9]['ref'],'.')
 
 
-# In[12]:
+# In[31]:
 
 
 igood = rts[9]['tau']>0
 
 
-# In[13]:
+# In[32]:
 
 
 igood[0:10]
@@ -342,14 +342,14 @@ plt.plot(sps[7].utc,sps[7].sza,'x-')
 
 # ## Filter out data points where nir and vis spectrometers don't match
 
-# In[24]:
+# In[33]:
 
 
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
-# In[25]:
+# In[34]:
 
 
 for i,daystr in enumerate(dds):
@@ -373,13 +373,13 @@ for i,daystr in enumerate(dds):
 
 # ## Now filter out the times which were at too high altitude
 
-# In[26]:
+# In[35]:
 
 
 fl_alt = rt['alt']<1000.0
 
 
-# In[27]:
+# In[36]:
 
 
 for i,daystr in enumerate(dds):
@@ -395,13 +395,13 @@ for i,daystr in enumerate(dds):
 
 # ## Filter for in cloud
 
-# In[28]:
+# In[37]:
 
 
 from write_utils import nearest_neighbor
 
 
-# In[29]:
+# In[38]:
 
 
 for i,daystr in enumerate(dds):
@@ -416,7 +416,7 @@ for i,daystr in enumerate(dds):
     print daystr,rts_low[i]['utc'].shape,rts_low[i]['utc'][rts_low[i]['fl_incld']].shape,        float(rts_low[i]['utc'][rts_low[i]['fl_incld']].shape[0])/ float(rts_low[i]['utc'].shape[0])*100.0
 
 
-# In[30]:
+# In[40]:
 
 
 for i,daystr in enumerate(dds):
@@ -431,7 +431,7 @@ for i,daystr in enumerate(dds):
 
 # ## Filter for high ki squared residuals
 
-# In[31]:
+# In[41]:
 
 
 for i,daystr in enumerate(dds):
@@ -448,7 +448,7 @@ for i,daystr in enumerate(dds):
 
 # ## Combine the filters
 
-# In[32]:
+# In[42]:
 
 
 tot=0
@@ -467,7 +467,7 @@ for i,daystr in enumerate(dds):
     rts_15[i]['fl'] = rts_15[i]['fl_match'] & rts_15[i]['fl_alt'] & rts_15[i]['fl_incld'] & rts_15[i]['fl_ki']
 
 
-# In[33]:
+# In[43]:
 
 
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
@@ -475,7 +475,7 @@ print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 # # Now plot each retrieved product, filtered
 
-# In[34]:
+# In[44]:
 
 
 from Sp_parameters import smooth
@@ -566,20 +566,20 @@ ar6['Start_UTC']
 ar6['days']
 
 
-# In[40]:
+# In[45]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[41]:
+# In[46]:
 
 
 dds
 
 
-# In[42]:
+# In[47]:
 
 
 for i,daystr in enumerate(dds):
@@ -592,51 +592,51 @@ for i,daystr in enumerate(dds):
     print daystr,rts_low[i]['utc'].shape,np.nanmin(rts_low[i]['acaod']),np.nanmax(rts_low[i]['acaod']),np.nanmean(rts_low[i]['acaod'])
 
 
-# In[46]:
+# In[48]:
 
 
 aod_luts = [0.15,0.3,0.45,0.6,1.5,1.95,2.4]
 
 
-# In[47]:
+# In[49]:
 
 
 acaod_index = []
 for i,dayst in enumerate(dds): acaod_index.append([np.abs(aod_luts-a).argmin() for a in rts_low[i]['acaod']])
 
 
-# In[48]:
+# In[50]:
 
 
 acaod_index[4]
 
 
-# In[49]:
+# In[51]:
 
 
 i = 4
 tmpt = np.array([rts_05[i]['tau'],rts_10[i]['tau'],rts_15[i]['tau'],rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']])
 
 
-# In[50]:
+# In[52]:
 
 
 tmpt.shape
 
 
-# In[52]:
+# In[53]:
 
 
 np.array(acaod_index[4]).shape
 
 
-# In[58]:
+# In[54]:
 
 
 ta = np.array([tmpt[a,j] for j,a in enumerate(acaod_index[i])])
 
 
-# In[59]:
+# In[55]:
 
 
 ta.shape
@@ -652,13 +652,13 @@ plt.plot(rts_low[i]['tau'],'+',label='low')
 plt.legend()
 
 
-# In[65]:
+# In[56]:
 
 
 rts = rts_mid
 
 
-# In[66]:
+# In[57]:
 
 
 for i,daystr in enumerate(dds):
@@ -671,7 +671,7 @@ for i,daystr in enumerate(dds):
     rts[i]['ref'] = re
 
 
-# In[67]:
+# In[58]:
 
 
 for i,daystr in enumerate(dds):
@@ -725,6 +725,42 @@ for i,daystr in enumerate(dds):
     rts_mid[i]['LWP'] = 5.0/9.0 * rts_mid[i]['tau']* rts_mid[i]['ref']
     rts_mid[i]['LWP_err'] = np.sqrt((5.0/9.0 * rts_mid[i]['ref'] * rts_mid[i]['tau_err'])**2.0+                                       (5.0/9.0 * rts_mid[i]['tau'] * rts_mid[i]['ref_err'])**2.0)
     
+
+
+# ## Save the acaod indices for easier loading later
+
+# In[71]:
+
+
+dds
+
+
+# In[76]:
+
+
+ind,utc_ind = {},{}
+for i,d in enumerate(dds):
+    ind[d] = acaod_index[i]
+    utc_ind[d] = rts[i]['utc']
+
+
+# In[75]:
+
+
+files_ind = {
+    '0':'ORACLES_lut_v5_05aod.txt',
+    '1':'ORACLES_lut_v5_10aod.txt',
+    '2':'ORACLES_lut_v5_15aod.txt',
+    '3':'ORACLES_lut_v5_lowaod.txt',
+    '4':'ORACLES_lut_v5_midaod.txt',
+    '5':'ORACLES_lut_v5_65aod.txt',
+    '6':'ORACLES_lut_v5_80aod.txt'}
+
+
+# In[77]:
+
+
+sio.savemat(fp+'acaod_index_v5.mat',{'files':files_ind,'acaod_index':ind,'utc':utc_ind})
 
 
 # # Now write these values to ict file
@@ -784,13 +820,13 @@ for i,daystr in enumerate(dds):
 
 # ## For use of this python, save values to mat files
 
-# In[71]:
+# In[78]:
 
 
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
-# In[72]:
+# In[79]:
 
 
 def dict_keys_to_unicode(d):
@@ -809,7 +845,7 @@ for n in rtss.keys():
         rtss[n] = dict_keys_to_unicode(rtss[n])
 
 
-# In[73]:
+# In[80]:
 
 
 hs.savemat(fp+'..//zen_ict/v5/{}_all_retrieved.mat'.format(vr),rtss)
@@ -1447,6 +1483,12 @@ CRE_aero = c['star_aero_CRE']['up'][:,2] -c['star_aero_CRE_clear']['up'][:,2]
 CRE_noaero = c['star_noaero_CRE']['up'][:,2] -c['star_noaero_CRE_clear']['up'][:,2] 
 
 
+# In[ ]:
+
+
+
+
+
 # ## Start plotting results of CRE
 
 # In[15]:
@@ -1995,4 +2037,10 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nan
 
 
 np.exp(-0.1)
+
+
+# In[ ]:
+
+
+
 

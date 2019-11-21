@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[271]:
 
 
 import numpy as np
@@ -68,6 +68,7 @@ get_ipython().magic(u'matplotlib notebook')
 import Run_libradtran as RL
 import os
 import write_utils as wu
+from tqdm.notebook import tqdm
 
 
 # In[4]:
@@ -83,13 +84,13 @@ vv = 'v1'
 fp =getpath('COSR')
 
 
-# In[6]:
+# In[551]:
 
 
-day = '20180624'
+day = '20180705'
 
 
-# In[7]:
+# In[552]:
 
 
 #get the paths
@@ -101,7 +102,7 @@ fp_uv = '/mnt/c/Users/lebla/Research/libradtran/libRadtran-2.0.2/bin/uvspec'
 
 # ## Setup command line interface
 
-# In[6]:
+# In[402]:
 
 
 import argparse
@@ -134,37 +135,43 @@ day = in_.get('daystr','20180624')
 
 # ## Load the in situ files
 
-# In[8]:
+# In[553]:
 
 
 situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
 
 
-# In[9]:
+# In[404]:
 
 
 situ
 
 
-# In[10]:
+# In[481]:
 
 
 insitu = situ.to_dict('list')
 
 
-# In[11]:
+# In[482]:
 
 
 insitu.keys()
 
 
-# In[12]:
+# In[483]:
 
 
 insitu['ssa_500nm'] = np.array(insitu['totScatCalc_500nm'])/np.array(insitu['extCalc500nm'])
 
 
-# In[228]:
+# In[484]:
+
+
+insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])/10.0
+
+
+# In[530]:
 
 
 plt.figure()
@@ -173,18 +180,19 @@ plt.plot(insitu['utc'],Sp.smooth(insitu['ssa_500nm'],60,old=True),'-r',label='sm
 plt.legend()
 plt.xlabel('UTC [h]')
 plt.ylabel('SSA at 500 nm')
+plt.title('SSA from in situ calculated on: {}'.format(day))
 plt.ylim(0.5,1.0)
 plt.grid()
 plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[17]:
+# In[485]:
 
 
 ssa_insitu = Sp.smooth(insitu['ssa_500nm'],60,old=True)
 
 
-# In[18]:
+# In[486]:
 
 
 len(ssa_insitu)
@@ -192,43 +200,43 @@ len(ssa_insitu)
 
 # ## Load the UHSAS files
 
-# In[241]:
+# In[487]:
 
 
 uh = sio.loadmat(fp+'data_other/{}_UHSAS_ECCC.mat'.format(day))
 
 
-# In[242]:
+# In[488]:
 
 
 uh.keys()
 
 
-# In[243]:
+# In[489]:
 
 
 uh['utc'] = lu.toutc(lu.mat2py_time(uh['t']))
 
 
-# In[245]:
+# In[490]:
 
 
 uh['utc'].shape
 
 
-# In[249]:
+# In[491]:
 
 
 uh['binDataConc'].sum(axis=1).shape
 
 
-# In[251]:
+# In[492]:
 
 
 uh['nConc'] = uh['binDataConc'].sum(axis=1)
 
 
-# In[250]:
+# In[493]:
 
 
 plt.figure()
@@ -237,7 +245,7 @@ plt.plot(uh['utc'],uh['binDataConc'].sum(axis=1),'.')
 
 # ## Load the 4STAR AOD
 
-# In[139]:
+# In[494]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
@@ -249,7 +257,7 @@ s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 s.keys()
 
 
-# In[140]:
+# In[495]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -257,19 +265,19 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 
 # ### use the polyfit aod on the wavelength array
 
-# In[141]:
+# In[496]:
 
 
 s['tau_aero_polynomial'].shape
 
 
-# In[142]:
+# In[497]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[143]:
+# In[498]:
 
 
 s['aod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -279,19 +287,19 @@ for i in xrange(len(s['utc'])):
                                          np.log(wvl)))
 
 
-# In[144]:
+# In[499]:
 
 
 s['aod'].shape
 
 
-# In[145]:
+# In[500]:
 
 
 s['aod'][10:-1:200,:].shape
 
 
-# In[97]:
+# In[501]:
 
 
 plt.figure()
@@ -301,13 +309,13 @@ plt.ylim(0,1)
 
 # ### Load the flag files
 
-# In[28]:
+# In[502]:
 
 
 fmat = getpath('4STAR_data')
 
 
-# In[29]:
+# In[503]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -317,25 +325,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[30]:
+# In[504]:
 
 
 sf.keys()
 
 
-# In[31]:
+# In[505]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[32]:
+# In[506]:
 
 
 flag.shape
 
 
-# In[33]:
+# In[507]:
 
 
 sum(flag)
@@ -343,25 +351,37 @@ sum(flag)
 
 # ## Load the skyscan results
 
-# In[266]:
+# In[508]:
 
 
 sk_names = {
     '20180624':'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat',
     '20180625':'4STAR_20180625_026_SKYP.created_20190507_213718.ppl_lv15.mat',
-    '20180620':'4STAR_20180620_135_SKYP.created_20190329_003621.ppl_lv15.mat',
-    '20180618':'4STAR_20180618_135_SKYP.created_20190329_003621.ppl_lv15.mat',
-    '20180609':'4STAR_20180609_135_SKYP.created_20190329_003621.ppl_lv15.mat',
-    '20180705':'4STAR_20180705_135_SKYP.created_20190329_003621.ppl_lv15.mat'}
+    '20180620':'4STAR_20180620_017_SKYP.created_20190507_225712.ppl_lv15.mat',
+    '20180618':'4STAR_20180618_029_SKYA.created_20190507_232752.avg_lv10.mat',
+    '20180609':'4STAR_20180609_041_SKYP.created_20190508_003116.ppl_lv15.mat',
+    '20180705':'4STAR_20180705_061_SKYP.created_20190508_003930.ppl_lv15.mat'}
 
 
-# In[267]:
+# In[509]:
+
+
+sk_n = {
+    '20180624':'135',
+    '20180625':'026',
+    '20180620':'017',
+    '20180618':'029',
+    '20180609':'041',
+    '20180705':'061'}
+
+
+# In[510]:
 
 
 fp_name = sk_names[day]#'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
 
 
-# In[35]:
+# In[511]:
 
 
 sky = sio.loadmat(fp+fp_name)
@@ -372,7 +392,7 @@ sky.keys()
 
 # ## Plot out the retrieved skyscans
 
-# In[36]:
+# In[512]:
 
 
 plt.figure()
@@ -384,16 +404,16 @@ plt.plot(sky['Wavelength'],sky['sfc_alb'][0,:],'x-',label='Albedo')
 plt.legend(frameon=False)
 plt.xlabel('Wavelength [micron]')
 plt.title('4STAR skyscan results from: \n' + fp_name)
-plt.savefig(fp+'plots/4STAR_skyscan_result_{}_135_SKYP.png'.format(day),dpi=600,transparent=True)
+plt.savefig(fp+'plots/4STAR_skyscan_result_{}_{}_SKYP.png'.format(day,sk_n[day]),dpi=600,transparent=True)
 
 
-# In[37]:
+# In[513]:
 
 
 sky['g_tot'][-1]
 
 
-# In[98]:
+# In[514]:
 
 
 #wvl = np.array([0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,4.0])
@@ -408,13 +428,13 @@ f_alb = interp1d(np.append(sky['Wavelength'][:,0],1.1),np.append(sky['sfc_alb'][
 alb = f_alb(wvl)
 
 
-# In[99]:
+# In[515]:
 
 
 np.append(sky['ssa_total'][0,:],[sky['ssa_total'][0,-1]-0.008,sky['ssa_total'][0,-1]-0.002])
 
 
-# In[210]:
+# In[516]:
 
 
 plt.figure()
@@ -432,47 +452,35 @@ plt.savefig(fp+'plots/AERO_prop_for_DARE_{}.png'.format(day),dpi=600,transparent
 
 # ## Get the vertical dependence of the extinction
 
-# In[101]:
+# In[517]:
 
 
 gu = pd.to_datetime(situ['DateTimeUTC']).to_list()
 insitu['utc'] = np.array([g.hour+g.minute/60.0+g.second/3600.0 for g in gu])
 
 
-# In[102]:
-
-
-from scipy.interpolate import interp1d
-
-
-# In[103]:
+# In[518]:
 
 
 f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
 insitu['alt'] = f_alt(insitu['utc'])
 
 
-# In[44]:
+# In[519]:
 
 
 plt.figure()
 plt.plot(insitu['extCalc500nm'],insitu['alt'],'.')
 
 
-# In[45]:
+# In[520]:
 
 
 plt.figure()
 plt.plot(insitu['utc'],insitu['alt'])
 
 
-# In[104]:
-
-
-insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
-
-
-# In[213]:
+# In[522]:
 
 
 plt.figure()
@@ -485,17 +493,17 @@ plt.title('In Situ Extinction coefficients on {}'.format(day))
 plt.savefig(fp+'plots/Extinction_UTC_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[48]:
+# In[445]:
 
 
 np.isfinite(insitu['extCalc500nm'])
 
 
-# In[50]:
+# In[523]:
 
 
 binned_ext,binned_alt,binned_num = [],[],[]
-for i in xrange(14):
+for i in xrange(17):
     flaa = (insitu['alt']>=i*100.0) & (insitu['alt']<(i+1.0)*100.0) & (np.isfinite(insitu['extCalc500nm']))
     if flaa.any():
         binned_ext.append(insitu['extCalc500nm'][flaa])
@@ -503,7 +511,7 @@ for i in xrange(14):
         binned_num.append(len(insitu['extCalc500nm'][flaa]))
 
 
-# In[108]:
+# In[524]:
 
 
 plt.figure()
@@ -535,11 +543,12 @@ for b in bp['fliers']:
     b.set_alpha(0.2)
 ext_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
 plt.plot(ext_means[:,0],ext_means[:,1],'-k')
+plt.xlim(0,100)
 plt.title('In situ calculated extinction CLAP+neph: {}'.format(day))
 plt.savefig(fp+'plots/extinction_vertical_bins_clap_neph_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[109]:
+# In[525]:
 
 
 ext_z = ext_means[:,1]/1000.0
@@ -547,25 +556,25 @@ ext_ = ext_means[:,0]/1000.0
 aod_ = ext_.sum()/10.0
 
 
-# In[110]:
+# In[526]:
 
 
 ext_z = np.append(ext_z,ext_z[-1]+0.1)
 
 
-# In[111]:
+# In[527]:
 
 
 nz = len(ext_z)
 
 
-# In[112]:
+# In[528]:
 
 
 ext_ = np.append(ext_,ext_[-1]*0.0)
 
 
-# In[113]:
+# In[529]:
 
 
 ext_,aod_
@@ -574,16 +583,10 @@ ext_,aod_
 # # Now build the input files for DARE calculations
 # 
 
-# In[55]:
+# In[531]:
 
 
-from tqdm.notebook import tqdm
-
-
-# In[114]:
-
-
-geo = {'zout':[0,3,100],'year':2018,'month':6,'day':24,'hour':12,'minute':0,'second':0}
+geo = {'zout':[0,3,100],'year':int(day[0:4]),'month':int(day[4:6]),'day':int(day[6:8]),'hour':12,'minute':0,'second':0}
 aero_base = {'z_arr':(ext_z+0.05),'wvl_arr':wvl,'ssa':np.array([ssa,]*nz),'asy':np.array([asy,]*nz)}
 source = {'integrate_values':True,'dat_path':'/mnt/c/Users/lebla/Research/libradtran/libRadtran-2.0.2/data/',
           'run_fuliou':True,'wvl_range':[350,4000]}
@@ -591,7 +594,7 @@ albedo = {'create_albedo_file':True,'alb':alb,'alb_wvl':wvl*1000.0}
 cloud = {'dummy':None}
 
 
-# In[115]:
+# In[532]:
 
 
 fx_ssa_insitu = interp1d(insitu['utc'],ssa_insitu,bounds_error=False)
@@ -599,7 +602,7 @@ ssa_u = fx_ssa_insitu(s['utc'])
 ssa_u[ssa_u<0.8] = np.nan
 
 
-# In[116]:
+# In[533]:
 
 
 def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
@@ -621,7 +624,7 @@ def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
     return exts 
 
 
-# In[122]:
+# In[534]:
 
 
 file_list = file(fp_rtm+'COSR_DARE_list_file_{d}_{v}.sh'.format(d=day,v=vv),'w')
@@ -630,9 +633,9 @@ print 'Starting list file'
 fpp_out = fp_rtm+'output/COSR_{d}_{v}/'.format(d=day,v=vv)
 fpp_in = fp_rtm+'input/COSR_{d}_{v}/'.format(d=day,v=vv)
 if not os.path.exists(fpp_out):
-    os.mkdir(fp_out)
+    os.mkdir(fpp_out)
 if not os.path.exists(fpp_in):
-    os.mkdir(fp_in)
+    os.mkdir(fpp_in)
 
 nu = len(s['utc'])
 pbar = tqdm(total=nu)
@@ -659,6 +662,9 @@ for i,u in enumerate(s['utc']):
         except: pass
         
         geo['utc'] = u
+        geo['hour'] = int(u)
+        geo['minute'] = int((u-int(u))*60.0)
+        geo['second'] = int((u-geo['hour']-geo['minute']/60.0)*3600.0)
         geo['sza'] = s['sza'][i]
         geo['lat'] = s['Lat'][i]
         geo['lon'] = s['Lon'][i]
@@ -682,13 +688,13 @@ file_list_clean.close()
 print 'done'
 
 
-# In[118]:
+# In[535]:
 
 
 aero_base['z_arr']
 
 
-# In[119]:
+# In[536]:
 
 
 ext_z
@@ -696,32 +702,32 @@ ext_z
 
 # ## Now read the libradtran output files
 
-# In[188]:
+# In[537]:
 
 
 out = {'ssa':[],'asy':[],'ext':[],'albedo':alb,'aod':[],'alt':[],
        'sza':[],'utc':[],'lat':[],'lon':[],'wvl':wvl,'z_aero':aero_base['z_arr']}
 
 
-# In[189]:
+# In[538]:
 
 
 nzout = len(geo['zout'])
 
 
-# In[190]:
+# In[539]:
 
 
 fl = flag & (np.isfinite(ssa_u))
 
 
-# In[191]:
+# In[540]:
 
 
 nl = fl.sum()
 
 
-# In[192]:
+# In[541]:
 
 
 star_aero = {'dn':np.zeros((nl,nzout))+np.nan,'up':np.zeros((nl,nzout))+np.nan}
@@ -729,7 +735,7 @@ star_aero_cl = {'dn':np.zeros((nl,nzout))+np.nan,'up':np.zeros((nl,nzout))+np.na
 star_aero_C = np.zeros((nl,nzout))+np.nan
 
 
-# In[193]:
+# In[542]:
 
 
 nu = len(s['utc'])
@@ -801,7 +807,7 @@ out['up_clear'] = star_aero_cl['up']
 print 'done'
 
 
-# In[194]:
+# In[543]:
 
 
 #star = wu.iterate_dict_unicode(out)
@@ -812,19 +818,19 @@ hs.savemat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv=vv),out)
 
 # # Now plot out the DARE for this flight
 
-# In[195]:
+# In[544]:
 
 
 out['dare'].shape
 
 
-# In[196]:
+# In[545]:
 
 
 out['aod'].shape
 
 
-# In[221]:
+# In[546]:
 
 
 plt.figure()
@@ -842,7 +848,7 @@ plt.title('DARE from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_aod_utc_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[186]:
+# In[547]:
 
 
 plt.figure()
@@ -852,19 +858,20 @@ cb.set_label('UTC')
 plt.xlabel('SSA 500nm')
 plt.ylabel('Instantaneous DARE [W/m$^2$]')
 plt.title('DARE calculations from Oil Sands on {}'.format(day))
+
 plt.savefig(fp+'plots/DARE_vs_SSA_{}.png'.format(day),dpi=600,transparent=True)
 
 
 # ## Plot compared to UHSAS
 
-# In[252]:
+# In[548]:
 
 
-fx_h = interp1d(uh['utc'],uh['nConc'])
+fx_h = interp1d(uh['utc'],uh['nConc'],bounds_error=False)
 nConc = fx_h(out['utc'])
 
 
-# In[256]:
+# In[549]:
 
 
 plt.figure()
@@ -877,7 +884,7 @@ plt.title('DARE calculations from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_vs_nConc_UHSAS_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[265]:
+# In[550]:
 
 
 plt.figure()
