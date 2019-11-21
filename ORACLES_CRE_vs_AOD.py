@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -290,5 +290,17 @@ plot_greys()
 plt.savefig(fp+'plot/Aerosol_above_cloud_model_spectra_norm.png',dpi=600,transparent=True)
 
 
+# In[ ]:
+
+
+
+
+
 # # Plotting
 # Present some fo the early plots here
+
+# In[ ]:
+
+
+
+

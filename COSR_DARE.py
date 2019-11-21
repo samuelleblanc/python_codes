@@ -190,6 +190,51 @@ ssa_insitu = Sp.smooth(insitu['ssa_500nm'],60,old=True)
 len(ssa_insitu)
 
 
+# ## Load the UHSAS files
+
+# In[241]:
+
+
+uh = sio.loadmat(fp+'data_other/{}_UHSAS_ECCC.mat'.format(day))
+
+
+# In[242]:
+
+
+uh.keys()
+
+
+# In[243]:
+
+
+uh['utc'] = lu.toutc(lu.mat2py_time(uh['t']))
+
+
+# In[245]:
+
+
+uh['utc'].shape
+
+
+# In[249]:
+
+
+uh['binDataConc'].sum(axis=1).shape
+
+
+# In[251]:
+
+
+uh['nConc'] = uh['binDataConc'].sum(axis=1)
+
+
+# In[250]:
+
+
+plt.figure()
+plt.plot(uh['utc'],uh['binDataConc'].sum(axis=1),'.')
+
+
 # ## Load the 4STAR AOD
 
 # In[139]:
@@ -298,16 +343,28 @@ sum(flag)
 
 # ## Load the skyscan results
 
-# In[34]:
+# In[266]:
 
 
-fp_name = '4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
-sky = sio.loadmat(fp+fp_name)
+sk_names = {
+    '20180624':'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat',
+    '20180625':'4STAR_20180625_026_SKYP.created_20190507_213718.ppl_lv15.mat',
+    '20180620':'4STAR_20180620_135_SKYP.created_20190329_003621.ppl_lv15.mat',
+    '20180618':'4STAR_20180618_135_SKYP.created_20190329_003621.ppl_lv15.mat',
+    '20180609':'4STAR_20180609_135_SKYP.created_20190329_003621.ppl_lv15.mat',
+    '20180705':'4STAR_20180705_135_SKYP.created_20190329_003621.ppl_lv15.mat'}
+
+
+# In[267]:
+
+
+fp_name = sk_names[day]#'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
 
 
 # In[35]:
 
 
+sky = sio.loadmat(fp+fp_name)
 sky.keys()
 
 
@@ -796,6 +853,38 @@ plt.xlabel('SSA 500nm')
 plt.ylabel('Instantaneous DARE [W/m$^2$]')
 plt.title('DARE calculations from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_vs_SSA_{}.png'.format(day),dpi=600,transparent=True)
+
+
+# ## Plot compared to UHSAS
+
+# In[252]:
+
+
+fx_h = interp1d(uh['utc'],uh['nConc'])
+nConc = fx_h(out['utc'])
+
+
+# In[256]:
+
+
+plt.figure()
+plt.scatter(nConc,out['dare'][:,0],c=out['ssa'][:,0,3])
+cb = plt.colorbar()
+cb.set_label('SSA 500 nm')
+plt.xlabel('UHSAS number Concentration [#]')
+plt.ylabel('Instantaneous DARE [W/m$^2$]')
+plt.title('DARE calculations from Oil Sands on {}'.format(day))
+plt.savefig(fp+'plots/DARE_vs_nConc_UHSAS_{}.png'.format(day),dpi=600,transparent=True)
+
+
+# In[265]:
+
+
+plt.figure()
+plt.hist2d(nConc,out['dare'][:,0],range=[[0,7500],[-25,0]],bins=50)
+plt.colorbar(label='Number')
+plt.xlabel('UHSAS number Concentration [#]')
+plt.ylabel('Instantaneous DARE [W/m$^2$]')
 
 
 # In[ ]:
