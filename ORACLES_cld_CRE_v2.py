@@ -53,12 +53,14 @@ import hdf5storage as hs
 import os
 import write_utils as wu
 import scipy.io as sio
+from path_utils import getpath
+import matplotlib.pyplot as plt
 
 
-# In[2]:
+# In[55]:
 
 
-from load_utils import load_from_json
+from load_utils import load_from_json, mat2py_time,toutc
 
 
 # In[3]:
@@ -74,23 +76,15 @@ vv = 'v5'
 vr = 'R2'
 
 
-# In[49]:
+# In[23]:
 
 
-if os.sys.platform == 'win32':
-    fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
-    fp_rtm = 'C:\\Users\\sleblan2\\Research\\ORACLES\\rtm\\'
-    fp_uvspec = 'C:\\Users\\sleblan2\\Research\\libradtran\\libRadtran-2.0-beta\\bin\\uvspec'
-    fp_rtmdat = 'C:\\Users\\sleblan2\\Research\\libradtran\\libRadtran-2.0-beta\\data\\'
-    matfile = fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vr)
-elif os.sys.platform == 'linux2':
-    fp = '/u/sleblan2/ORACLES/'
-    fp_rtm = '/nobackup/sleblan2/rtm/'
-    fp_uvspec = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
-    fp_rtmdat = '/nobackup/sleblan2/AAC_DARF/rtm/' #'/u/sleblan2/4STAR/rtm_dat/'
-    matfile = fp+'{}_all_cld_ict.mat'.format(vr)
-else:
-    raise Exception
+fp_rtm = getpath('rtm')
+fp_uvspec = getpath('uvspec_bin')+'uvspec'
+fp = getpath('ORACLES')
+fp_rtmdat = fp_rtm+'dat/'
+matfile = fp+'{}_all_cld_ict.mat'.format(vr)
+fp_uvspec_dat = getpath('uvspec_dat')
 
 
 # ## Set up for command line arguments
@@ -124,28 +118,57 @@ do_read = in_.get('doread',False)
 
 # # Load the saved files
 
-# In[5]:
-
-
-ar = hs.loadmat(matfile)
-
+# ## Load the cloud retrievals
 
 # In[6]:
+
+
+ar = hs.loadmat(fp+'zen_ict/{}/{}_all_cld_ict.mat'.format(vv,vr))
+
+
+# In[7]:
 
 
 ar.keys()
 
 
-# In[12]:
+# In[8]:
 
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
+# ## Load the linked acaod values
+
+# In[9]:
+
+
+aca = hs.loadmat(fp+'starzen/acaod_index_{}.mat'.format(vv))
+
+
+# In[10]:
+
+
+aca.keys()
+
+
+# In[11]:
+
+
+aca['files']
+
+
+# In[16]:
+
+
+plt.figure()
+plt.hist(aca['acaod_index']['20160904'])
+
+
 # # Prepare input files for radiative transfer
 
-# In[7]:
+# In[17]:
 
 
 import Run_libradtran as Rl
@@ -153,31 +176,31 @@ import Run_libradtran as Rl
 
 # ## Prepare the defaults
 
-# In[10]:
+# In[21]:
 
 
 from datetime import datetime
-datetime(2015,11,17).timetuple().tm_yday
+doy = datetime(int(dds[0][0:4]),int(dds[0][4:6]),int(dds[0][6:8])).timetuple().tm_yday
 
 
-# In[14]:
+# In[19]:
 
 
 ar['days']
 
 
-# In[15]:
+# In[24]:
 
 
-geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,1.5,100.0]}
+geo = {'lat':47.6212167,'lon':52.74245,'doy':doy,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
 source = {'wvl_range':[201.0,4000.0],'source':'solar','integrate_values':True,'run_fuliou':True,
-          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+          'dat_path':fp_uvspec_dat}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
-# In[16]:
+# In[27]:
 
 
 cloud['phase'] = 'wc'
@@ -188,13 +211,13 @@ pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
 cloud['moms_dict'] = pmom
 
 
-# In[17]:
+# In[28]:
 
 
 phase_star = {0:'wc',1:'ic'}
 
 
-# In[18]:
+# In[29]:
 
 
 phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
@@ -202,36 +225,55 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 
 # ## Load the aerosol values
 
-# In[82]:
+# In[30]:
 
 
-if os.sys.platform == 'win32':
-        fp_aero = fp+'model\\aero_save_v2.txt'
-else:
-        fp_aero = fp+'aero_save_v2.txt'
-aero = load_from_json(fp_aero)
+fp
 
 
-# In[83]:
+# In[38]:
 
 
-aero
+aca['aero'] = {}
+for ka in aca['files'].keys():
+    aa = load_from_json(fp+'/model/'+aca['files'][ka])
+    aca['aero'][ka] = aa['aero']
+
+
+# In[39]:
+
+
+aca['aero']['1']
 
 
 # ## Prepare the paths and files for input files
 
-# In[71]:
+# In[65]:
+
+
+def isjupyter():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+
+# In[40]:
 
 
 # open the list file
-f = open(fp+'rtm/{}_CRE_{}.sh'.format(name,vv),'w')
-fpp_in = '/nobackup/sleblan2/rtm/input/{}_CRE_{}/'.format(name,vv)
-fpp_out = '/nobackup/sleblan2/rtm/output/{}_CRE_{}/'.format(name,vv)
-fp_uv = '/u/sleblan2/libradtran/libRadtran-2.0-beta/bin/uvspec'
-fp_in = fp+'rtm/input/CRE/'
+f = open(fp_rtm+'{}_CRE_{}.sh'.format(name,vv),'w')
+fpp_in = fp_rtm+'input/{}_CRE_{}/'.format(name,vv)
+fpp_out = fp_rtm+'output/{}_CRE_{}/'.format(name,vv)
 
 
-# In[74]:
+# In[41]:
 
 
 if not os.path.isdir(fpp_in):
@@ -240,10 +282,16 @@ if not os.path.isdir(fpp_out):
      os.mkdir(fpp_out)
 
 
-# In[23]:
+# In[42]:
 
 
 ar.keys()
+
+
+# In[43]:
+
+
+ar['lat_fl'].shape
 
 
 # In[ ]:
@@ -252,47 +300,73 @@ ar.keys()
 if not do_read:
 
 
-# In[ ]:
+# In[70]:
+
+
+if isjupyter():
+    from tqdm.notebook import tqdm 
+    pbar = tqdm(total=len(ar['lat_fl']))
+
+
+# In[72]:
 
 
 # make input
-    for i,l in enumerate(ar['lat_fl']):
+for i,l in enumerate(ar['lat_fl']):
 
-        print i
+    #print i
 
-        f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
-        geo['lat'],geo['lon'],geo['sza'] = l,ar['lon_fl'][i],ar['sza'][ar['fl'].astype(bool)][i]
-        day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
-        geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
-        cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
+    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+    geo['lat'],geo['lon'],geo['sza'] = l,ar['lon_fl'][i],ar['sza'][ar['fl'].astype(bool)][i]
+    day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
+    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+    cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
+    cloud['write_moments_file'] = True
+
+    i_aca = np.argmin(abs(aca['utc'][day]-ar['utc_fl'][i]))
+    i_aero = '{}'.format(aca['acaod_index'][day][i_aca])
+    
+    Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aca['aero'][i_aero],cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+    cloud['tau'] = 0.0
+    Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aca['aero'][i_aero],cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+    cloud['tau'] = ar['tau_fl'][i]
+    if cloud['ref']>25.0:
         cloud['write_moments_file'] = True
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+    else:
+        cloud['write_moments_file'] = False
+    Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-        f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
-        cloud['tau'] = 0.0
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+    cloud['tau'] = 0.0
+    Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                               verbose=False,make_base=False,set_quiet=True)
+    f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
+    if isjupyter(): 
+        pbar.update(1)
 
-        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
-        cloud['tau'] = ar['tau_fl'][i]
-        if cloud['ref']>25.0:
-            cloud['write_moments_file'] = True
-        else:
-            cloud['write_moments_file'] = False
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
+f.close()
 
-        f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
-        cloud['tau'] = 0.0
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uv,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-    f.close()
+# In[73]:
+
+
+day
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
