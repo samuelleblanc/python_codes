@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Name:  
@@ -224,13 +224,13 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
         file_iz = output_file+'_z%03i' % iz
         if two_z:
             if iz>0:
-                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose)
+                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose,expand_hg=expand_hg)
                 output.write('%4.4f\t%s\n' % (z,file_iz))
             else:
                 output.write('%4.4f\t%s\n' % (z,'NULL'))
         else:
             if any(ext[izs[iz],:]):
-                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],verbose=verbose)
+                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],verbose=verbose,expand_hg=expand_hg)
                 output.write('%4.4f\t%s\n' % (z,file_iz))
             else:
                 output.write('%4.4f\t%s\n' % (z,'NULL'))
