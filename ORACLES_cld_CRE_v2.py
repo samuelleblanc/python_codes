@@ -189,18 +189,18 @@ doy = datetime(int(dds[0][0:4]),int(dds[0][4:6]),int(dds[0][6:8])).timetuple().t
 ar['days']
 
 
-# In[24]:
+# In[101]:
 
 
 geo = {'lat':47.6212167,'lon':52.74245,'doy':doy,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
-source = {'wvl_range':[201.0,4000.0],'source':'solar','integrate_values':True,'run_fuliou':True,
+source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'run_fuliou':True,
           'dat_path':fp_uvspec_dat}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
-# In[27]:
+# In[102]:
 
 
 cloud['phase'] = 'wc'
@@ -211,13 +211,19 @@ pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
 cloud['moms_dict'] = pmom
 
 
-# In[28]:
+# In[103]:
+
+
+pmom['wvl'][0] = 0.250
+
+
+# In[104]:
 
 
 phase_star = {0:'wc',1:'ic'}
 
 
-# In[29]:
+# In[105]:
 
 
 phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
@@ -240,10 +246,10 @@ for ka in aca['files'].keys():
     aca['aero'][ka] = aa['aero']
 
 
-# In[39]:
+# In[86]:
 
 
-aca['aero']['1']
+aca['aero']
 
 
 # ## Prepare the paths and files for input files
@@ -264,7 +270,7 @@ def isjupyter():
         return False      # Probably standard Python interpreter
 
 
-# In[40]:
+# In[106]:
 
 
 # open the list file
@@ -273,7 +279,7 @@ fpp_in = fp_rtm+'input/{}_CRE_{}/'.format(name,vv)
 fpp_out = fp_rtm+'output/{}_CRE_{}/'.format(name,vv)
 
 
-# In[41]:
+# In[107]:
 
 
 if not os.path.isdir(fpp_in):
@@ -282,25 +288,25 @@ if not os.path.isdir(fpp_out):
      os.mkdir(fpp_out)
 
 
-# In[42]:
+# In[92]:
 
 
 ar.keys()
 
 
-# In[43]:
+# In[93]:
 
 
 ar['lat_fl'].shape
 
 
-# In[ ]:
+# In[94]:
 
 
 if not do_read:
 
 
-# In[70]:
+# In[108]:
 
 
 if isjupyter():
@@ -308,7 +314,7 @@ if isjupyter():
     pbar = tqdm(total=len(ar['lat_fl']))
 
 
-# In[72]:
+# In[109]:
 
 
 # make input
@@ -357,77 +363,70 @@ for i,l in enumerate(ar['lat_fl']):
 f.close()
 
 
-# In[73]:
-
-
-day
-
-
-# In[ ]:
-
-
-
-
-
 # In[ ]:
 
 
 else:
 
 
-# In[ ]:
+# In[114]:
 
 
 # read output
-    nstar = len(ar['lat_fl'])
-    nz = len(geo['zout'])
-    star_aero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
-    star_aero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
-    star_aero_C = np.zeros((nstar,nz))+np.nan
-    star_noaero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
-    star_noaero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
-    star_noaero_C = np.zeros((nstar,nz))+np.nan
+nstar = len(ar['lat_fl'])
+nz = len(geo['zout'])
+star_aero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+star_aero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+star_aero_C = np.zeros((nstar,nz))+np.nan
+star_noaero_CRE = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+star_noaero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,nz))+np.nan}
+star_noaero_C = np.zeros((nstar,nz))+np.nan
 
 
-# In[ ]:
+# In[116]:
 
 
 # run through to read
-    print '4STAR'
-    for i,l in enumerate(ar['lat_fl']):
-        print '\r{}..'.format(i)
-        f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
-        s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
-        f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
-        sc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+if isjupyter():
+    from tqdm.notebook import tqdm 
+    pbar = tqdm(total=len(ar['lat_fl']))
+print '4STAR'
+for i,l in enumerate(ar['lat_fl']):
+    #print '\r{}..'.format(i)
+    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+    s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+    sc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
-        star_aero_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
-        star_aero_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
-        star_aero_CRE['up'][i,:] = s['diffuse_up']
-        star_aero_CRE_clear['up'][i,:] = sc['diffuse_up']
-        star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) -                            (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
-        
-        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
-        sn = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
-        f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
-        snc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+    star_aero_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
+    star_aero_CRE_clear['dn'][i,:] = sc['diffuse_down']+sc['direct_down']
+    star_aero_CRE['up'][i,:] = s['diffuse_up']
+    star_aero_CRE_clear['up'][i,:] = sc['diffuse_up']
+    star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) -                        (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
+    
+    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+    sn = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+    snc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
-        star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+sn['direct_down']
-        star_noaero_CRE_clear['dn'][i,:] = snc['diffuse_down']+snc['direct_down']
-        star_noaero_CRE['up'][i,:] = sn['diffuse_up']
-        star_noaero_CRE_clear['up'][i,:] = snc['diffuse_up']
-        star_noaero_C[i,:] = (star_noaero_CRE['dn'][i,:]-star_noaero_CRE['up'][i,:]) -                              (star_noaero_CRE_clear['dn'][i,:]-star_noaero_CRE_clear['up'][i,:])
+    star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+sn['direct_down']
+    star_noaero_CRE_clear['dn'][i,:] = snc['diffuse_down']+snc['direct_down']
+    star_noaero_CRE['up'][i,:] = sn['diffuse_up']
+    star_noaero_CRE_clear['up'][i,:] = snc['diffuse_up']
+    star_noaero_C[i,:] = (star_noaero_CRE['dn'][i,:]-star_noaero_CRE['up'][i,:]) -                          (star_noaero_CRE_clear['dn'][i,:]-star_noaero_CRE_clear['up'][i,:])
+    if isjupyter(): 
+        pbar.update(1)
 
 
-# In[ ]:
+# In[118]:
 
 
 # save the output
-    star1 = {'star_noaero_CRE':star_noaero_CRE,'star_noaero_CRE_clear':star_noaero_CRE_clear,'star_noaero_C':star_noaero_C,
-            'star_aero_CRE':star_aero_CRE,'star_aero_CRE_clear':star_aero_CRE_clear,'star_aero_C':star_aero_C}
-    star = wu.iterate_dict_unicode(star1)
-    print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
-    hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star)
-    #hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
-     #                                                           star_aero_CRE,star_aero_CRE_clear,star_aero_C)
+star1 = {'star_noaero_CRE':star_noaero_CRE,'star_noaero_CRE_clear':star_noaero_CRE_clear,'star_noaero_C':star_noaero_C,
+        'star_aero_CRE':star_aero_CRE,'star_aero_CRE_clear':star_aero_CRE_clear,'star_aero_C':star_aero_C}
+star = wu.iterate_dict_unicode(star1)
+print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
+hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star)
+#hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
+ #                                                           star_aero_CRE,star_aero_CRE_clear,star_aero_C)
 
