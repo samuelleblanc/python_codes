@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -1796,4 +1796,10 @@ for i,d in enumerate(days):
     ax[6].set_ylabel('qual_flag')
     
     ax[6].set_xlabel('UTC [h]')
+
+
+# In[ ]:
+
+
+
 

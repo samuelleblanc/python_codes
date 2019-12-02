@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Introduction
@@ -895,4 +895,10 @@ plt.savefig(fp+'plots/effDARE_vs_cod_ref_ssa_0.90_MAM.png',transparent=True,dpi=
 iii = input_MAM['MOC_ssa_mean'][0,0][:,:,8]>0.0
 plot_dare_eff_MAM(iii,'All aerosol')
 plt.savefig(fp+'plots/effDARE_vs_cod_ref_all_aero_MAM.png',transparent=True,dpi=600)
+
+
+# In[ ]:
+
+
+
 
