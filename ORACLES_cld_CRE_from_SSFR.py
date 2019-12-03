@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -170,7 +170,7 @@ geo = {'lat':47.6212167,'lon':52.74245,'doy':321,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
 source = {'wvl_range':[201.0,5600.0],'source':'solar','integrate_values':True,'run_fuliou':True,
-          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/'}
+          'dat_path':fp_uvspec_dat}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
