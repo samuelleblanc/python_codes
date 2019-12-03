@@ -45,7 +45,7 @@
 
 # # Import of modules
 
-# In[1]:
+# In[119]:
 
 
 import numpy as np
@@ -57,26 +57,27 @@ from path_utils import getpath
 import matplotlib.pyplot as plt
 
 
-# In[55]:
+# In[120]:
 
 
 from load_utils import load_from_json, mat2py_time,toutc
 
 
-# In[3]:
+# In[121]:
 
 
 name = 'ORACLES'
 
 
-# In[4]:
+# In[143]:
 
 
 vv = 'v5'
 vr = 'R2'
+vo = vv+'b'
 
 
-# In[23]:
+# In[124]:
 
 
 fp_rtm = getpath('rtm')
@@ -120,19 +121,19 @@ do_read = in_.get('doread',False)
 
 # ## Load the cloud retrievals
 
-# In[6]:
+# In[125]:
 
 
 ar = hs.loadmat(fp+'zen_ict/{}/{}_all_cld_ict.mat'.format(vv,vr))
 
 
-# In[7]:
+# In[126]:
 
 
 ar.keys()
 
 
-# In[8]:
+# In[127]:
 
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -141,19 +142,19 @@ dds = ['20160827','20160830','20160831','20160902','20160904','20160906','201609
 
 # ## Load the linked acaod values
 
-# In[9]:
+# In[128]:
 
 
 aca = hs.loadmat(fp+'starzen/acaod_index_{}.mat'.format(vv))
 
 
-# In[10]:
+# In[129]:
 
 
 aca.keys()
 
 
-# In[11]:
+# In[130]:
 
 
 aca['files']
@@ -168,7 +169,7 @@ plt.hist(aca['acaod_index']['20160904'])
 
 # # Prepare input files for radiative transfer
 
-# In[17]:
+# In[131]:
 
 
 import Run_libradtran as Rl
@@ -176,20 +177,20 @@ import Run_libradtran as Rl
 
 # ## Prepare the defaults
 
-# In[21]:
+# In[132]:
 
 
 from datetime import datetime
 doy = datetime(int(dds[0][0:4]),int(dds[0][4:6]),int(dds[0][6:8])).timetuple().tm_yday
 
 
-# In[19]:
+# In[133]:
 
 
 ar['days']
 
 
-# In[101]:
+# In[134]:
 
 
 geo = {'lat':47.6212167,'lon':52.74245,'doy':doy,'zout':[0,1.5,100.0]}
@@ -200,30 +201,30 @@ source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'r
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
-# In[102]:
+# In[135]:
 
 
 cloud['phase'] = 'wc'
 geo['sza'] = 40.0
 cloud['tau'] = 2.0
 cloud['ref'] = 5.0
-pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar')
+pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=False)
 cloud['moms_dict'] = pmom
 
 
-# In[103]:
+# In[136]:
 
 
 pmom['wvl'][0] = 0.250
 
 
-# In[104]:
+# In[137]:
 
 
 phase_star = {0:'wc',1:'ic'}
 
 
-# In[105]:
+# In[138]:
 
 
 phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
@@ -231,13 +232,13 @@ phase_modis = {0:'wc',1:'wc',2:'ic',3:'ic',6:'wc'}
 
 # ## Load the aerosol values
 
-# In[30]:
+# In[139]:
 
 
 fp
 
 
-# In[38]:
+# In[140]:
 
 
 aca['aero'] = {}
@@ -246,7 +247,7 @@ for ka in aca['files'].keys():
     aca['aero'][ka] = aa['aero']
 
 
-# In[86]:
+# In[141]:
 
 
 aca['aero']
@@ -254,7 +255,7 @@ aca['aero']
 
 # ## Prepare the paths and files for input files
 
-# In[65]:
+# In[142]:
 
 
 def isjupyter():
@@ -270,16 +271,16 @@ def isjupyter():
         return False      # Probably standard Python interpreter
 
 
-# In[106]:
+# In[144]:
 
 
 # open the list file
-f = open(fp_rtm+'{}_CRE_{}.sh'.format(name,vv),'w')
-fpp_in = fp_rtm+'input/{}_CRE_{}/'.format(name,vv)
-fpp_out = fp_rtm+'output/{}_CRE_{}/'.format(name,vv)
+f = open(fp_rtm+'{}_CRE_{}.sh'.format(name,vo),'w')
+fpp_in = fp_rtm+'input/{}_CRE_{}/'.format(name,vo)
+fpp_out = fp_rtm+'output/{}_CRE_{}/'.format(name,vo)
 
 
-# In[107]:
+# In[145]:
 
 
 if not os.path.isdir(fpp_in):
@@ -288,13 +289,13 @@ if not os.path.isdir(fpp_out):
      os.mkdir(fpp_out)
 
 
-# In[92]:
+# In[146]:
 
 
 ar.keys()
 
 
-# In[93]:
+# In[147]:
 
 
 ar['lat_fl'].shape
@@ -306,7 +307,7 @@ ar['lat_fl'].shape
 if not do_read:
 
 
-# In[108]:
+# In[148]:
 
 
 if isjupyter():
@@ -314,7 +315,7 @@ if isjupyter():
     pbar = tqdm(total=len(ar['lat_fl']))
 
 
-# In[109]:
+# In[149]:
 
 
 # make input
@@ -322,7 +323,7 @@ for i,l in enumerate(ar['lat_fl']):
 
     #print i
 
-    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vo,i=i)
     geo['lat'],geo['lon'],geo['sza'] = l,ar['lon_fl'][i],ar['sza'][ar['fl'].astype(bool)][i]
     day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
     geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
@@ -336,13 +337,13 @@ for i,l in enumerate(ar['lat_fl']):
                                verbose=False,make_base=False,set_quiet=True)
     f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vo,i=i)
     cloud['tau'] = 0.0
     Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aca['aero'][i_aero],cloud=cloud,source=source,albedo=albedo,
                                verbose=False,make_base=False,set_quiet=True)
     f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vo,i=i)
     cloud['tau'] = ar['tau_fl'][i]
     if cloud['ref']>25.0:
         cloud['write_moments_file'] = True
@@ -352,7 +353,7 @@ for i,l in enumerate(ar['lat_fl']):
                                verbose=False,make_base=False,set_quiet=True)
     f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vo,i=i)
     cloud['tau'] = 0.0
     Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                verbose=False,make_base=False,set_quiet=True)
@@ -369,7 +370,7 @@ f.close()
 else:
 
 
-# In[114]:
+# In[150]:
 
 
 # read output
@@ -383,7 +384,7 @@ star_noaero_CRE_clear = {'dn':np.zeros((nstar,nz))+np.nan,'up':np.zeros((nstar,n
 star_noaero_C = np.zeros((nstar,nz))+np.nan
 
 
-# In[116]:
+# In[151]:
 
 
 # run through to read
@@ -393,9 +394,9 @@ if isjupyter():
 print '4STAR'
 for i,l in enumerate(ar['lat_fl']):
     #print '\r{}..'.format(i)
-    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_withaero.dat'.format(name=name,vv=vo,i=i)
     s = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
-    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vo,i=i)
     sc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
     star_aero_CRE['dn'][i,:] = s['diffuse_down']+s['direct_down']
@@ -404,9 +405,9 @@ for i,l in enumerate(ar['lat_fl']):
     star_aero_CRE_clear['up'][i,:] = sc['diffuse_up']
     star_aero_C[i,:] = (star_aero_CRE['dn'][i,:]-star_aero_CRE['up'][i,:]) -                        (star_aero_CRE_clear['dn'][i,:]-star_aero_CRE_clear['up'][i,:])
     
-    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vo,i=i)
     sn = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
-    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vv,i=i)
+    f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vo,i=i)
     snc = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
 
     star_noaero_CRE['dn'][i,:] = sn['diffuse_down']+sn['direct_down']
@@ -418,15 +419,21 @@ for i,l in enumerate(ar['lat_fl']):
         pbar.update(1)
 
 
-# In[118]:
+# In[152]:
 
 
 # save the output
 star1 = {'star_noaero_CRE':star_noaero_CRE,'star_noaero_CRE_clear':star_noaero_CRE_clear,'star_noaero_C':star_noaero_C,
         'star_aero_CRE':star_aero_CRE,'star_aero_CRE_clear':star_aero_CRE_clear,'star_aero_C':star_aero_C}
 star = wu.iterate_dict_unicode(star1)
-print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv)
-hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star)
+print 'saving file to: '+fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vo)
+hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vo),star)
 #hs.savemat(fp+'{name}_CRE_{vv}.mat'.format(name=name,vv=vv),star_noaero_CRE,star_noaero_CRE_clear,star_noaero_C,
  #                                                           star_aero_CRE,star_aero_CRE_clear,star_aero_C)
+
+
+# In[ ]:
+
+
+
 
