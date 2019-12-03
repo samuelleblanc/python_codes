@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -1229,4 +1229,10 @@ f = smt.graphics.plot_acf(ts,lags=36000)
 
 
 f = smt.graphics.plot_pacf(ts,lags=3600)
+
+
+# In[ ]:
+
+
+
 
