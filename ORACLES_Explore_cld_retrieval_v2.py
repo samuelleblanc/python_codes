@@ -1477,31 +1477,37 @@ plt.savefig(fp+'..//zen_ict/v5/{}_ref_cod_hist.png'.format(vr),transparent=True,
 fp
 
 
-# In[78]:
+# In[229]:
+
+
+vv = 'v5b'
+
+
+# In[230]:
 
 
 c = hs.loadmat(fp+'../ORACLES_CRE_{}.mat'.format(vv))
 
 
-# In[79]:
+# In[231]:
 
 
 c.keys()
 
 
-# In[80]:
+# In[232]:
 
 
 c['star_aero_C']
 
 
-# In[81]:
+# In[233]:
 
 
 c['star_aero_CRE'].keys()
 
 
-# In[82]:
+# In[234]:
 
 
 CRE_aero = c['star_aero_CRE']['up'][:,2] -c['star_aero_CRE_clear']['up'][:,2] 
@@ -1516,7 +1522,7 @@ CRE_noaero = c['star_noaero_CRE']['up'][:,2] -c['star_noaero_CRE_clear']['up'][:
 import plotting_utils as pu
 
 
-# In[92]:
+# In[235]:
 
 
 plt.figure()
@@ -1536,7 +1542,7 @@ plt.xlabel('Normalized counts')
 plt.savefig(fp_plot+'ORACLES_SUR_CRE_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[91]:
+# In[236]:
 
 
 plt.figure()
@@ -1555,7 +1561,7 @@ plt.xlabel('Normalized counts')
 plt.savefig(fp_plot+'ORACLES_TOA_CRE_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[101]:
+# In[237]:
 
 
 plt.figure()
@@ -1615,7 +1621,7 @@ pu.plot_vert_hist(fig,ax1,c['star_noaero_C'][:,2],1,[-1000,0],legend=True,color=
 plt.savefig(fp+'../plot/ORACLES_CRE_toa_4STAR.png',transparent=True,dpi=600)
 
 
-# In[103]:
+# In[238]:
 
 
 print 'Surface CRE'
@@ -1624,7 +1630,7 @@ print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),
 print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nanstd(c['star_noaero_C'][:,0]))
 
 
-# In[104]:
+# In[239]:
 
 
 print 'TOA CRE'
@@ -1633,7 +1639,7 @@ print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,2]),
 print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,2]),np.nanstd(c['star_noaero_C'][:,2]))
 
 
-# In[106]:
+# In[240]:
 
 
 plt.figure()
@@ -1651,7 +1657,7 @@ plt.savefig(fp+'../plot/ORACLES_albedo_toa_4STAR_{}.png'.format(vv),transparent=
 
 # ### Setup alternate calculations
 
-# In[114]:
+# In[241]:
 
 
 rCRE_sur_aero = c['star_aero_C'][:,0]/c['star_aero_CRE_clear']['dn'][:,2]*100.0 
@@ -1660,14 +1666,14 @@ rCRE_toa_aero = CRE_aero/c['star_aero_CRE_clear']['dn'][:,2]*100.0
 rCRE_toa_noaero = CRE_noaero/c['star_aero_CRE_clear']['dn'][:,2]*100.0
 
 
-# In[115]:
+# In[242]:
 
 
 rCRE_sur_daero = rCRE_sur_aero-rCRE_sur_noaero
 rCRE_toa_daero = rCRE_toa_aero-rCRE_toa_noaero
 
 
-# In[110]:
+# In[243]:
 
 
 plt.figure()
@@ -1677,7 +1683,7 @@ plt.xlabel('rCRE difference due to Aerosol [%]')
 plt.ylabel('Normed counts')
 
 
-# In[122]:
+# In[244]:
 
 
 plt.figure()
@@ -1704,7 +1710,7 @@ plt.xlabel('Normed counts')
 plt.savefig(fp_plot+'ORACLES_SUR_TOA_rCRE_dAOD_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[123]:
+# In[245]:
 
 
 np.nanstd(rCRE_sur_daero), np.nanstd(rCRE_toa_daero)
@@ -1712,14 +1718,14 @@ np.nanstd(rCRE_sur_daero), np.nanstd(rCRE_toa_daero)
 
 # ### Use previous calculations
 
-# In[124]:
+# In[290]:
 
 
 star_aero_rC = np.zeros_like(c['star_aero_C'])
 star_noaero_rC = np.zeros_like(c['star_aero_C'])
 
 
-# In[125]:
+# In[291]:
 
 
 star_aero_rC[:,0] = c['star_aero_C'][:,0]/c['star_aero_CRE']['dn'][:,2]*100.0
@@ -1730,7 +1736,7 @@ star_noaero_rC[:,1] = c['star_noaero_C'][:,1]/c['star_noaero_CRE']['dn'][:,2]*10
 star_noaero_rC[:,2] = c['star_noaero_C'][:,2]/c['star_noaero_CRE']['dn'][:,2]*100.0
 
 
-# In[126]:
+# In[292]:
 
 
 star_aero_rC_abc = np.zeros_like(c['star_aero_C'])
@@ -1796,7 +1802,7 @@ pu.plot_vert_hist(fig,ax1,star_noaero_rC[:,2],1,[-100,0],legend=True,color='r',b
 plt.savefig(fp+'../plot/ORACLES_rCRE_toa_4STAR.png',transparent=True,dpi=600)
 
 
-# In[85]:
+# In[293]:
 
 
 print 'Surface rCRE'
@@ -1805,7 +1811,7 @@ print 'median aero: {}, no aero: {}'.format(np.nanmedian(star_aero_rC[:,0]),np.n
 print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,0]),np.nanstd(star_noaero_rC[:,0]))
 
 
-# In[86]:
+# In[294]:
 
 
 print 'TOA rCRE'
@@ -1818,25 +1824,25 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,2]),np.nanstd(
 
 # ### Get the AOD
 
-# In[137]:
+# In[252]:
 
 
 ar.keys()
 
 
-# In[138]:
+# In[254]:
 
 
-aca = hs.loadmat(fp+'acaod_index_{}.mat'.format(vv))
+aca = hs.loadmat(fp+'acaod_index_{}.mat'.format('v5'))
 
 
-# In[139]:
+# In[255]:
 
 
 from load_utils import load_from_json
 
 
-# In[140]:
+# In[261]:
 
 
 aca['aero'] = {}
@@ -1845,13 +1851,13 @@ for ka in aca['files'].keys():
     aca['aero'][ka] = aa['aero']
 
 
-# In[148]:
+# In[262]:
 
 
 aca['aero']['1']['z_arr']
 
 
-# In[149]:
+# In[263]:
 
 
 aod = []
@@ -1862,13 +1868,13 @@ for i,l in enumerate(ar['lat_fl']):
     aod.append(aca['aero'][i_aero]['ext'][0,3]*3.0)
 
 
-# In[150]:
+# In[264]:
 
 
 aod = np.array(aod)
 
 
-# In[151]:
+# In[265]:
 
 
 aod.shape
@@ -1876,19 +1882,19 @@ aod.shape
 
 # ### Determine the DARE
 
-# In[186]:
+# In[266]:
 
 
 c.keys()
 
 
-# In[178]:
+# In[267]:
 
 
 c['star_aero_CRE']['dn'].shape
 
 
-# In[218]:
+# In[268]:
 
 
 plt.figure()
@@ -1907,7 +1913,7 @@ leg = plt.legend()
 leg.draggable()
 
 
-# In[219]:
+# In[269]:
 
 
 plt.figure()
@@ -1926,7 +1932,7 @@ leg = plt.legend()
 leg.draggable()
 
 
-# In[220]:
+# In[270]:
 
 
 plt.figure()
@@ -1945,7 +1951,7 @@ leg = plt.legend()
 leg.draggable()
 
 
-# In[221]:
+# In[271]:
 
 
 plt.figure()
@@ -1964,20 +1970,20 @@ leg = plt.legend()
 leg.draggable()
 
 
-# In[195]:
+# In[272]:
 
 
 DAREs = (c['star_aero_CRE']['dn'][:,0]-c['star_aero_CRE']['up'][:,0])-(c['star_noaero_CRE']['dn'][:,0]-c['star_noaero_CRE']['up'][:,0])
 DAREs_clear = (c['star_aero_CRE_clear']['dn'][:,0]-c['star_aero_CRE_clear']['up'][:,0])-(c['star_noaero_CRE_clear']['dn'][:,0]-c['star_noaero_CRE_clear']['up'][:,0])
 
 
-# In[196]:
+# In[274]:
 
 
 fig = plt.figure(figsize=(5,4))
 #ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,20],xlim=[-0.5,1.5])
 plt.hist(DAREs,label='With Clouds',normed=True,edgecolor='None',color='blue',alpha=0.6,orientation='horizontal',bins=30)
-plt.hist(DAREs_clear,label='Without Clouds',normed=True,edgecolor='None',color='orange',alpha=0.6,orientation='horizontal',bins=8)
+plt.hist(DAREs_clear,label='Without Clouds',normed=True,edgecolor='None',color='orange',alpha=0.6,orientation='horizontal',bins=30)
 ax1 = plt.gca()
 ax1.set_ylabel('Direct Aerosol Radiative Effect [W/m$^2$]')
 ax1.set_title('Direct Aerosol Radiative Effect from 4STAR retrievals\nSurface')
@@ -1987,7 +1993,7 @@ plt.legend(frameon=False)
 plt.savefig(fp+'../plot/ORACLES_DARE_surface_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[169]:
+# In[275]:
 
 
 print 'Surface DARE'
@@ -1996,20 +2002,20 @@ print 'median clouds: {}, no clouds: {}'.format(np.nanmedian(DAREs),np.nanmedian
 print 'std clouds: {}, no clouds: {}'.format(np.nanstd(DAREs),np.nanstd(DAREs_clear))
 
 
-# In[173]:
+# In[276]:
 
 
 DAREt = (c['star_aero_CRE']['dn'][:,2]-c['star_aero_CRE']['up'][:,2])-       (c['star_noaero_CRE']['dn'][:,2]-c['star_noaero_CRE']['up'][:,2])
 DAREt_clear = (c['star_aero_CRE_clear']['dn'][:,2]-c['star_aero_CRE_clear']['up'][:,2])-             (c['star_noaero_CRE_clear']['dn'][:,2]-c['star_noaero_CRE_clear']['up'][:,2])
 
 
-# In[174]:
+# In[278]:
 
 
 fig = plt.figure(figsize=(5,4))
 #ax1 = fig.add_axes([0.1,0.1,0.8,0.8],ylim=[-100,20],xlim=[-0.5,1.5])
 plt.hist(DAREt,label='With Clouds',normed=True,edgecolor='None',color='blue',alpha=0.6,orientation='horizontal',bins=30)
-plt.hist(DAREt_clear,label='Without Clouds',normed=True,edgecolor='None',color='orange',alpha=0.6,orientation='horizontal',bins=8)
+plt.hist(DAREt_clear,label='Without Clouds',normed=True,edgecolor='None',color='orange',alpha=0.6,orientation='horizontal',bins=15)
 ax1 = plt.gca()
 ax1.set_ylabel('Direct Aerosol Radiative Effect [W/m$^2$]')
 ax1.set_title('Direct Aerosol Radiative Effect from 4STAR retrievals\nTOA')
@@ -2034,7 +2040,7 @@ pu.plot_vert_hist(fig,ax1,DAREt_clear,1,[-50,100],legend=True,color='y',bins=30)
 plt.savefig(fp+'../plot/ORACLES_DARE_toa_4STAR.png',transparent=True,dpi=600)
 
 
-# In[175]:
+# In[279]:
 
 
 print 'TOA DARE'
@@ -2045,13 +2051,13 @@ print 'std clouds: {}, no clouds: {}'.format(np.nanstd(DAREt),np.nanstd(DAREt_cl
 
 # ### Calculate the relative forcing efficiency
 
-# In[202]:
+# In[280]:
 
 
 tau_500 = aod
 
 
-# In[203]:
+# In[281]:
 
 
 rfes = DAREs/c['star_aero_CRE']['dn'][:,2]*100.0/tau_500
@@ -2074,7 +2080,7 @@ pu.plot_vert_hist(fig,ax1,rfes_clear,1,[-30,5],legend=True,color='y',bins=50)
 plt.savefig(fp+'../plot/ORACLES_rDAREe_surface_4STAR.png',transparent=True,dpi=600)
 
 
-# In[207]:
+# In[282]:
 
 
 plt.figure()
@@ -2092,7 +2098,7 @@ plt.title('Relative DARE efficiency from 4STAR retrievals\nSurface')
 plt.savefig(fp+'../plot/ORACLES_rDAREe_surface_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[208]:
+# In[283]:
 
 
 plt.figure()
@@ -2124,7 +2130,7 @@ pu.plot_vert_hist(fig,ax1,rfet_clear,1,[-25,25],legend=True,color='y',bins=50)
 plt.savefig(fp+'../plot/ORACLES_rDAREe_TOA_4STAR.png',transparent=True,dpi=600)
 
 
-# In[77]:
+# In[284]:
 
 
 print 'Surface rDAREe'
@@ -2133,7 +2139,7 @@ print 'median clouds: {}, no clouds: {}'.format(np.nanmedian(rfes),np.nanmedian(
 print 'std clouds: {}, no clouds: {}'.format(np.nanstd(rfes),np.nanstd(rfes_clear))
 
 
-# In[78]:
+# In[285]:
 
 
 print 'TOA rDAREe'
@@ -2159,7 +2165,27 @@ ax1.grid()
 plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_4STAR.png',transparent=True,dpi=600)
 
 
-# In[139]:
+# In[295]:
+
+
+fig = plt.figure()
+plt.hist(star_aero_rC[:,0]-star_noaero_rC[:,0],color='b',alpha=0.6,bins=30,normed=True,edgecolor='None',label='Surface')
+plt.hist(star_aero_rC[:,2]-star_noaero_rC[:,2],color='k',alpha=0.6,bins=30,normed=True,edgecolor='None',label='TOA')
+
+plt.axvline(np.nanmean(star_aero_rC[:,0]-star_noaero_rC[:,0]),ls='-',color='b',label='Mean')
+plt.axvline(np.nanmedian(star_aero_rC[:,0]-star_noaero_rC[:,0]),ls='--',color='b',label='Median')
+
+plt.axvline(np.nanmean(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='-',color='k')
+plt.axvline(np.nanmedian(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='--',color='k')
+plt.legend(frameon=False)
+
+plt.xlabel('relative Cloud Radiative Effect [\%]')
+plt.title('difference in relative CRE due to aerosols')
+
+plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
+
+
+# In[296]:
 
 
 print 'difference in relative CRE due to aerosol'
@@ -2182,31 +2208,54 @@ ax1.grid()
 plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_abc_4STAR.png',transparent=True,dpi=600)
 
 
-# In[98]:
+# In[299]:
+
+
+fig = plt.figure()
+plt.hist(star_aero_rC_abc[:,0]-star_noaero_rC_abc[:,0],color='b',alpha=0.6,bins=30,normed=True,edgecolor='None',label='Surface/ above cloud')
+plt.hist(star_aero_rC[:,0]-star_noaero_rC[:,0],color='g',alpha=0.6,bins=30,normed=True,edgecolor='None',label='Surface')
+plt.hist(star_aero_rC[:,2]-star_noaero_rC[:,2],color='r',alpha=0.6,bins=30,normed=True,edgecolor='None',label='TOA')
+
+plt.axvline(np.nanmean(star_aero_rC[:,0]-star_noaero_rC[:,0]),ls='-',color='g',label='Mean')
+plt.axvline(np.nanmedian(star_aero_rC[:,0]-star_noaero_rC[:,0]),ls='--',color='g',label='Median')
+
+plt.axvline(np.nanmean(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='-',color='r')
+plt.axvline(np.nanmedian(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='--',color='r')
+plt.axvline(np.nanmean(star_aero_rC_abc[:,0]-star_noaero_rC_abc[:,0]),ls='-',color='b')
+plt.axvline(np.nanmedian(star_aero_rC_abc[:,0]-star_noaero_rC_abc[:,0]),ls='--',color='b')
+plt.legend(frameon=False)
+
+plt.xlabel('relative Cloud Radiative Effect [\%]')
+plt.title('difference in relative CRE due to aerosols')
+
+plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_abc_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
+
+
+# In[300]:
 
 
 c.keys()
 
 
-# In[101]:
+# In[301]:
 
 
 c['star_aero_C'].shape
 
 
-# In[107]:
+# In[302]:
 
 
 ar.keys()
 
 
-# In[108]:
+# In[304]:
 
 
 ar['tau_fl'].shape
 
 
-# In[112]:
+# In[305]:
 
 
 plt.figure()
@@ -2216,7 +2265,7 @@ plt.xlabel('Expected reduction due to aerosol optical depth')
 #plt.savefig(fp+'../plot/ORACLES_albedo_toa_4STAR.png',transparent=True,dpi=600)
 
 
-# In[115]:
+# In[306]:
 
 
 plt.figure()
@@ -2237,20 +2286,20 @@ np.cos(4*np.pi/180)
 
 # Ratio the expected reduction due to aerosol
 
-# In[119]:
+# In[311]:
 
 
 aero_tau_ratio = np.exp(-1.0*0.36*np.cos(ar['sza'][ar['fl'].astype(bool)]*np.pi/180.0))
 
 
-# In[123]:
+# In[312]:
 
 
 plt.figure()
 plt.hist(aero_tau_ratio)
 
 
-# In[120]:
+# In[307]:
 
 
 print 'Surface CRE'
@@ -2259,7 +2308,7 @@ print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),
 print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nanstd(c['star_noaero_C'][:,0]))
 
 
-# In[122]:
+# In[313]:
 
 
 print 'Surface CRE corrected for ratio'
@@ -2268,13 +2317,13 @@ print 'median aero: {}, no aero: {}'.format(np.nanmedian(c['star_aero_C'][:,0]),
 print 'std aero: {}, no aero: {}'.format(np.nanstd(c['star_aero_C'][:,0]),np.nanstd(c['star_noaero_C'][:,0]*aero_tau_ratio))
 
 
-# In[125]:
+# In[309]:
 
 
 -571.2/-610.3
 
 
-# In[134]:
+# In[310]:
 
 
 np.exp(-0.1)
