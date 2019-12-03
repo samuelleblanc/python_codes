@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Collection of programs to used for reading and analyzing the C-air utils 
@@ -224,4 +224,10 @@ def calc_gas_tau(band_wvl,gas_wvl,gas_tau):
     for i,v in enumerate(band_wvl):
         gas_tau_out[i] = np.interp(v,gas_wvl,gas_tau,right=0.0,left=0.0)
     return gas_tau_out   
+
+
+# In[ ]:
+
+
+
 
