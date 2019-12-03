@@ -55,12 +55,27 @@ from path_utils import getpath
 import matplotlib.pyplot as plt
 
 
+# In[248]:
+
+
+get_ipython().magic(u'matplotlib notebook')
+
+
 # In[42]:
 
 
 from Sp_parameters import smooth
 from load_utils import load_from_json, mat2py_time,toutc
 import write_utils as wu
+
+
+# In[190]:
+
+
+import Sun_utils as su
+from datetime import datetime
+import pytz
+import map_utils as mu
 
 
 # In[3]:
@@ -181,7 +196,7 @@ sp_liq['status']
 
 # # Verify the results and write out
 
-# In[99]:
+# In[160]:
 
 
 hdict = {'PI':'Samuel LeBlanc',
@@ -191,7 +206,7 @@ hdict = {'PI':'Samuel LeBlanc',
      'special_comments':'',
      'PI_contact':'Samuel.leblanc@nasa.gov',
      'platform':'Roof top University of Colorado',
-     'location':'Boulder, Colorado, USA',
+     'location':'University of Colorado, Duane rooftop, Boulder, Colorado, USA, Lat: 40.01 N, Lon: 105.25 W, Alt: 1660 m',
      'instrument_info':'Derived product from SSFR with zenith narrow field of view radiance light collector',
      'data_info':'Using the cloud property retrieval method based on spectral transmitted light measurements described by LeBlanc, Pileskie, Schmidt, and Coddington (2015), AMT, https://doi.org/10.5194/amt-8-1361-2015',
      'uncertainty':'See included variables.',
@@ -292,7 +307,7 @@ rtr[0].keys()
 
 # ### save liquid cloud
 
-# In[96]:
+# In[161]:
 
 
 dict_fliq =  {'Start_UTC':{'data':rtr[0]['tmhrs']*3600.0,'unit':'seconds from midnight UTC',
@@ -314,14 +329,14 @@ dict_fliq =  {'Start_UTC':{'data':rtr[0]['tmhrs']*3600.0,'unit':'seconds from mi
                    'long_description':'Ki square fit parameter. It is the remainder of the ki square fit, values higher than 0.69 are considered to be failed retrievals.'}}
 
 
-# In[100]:
+# In[162]:
 
 
 hdict_fliq = hdict
 hdict_fliq['special_comments'] = 'Liquid cloud case from LeBlanc et al., 2015'
 
 
-# In[104]:
+# In[163]:
 
 
 wu.write_ict(hdict_fliq,dict_fliq,filepath=fp,
@@ -330,7 +345,7 @@ wu.write_ict(hdict_fliq,dict_fliq,filepath=fp,
 
 # ### Save mix phase cloud
 
-# In[105]:
+# In[164]:
 
 
 dict_fmix =  {'Start_UTC':{'data':rtr[1]['tmhrs']*3600.0,'unit':'seconds from midnight UTC',
@@ -353,14 +368,14 @@ dict_fmix =  {'Start_UTC':{'data':rtr[1]['tmhrs']*3600.0,'unit':'seconds from mi
                    'long_description':'Ki square fit parameter. It is the remainder of the ki square fit, values higher than 0.69 are considered to be failed retrievals.'}}
 
 
-# In[106]:
+# In[165]:
 
 
 hdict_mix = hdict
 hdict_mix['special_comments'] = 'Mixed-phase cloud case from LeBlanc et al., 2015'
 
 
-# In[109]:
+# In[166]:
 
 
 wu.write_ict(hdict_mix,dict_fmix,filepath=fp,
@@ -369,7 +384,7 @@ wu.write_ict(hdict_mix,dict_fmix,filepath=fp,
 
 # ### Save ice cloud
 
-# In[111]:
+# In[167]:
 
 
 dict_fice =  {'Start_UTC':{'data':rtr[2]['tmhrs']*3600.0,'unit':'seconds from midnight UTC',
@@ -392,14 +407,14 @@ dict_fice =  {'Start_UTC':{'data':rtr[2]['tmhrs']*3600.0,'unit':'seconds from mi
                    'long_description':'Ki square fit parameter. It is the remainder of the ki square fit, values higher than 0.69 are considered to be failed retrievals.'}}
 
 
-# In[110]:
+# In[168]:
 
 
 hdict_ice = hdict
 hdict_ice['special_comments'] = 'Ice cloud case from LeBlanc et al., 2015'
 
 
-# In[112]:
+# In[169]:
 
 
 wu.write_ict(hdict_ice,dict_fice,filepath=fp,
@@ -443,7 +458,7 @@ rsl[2]['utc']
 
 # ### Save liquid cloud
 
-# In[132]:
+# In[170]:
 
 
 hdict_sl = {'PI':'Samuel LeBlanc',
@@ -453,7 +468,7 @@ hdict_sl = {'PI':'Samuel LeBlanc',
      'special_comments':'',
      'PI_contact':'Samuel.leblanc@nasa.gov',
      'platform':'Roof top University of Colorado',
-     'location':'Boulder, Colorado, USA',
+     'location':'University of Colorado, Duane rooftop, Boulder, Colorado, USA, Lat: 40.01 N, Lon: 105.25 W, Alt: 1660 m',
      'instrument_info':'Derived product from SSFR with zenith narrow field of view radiance light collector',
      'data_info':'Using the cloud property retrieval method based on slope at 1600 nm from transmitted light measurements described by McBride et al., 2011, doi:10.5194/acp-11-7235-2011.',
      'uncertainty':'See included variables.',
@@ -465,7 +480,7 @@ hdict_sl = {'PI':'Samuel LeBlanc',
 order_sl = ['COD','COD_err','REF','REF_err']
 
 
-# In[134]:
+# In[171]:
 
 
 dict_sl_liq =  {'Start_UTC':{'data':rsl[0]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -479,14 +494,14 @@ dict_sl_liq =  {'Start_UTC':{'data':rsl[0]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[135]:
+# In[172]:
 
 
 hdict_sl_liq = hdict_sl
 hdict_sl_liq['special_comments'] = 'Liquid cloud case from LeBlanc et al., 2015'
 
 
-# In[136]:
+# In[173]:
 
 
 wu.write_ict(hdict_sl_liq,dict_sl_liq,filepath=fp,
@@ -495,7 +510,7 @@ wu.write_ict(hdict_sl_liq,dict_sl_liq,filepath=fp,
 
 # ### Save mix-phase cloud
 
-# In[137]:
+# In[174]:
 
 
 dict_sl_mix =  {'Start_UTC':{'data':rsl[1]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -509,14 +524,14 @@ dict_sl_mix =  {'Start_UTC':{'data':rsl[1]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[138]:
+# In[175]:
 
 
 hdict_sl_mix = hdict_sl
 hdict_sl_mix['special_comments'] = 'Mixed-phase cloud case from LeBlanc et al., 2015'
 
 
-# In[139]:
+# In[176]:
 
 
 wu.write_ict(hdict_sl_mix,dict_sl_mix,filepath=fp,
@@ -525,7 +540,7 @@ wu.write_ict(hdict_sl_mix,dict_sl_mix,filepath=fp,
 
 # ### Save ice cloud
 
-# In[140]:
+# In[177]:
 
 
 dict_sl_ice =  {'Start_UTC':{'data':rsl[2]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -539,14 +554,14 @@ dict_sl_ice =  {'Start_UTC':{'data':rsl[2]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[141]:
+# In[178]:
 
 
 hdict_sl_ice = hdict_sl
 hdict_sl_ice['special_comments'] = 'Ice cloud case from LeBlanc et al., 2015'
 
 
-# In[142]:
+# In[179]:
 
 
 wu.write_ict(hdict_sl_ice,dict_sl_ice,filepath=fp,
@@ -589,7 +604,7 @@ for i,g in enumerate(twv):
 rtw[0]['REF']
 
 
-# In[145]:
+# In[180]:
 
 
 hdict_twv = {'PI':'Samuel LeBlanc',
@@ -599,7 +614,7 @@ hdict_twv = {'PI':'Samuel LeBlanc',
      'special_comments':'',
      'PI_contact':'Samuel.leblanc@nasa.gov',
      'platform':'Roof top University of Colorado',
-     'location':'Boulder, Colorado, USA',
+     'location':'University of Colorado, Duane rooftop, Boulder, Colorado, USA, Lat: 40.01 N, Lon: 105.25 W, Alt: 1660 m',
      'instrument_info':'Derived product from SSFR with zenith narrow field of view radiance light collector',
      'data_info':'Using the 2 wavelength cloud property retrieval method from transmitted light measurements.',
      'uncertainty':'See included variables.',
@@ -613,7 +628,7 @@ order_twv = ['COD','COD_err','REF','REF_err']
 
 # ### Save liquid cloud
 
-# In[149]:
+# In[181]:
 
 
 dict_tw_liq =  {'Start_UTC':{'data':rtw[0]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -627,14 +642,14 @@ dict_tw_liq =  {'Start_UTC':{'data':rtw[0]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[151]:
+# In[182]:
 
 
 hdict_tw_liq = hdict_twv
 hdict_tw_liq['special_comments'] = 'Liquid cloud case from LeBlanc et al., 2015'
 
 
-# In[153]:
+# In[183]:
 
 
 wu.write_ict(hdict_tw_liq,dict_tw_liq,filepath=fp,
@@ -643,7 +658,7 @@ wu.write_ict(hdict_tw_liq,dict_tw_liq,filepath=fp,
 
 # ### Save mix phase cloud
 
-# In[154]:
+# In[184]:
 
 
 dict_tw_mix =  {'Start_UTC':{'data':rtw[1]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -657,14 +672,14 @@ dict_tw_mix =  {'Start_UTC':{'data':rtw[1]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[155]:
+# In[185]:
 
 
 hdict_tw_mix = hdict_twv
 hdict_tw_mix['special_comments'] = 'Mixed-phase cloud case from LeBlanc et al., 2015'
 
 
-# In[156]:
+# In[186]:
 
 
 wu.write_ict(hdict_tw_mix,dict_tw_mix,filepath=fp,
@@ -673,7 +688,7 @@ wu.write_ict(hdict_tw_mix,dict_tw_mix,filepath=fp,
 
 # ### Save ice cloud
 
-# In[157]:
+# In[263]:
 
 
 dict_tw_ice =  {'Start_UTC':{'data':rtw[2]['utc']*3600.0,'unit':'seconds from midnight UTC',
@@ -687,14 +702,14 @@ dict_tw_ice =  {'Start_UTC':{'data':rtw[2]['utc']*3600.0,'unit':'seconds from mi
                     'long_description':'Retrieval uncertainty of Cloud effective radius.'}}
 
 
-# In[158]:
+# In[188]:
 
 
 hdict_tw_ice = hdict_twv
 hdict_tw_ice['special_comments'] = 'Ice cloud case from LeBlanc et al., 2015'
 
 
-# In[159]:
+# In[189]:
 
 
 wu.write_ict(hdict_tw_ice,dict_tw_ice,filepath=fp,
@@ -703,10 +718,170 @@ wu.write_ict(hdict_tw_ice,dict_tw_ice,filepath=fp,
 
 # ## Spectra
 
-# # Write out the results
-
-# In[ ]:
+# In[216]:
 
 
+lat = 40.01
+lon = -105.25
+alt = 1660.0
 
+
+# In[193]:
+
+
+sp_liq.keys()
+
+
+# In[225]:
+
+
+sp = [sp_liq,sp_mix,sp_ice]
+
+
+# In[230]:
+
+
+ut = [[15.0,16.0],[22.0,23.0],[17.5,19.5]]
+
+
+# In[257]:
+
+
+rsp = []
+for i,g in enumerate(sp):
+    fsp = {}
+    dtu = np.array([datetime(int(days[i][0:4]),int(days[i][4:6]),int(days[i][6:8])+(int(u)/24+1),
+                             int(u%24),int((u-int(u))*60),int(((u-int(u))*60)-int((u-int(u))*60))*60,
+                             tzinfo=pytz.timezone('UTC')) for u in g['tmhrs']])
+    sza, azi = mu.get_sza_azi(lat,lon,dtu,alt=alt)
+    tp = (g['tmhrs']>=ut[i][0]) & (g['tmhrs']<=ut[i][1]) & (g['sat']==0) & (g['zspectra'][:,50]>0.0003)
+    fsp['utc'] = g['tmhrs'][tp]
+    fsp['sza'] = np.array(sza)[tp]
+    fsp['wvl'] = g['zenlambda']
+    fsp['rad'] = g['zspectra'][tp,:]
+    rsp.append(fsp)
+
+
+# In[254]:
+
+
+hdict_sp = {'PI':'Samuel LeBlanc',
+     'Institution':'NASA Ames Research Center',
+     'Instrument':'Solar Spectral Flux Radiometer - 3 (SSFR3)',
+     'campaign':'University of Colorado Skywatch Observatory',
+     'special_comments':'',
+     'PI_contact':'Samuel.leblanc@nasa.gov',
+     'platform':'Roof top University of Colorado',
+     'location':'University of Colorado, Duane rooftop, Boulder, Colorado, USA, Lat: 40.01 N, Lon: 105.25 W, Alt: 1660 m',
+     'instrument_info':'SSFR spectral radiances with zenith narrow field of view radiance light collector',
+     'data_info':'Radiance calibrated with lab measurement using NIST traceable lamp and spectralon panel. See details in LeBlanc et al., 2015, AMT, DOI:10.5194/amt-8-1361-2015 ',
+     'uncertainty':'month to month variability of accuracy at 8% in radiance. spectral and day to day precision at higher than 0.1%',
+     'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+     'project_info':'N/A',
+     'stipulations':'',
+     'rev_comments':'R0: Data from LeBlanc et al., 2015 publication, released to A. Kohkanovsky in December, 2019.'
+    }
+
+
+# In[259]:
+
+
+rsp[0]['wvl']
+
+
+# ### Save the liquid cloud
+
+# In[275]:
+
+
+dict_sp_liq =  {'Start_UTC':{'data':rsp[0]['utc']*3600.0,'unit':'seconds from midnight UTC',
+                           'long_description':'time keeping, based on UTC midnight'},
+      'SZA':{'data':rsp[0]['sza'],'unit':'degrees','long_description':'Solar Zenith Angle of observations'}}
+order_sp = ['SZA']
+
+
+# In[276]:
+
+
+for i,n in enumerate(rsp[0]['wvl']):
+    dict_sp_liq['rad_{:06.1f}'.format(n)]={'data':rsp[0]['rad'][:,i],'unit':'W/m^2/nm/sr','long_description':'Zenith radiance measured at {} nm'.format(n)}
+    order_sp.append('rad_{:06.1f}'.format(n))
+
+
+# In[277]:
+
+
+hdict_sp_liq = hdict_sp
+hdict_sp_liq['special_comments'] = 'Liquid cloud case from LeBlanc et al., 2015'
+
+
+# In[278]:
+
+
+wu.write_ict(hdict_sp_liq,dict_sp_liq,filepath=fp,
+              data_id='SSFR_Zenith_radiance',loc_id='Boulder',date=days[0],rev='R0',order=order_sp) 
+
+
+# ### Save the mix phase cloud
+
+# In[279]:
+
+
+dict_sp_mix =  {'Start_UTC':{'data':rsp[1]['utc']*3600.0,'unit':'seconds from midnight UTC',
+                           'long_description':'time keeping, based on UTC midnight'},
+      'SZA':{'data':rsp[1]['sza'],'unit':'degrees','long_description':'Solar Zenith Angle of observations'}}
+
+
+# In[280]:
+
+
+for i,n in enumerate(rsp[1]['wvl']):
+    dict_sp_mix['rad_{:06.1f}'.format(n)]={'data':rsp[1]['rad'][:,i],'unit':'W/m^2/nm/sr','long_description':'Zenith radiance measured at {} nm'.format(n)}
+
+
+# In[281]:
+
+
+hdict_sp_mix = hdict_sp
+hdict_sp_mix['special_comments'] = 'Mixed-phase cloud case from LeBlanc et al., 2015'
+
+
+# In[282]:
+
+
+wu.write_ict(hdict_sp_mix,dict_sp_mix,filepath=fp,
+              data_id='SSFR_Zenith_radiance',loc_id='Boulder',date=days[1],rev='R0',order=order_sp)
+
+
+# ### Save the ice cloud
+
+# In[287]:
+
+
+dict_sp_ice =  {'Start_UTC':{'data':rsp[2]['utc']*3600.0,'unit':'seconds from midnight UTC',
+                           'long_description':'time keeping, based on UTC midnight'},
+      'SZA':{'data':rsp[2]['sza'],'unit':'degrees','long_description':'Solar Zenith Angle of observations'}}
+order_spi = ['SZA']
+
+
+# In[288]:
+
+
+for i,n in enumerate(rsp[2]['wvl']):
+    dict_sp_ice['rad_{:06.1f}'.format(n)]={'data':rsp[2]['rad'][:,i],'unit':'W/m^2/nm/sr','long_description':'Zenith radiance measured at {} nm'.format(n)}
+    order_spi.append('rad_{:06.1f}'.format(n))
+
+
+# In[289]:
+
+
+hdict_sp_ice = hdict_sp
+hdict_sp_ice['special_comments'] = 'Ice cloud case from LeBlanc et al., 2015'
+
+
+# In[290]:
+
+
+wu.write_ict(hdict_sp_ice,dict_sp_ice,filepath=fp,
+              data_id='SSFR_Zenith_radiance',loc_id='Boulder',date=days[2],rev='R0',order=order_spi)
 
