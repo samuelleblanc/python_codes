@@ -53,7 +53,7 @@ import scipy.io as sio
 from path_utils import getpath
 import matplotlib.pyplot as plt
 import load_utils as lu
-from write_utils import nearest_neighbor
+from write_utils import nearest_neighbor, iterate_dict_unicode
 
 
 # In[127]:
@@ -332,7 +332,7 @@ doy
 geo = {'lat':ar['Latitude'][0],'lon':ar['Longitude'][0],'doy':doy,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
-source = {'wvl_range':[201.0,5600.0],'source':'solar','integrate_values':True,'run_fuliou':True,
+source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'run_fuliou':True,
           'dat_path':fp_uvspec_dat}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
@@ -492,5 +492,57 @@ f.close()
 # In[ ]:
 
 
+n = len(ar['Start_UTC'][fla])
+nz = len(geo['zout'])
+nw = len(aero['wvl_arr'])
 
+if isjupyter():
+    pbar = tqdm(total=n)
+    
+dat = {'cod':np.zeros(n)+np.nan,'ref':np.zeros(n)+np.nan,'ext':np.zeros((n,nw))+np.nan,
+       'ssa':np.zeros((n,nw))+np.nan,'asy':np.zeros((n,nw))+np.nan,'zout'=geo['zout'],
+       'wvl':aero['wvl_arr'],
+       'dn':np.zeros((n,nz))+np.nan,'up':np.zeros((n,nz))+np.nan,
+       'dn_noa':np.zeros((n,nz))+np.nan,'up_noa':np.zeros((n,nz))+np.nan}
+for i,u in enumerate(ar['Start_UTC'][fla]):
+    
+    dat['cod'][i] = cod[flb][i]
+    dat['ref'][i] = ref[flb][i]
+
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        dat['ext'][i,:] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])[0]
+        dat['ssa'][i,:] = fx_aero(ae['SSA'][0])[0]
+        dat['asy'][i,:] = fx_aero(ae['g_total'][iae])[0]
+        
+        f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        o = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        on = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+        
+        dat['dn'][i,:] = o['diffuse_down']+o['direct_down']
+        dat['dn_noa'][i,:] = on['diffuse_down']+on['direct_down']
+        dat['up'][i,:] = o['diffuse_up']
+        dat['up_noa'][i,:] = on['diffuse_up']
+
+    if isjupyter(): 
+        pbar.update(1)
+    else:
+        print i
+
+
+# In[ ]:
+
+
+dat['dare'] = (dat['dn']-dat['up']) - (dat['dn_noa']-dat['up_noa'])
+
+
+# In[ ]:
+
+
+dat1 = iterate_dict_unicode(dat)
+print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
+hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
 
