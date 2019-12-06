@@ -260,57 +260,57 @@ elev_lon = np.arange(5.0,43.0,0.00833333)
 elev_lon.shape
 
 
-# In[63]:
+# In[115]:
 
 
-plt.figure()
+plt.figure(figsize=(6,6))
 plt.contourf(elev_lon,elev_lat,elev)
+plt.colorbar(label='Surface Elevation [m]')
+plt.xlabel('Longitude [$^\\circ$]')
+plt.ylabel('Latitude [$^\\circ$]')
+plt.savefig(fp+'plot/SA_Surface_elevation.png',dpi=600,transparent=True)
 
 
-# In[21]:
+# In[48]:
 
 
 elev[elev <0] = np.nan
 
 
-# In[22]:
+# In[55]:
 
 
 strip_elev = np.nanmax(elev[:,0:2200],axis=1)
 mean_elev = np.nanmean(elev[:,0:2200],axis=1)
 
 
-# In[49]:
-
-
-plt.figure()
-plt.plot(mean_elev)
-
-
-# In[75]:
-
-
-strip_elev.shape
-
-
-# In[76]:
-
-
-strip_elev
-
-
-# In[78]:
+# In[56]:
 
 
 plt.figure()
 plt.plot(strip_elev)
+plt.plot(mean_elev)
 
 
-# In[77]:
+# In[57]:
 
 
 plt.figure()
-plt.plot(strip_elev,elev_lat)
+plt.plot(mean_elev,elev_lat)
+
+
+# ## Load HSRL bins
+
+# In[69]:
+
+
+hsrl = hs.loadmat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears.mat')
+
+
+# In[70]:
+
+
+hsrl.keys()
 
 
 # # Now plot the data together
@@ -707,28 +707,28 @@ plt.savefig(fp+'plot_all/AOD_oceanc_latitude_2016_2017_2018.png',dpi=600,transpa
 
 # ## Setup the vertical angtrom profiles
 
-# In[43]:
+# In[26]:
 
 
 ar6['fl_QA_angs'] = ar6['fl_QA'] & (ar6['AOD0501']>0.1)
 ar6['fl_QA_angs_aca'] = ar6['flac'] & (ar6['AOD0501']>0.1) & (ar6['GPS_Alt']>300.0)
 
 
-# In[44]:
+# In[27]:
 
 
 ar7['fl_QA_angs'] = ar7['fl_QA'] & (ar7['AOD0501']>0.1)
 ar7['fl_QA_angs_aca'] = ar7['flac'] & (ar7['AOD0501']>0.1) & (ar7['GPS_Alt']>300.0)
 
 
-# In[45]:
+# In[28]:
 
 
 ar8['fl_QA_angs'] = ar8['fl_QA'] & (ar8['AOD0501']>0.1)
 ar8['fl_QA_angs_aca'] = ar8['flac'] & (ar8['AOD0501']>0.1) & (ar8['GPS_Alt']>300.0)
 
 
-# In[42]:
+# In[29]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70):
@@ -742,37 +742,37 @@ def make_bined_alt(x,alt,days,fl,n=70):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[41]:
+# In[74]:
 
 
-def set_box_whisker_color(cl,bp,binned_ndays):
+def set_box_whisker_color(cl,bp,binned_ndays,a=0.6):
     bndm = np.nanmax(binned_ndays)*1.0
     for j,b in enumerate(bp['boxes']):
         b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
         b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
-        #b.set_alpha(0.4)
+        b.set_alpha(a)
     for j,b in enumerate(bp['means']):
         b.set_marker('.')
         b.set_color('None')
         b.set_markerfacecolor('darkgreen')
         b.set_markeredgecolor('darkgreen')
-        b.set_alpha(0.6)
+        b.set_alpha(a)
     for j,b in enumerate(bp['whiskers']):
         b.set_linestyle('-')
         b.set_color('pink') #gr(binned_ndays[j]*1.0/bndm))
-        b.set_alpha(0.7)
+        b.set_alpha(a+0.1)
     for j,b in enumerate(bp['caps']):
-        b.set_alpha(0.7)
+        b.set_alpha(a+0.1)
         b.set_color('pink')#gr(binned_ndays[j]*1.0/bndm))
     for j,b in enumerate( bp['medians']):
         b.set_linewidth(4)
         b.set_color('gold')
-        b.set_alpha(0.4)
+        b.set_alpha(a-0.2)
     
     return
 
 
-# In[21]:
+# In[31]:
 
 
 binned_ang6,binned_alt6,binned_num6,binned_ndays6 = make_bined_alt(ar6['AOD_angstrom_470_865'],
@@ -936,7 +936,7 @@ plt.savefig(fp+'plot_all/ORACLES2018_4STAR_Angstrom_2wvl_vertical_cb.png',
 
 # ## Prepare the AOD profiles
 
-# In[22]:
+# In[32]:
 
 
 binned_aod6,binned_alta6,binned_numa6,binned_ndaysa6 = make_bined_alt(ar6['AOD0501'],
@@ -1100,14 +1100,14 @@ plt.savefig(fp+'plot_all/ORACLES2018_4STAR_AOD_vertical_cb.png',
 
 # ## Set the region and times
 
-# In[27]:
+# In[33]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[28]:
+# In[34]:
 
 
 ar6['flq'] = ar6['flac'] & (ar6['Latitude']>lat1) & (ar6['Latitude']<lat2) & (ar6['Longitude']>lon1) & (ar6['Longitude']<lon2) & (ar6['qual_flag']==0)& (ar6['AOD0501']<1.5)
@@ -1115,7 +1115,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[29]:
+# In[35]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -1126,7 +1126,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[30]:
+# In[36]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -1134,7 +1134,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[31]:
+# In[37]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1145,7 +1145,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[32]:
+# In[38]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -1153,7 +1153,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[33]:
+# In[39]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1166,7 +1166,7 @@ ar8['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar8['Start_
 
 # ## Plot the time series of the region
 
-# In[34]:
+# In[40]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -1178,7 +1178,7 @@ for d in bin_days6:
     bin_num6.append(len(ar6['AOD0501'][ar6['flq']][flh]))
 
 
-# In[35]:
+# In[41]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -1190,7 +1190,7 @@ for d in bin_days7:
     bin_num7.append(len(ar7['AOD0501'][ar7['flq']][flh]))
 
 
-# In[36]:
+# In[42]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -1272,13 +1272,13 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly.png',
 
 # ## Add a map of the region
 
-# In[37]:
+# In[59]:
 
 
 from mpl_toolkits.basemap import Basemap
 
 
-# In[38]:
+# In[60]:
 
 
 def mapfig(ax=plt.gca()):
@@ -1291,7 +1291,7 @@ def mapfig(ax=plt.gca()):
     return m
 
 
-# In[39]:
+# In[61]:
 
 
 fig,ax = plt.subplots(1,1,figsize=(5,5))
@@ -1314,7 +1314,14 @@ plt.fill_between(xss, yss, yss2,color='gold',alpha=0.7)
 #plt.Polygon(xss,yss,edgecolor='None',color='gold',alpha=0.3)
 
 
-# In[48]:
+# In[63]:
+
+
+from matplotlib import rc
+rc("text", usetex=False)
+
+
+# In[64]:
 
 
 plt.figure(figsize=(9,3))
@@ -1384,6 +1391,110 @@ xss2,yss2 = m([lon1,lon1,lon2,lon2,lon1],[lat1,lat1,lat1,lat1,lat1])
 plt.fill_between(xss, yss, yss2,color='k',alpha=0.6)
 
 plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly_hist_map.png',
+            transparent=True,dpi=500)
+
+
+# In[81]:
+
+
+plt.figure(figsize=(9,3))
+bp = plt.boxplot(bin_aod6,positions=bin_doy6,vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+bl = plt.cm.bwr
+set_box_whisker_color(bl,bp,np.array(bin_num6)*0.0+3130)
+
+bp7 = plt.boxplot(np.array(bin_aod7),positions=np.array(bin_doy7),vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+gr = plt.cm.brg
+set_box_whisker_color(gr,bp7,np.array(bin_num7)*0.0+870)
+
+bp8 = plt.boxplot(np.array(bin_aod8),positions=np.array(bin_doy8),vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+by = plt.cm.bwr_r
+set_box_whisker_color(by,bp8,np.array(bin_num8)*0.0+760)
+
+
+hbp = plt.boxplot(hsrl['bin_aod6'],positions=hsrl['bin_doy6'],vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+hbl = plt.cm.cool
+set_box_whisker_color(hbl,hbp,np.array(hsrl['bin_num6'])*0.0+3130,a=0.3)
+
+hbp7 = plt.boxplot(np.array(hsrl['bin_aod7']),positions=np.array(hsrl['bin_doy7']),vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+hgr = plt.cm.summer_r
+set_box_whisker_color(hgr,hbp7,np.array(hsrl['bin_num7'])*0.0+870,a=0.3)
+
+hbp8 = plt.boxplot(np.array(hsrl['bin_aod8']),positions=np.array(hsrl['bin_doy8']),vert=True,
+                showfliers=False,widths=2,showmeans=True,patch_artist=True)
+hby = plt.cm.coolwarm_r
+set_box_whisker_color(hby,hbp8,np.array(hsrl['bin_num8'])*0.0+760,a=0.3)
+
+
+xy6 = [[r.get_data()[0],r.get_data()[1]] for r in bp['means']]
+xy6 = np.array(xy6)[:,:,0]
+xy7 = [[r.get_data()[0],r.get_data()[1]] for r in bp7['means']]
+xy7 = np.array(xy7)[:,:,0]
+xy8 = [[r.get_data()[0],r.get_data()[1]] for r in bp8['means']]
+xy8 = np.array(xy8)[:,:,0]
+xx = np.append(np.append(xy7[:,0],xy6[:,0]),xy8[:,0])
+yy = np.append(np.append(xy7[:,1],xy6[:,1]),xy8[:,1])
+xn = np.linspace(xx.min(),xx.max(),50)
+spl = UnivariateSpline(xx,yy, k=5)
+lb = plt.plot(xn,spl(xn),'-k',label='fit')
+
+hxy6 = [[r.get_data()[0],r.get_data()[1]] for r in hbp['means']]
+hxy6 = np.array(hxy6)[:,:,0]
+hxy7 = [[r.get_data()[0],r.get_data()[1]] for r in hbp7['means']]
+hxy7 = np.array(hxy7)[:,:,0]
+hxy8 = [[r.get_data()[0],r.get_data()[1]] for r in hbp8['means']]
+hxy8 = np.array(hxy8)[:,:,0]
+hxx = np.append(np.append(hxy7[:,0],hxy6[:,0]),hxy8[:,0])
+hyy = np.append(np.append(hxy7[:,1],hxy6[:,1]),hxy8[:,1])
+hxn = np.linspace(hxx.min(),hxx.max(),50)
+hspl = UnivariateSpline(hxx,hyy, k=5)
+hlb = plt.plot(hxn,hspl(hxn),'--k',alpha=0.3)
+
+plt.xlim(213,320)
+plt.ylim(0.1,0.9)
+plt.xticks([220,230,240,250,260,270,280,290,300])
+plt.gca().set_xticklabels([220,230,240,250,260,270,280,290,300])
+
+plt.plot([213,243],[0.1,0.1],'-',color='lightgreen',lw=6)
+plt.plot([244,273],[0.1,0.1],'-',color='lightcoral',lw=6)
+plt.plot([274,305],[0.1,0.1],'-',color='lightskyblue',lw=6)
+plt.text(215,0.12,'August',color='g')
+plt.text(246,0.12,'September',color='r')
+plt.text(276,0.12,'October',color='b')
+
+plt.ylabel('ACAOD')
+plt.xlabel('Day of Year')
+plt.title('ORACLES ACAOD between 17$^{{\circ}}$S - 10$^{{\circ}}$S and 3.5$^{{\circ}}$W - 6.75$^{{\circ}}$W')
+
+#plt.grid()
+bp['boxes'][0].set_color('grey')
+plt.legend([bp['boxes'][1],bp7['boxes'][0],bp8['boxes'][0],hbp['boxes'][1],hbp7['boxes'][0],hbp8['boxes'][0]],
+           ['2016 4STAR','2017 4STAR','2018 4STAR','2016 HSRL','2017 HSRL','2018 HSRL'],frameon=False,numpoints=1)
+#plt.legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],
+#            bp['whiskers'][0],lb[0]],
+#           ['Mean','Median','25$\%$ - 75$\%$','min-max','fit'],frameon=False,numpoints=1,loc='upper center')
+
+axb = plt.gcf().add_axes([0.06, 0.6, 0.28, 0.28])
+m = mapfig(ax=axb)
+x6,y6 = m(ar6['Longitude'],ar6['Latitude'])
+m.plot(x6,y6,'.',color='lightcoral',alpha=0.006,markeredgecolor='None')
+
+x7,y7 = m(ar7['Longitude'],ar7['Latitude'])
+m.plot(x7,y7,'.',color='lightgreen',alpha=0.006,markeredgecolor='None')
+
+x8,y8 = m(ar8['Longitude'],ar8['Latitude'])
+m.plot(x8,y8,'.',color='lightskyblue',alpha=0.05,markeredgecolor='None')
+
+xss,yss = m([lon1,lon1,lon2,lon2,lon1],[lat1,lat2,lat2,lat1,lat1])
+xss2,yss2 = m([lon1,lon1,lon2,lon2,lon1],[lat1,lat1,lat1,lat1,lat1])
+
+plt.fill_between(xss, yss, yss2,color='k',alpha=0.6)
+
+plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly_hist_map_with_HSRL.png',
             transparent=True,dpi=500)
 
 
@@ -1738,7 +1849,7 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
 
 # ## Set up the function and variables
 
-# In[56]:
+# In[82]:
 
 
 def get_gap(index,alt,lat,lon,days,aod,ang):
@@ -1776,7 +1887,7 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     return d
 
 
-# In[57]:
+# In[83]:
 
 
 ar6['fl_acaod_noQA'] = ar6['flag_acaod']==1
@@ -1784,7 +1895,7 @@ ii_flacaod6 = np.where(ar6['fl_acaod_noQA'])[0]
 ii_flacaod6[0]
 
 
-# In[58]:
+# In[84]:
 
 
 ar7['fl_acaod_noQA'] = ar7['flag_acaod']==1
@@ -1792,7 +1903,7 @@ ii_flacaod7 = np.where(ar7['fl_acaod_noQA'])[0]
 ii_flacaod7[0]
 
 
-# In[59]:
+# In[85]:
 
 
 ar8['fl_acaod_noQA'] = ar8['flag_acaod']==1
@@ -1800,7 +1911,7 @@ ii_flacaod8 = np.where(ar8['fl_acaod_noQA'])[0]
 ii_flacaod8[0]
 
 
-# In[60]:
+# In[86]:
 
 
 gap6 = get_gap(ii_flacaod6,ar6['GPS_Alt'],ar6['Latitude'],ar6['Longitude'],ar6['days'],ar6['AOD0501'],ar6['AOD_angstrom_470_865'])
@@ -1808,7 +1919,7 @@ gap7 = get_gap(ii_flacaod7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7['
 gap8 = get_gap(ii_flacaod8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[61]:
+# In[87]:
 
 
 def make_bined_x(x,alt,days,fl,bins=[]):
@@ -1828,7 +1939,7 @@ def make_bined_x(x,alt,days,fl,bins=[]):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[62]:
+# In[88]:
 
 
 i6 = np.isfinite(gap6['dalt'])
@@ -1836,13 +1947,13 @@ i7 = np.isfinite(gap7['dalt'])
 i8 = np.isfinite(gap8['dalt'])
 
 
-# In[63]:
+# In[89]:
 
 
 bins = np.linspace(0.5,-24.5,26)
 
 
-# In[64]:
+# In[90]:
 
 
 bgap6_alt,bgap6_lat,bgap6_num,bgap6_ndays = make_bined_x(gap6['dalt'],
@@ -1855,7 +1966,7 @@ bgap8_alt,bgap8_lat,bgap8_num,bgap8_ndays = make_bined_x(gap8['dalt'],
 
 # ### Redo or separating routine and others
 
-# In[65]:
+# In[91]:
 
 
 ar6['fl_acaod_noQAr'] = (ar6['flag_acaod']==1) & (ar6['fl_routine'])
@@ -1872,7 +1983,7 @@ gapr7 = get_gap(ii_flacaodr7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapr8 = get_gap(ii_flacaodr8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[66]:
+# In[92]:
 
 
 ir6 = np.isfinite(gapr6['dalt'])
@@ -1880,7 +1991,7 @@ ir7 = np.isfinite(gapr7['dalt'])
 ir8 = np.isfinite(gapr8['dalt'])
 
 
-# In[67]:
+# In[93]:
 
 
 bgapr6_alt,bgapr6_lat,bgapr6_num,bgapr6_ndays = make_bined_x(gapr6['dalt'],
@@ -1891,7 +2002,7 @@ bgapr8_alt,bgapr8_lat,bgapr8_num,bgapr8_ndays = make_bined_x(gapr8['dalt'],
                                                            gapr8['dlat'],gapr8['dlat_ndays'],ir8,bins=bins)
 
 
-# In[68]:
+# In[94]:
 
 
 ar6['fl_acaod_noQAo'] = (ar6['flag_acaod']==1) & (~ar6['fl_routine'])
@@ -1908,7 +2019,7 @@ gapo7 = get_gap(ii_flacaodo7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapo8 = get_gap(ii_flacaodo8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[69]:
+# In[95]:
 
 
 io6 = np.isfinite(gapo6['dalt'])
@@ -1916,7 +2027,7 @@ io7 = np.isfinite(gapo7['dalt'])
 io8 = np.isfinite(gapo8['dalt'])
 
 
-# In[70]:
+# In[96]:
 
 
 bgapo6_alt,bgapo6_lat,bgapo6_num,bgapo6_ndays = make_bined_x(gapo6['dalt'],
@@ -2004,6 +2115,70 @@ ax0.set_title('Gap extent through the years')
 plt.tight_layout()
 
 plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat.png',
+            transparent=True,dpi=500)
+
+
+# In[105]:
+
+
+plt.figure(figsize=(5,8))
+gr = plt.cm.RdPu
+bl = plt.cm.YlGn
+br = plt.cm.Blues
+
+ax0 = plt.gca()
+
+bp6 = plt.boxplot(bgap6_alt,positions=np.array(bgap6_lat)+0.2,vert=False,
+                 showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
+set_box_whisker_color(gr,bp6,bgap6_ndays)
+plt.plot([x.get_data()[0][0] for x in bp6['means']],[x.get_data()[1][0] for x in bp6['means']],'r-')
+
+bp7 = plt.boxplot(bgap7_alt,positions=np.array(bgap7_lat)-0.2,vert=False,widths=0.4,
+                  showfliers=False,showmeans=True,patch_artist=True)
+set_box_whisker_color(bl,bp7,bgap7_ndays)
+plt.plot([x.get_data()[0][0] for x in bp7['means']],[x.get_data()[1][0] for x in bp7['means']],'g-')
+
+bp8 = plt.boxplot(bgap8_alt,positions=np.array(bgap8_lat),vert=False,
+                 showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
+set_box_whisker_color(br,bp8,bgap8_ndays)
+plt.plot([x.get_data()[0][0] for x in bp8['means']],[x.get_data()[1][0] for x in bp8['means']],'b-')
+
+pse = plt.plot(strip_elev,elev_lat,'-k',label='Surface elevation',alpha=0.7)
+
+plt.xlabel('Gap Extent [m]')
+plt.ylabel('Latitude [$^{{\circ}}$]')
+plt.legend([bp6['boxes'][5],bp7['boxes'][18],bp8['boxes'][18],bp6['means'][0],bp6['medians'][0],bp6['boxes'][0],
+            bp6['whiskers'][0],pse[0]],
+           ['2016','2017','2018','Mean','Median','25% - 75%','min-max','Surface\nelevation'],
+           frameon=False,loc=1,numpoints=1)
+
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(bgap6_ndays)
+scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+scalarmapbl.set_array(bgap6_ndays)
+scalarmapbr = plt.cm.ScalarMappable(cmap=br)
+scalarmapbr.set_array(bgap6_ndays)
+
+cbaxesgr = plt.gcf().add_axes([0.69, 0.41, 0.015, 0.2])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr)
+cbg.outline.set_visible(False)
+cbaxesbl = plt.gcf().add_axes([0.71, 0.41, 0.015, 0.2])
+cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl)
+cbb.outline.set_visible(False)
+cbaxesbr = plt.gcf().add_axes([0.73, 0.41, 0.015, 0.2])
+cbr = plt.colorbar(scalarmapbr,cax=cbaxesbr)
+cbr.outline.set_visible(False)
+cbg.set_ticks([0,3,6,9,12,15]),cbg.set_ticklabels(['','','','',''])
+cbb.set_ticks([0,3,6,9,12,15]),cbb.set_ticklabels(['','','','',''])
+cbr.set_ticks([0,3,6,9,12,15])
+cbaxesgr.yaxis.set_ticks_position('right'),cbaxesbl.yaxis.set_ticks_position('right'),cbaxesbr.yaxis.set_ticks_position('right')
+cbaxesgr.spines['right'].set_visible(False), cbaxesbl.spines['left'].set_visible(False)
+cbaxesbr.text(4.0,0.5,'Days sampled',rotation=-90,verticalalignment='center')
+
+ax0.set_title('Gap extent through the years')
+plt.tight_layout()
+
+plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_surf_elev.png',
             transparent=True,dpi=500)
 
 

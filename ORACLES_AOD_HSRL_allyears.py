@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -94,19 +94,19 @@ fp
 
 # ## Load the 2016 data
 
-# In[6]:
+# In[10]:
 
 
 fp6 = fp+'data_other/HSRL/'
 
 
-# In[11]:
+# In[7]:
 
 
 f6_hsrl = os.listdir(fp6)
 
 
-# In[12]:
+# In[8]:
 
 
 s6 = {}
@@ -129,7 +129,7 @@ for i,f in enumerate(f6_hsrl):
     s6[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[13]:
+# In[9]:
 
 
 len(s6)
@@ -200,7 +200,7 @@ hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD.mat',s6)
 
 # ## Load the 2017 data
 
-# In[7]:
+# In[15]:
 
 
 fp7 = fp+'data_other_2017/HSRL/'
@@ -289,7 +289,7 @@ hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD.mat',s7)
 
 # ## Load the 2018 data
 
-# In[8]:
+# In[14]:
 
 
 fp8 = fp+'data_other_2018/HSRL/'
@@ -517,19 +517,19 @@ hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat',hr8)
 
 # ## Alternatively load the saved files
 
-# In[9]:
+# In[11]:
 
 
 hr6 = hs.loadmat(fp6+'ORACLES_2016_HSRL_ACAOD_arr.mat')
 
 
-# In[12]:
+# In[16]:
 
 
 hr7 = hs.loadmat(fp7+'ORACLES_2017_HSRL_ACAOD_arr.mat')
 
 
-# In[11]:
+# In[17]:
 
 
 hr8 = hs.loadmat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat')
@@ -579,14 +579,14 @@ plt.savefig(fp+'plot_all/HSRL_AOD_Above_cloud_normed_histogram_2018_2017_2016.pn
 
 # ## Plot out AOD vs. DOY for regional subset (all 3 years)
 
-# In[13]:
+# In[18]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[14]:
+# In[19]:
 
 
 hr6['flq'] =  (hr6['lat']>lat1) & (hr6['lat']<lat2) & (hr6['lon']>lon1) & (hr6['lon']<lon2) & (hr6['acaod_532']<1.5)
@@ -594,7 +594,7 @@ hr7['flq'] = hr7['fl'] & (hr7['lat']>lat1) & (hr7['lat']<lat2) & (hr7['lon']>lon
 hr8['flq'] = hr8['fl'] & (hr8['lat']>lat1) & (hr8['lat']<lat2) & (hr8['lon']>lon1) & (hr8['lon']<lon2) & (hr8['acaod_532']<1.5)
 
 
-# In[15]:
+# In[20]:
 
 
 hr6['ndtime2'] = np.array([datetime(2018,int((d-20160000)/100.0),int(d%100),int(hr6['time'][i]),
@@ -605,7 +605,7 @@ hr8['ndtime2'] = np.array([datetime(2018,int((d-20180000)/100.0),int(d%100),int(
                           int((hr8['time'][i]-float(int(hr8['time'][i])))*60)) for i,d in enumerate(hr8['date'])])
 
 
-# In[16]:
+# In[21]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -617,7 +617,7 @@ for d in bin_days6:
     bin_num6.append(len(hr6['acaod_532'][hr6['flq']][flh]))
 
 
-# In[17]:
+# In[22]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -629,7 +629,7 @@ for d in bin_days7:
     bin_num7.append(len(hr7['acaod_532'][hr7['flq']][flh]))
 
 
-# In[18]:
+# In[23]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -725,6 +725,21 @@ def set_box_whisker_color(cl,bp,binned_ndays):
         b.set_alpha(0.4)
     
     return
+
+
+# In[24]:
+
+
+fp
+
+
+# In[26]:
+
+
+hs.savemat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears.mat',
+           {u'bin_aod6':bin_aod6,u'bin_aod7':bin_aod7,u'bin_aod8':bin_aod8,
+            u'bin_doy6':bin_doy6,u'bin_doy7':bin_doy7,u'bin_doy8':bin_doy8,
+            u'bin_num6':bin_num6,u'bin_num7':bin_num7,u'bin_num8':bin_num8})
 
 
 # In[469]:
@@ -1182,6 +1197,12 @@ for i,d in enumerate(daysa8):
 
 # # Combine the scatter plots for each day
 
+# In[ ]:
+
+
+
+
+
 # In[60]:
 
 
@@ -1237,4 +1258,10 @@ aod_binsa7[i].shape
 
 
 xe7.shape
+
+
+# In[ ]:
+
+
+
 
