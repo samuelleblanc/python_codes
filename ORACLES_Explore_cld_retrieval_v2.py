@@ -1514,6 +1514,19 @@ CRE_aero = c['star_aero_CRE']['up'][:,2] -c['star_aero_CRE_clear']['up'][:,2]
 CRE_noaero = c['star_noaero_CRE']['up'][:,2] -c['star_noaero_CRE_clear']['up'][:,2] 
 
 
+# In[315]:
+
+
+ca = hs.loadmat(fp+'../ORACLES_CRE_aerosol_{}.mat'.format(vv))
+
+
+# In[320]:
+
+
+plt.figure()
+plt.plot(ca['aod'][:,3])
+
+
 # ## Start plotting results of CRE
 
 # In[83]:
@@ -2179,10 +2192,37 @@ plt.axvline(np.nanmean(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='-',color='k')
 plt.axvline(np.nanmedian(star_aero_rC[:,2]-star_noaero_rC[:,2]),ls='--',color='k')
 plt.legend(frameon=False)
 
-plt.xlabel('relative Cloud Radiative Effect [\%]')
+plt.xlabel('relative Cloud Radiative Effect [%]')
 plt.title('difference in relative CRE due to aerosols')
 
 plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
+
+
+# In[324]:
+
+
+daod = np.unique(ca['aod'][:,3])
+bins_diffrC = [star_aero_rC[ca['aod'][:,3]==a,0]-star_noaero_rC[ca['aod'][:,3]==a,0] for a in daod]
+
+
+# In[342]:
+
+
+plt.figure()
+plt.boxplot(bins_diffrC,positions=daod,showfliers=False,widths=0.1,showmeans=True,patch_artist=True)
+plt.xlim(0,0.7)
+plt.xticks([0.15,0.3,0.45,0.6])
+plt.gca().set_xticklabels([0.15,0.3,0.45,0.6])
+plt.xlabel('AOD at 500 nm')
+plt.ylabel('surface relative Cloud Radiative Effect [%]')
+plt.savefig(fp+'../plot/ORACLES_rCRE_vs_AOD_4STAR_{}.png'.format(vv),transparent=True,dpi=600)
+
+
+# In[322]:
+
+
+plt.figure()
+plt.plot(ca['aod'][:,3],star_aero_rC[:,0]-star_noaero_rC[:,0],'.')
 
 
 # In[296]:
@@ -2190,6 +2230,12 @@ plt.savefig(fp+'../plot/ORACLES_rCRE_from_aerosol_4STAR_{}.png'.format(vv),trans
 
 print 'difference in relative CRE due to aerosol'
 print 'mean, surface: {}, toa: {}'.format(np.nanmean(star_aero_rC[:,0]-star_noaero_rC[:,0]),np.nanmean(star_aero_rC[:,2]-star_noaero_rC[:,2]))
+
+
+# In[314]:
+
+
+c.keys()
 
 
 # In[127]:

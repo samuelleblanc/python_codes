@@ -70,6 +70,8 @@ fp = getpath(name)
 
 # # Load files
 
+# ## Load DARE calculations
+
 # In[7]:
 
 
@@ -80,6 +82,20 @@ s = hs.loadmat(fp+'model/ORACLES_DARE_v1.mat')
 
 
 s.keys()
+
+
+# ## Load DARE parameters from SARE
+
+# In[113]:
+
+
+sa = sio.loadmat(fp+'ORACLES_2016_DARE_params_v2.mat')
+
+
+# In[114]:
+
+
+sa.keys()
 
 
 # # Plot out data
@@ -152,6 +168,25 @@ plt.figure()
 plt.hist(s['ref'],range=[0,30],bins=30)
 plt.xlabel('REF [${{\\mu}}$m]')
 plt.title('ORACLES 2016 SSFR REF histogram')
+
+
+# In[108]:
+
+
+s['ext'].shape
+
+
+# In[109]:
+
+
+s['wvl']
+
+
+# In[111]:
+
+
+plt.figure()
+plt.hist(s['ext'][:,2],range=[np.nanmin(s['ext'][:,2]),np.nanmax(s['ext'][:,2])],bins=30)
 
 
 # In[53]:
@@ -272,10 +307,10 @@ for i,b in enumerate(boxes_diag):
     bins_diag.append(s['dare'][igood,2][ia])
 
 
-# In[94]:
+# In[100]:
 
 
-bins_diag[0] = bins_diag[1][0:3]
+bins_diag[0] = bins_diag[1][0:5]
 
 
 # In[79]:
@@ -285,6 +320,12 @@ bins_ns = []
 for i,b in enumerate(boxes_ns):
     ia = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) & (s['lat'][igood]<=b[3]) & (np.isfinite(s['dare'][igood,2]))
     bins_ns.append(s['dare'][igood,2][ia])
+
+
+# In[105]:
+
+
+bins_ns[-1] = bins_ns[-2][0:5]
 
 
 # In[82]:
@@ -302,19 +343,24 @@ for i,b in enumerate(boxes_ew):
 len(boxes_diag),len(bins_diag)
 
 
-# In[97]:
+# In[127]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_diag_ct):
-    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-20,35),zorder=10,normed=True,orientation='horizontal')
+    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-30,100),
+               zorder=10,normed=True,orientation='horizontal',label='Calculations')
+    #ax[i].hist(sa['bins_diag'][0,i][0],bins=30,edgecolor='None',alpha=0.3,color='m',range=(-30,100),
+    #           zorder=-1,normed=True,orientation='horizontal',label='Parameterization')
     ax[i].axhline(np.nanmean(bins_diag[i]),color='g',label='mean')
     ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
     if i>0:
         [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
+    #else:
+        #ax[i].legend(frameon=False)
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i%2: pu.prelim(ax[i])
@@ -324,13 +370,14 @@ fig.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_diag_boxes.png',dpi=600,transparent=True)
 
 
-# In[96]:
+# In[129]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_ns_ct):
     ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-30,35),zorder=10,normed=True,orientation='horizontal')
+    #ax[i].hist(sa['bins_ns'][0,i][0],bins=30,edgecolor='None',alpha=0.2,color='orange',range=(-30,35),zorder=-1,normed=True,orientation='horizontal')
     ax[i].axhline(np.nanmean(bins_ns[i]),color='b',label='mean')
     ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
@@ -346,7 +393,7 @@ fig.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_ns_boxes.png',dpi=600,transparent=True)
 
 
-# In[99]:
+# In[128]:
 
 
 plt.figure()
@@ -367,4 +414,10 @@ for i,b in enumerate(boxes_diag):
 plt.ylim(-25,-7)
 plt.title('ORACLES 2016 DARE TOA from calculations of\n4STAR AOD, skyscans and SSFR cloud retrievals')
 plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_map_param.png',dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 

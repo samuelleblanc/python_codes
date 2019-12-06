@@ -72,9 +72,10 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
-# In[5]:
+# In[122]:
 
 
+from datetime import datetime 
 import plotting_utils as pu
 
 
@@ -98,6 +99,12 @@ fp
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
+
+
+# In[123]:
+
+
+doy = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
 
 
 # ## Load the SSFR ict files for 2016
@@ -236,13 +243,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[25]:
+# In[149]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[26]:
+# In[150]:
 
 
 ar = {}
@@ -250,17 +257,20 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[27]:
+# In[151]:
 
 
 ar['days'] = np.array([])
+ar['doy'] = np.array([])
 
 
-# In[28]:
+# In[152]:
 
 
 for i,d in enumerate(days):
     ar['days'] = np.append(ar['days'],np.zeros_like(ssfr_a[i]['Start_UTC'])+i)
+    
+    ar['doy'] = np.append(ar['doy'],np.zeros_like(ssfr_a[i]['Start_UTC'])+datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday)
     for n in nm:
         try:
             ar[n] = np.append(ar[n],ssfr_a[i][n])
@@ -269,9 +279,21 @@ for i,d in enumerate(days):
             ar[n] = np.append(ar[n],ssfr_a[i]['Start_UTC']*0)
 
 
+# In[153]:
+
+
+ar['days'].shape
+
+
+# In[154]:
+
+
+nm
+
+
 # # Format the LUT and data for retrievals
 
-# In[29]:
+# In[155]:
 
 
 class so:
@@ -280,7 +302,7 @@ class so:
 
 # ## Set up the data
 
-# In[30]:
+# In[156]:
 
 
 ar['meas'] = so
@@ -290,7 +312,7 @@ ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[31]:
+# In[157]:
 
 
 # filter out the bad data. 
@@ -299,7 +321,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[32]:
+# In[158]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -377,12 +399,6 @@ ax[0].legend(frameon=False)
 ax[1].set_title('Cloud Albedo under aerosol For ORACLES 2016 from P3')
 
 
-# In[ ]:
-
-
-ax[0].
-
-
 # In[57]:
 
 
@@ -402,12 +418,23 @@ cb.set_label('Counts')
 fp
 
 
-# In[26]:
+# In[51]:
 
 
-sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
+sares = []
+for i in xrange(9):
+    sares.append(sio.idl.readsav(fp+'data_other/SSFR/AOD_DARE_param_coeffs_{}0sza_for_sam_v2.out'.format(i)))
+sares_sza = [0.0,10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0]
 
 
+# In[47]:
+
+
+sares[-2]
+
+
+# **Old**
+# 
 # From Sabrina Cochrane on 2019-06-27, 2:23pm
 # 
 # Here they are! The variables are l0, l1, l2, q0, q1, q2, crit_alb. Note this is valid for a SZA of 20 and for one retrieval from 20160920 (let me know if you need the ssa/g values.)
@@ -424,16 +451,46 @@ sare = sio.idl.readsav(fp+'data_other/SSFR/for_Sam.out')
 # Cases for 9, spanning 2016 and 2017. related ssa, and g. Each case for 0-80 SZA. Range of calculated AOD, tied 550
 # Parameterization, for 0-80 sza, there is an aaod parameterisation. 
 
-# In[27]:
+# **New**
+# 
+# From Sabrina Cochrane on Aug 14, 2019, 2:50 pm 
+# 
+# Hi Sam,
+# 
+# Thanks for chatting with me today. Here are the files with the coefficients for the 9 cases along with the average coefficients from all cases. Each SZA has its own file and is labeled in the filename. The variables in the file are:
+# 
+# dates: array with the dates in order 
+# 
+# spnums: spiral numbers in order (the specific numbers aren't that important, just a way to keep track for days that have more than one spiral)
+# 
+# sza: same as in the file name
+# 
+# l00,l11,l22,q00,q11,q22: arrays for each of the coefficients in the same order as the dates. So for date and spnum index 0, you'll use l00[0], l11[0], l22[0], q00[0], q11[0], q22[0]. To calculate BB DARE (i.e. SARE), you would do:
+# 
+#     l_term=l00+l11*(albedo550)+l22*(albedo550)^2
+#     q_term=q00+q11*(albedo550)+q22*albedo)^2
+#     sare=l_term*aod550+q_term*[aod550]^2
+# 
+# *this is slightly different than what I gave you last time- we've removed the critical albedo since it wasn't necessary here. It will be included in the AAOD parameterization.
+# 
+# avl0,avl1,avl2,avq0,avq1,avq2: Average coefficients for all cases in same order as dates. 
+# 
+# svl0,svl1,svl2,svq0,svq1,svq2: standard deviation of the average calculation
+# 
+# 
+# Let me know if you have any questions!
+
+# In[164]:
 
 
-sare.keys()
+for sa in sares:
+    sa['doy'] = np.array([datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in sa['spnums']])
 
 
-# In[30]:
+# In[97]:
 
 
-sare
+sares[6]['avl1']
 
 
 # In[29]:
@@ -442,90 +499,98 @@ sare
 sare['sza'] = [20.0]
 
 
-# In[31]:
+# In[167]:
 
 
-def sare_fx(alb,aod,sare,sza):
-    'Function to calculate the Scalable Aerosol Radiative Effect (SARE) from Cochrane et al., 2019 in prep'
-    #i = np.argmin(abs(np.array(sare['sza'])-sza))
-    #if i==0:
-    l_term = sare['l0']+sare['l1']*(alb-sare['crit_alb'])+sare['l2']*(alb-sare['crit_alb'])**2.0
-    q_term = sare['q0']+sare['q1']*(alb-sare['crit_alb'])+sare['q2']*(alb-sare['crit_alb'])**2.0
-    #else:
-    #    l_term = sare['l0'][i]+sare['l1'][i]*(alb-sare['crit_alb'][i])+sare['l2'][i]*(alb-sare['crit_alb'][i])**2.0
-    #    q_term = sare['q0'][i]+sare['q1'][i]*(alb-sare['crit_alb'][i])+sare['q2'][i]*(alb-sare['crit_alb'][i])**2.0
-    return l_term*aod + q_term*(aod)**2.0
+def sare_fx(alb,aod,sares,sza,doy,sares_sza=np.array(sares_sza)):
+    'Function to calculate the Scalable Aerosol Radiative Effect (SARE) from Cochrane et al., 2019 in prep v2'
+    
+    dare = np.zeros_like(sza)+np.nan
+    szai = []
+    for j,z in enumerate(sza):
+        i = np.argmin(abs(z-sares_sza))
+        k = np.argmin(abs(doy[j]-sares[i]['doy']))
+        
+        szai.append(i)
+        #l_term = sares[i]['l0']+sares[i]['l1']*(alb-sares[i]['crit_alb'])+sares[i]['l2']*(alb-sares[i]['crit_alb'])**2.0
+        #q_term = sares[i]['q0']+sares[i]['q1']*(alb-sares[i]['crit_alb'])+sares[i]['q2']*(alb-sares[i]['crit_alb'])**2.0
+
+        l_term = sares[i]['l00'][k]+sares[i]['l11'][k]*alb[j]+sares[i]['l22'][k]*alb[j]**2.0
+        q_term = sares[i]['q00'][k]+sares[i]['q11'][k]*alb[j]+sares[i]['q22'][k]*alb[j]**2.0
+        dare[j] = l_term*aod[j] + q_term*(aod[j])**2.0
+        
+    return dare,np.array(szai)
 
 
-# In[32]:
+# In[176]:
 
 
-dare = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sare,ar['meas'].sza[igood])
+dare,szai = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sares,ar['meas'].sza[igood],ar['doy'][igood])
 
 
-# In[33]:
+# In[177]:
 
 
 np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
 
 
-# In[229]:
+# In[178]:
 
 
 plt.figure()
 plt.hist(dare,bins=30,edgecolor='None',alpha=0.7,color='g',range=(np.nanmin(dare),np.nanmax(dare)),zorder=10)
 plt.xlabel('DARE [w/m^2]')
 plt.ylabel('counts')
-plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE v2')
 
 plt.axvline(0,color='k',alpha=0.5,linestyle='--',zorder = -10)
 plt.axvline(np.nanmean(dare),color='g',label='mean')
 plt.axvline(np.nanmedian(dare),color='g',linestyle='--',label='median')
 plt.legend(frameon=False)
 pu.prelim()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_hist.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_hist_v2.png',dpi=600,transparent=True)
 
 
-# In[223]:
+# In[179]:
 
 
 plt.figure()
 plt.hist2d(dare,ar['meas'].sza[igood],bins=40,range=[[-70,150],[0,90]],cmap=plt.cm.Greens)
 plt.ylabel('SZA [$^\\circ$]')
 plt.xlabel('DARE [W/m$^2$]')
-plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE v2')
 
 cb = plt.colorbar()
 cb.set_label('counts')
 pu.prelim()
 
-plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_SZA.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_SZA_v2.png',dpi=600,transparent=True)
 
 
-# In[224]:
+# In[99]:
 
 
 plt.figure()
 plt.hist2d(dare,ar['LAT'][igood],bins=40,range=[[-70,150],[-24,-8]],cmap=plt.cm.PuRd)
 plt.ylabel('Latitude [$^\\circ$]')
 plt.xlabel('DARE [W/m$^2$]')
-plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE at 20 SZA only')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE v2')
 
 cb = plt.colorbar()
 cb.set_label('counts')
 pu.prelim()
 
-plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_lat.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_vs_lat_v2.png',dpi=600,transparent=True)
 
 
-# In[227]:
+# In[100]:
 
 
 plt.figure()
 plt.plot(dare,ar['LAT'][igood],'+')
 
 
-# In[215]:
+# In[180]:
 
 
 plt.figure()
@@ -543,7 +608,7 @@ pu.prelim()
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[34]:
+# In[181]:
 
 
 boxes_diag = []
@@ -551,7 +616,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[35]:
+# In[182]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -561,43 +626,43 @@ boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.
 
 # Corners are [x0,x1,y0,y1]
 
-# In[208]:
+# In[183]:
 
 
 boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
 
 
-# In[147]:
+# In[184]:
 
 
 boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
 
 
-# In[148]:
+# In[185]:
 
 
 boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
 
 
-# In[149]:
+# In[186]:
 
 
 boxes_diag
 
 
-# In[150]:
+# In[187]:
 
 
 boxes_ew
 
 
-# In[209]:
+# In[188]:
 
 
 boxes_ns
 
 
-# In[158]:
+# In[189]:
 
 
 bins_diag = []
@@ -606,7 +671,7 @@ for i,b in enumerate(boxes_diag):
     bins_diag.append(dare[ia])
 
 
-# In[210]:
+# In[190]:
 
 
 bins_ns = []
@@ -615,7 +680,7 @@ for i,b in enumerate(boxes_ns):
     bins_ns.append(dare[ia])
 
 
-# In[161]:
+# In[191]:
 
 
 bins_ew = []
@@ -624,13 +689,13 @@ for i,b in enumerate(boxes_ew):
     bins_ew.append(dare[ia])
 
 
-# In[162]:
+# In[192]:
 
 
 len(boxes_diag),len(bins_diag)
 
 
-# In[225]:
+# In[195]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
@@ -641,17 +706,18 @@ for i,b in enumerate(boxes_diag_ct):
     ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
+    ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i>0:
         [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - 4STAR+SSFR SARE param for SZA of 20 only')
+fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - 4STAR+SSFR SARE params v2')
 fig.tight_layout()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_diag_boxes.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_v2_diag_boxes.png',dpi=600,transparent=True)
 
 
-# In[226]:
+# In[196]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
@@ -662,17 +728,27 @@ for i,b in enumerate(boxes_ns_ct):
     ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
+    ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i>0:
         [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - 4STAR+SSFR SARE param for SZA of 20 only')
+fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - 4STAR+SSFR SARE param v2')
 fig.tight_layout()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes_v2.png',dpi=600,transparent=True)
 
 
-# In[220]:
+# In[200]:
+
+
+dat_out = {'dare':dare,'bins_diag':bins_diag,'bins_ew':bins_ew,'bins_ns':bins_ns,
+           'boxes_diag':boxes_diag,'boxes_ew':boxes_ew,'boxes_ns':boxes_ns,
+           'boxes_diag_ct':boxes_diag_ct,'boxes_ew_ct':boxes_ew_ct,'boxes_ns_ct':boxes_ns_ct}
+sio.savemat(fp+'ORACLES_2016_DARE_params_v2.mat',dat_out)
+
+
+# In[194]:
 
 
 plt.figure()
@@ -691,8 +767,8 @@ for i,b in enumerate(boxes_diag):
     plt.plot([b[0],b[0],b[1],b[1],b[0]],[b[2],b[3],b[3],b[2],b[2]],'-g')
 
 plt.ylim(-25,-7)
-plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR')
-plt.savefig(fp+'plot/ORACLES_2016_DARE_map_param.png',dpi=600,transparent=True)
+plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR v2')
+plt.savefig(fp+'plot/ORACLES_2016_DARE_v2_map_param.png',dpi=600,transparent=True)
 
 
 # ## Save to file for easier loading

@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -69,6 +69,7 @@ from mpl_toolkits.basemap import Basemap
 
 import scipy.stats as st
 from mpl_toolkits.basemap import Basemap
+import pandas as pd
 
 
 # In[3]:
@@ -158,15 +159,169 @@ ar8['flo'] = (ar8['qual_flag']==0) & (ar8['fl_routine']==False)
 ar8['fl'] = (ar8['qual_flag']==0)
 
 
-# # Now plot the data together
+# ## Load the surface elevation map from SAFARI
+
+# from : https://daac.ornl.gov/daacdata/safari2k/vegetation_wetlands/globe_dem/comp/readme_new.txt
+# 
+# SAFARI 2000 Digital Elevation Model, 1-km (GLOBE)
+# 
+# Cite this data set as follows: 
+# 
+# Hastings, David A., et al. 2002. SAFARI 2000 Digital Elevation Model, 1-km (GLOBE). 
+# Available on-line [http://www.daac.ornl.gov/] from Oak Ridge National
+# Laboratory Distributed Active Archive Center, Oak Ridge, Tennessee, U.S.A. 
+# 
+# 
+# 
+# ASCII File Information  
+# 
+# 
+# The data is also available in ASCII Grid (so_africa_dem.dat.gz) format for 
+# ArcInfo. The *.dat file contains a single ASCII array with integer values. 
+# Coordinates listed below are in decimal degrees.  The ASCII file consists of 
+# header information containing a set of keywords, followed by cell values in 
+# row-major order. The file format is:
+# 
+#   NCOLS 4560
+#   NROWS 4200
+#   XLLCORNER 4.9958333333333
+#   YLLCORNER     -34.995833333333
+#   CELLSIZE      0.0083333333333333
+#   NODATA_value  -9999
+#   row 1
+#   row 2
+#   .
+#   .
+#   .
+#   row n
+# 
+# Row 1 of the data is at the top of the grid, row 2 is just
+# under row 1 and so on. The end of each row of data from the grid is
+# terminated with a carriage return in the file. 
+# 
+# 
+# To import this file into ArcInfo use the following command at an ARC prompt: 
+# 
+#     ASCIIGRID {in_ascii_file} {out_grid} {INT | FLOAT}
+# 
+# Arguments:
+# {in_ascii_file} - the ASCII file to be converted.
+# {out_grid} - the name of the grid to be created.
+# {INT | FLOAT} - the data type of the output grid.
+#     INT - an integer grid will be created.
+#     FLOAT - a floating-point grid will be created.
+# 
 
 # In[14]:
+
+
+elev_pd = pd.read_csv(fp+'surface_elevation/so_africa_dem_nohead.dat',delimiter=' ',header=None)
+
+
+# In[37]:
+
+
+elev_pd
+
+
+# In[15]:
+
+
+elev = elev_pd.to_numpy()
+
+
+# In[16]:
+
+
+elev.shape
+
+
+# In[17]:
+
+
+elev_lat = np.arange(-0.0083333,-35,-0.0083333)
+
+
+# In[18]:
+
+
+elev_lat.shape
+
+
+# In[19]:
+
+
+elev_lon = np.arange(5.0,43.0,0.00833333)
+
+
+# In[20]:
+
+
+elev_lon.shape
+
+
+# In[63]:
+
+
+plt.figure()
+plt.contourf(elev_lon,elev_lat,elev)
+
+
+# In[21]:
+
+
+elev[elev <0] = np.nan
+
+
+# In[22]:
+
+
+strip_elev = np.nanmax(elev[:,0:2200],axis=1)
+mean_elev = np.nanmean(elev[:,0:2200],axis=1)
+
+
+# In[49]:
+
+
+plt.figure()
+plt.plot(mean_elev)
+
+
+# In[75]:
+
+
+strip_elev.shape
+
+
+# In[76]:
+
+
+strip_elev
+
+
+# In[78]:
+
+
+plt.figure()
+plt.plot(strip_elev)
+
+
+# In[77]:
+
+
+plt.figure()
+plt.plot(strip_elev,elev_lat)
+
+
+# # Now plot the data together
+
+# In[25]:
 
 
 len(ar6['AOD0501'][ar6['fl']]), len(ar7['AOD0501'][ar7['fl']]), len(ar8['AOD0501'][ar8['fl']])
 
 
-# In[15]:
+# In[26]:
 
 
 np.nanmean(ar6['AOD0501'][ar6['fl']]),np.nanmean(ar7['AOD0501'][ar7['fl']]),np.nanmean(ar8['AOD0501'][ar8['fl']])
@@ -552,28 +707,28 @@ plt.savefig(fp+'plot_all/AOD_oceanc_latitude_2016_2017_2018.png',dpi=600,transpa
 
 # ## Setup the vertical angtrom profiles
 
-# In[16]:
+# In[43]:
 
 
 ar6['fl_QA_angs'] = ar6['fl_QA'] & (ar6['AOD0501']>0.1)
 ar6['fl_QA_angs_aca'] = ar6['flac'] & (ar6['AOD0501']>0.1) & (ar6['GPS_Alt']>300.0)
 
 
-# In[17]:
+# In[44]:
 
 
 ar7['fl_QA_angs'] = ar7['fl_QA'] & (ar7['AOD0501']>0.1)
 ar7['fl_QA_angs_aca'] = ar7['flac'] & (ar7['AOD0501']>0.1) & (ar7['GPS_Alt']>300.0)
 
 
-# In[18]:
+# In[45]:
 
 
 ar8['fl_QA_angs'] = ar8['fl_QA'] & (ar8['AOD0501']>0.1)
 ar8['fl_QA_angs_aca'] = ar8['flac'] & (ar8['AOD0501']>0.1) & (ar8['GPS_Alt']>300.0)
 
 
-# In[19]:
+# In[42]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70):
@@ -587,7 +742,7 @@ def make_bined_alt(x,alt,days,fl,n=70):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[20]:
+# In[41]:
 
 
 def set_box_whisker_color(cl,bp,binned_ndays):
@@ -945,14 +1100,14 @@ plt.savefig(fp+'plot_all/ORACLES2018_4STAR_AOD_vertical_cb.png',
 
 # ## Set the region and times
 
-# In[23]:
+# In[27]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[24]:
+# In[28]:
 
 
 ar6['flq'] = ar6['flac'] & (ar6['Latitude']>lat1) & (ar6['Latitude']<lat2) & (ar6['Longitude']>lon1) & (ar6['Longitude']<lon2) & (ar6['qual_flag']==0)& (ar6['AOD0501']<1.5)
@@ -960,7 +1115,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[25]:
+# In[29]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -971,7 +1126,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[26]:
+# In[30]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -979,7 +1134,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[27]:
+# In[31]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -990,7 +1145,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[28]:
+# In[32]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -998,7 +1153,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[29]:
+# In[33]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1011,7 +1166,7 @@ ar8['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar8['Start_
 
 # ## Plot the time series of the region
 
-# In[30]:
+# In[34]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -1023,7 +1178,7 @@ for d in bin_days6:
     bin_num6.append(len(ar6['AOD0501'][ar6['flq']][flh]))
 
 
-# In[31]:
+# In[35]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -1035,7 +1190,7 @@ for d in bin_days7:
     bin_num7.append(len(ar7['AOD0501'][ar7['flq']][flh]))
 
 
-# In[32]:
+# In[36]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -1117,13 +1272,13 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly.png',
 
 # ## Add a map of the region
 
-# In[33]:
+# In[37]:
 
 
 from mpl_toolkits.basemap import Basemap
 
 
-# In[34]:
+# In[38]:
 
 
 def mapfig(ax=plt.gca()):
@@ -1136,7 +1291,7 @@ def mapfig(ax=plt.gca()):
     return m
 
 
-# In[55]:
+# In[39]:
 
 
 fig,ax = plt.subplots(1,1,figsize=(5,5))
@@ -1159,7 +1314,7 @@ plt.fill_between(xss, yss, yss2,color='gold',alpha=0.7)
 #plt.Polygon(xss,yss,edgecolor='None',color='gold',alpha=0.3)
 
 
-# In[382]:
+# In[48]:
 
 
 plt.figure(figsize=(9,3))
@@ -1571,6 +1726,12 @@ cb.set_label('Difference in AOD$_{{500nm}}$')
 plt.tight_layout(rect=[0.03,0,1,1],w_pad=2.5)
 plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
             transparent=True,dpi=500)
+
+
+# In[ ]:
+
+
+
 
 
 # # Get the ACAOD gaps

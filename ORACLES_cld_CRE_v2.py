@@ -370,6 +370,37 @@ f.close()
 else:
 
 
+# In[160]:
+
+
+ext = np.zeros((len(ar['lat_fl']),len(aca['aero']['0']['wvl_arr'])))
+ssa = np.zeros((len(ar['lat_fl']),len(aca['aero']['0']['wvl_arr'])))
+asy = np.zeros((len(ar['lat_fl']),len(aca['aero']['0']['wvl_arr'])))
+for i,l in enumerate(ar['lat_fl']):
+
+    #print i
+    day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
+    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+    i_aca = np.argmin(abs(aca['utc'][day]-ar['utc_fl'][i]))
+    i_aero = '{}'.format(aca['acaod_index'][day][i_aca])
+    ext[i,:] = aca['aero'][i_aero]['ext'][0]
+    ssa[i,:]= aca['aero'][i_aero]['ssa'][0]
+    asy[i,:]= aca['aero'][i_aero]['asy'][0]
+aod_sv = ext*3.0
+
+
+# In[161]:
+
+
+wvl = aca['aero']['0']['wvl_arr']
+
+
+# In[162]:
+
+
+hs.savemat(fp+'{name}_CRE_aerosol_{vv}.mat'.format(name=name,vv=vo),{u'ext':ext,u'aod':aod_sv,u'wvl':wvl,u'ssa':ssa,u'asy':asy})
+
+
 # In[150]:
 
 
