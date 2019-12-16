@@ -107,7 +107,7 @@ sklearn==0.0
 statsmodels==0.8.0
 tables==3.4.2
 Tempita==0.5.2
-tensorflow==1.4.0
+tensorflow==1.15.0
 tensorflow-tensorboard==0.4.0rc2
 terminado==0.6
 testpath==0.3.1
