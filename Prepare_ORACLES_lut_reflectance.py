@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -48,7 +48,7 @@
 
 # # Prepare the python environment
 
-# In[4]:
+# In[2]:
 
 
 import numpy as np
@@ -57,11 +57,22 @@ import os
 import Run_libradtran as RL
 
 
-# In[5]:
+# In[22]:
 
 
 from load_utils import load_from_json
 from path_utils import getpath
+from tqdm.notebook import tqdm 
+
+
+# In[12]:
+
+
+fp = getpath('ORACLES')
+fp_rtm = getpath('rtm')
+fp_uvspec = getpath('uvspec')+'uvspec'
+fp_rtmdat = fp_rtm+'dat/'
+fp_uvspec_dat = getpath('uvspec_dat')
 
 
 # In[6]:
@@ -83,15 +94,15 @@ else:
 
 # # Setup the variables used to create the lut
 
-# In[14]:
+# In[5]:
 
 
-vv = 'v5_irr'
+vv = 'v6_irr'
 mu = np.arange(1.02,3.4,0.05)
 mu.shape
 
 
-# In[15]:
+# In[6]:
 
 
 sza = np.arccos(1.0/mu)*180.0/np.pi
@@ -99,7 +110,7 @@ sza = np.arccos(1.0/mu)*180.0/np.pi
 print(sza)
 
 
-# In[16]:
+# In[7]:
 
 
 tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
@@ -108,32 +119,32 @@ tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
 ref = np.append(np.append(np.arange(1,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,2.5)))
 
 
-# In[17]:
+# In[8]:
 
 
 ref
 
 
-# In[18]:
+# In[9]:
 
 
 print(ref.shape)
 print(tau.shape)
 
 
-# In[ ]:
+# In[10]:
 
 
 pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=False)
 
 
-# In[ ]:
+# In[11]:
 
 
 aero = load_from_json(fp+'aero_file_v4.txt')
 
 
-# In[70]:
+# In[13]:
 
 
 #geo = {'lat':-22.979,
@@ -155,19 +166,19 @@ cloud = {'ztop':1.0,
          'zbot':0.5,
          'write_moments_file':True,
          'moms_dict':pmom}
-source = {'wvl_range':[350,1750],
+source = {'wvl_range':[350,2150],
           'source':'solar',
           'integrate_values':False,
           'run_fuliou':False,
-          'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
-          'atm_file':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/atmmod/afglt.dat',
+          'dat_path':fp_uvspec_dat,
+          'atm_file':fp_uvspec_dat + 'afglt.dat',
           'zenith':False}
 albedo = {'create_albedo_file':False,
           'sea_surface_albedo':True,
           'wind_speed':5.0}
 
 
-# In[60]:
+# In[14]:
 
 
 RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
@@ -175,21 +186,21 @@ RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
                          tau=tau,ref=ref,sza=sza,cloud_pmom_file=fp_rtmdat+'mie_hi_delta.mat')
 
 
-# In[71]:
+# In[15]:
 
 
 fp_in = os.path.join(fp_rtm,'input','%s_ORACLES'%vv)
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 
-# In[82]:
+# In[16]:
 
 
 f_slit_vis = os.path.join(fp_rtm,'vis_1nm.dat')
 f_slit_nir = os.path.join(fp_rtm,'nir_1nm.dat')
 
 
-# In[72]:
+# In[17]:
 
 
 if not os.path.exists(fp_in):
@@ -198,16 +209,34 @@ if not os.path.exists(fp_out):
     os.makedirs(fp_out)
 
 
-# In[79]:
+# In[19]:
 
 
-f_list = open(os.path.join(fp,'run','ORACLES_list_%s.sh'%vv),'w')
+f_list = open(os.path.join(fp_rtm,'ORACLES_list_%s.sh'%vv),'w')
 print f_list.name
 
 
-# In[ ]:
+# In[20]:
 
 
+def isjupyter():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+
+# In[24]:
+
+
+if isjupyter():
+    pbar = tqdm(total=len(sza)*len(tau)*len(ref))
 for s in sza:
     for t in tau:
         for r in ref:
@@ -235,21 +264,30 @@ for s in sza:
                 source['wvl_range'] = [500.0,500.0]
                 source['slit_file'] = f_slit_vis
                 RL.write_input_aac(os.path.join(fp_in,fname0),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=True,make_base=False,set_quiet=True)
+                                   verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname0)+' > '+os.path.join(fp_out,fname0)+'\n')
                 fname1 = fname+'_'+cloud['phase']+'_w1.dat'
-                source['wvl_range'] = [1649.0,1649.0]
+                source['wvl_range'] = [2150.0,2150.0]
                 source['slit_file'] = f_slit_nir
                 RL.write_input_aac(os.path.join(fp_in,fname1),geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')                
-            print s,t,r
+            if isjupyter(): 
+                pbar.update(1)
+            else:
+                print s,t,r
         #break
     #break
+
+
+# In[25]:
+
+
+f_list.close()
 
 
 # In[ ]:
 
 
-f_list.close()
+
 
