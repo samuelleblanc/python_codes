@@ -107,7 +107,7 @@ fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 vr = 'R2'
 
 
-# In[75]:
+# In[8]:
 
 
 vv = 'v5'
@@ -115,21 +115,21 @@ vv = 'v5'
 
 # # Load the files
 
-# In[8]:
+# In[100]:
 
 
 dds = ['20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[9]:
+# In[10]:
 
 
 rts_low, rts_mid, rts_80, rts_65, rts_05, rts_10, rts_15 = [],[],[],[],[],[],[]
 sps = []
 
 
-# In[10]:
+# In[11]:
 
 
 for daystr in dds:
@@ -141,7 +141,7 @@ for daystr in dds:
     sps.append(sp)
 
 
-# In[11]:
+# In[12]:
 
 
 for daystr in dds:
@@ -151,7 +151,7 @@ for daystr in dds:
     rts_mid.append(rt)
 
 
-# In[12]:
+# In[13]:
 
 
 for daystr in dds:
@@ -161,7 +161,7 @@ for daystr in dds:
     rts_65.append(rt)
 
 
-# In[13]:
+# In[14]:
 
 
 for daystr in dds:
@@ -171,7 +171,7 @@ for daystr in dds:
     rts_80.append(rt)
 
 
-# In[14]:
+# In[15]:
 
 
 for daystr in dds:
@@ -181,7 +181,7 @@ for daystr in dds:
     rts_05.append(rt)
 
 
-# In[17]:
+# In[16]:
 
 
 for daystr in dds:
@@ -191,7 +191,7 @@ for daystr in dds:
     rts_10.append(rt)
 
 
-# In[18]:
+# In[17]:
 
 
 for daystr in dds:
@@ -203,31 +203,31 @@ for daystr in dds:
 
 # ## Load the cloud probe incloud flag
 
-# In[19]:
+# In[18]:
 
 
 from load_utils import mat2py_time,toutc
 
 
-# In[20]:
+# In[19]:
 
 
 p = sio.netcdf_file(fp+'..//data_other//oracles.cloud.timings.nc','r')
 
 
-# In[21]:
+# In[20]:
 
 
 p.variables
 
 
-# In[22]:
+# In[21]:
 
 
 p.variables['timevec_20160914'].data
 
 
-# In[23]:
+# In[22]:
 
 
 t_0914 = mat2py_time(p.variables['timevec_20160914'].data)
@@ -242,7 +242,7 @@ plt.plot(t_0914,p.variables['cloud_time_20160914'].data,'x')
 
 # ## Load the AOD ict files
 
-# In[24]:
+# In[23]:
 
 
 ar6 = hs.loadmat(fo+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
@@ -258,7 +258,7 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # # Start plotting the results
 
-# In[25]:
+# In[24]:
 
 
 rt.keys()
@@ -348,14 +348,14 @@ plt.plot(sps[7].utc,sps[7].sza,'x-')
 
 # ## Filter out data points where nir and vis spectrometers don't match
 
-# In[26]:
+# In[25]:
 
 
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
-# In[27]:
+# In[26]:
 
 
 for i,daystr in enumerate(dds):
@@ -379,13 +379,13 @@ for i,daystr in enumerate(dds):
 
 # ## Now filter out the times which were at too high altitude
 
-# In[28]:
+# In[27]:
 
 
 fl_alt = rt['alt']<1000.0
 
 
-# In[29]:
+# In[28]:
 
 
 for i,daystr in enumerate(dds):
@@ -401,13 +401,13 @@ for i,daystr in enumerate(dds):
 
 # ## Filter for in cloud
 
-# In[30]:
+# In[29]:
 
 
 from write_utils import nearest_neighbor
 
 
-# In[31]:
+# In[30]:
 
 
 for i,daystr in enumerate(dds):
@@ -422,7 +422,7 @@ for i,daystr in enumerate(dds):
     print daystr,rts_low[i]['utc'].shape,rts_low[i]['utc'][rts_low[i]['fl_incld']].shape,        float(rts_low[i]['utc'][rts_low[i]['fl_incld']].shape[0])/ float(rts_low[i]['utc'].shape[0])*100.0
 
 
-# In[32]:
+# In[31]:
 
 
 for i,daystr in enumerate(dds):
@@ -440,16 +440,17 @@ for i,daystr in enumerate(dds):
 # In[33]:
 
 
+dki = 2.66
 for i,daystr in enumerate(dds):
-    rts_low[i]['fl_ki'] = rts_low[i]['ki']<0.6
+    rts_low[i]['fl_ki'] = rts_low[i]['ki']<dki
     print daystr,rts_low[i]['utc'].shape,rts_low[i]['utc'][rts_low[i]['fl_ki']].shape,        float(rts_low[i]['utc'][rts_low[i]['fl_ki']].shape[0])/ float(rts_low[i]['utc'].shape[0])*100.0
         
-    rts_mid[i]['fl_ki'] = rts_mid[i]['ki']<0.6
-    rts_65[i]['fl_ki'] = rts_65[i]['ki']<0.6
-    rts_80[i]['fl_ki'] = rts_80[i]['ki']<0.6
-    rts_05[i]['fl_ki'] = rts_05[i]['ki']<0.6
-    rts_10[i]['fl_ki'] = rts_10[i]['ki']<0.6
-    rts_15[i]['fl_ki'] = rts_15[i]['ki']<0.6
+    rts_mid[i]['fl_ki'] = rts_mid[i]['ki']<dki
+    rts_65[i]['fl_ki'] = rts_65[i]['ki']<dki
+    rts_80[i]['fl_ki'] = rts_80[i]['ki']<dki
+    rts_05[i]['fl_ki'] = rts_05[i]['ki']<dki
+    rts_10[i]['fl_ki'] = rts_10[i]['ki']<dki
+    rts_15[i]['fl_ki'] = rts_15[i]['ki']<dki
 
 
 # ## Combine the filters
@@ -572,20 +573,20 @@ ar6['Start_UTC']
 ar6['days']
 
 
-# In[42]:
+# In[40]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[43]:
+# In[41]:
 
 
 dds
 
 
-# In[44]:
+# In[42]:
 
 
 for i,daystr in enumerate(dds):
@@ -598,57 +599,57 @@ for i,daystr in enumerate(dds):
     print daystr,rts_low[i]['utc'].shape,np.nanmin(rts_low[i]['acaod']),np.nanmax(rts_low[i]['acaod']),np.nanmean(rts_low[i]['acaod'])
 
 
-# In[45]:
+# In[43]:
 
 
 aod_luts = [0.15,0.3,0.45,0.6,1.5,1.95,2.4]
 
 
-# In[46]:
+# In[44]:
 
 
 acaod_index = []
 for i,dayst in enumerate(dds): acaod_index.append([np.abs(aod_luts-a).argmin() for a in rts_low[i]['acaod']])
 
 
-# In[47]:
+# In[45]:
 
 
 acaod_index[4]
 
 
-# In[48]:
+# In[46]:
 
 
 i = 4
 tmpt = np.array([rts_05[i]['tau'],rts_10[i]['tau'],rts_15[i]['tau'],rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']])
 
 
-# In[49]:
+# In[47]:
 
 
 tmpt.shape
 
 
-# In[50]:
+# In[48]:
 
 
 np.array(acaod_index[4]).shape
 
 
-# In[51]:
+# In[49]:
 
 
 ta = np.array([tmpt[a,j] for j,a in enumerate(acaod_index[i])])
 
 
-# In[52]:
+# In[50]:
 
 
 ta.shape
 
 
-# In[62]:
+# In[51]:
 
 
 plt.figure()
@@ -658,13 +659,13 @@ plt.plot(rts_low[i]['tau'],'+',label='low')
 plt.legend()
 
 
-# In[53]:
+# In[108]:
 
 
 rts = rts_mid
 
 
-# In[54]:
+# In[109]:
 
 
 for i,daystr in enumerate(dds):
@@ -677,13 +678,13 @@ for i,daystr in enumerate(dds):
     rts[i]['ref'] = re
 
 
-# In[55]:
+# In[110]:
 
 
 for i,daystr in enumerate(dds):
     try:
-        rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts_mid[i]['fl']],6,old=True)
-        rts[i]['ref_fl'] = smooth(rts[i]['ref'][rts_mid[i]['fl']],6,old=True)
+        rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts_mid[i]['fl']],2,old=True)
+        rts[i]['ref_fl'] = smooth(rts[i]['ref'][rts_mid[i]['fl']],2,old=True)
     except TypeError:
         print 'except',i
         rts[i]['tau_fl'] = rts[i]['tau'][rts_mid[i]['fl']]
@@ -694,9 +695,9 @@ for i,daystr in enumerate(dds):
     rts[i]['utc_fl'] = rts_mid[i]['utc'][rts_mid[i]['fl']]
     
     rts[i]['tau_err'] = np.nanmax([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)                          - np.nanmin([rts_low[i]['tau'],rts_mid[i]['tau'],rts_65[i]['tau'],rts_80[i]['tau']],axis=0)
-    rts[i]['tau_err_fl'] = smooth(rts_mid[i]['tau_err'][rts_mid[i]['fl']],6,old=True)
+    rts[i]['tau_err_fl'] = smooth(rts_mid[i]['tau_err'][rts_mid[i]['fl']],2,old=True)
     rts[i]['ref_err'] = np.nanmax([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)                          - np.nanmin([rts_low[i]['ref'],rts_mid[i]['ref'],rts_65[i]['ref'],rts_80[i]['ref']],axis=0)
-    rts[i]['ref_err_fl'] = smooth(rts_mid[i]['ref_err'][rts_mid[i]['fl']],6,old=True)
+    rts[i]['ref_err_fl'] = smooth(rts_mid[i]['ref_err'][rts_mid[i]['fl']],2,old=True)
     
     rts[i]['LWP_fl'] = 5.0/9.0 * rts[i]['tau_fl']* rts[i]['ref_fl']
     rts[i]['LWP_err_fl'] = np.sqrt((5.0/9.0 * rts[i]['ref_fl'] * rts[i]['tau_err_fl'])**2.0+                                   (5.0/9.0 * rts[i]['tau_fl'] * rts[i]['ref_err_fl'])**2.0)
@@ -735,13 +736,13 @@ for i,daystr in enumerate(dds):
 
 # ## Save the acaod indices for easier loading later
 
-# In[56]:
+# In[111]:
 
 
 dds
 
 
-# In[57]:
+# In[112]:
 
 
 ind,utc_ind = {},{}
@@ -750,7 +751,7 @@ for i,d in enumerate(dds):
     utc_ind[d] = np.array(rts[i]['utc'])
 
 
-# In[68]:
+# In[113]:
 
 
 files_ind = {
@@ -763,40 +764,46 @@ files_ind = {
     '6':'ORACLES_lut_v5_80aod.txt'}
 
 
-# In[69]:
+# In[114]:
+
+
+import write_utils as wu
+
+
+# In[115]:
 
 
 ddd = wu.dict_keys_to_unicode({'files':wu.dict_keys_to_unicode(files_ind),'acaod_index':wu.dict_keys_to_unicode(ind),
                             'utc':wu.dict_keys_to_unicode(utc_ind)})
 
 
-# In[70]:
+# In[116]:
 
 
 ddd['files']
 
 
-# In[63]:
+# In[117]:
 
 
 ddd['acaod_index']['20160827'].dtype
 
 
-# In[64]:
+# In[118]:
 
 
-hs.savemat(fp+'acaod_index_v5.mat',ddd)
+hs.savemat(fp+'acaod_index_v5b.mat',ddd)
 
 
 # # Now write these values to ict file
 
-# In[60]:
+# In[119]:
 
 
 import write_utils as wu
 
 
-# In[69]:
+# In[120]:
 
 
 hdict = {'PI':'Samuel LeBlanc',
@@ -813,7 +820,8 @@ hdict = {'PI':'Samuel LeBlanc',
      'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
      'project_info':'ORACLES 2016 deployment; August-September 2016; Walvis Bay, Namibia',
      'stipulations':'This is a public release of the ORACLES-2016 data set. We strongly recommend that you consult the PI, both for updates to the data set, and for the proper and most recent interpretation of the data for specific science use.',
-     'rev_comments':"""R2: Significant retrieval advancement and bug fixes, reducing COD values by about half. Renewed look-up-table creation accounting for actual above cloud AOD values. 
+     'rev_comments':"""R3: Relaxed the kisquare lvalue limit for valid retrievals to 2.0. 
+R2: Significant retrieval advancement and bug fixes, reducing COD values by about half. Renewed look-up-table creation accounting for actual above cloud AOD values. 
     Included uncertainties of retrieved products and the calculations of related cloud liquid water path.
 R1: Archival for first public release of retrieved cloud properties. Future releases is expected to contain uncertainty estimates. 
     Same filtering and notes on data quality as previous release. Retrieved cloud properties includes the assumption of the presence of an overlying aerosol layer having AOD=0.36, SSA=0.87, and ASY=0.64 at 500 nm.
@@ -823,7 +831,7 @@ R0: Preliminary archival of cloud properties retrieved from 4STAR sky radiance m
 order = ['LAT','LON','COD','REF','LWP','COD_err','REF_err','LWP_err']
 
 
-# In[70]:
+# In[121]:
 
 
 for i,daystr in enumerate(dds):
@@ -840,18 +848,18 @@ for i,daystr in enumerate(dds):
              }
     d_dict_out = wu.prep_data_for_ict(d_dict,in_var_name='utc',out_var_name='Start_UTC', in_input=True,time_interval=1.0)
     wu.write_ict(hdict,d_dict_out,filepath=fp+'..//zen_ict/v5/',
-              data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R2',order=order)    
+              data_id='4STAR_CLD',loc_id='P3',date=daystr,rev='R3',order=order)    
 
 
 # ## For use of this python, save values to mat files
 
-# In[78]:
+# In[122]:
 
 
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
-# In[84]:
+# In[123]:
 
 
 def dict_keys_to_unicode(d):
@@ -870,10 +878,10 @@ for n in rtss.keys():
         rtss[n] = dict_keys_to_unicode(rtss[n])
 
 
-# In[80]:
+# In[125]:
 
 
-hs.savemat(fp+'..//zen_ict/v5/{}_all_retrieved.mat'.format(vr),rtss)
+hs.savemat(fp+'..//zen_ict/v5/{}_all_retrieved.mat'.format(vv),rtss)
 
 
 # ## Optionally load the saved mat files
@@ -900,55 +908,49 @@ elif not rts:
 
 # ## Read the files as a verification
 
-# In[9]:
+# In[126]:
 
 
-vv = 'R2'
+vv = 'R3'
 
 
-# In[10]:
+# In[127]:
 
 
 from load_utils import load_ict
 
 
-# In[12]:
-
-
-dds = ['20160920']
-
-
-# In[13]:
+# In[128]:
 
 
 out_RA = []
 out_head_RA = []
 for d in dds:
-    fname_aod = fp+'..//zen_ict/v5/4STAR-CLD_P3_{}_{vr}.ict'.format(d,vr=vr)
+    fname_aod = fp+'..//zen_ict/v5/4STAR-CLD_P3_{}_{vr}.ict'.format(d,vr=vv)
     tt,th = load_ict(fname_aod,return_header=True)
     out_RA.append(tt)
     out_head_RA.append(th)
 
 
-# In[78]:
+# In[129]:
 
 
 out_head_RA[5]
 
 
-# In[16]:
+# In[130]:
 
 
 nm = out_RA[0].dtype.names
 
 
-# In[17]:
+# In[131]:
 
 
 nm
 
 
-# In[18]:
+# In[132]:
 
 
 for i,d in enumerate(dds):
@@ -1026,13 +1028,13 @@ for i,d in enumerate(dds):
     plt.savefig(fp+'..//zen_ict/v5/{vv}_{}.png'.format(d,vv=vv),dpi=600,transparent=True)
 
 
-# In[19]:
+# In[77]:
 
 
 nm
 
 
-# In[40]:
+# In[97]:
 
 
 plt.figure(figsize=(9,2.5))
@@ -1055,7 +1057,7 @@ plt.figure()
 plt.plot(out_RA[0]['Start_UTC'],out_RA[0]['LAT'],'.')
 
 
-# In[37]:
+# In[96]:
 
 
 iu = (out_RA[0]['Start_UTC']>8.8) & (out_RA[0]['Start_UTC']<9.86)
@@ -1063,7 +1065,7 @@ iu = (out_RA[0]['Start_UTC']>8.8) & (out_RA[0]['Start_UTC']<9.86)
 
 # ## Combine the data into a single array
 
-# In[82]:
+# In[133]:
 
 
 ar = {}
@@ -1071,13 +1073,13 @@ for n in rts[0].keys():
     ar[n] = np.array([])
 
 
-# In[83]:
+# In[134]:
 
 
 ar['days'] = np.array([])
 
 
-# In[84]:
+# In[135]:
 
 
 for i,d in enumerate(dds):
@@ -1088,16 +1090,16 @@ for i,d in enumerate(dds):
 
 # ## Save the combined array
 
-# In[129]:
+# In[136]:
 
 
 import hdf5storage as hs
 
 
-# In[86]:
+# In[137]:
 
 
-hs.savemat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vr),ar)
+hs.savemat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vv),ar)
 
 
 # ## Optionally load the all ict file
@@ -1111,19 +1113,19 @@ if not 'ar' in locals():
 
 # ## plot the data on a map
 
-# In[87]:
+# In[86]:
 
 
 import plotting_utils as pu
 
 
-# In[88]:
+# In[87]:
 
 
 from map_interactive import build_basemap
 
 
-# In[89]:
+# In[88]:
 
 
 rts[i]['tau_fl']
@@ -1136,7 +1138,7 @@ for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
 
 
-# In[91]:
+# In[92]:
 
 
 fig = plt.figure()
@@ -1151,7 +1153,7 @@ for i,daystr in enumerate(dds):
 #pu.prelim()
 cb = plt.colorbar(sa[0])
 cb.set_label('COD')
-plt.savefig(fp+'..//zen_ict/v5/{}_COD_map.png'.format(vr),transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/{}_COD_map.png'.format(vv),transparent=True,dpi=600)
 
 
 # In[92]:
@@ -1192,7 +1194,7 @@ plt.savefig(fp+'..//zen_ict/v5/{}_LWP_map.png'.format(vr),transparent=True,dpi=6
 
 # ## Plot out some statistics of all retrievals
 
-# In[94]:
+# In[138]:
 
 
 plt.figure()
@@ -1202,8 +1204,8 @@ plt.xlabel('Latitude [$^\\circ$]')
 plt.ylabel('COD')
 cb = plt.colorbar()
 cb.set_label('Normalized counts')
-plt.title('4STAR Cloud optical depth for all ORACLES flights')
-plt.savefig(fp+'..//zen_ict/v5/{}_COD_hist_lat.png'.format(vr),transparent=True,dpi=600)
+plt.title('4STAR Cloud optical depth for all ORACLES flights {}'.format(vv))
+plt.savefig(fp+'..//zen_ict/v5/{}_COD_hist_lat.png'.format(vv),transparent=True,dpi=600)
 
 
 # In[95]:
@@ -1250,7 +1252,7 @@ plt.title('4STAR Effective Radius for all ORACLES flights')
 plt.savefig(fp+'..//zen_ict/v5/ref_hist_lat.png',transparent=True,dpi=600)
 
 
-# In[9]:
+# In[98]:
 
 
 fig = plt.figure()
@@ -1261,7 +1263,7 @@ plt.xlabel('COD')
 plt.grid()
 pu.prelim()
 plt.legend(frameon=False)
-plt.savefig(fp+'..//zen_ict/v5/cod_hist.png',transparent=True,dpi=600)
+plt.savefig(fp+'..//zen_ict/v5/R3_cod_hist.png',transparent=True,dpi=600)
 
 
 # In[98]:

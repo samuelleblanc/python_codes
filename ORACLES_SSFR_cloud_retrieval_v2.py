@@ -72,7 +72,7 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
-# In[122]:
+# In[5]:
 
 
 from datetime import datetime 
@@ -101,7 +101,7 @@ days = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[123]:
+# In[9]:
 
 
 doy = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
@@ -109,7 +109,7 @@ doy = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d i
 
 # ## Load the SSFR ict files for 2016
 
-# In[9]:
+# In[10]:
 
 
 ssfr_a, ssfr_ah = [],[]
@@ -119,7 +119,7 @@ for d in days:
     ssfr_ah.append(sfh)
 
 
-# In[10]:
+# In[11]:
 
 
 ssfr_ah[0]
@@ -137,7 +137,7 @@ ssfr_a[0]
 ialt = ssfr_a[5]['ALT']<500.0
 
 
-# In[13]:
+# In[16]:
 
 
 plt.figure()
@@ -145,13 +145,13 @@ plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['UP500'][ialt]/ssfr_a[5]['DN500'
 plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['DN500'][ialt],'.')
 
 
-# In[14]:
+# In[13]:
 
 
 iflt = (ssfr_a[5]['Start_UTC']>11.4692) & (ssfr_a[5]['Start_UTC']<11.5)
 
 
-# In[15]:
+# In[14]:
 
 
 sk =  ssfr_a[5].keys()
@@ -161,14 +161,14 @@ for k in sk:
         print k, np.nanmean(ssfr_a[5][k.replace('DN','UP')][iflt])/np.nanmean(ssfr_a[5][k][iflt])
 
 
-# In[16]:
+# In[15]:
 
 
 albedo_wvl = [415.0,440.0,500.0,675.0,870.0,990.0,1020.0,1064.0,1250.0,1650.0,2100.0]
 albedos = [0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558]
 
 
-# In[17]:
+# In[16]:
 
 
 albedo_wvl,albedos
@@ -176,7 +176,7 @@ albedo_wvl,albedos
 
 # ## Load the 4STAR files with flagacaod
 
-# In[18]:
+# In[17]:
 
 
 star_a, star_ah = [],[]
@@ -186,13 +186,13 @@ for d in days:
     star_ah.append(sfh)
 
 
-# In[19]:
+# In[18]:
 
 
 ssfr_a[3]['Start_UTC'][100]
 
 
-# In[20]:
+# In[23]:
 
 
 star_ah[4]
@@ -200,7 +200,7 @@ star_ah[4]
 
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
-# In[21]:
+# In[19]:
 
 
 for i,d in enumerate(days):
@@ -221,7 +221,7 @@ for i,d in enumerate(days):
     ssfr_a[i]['a0'] = a0
 
 
-# In[22]:
+# In[20]:
 
 
 ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
@@ -229,13 +229,13 @@ ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
 
 # ## Load the LUT for 2wvl reflectance retrieval
 
-# In[23]:
+# In[21]:
 
 
-lut = hs.loadmat(fp+'rtm/v5_irr_ORACLES_lut.mat')
+lut = hs.loadmat(fp+'rtm/v6_irr_ORACLES_lut.mat')
 
 
-# In[24]:
+# In[22]:
 
 
 lut.keys()
@@ -243,13 +243,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[149]:
+# In[23]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[150]:
+# In[24]:
 
 
 ar = {}
@@ -257,14 +257,14 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[151]:
+# In[25]:
 
 
 ar['days'] = np.array([])
 ar['doy'] = np.array([])
 
 
-# In[152]:
+# In[26]:
 
 
 for i,d in enumerate(days):
@@ -279,13 +279,13 @@ for i,d in enumerate(days):
             ar[n] = np.append(ar[n],ssfr_a[i]['Start_UTC']*0)
 
 
-# In[153]:
+# In[27]:
 
 
 ar['days'].shape
 
 
-# In[154]:
+# In[28]:
 
 
 nm
@@ -293,7 +293,7 @@ nm
 
 # # Format the LUT and data for retrievals
 
-# In[155]:
+# In[29]:
 
 
 class so:
@@ -302,17 +302,17 @@ class so:
 
 # ## Set up the data
 
-# In[156]:
+# In[30]:
 
 
 ar['meas'] = so
 ar['meas'].sza = ar['sza']
 ar['meas'].Rvis = ar['UP500']/ar['DN500']
-ar['meas'].Rnir = ar['UP1650']/ar['DN1650']
+ar['meas'].Rnir = ar['UP2100']/ar['DN2100']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[157]:
+# In[31]:
 
 
 # filter out the bad data. 
@@ -321,7 +321,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[158]:
+# In[32]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -329,12 +329,12 @@ igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.
 
 # ## Plot the histogram of cloud reflectances
 
-# In[33]:
+# In[42]:
 
 
 plt.figure()
 
-plt.hist([ar['meas'].Rvis[igood],ar['meas'].Rnir[igood]],bins=30,edgecolor='None',color=['b','r'],alpha=0.7,normed=True,label=['500 nm','1650 nm'])
+plt.hist([ar['meas'].Rvis[igood],ar['meas'].Rnir[igood]],bins=30,edgecolor='None',color=['b','r'],alpha=0.7,normed=True,label=['500 nm','2100 nm'])
 
 plt.ylabel('Normalized counts')
 plt.xlabel('Cloud Reflectance')
@@ -352,7 +352,7 @@ plt.axvline(-0.1,color='k',alpha=0.7,linestyle='--',label='Median')
 
 plt.legend(frameon=False)
 
-plt.savefig(fp+'plot/Cloud_reflectance_ORACLES_2016.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/Cloud_reflectance_ORACLES_2016_v2.png',dpi=600,transparent=True)
 
 
 # In[44]:
@@ -377,6 +377,18 @@ plt.xlabel('Cloud reflectance at 1650 nm')
 cb = plt.colorbar()
 cb.set_label('Counts')
 plt.savefig(fp+'plot/ORACLES_2016_2dhist_SZA_vs_cloud_refl1650.png',dpi=600,transparent=True)
+
+
+# In[43]:
+
+
+plt.figure()
+plt.hist2d(ar['meas'].Rnir[igood],ar['meas'].sza[igood],bins=40,range=[[0,1],[0,90]])
+plt.ylabel('SZA')
+plt.xlabel('Cloud reflectance at 2100 nm')
+cb = plt.colorbar()
+cb.set_label('Counts')
+plt.savefig(fp+'plot/ORACLES_2016_2dhist_SZA_vs_cloud_refl2100.png',dpi=600,transparent=True)
 
 
 # In[70]:
@@ -412,13 +424,13 @@ cb.set_label('Counts')
 
 # ## Get the DARE parameterization
 
-# In[34]:
+# In[33]:
 
 
 fp
 
 
-# In[51]:
+# In[34]:
 
 
 sares = []
@@ -427,7 +439,7 @@ for i in xrange(9):
 sares_sza = [0.0,10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0]
 
 
-# In[47]:
+# In[35]:
 
 
 sares[-2]
@@ -480,26 +492,26 @@ sares[-2]
 # 
 # Let me know if you have any questions!
 
-# In[164]:
+# In[36]:
 
 
 for sa in sares:
     sa['doy'] = np.array([datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in sa['spnums']])
 
 
-# In[97]:
+# In[37]:
 
 
 sares[6]['avl1']
 
 
-# In[29]:
+# In[38]:
 
 
 sare['sza'] = [20.0]
 
 
-# In[167]:
+# In[39]:
 
 
 def sare_fx(alb,aod,sares,sza,doy,sares_sza=np.array(sares_sza)):
@@ -522,19 +534,19 @@ def sare_fx(alb,aod,sares,sza,doy,sares_sza=np.array(sares_sza)):
     return dare,np.array(szai)
 
 
-# In[176]:
+# In[40]:
 
 
 dare,szai = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sares,ar['meas'].sza[igood],ar['doy'][igood])
 
 
-# In[177]:
+# In[41]:
 
 
 np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
 
 
-# In[178]:
+# In[42]:
 
 
 plt.figure()
@@ -551,7 +563,7 @@ pu.prelim()
 plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_hist_v2.png',dpi=600,transparent=True)
 
 
-# In[179]:
+# In[56]:
 
 
 plt.figure()
@@ -608,7 +620,7 @@ pu.prelim()
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[181]:
+# In[43]:
 
 
 boxes_diag = []
@@ -616,7 +628,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[182]:
+# In[44]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -626,52 +638,55 @@ boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.
 
 # Corners are [x0,x1,y0,y1]
 
-# In[183]:
+# In[45]:
 
 
 boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
 
 
-# In[184]:
+# In[46]:
 
 
 boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
 
 
-# In[185]:
+# In[47]:
 
 
 boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
 
 
-# In[186]:
+# In[48]:
 
 
 boxes_diag
 
 
-# In[187]:
+# In[49]:
 
 
 boxes_ew
 
 
-# In[188]:
+# In[50]:
 
 
 boxes_ns
 
 
-# In[189]:
+# In[51]:
 
 
 bins_diag = []
+bins_diag_alb = []
 for i,b in enumerate(boxes_diag):
     ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
     bins_diag.append(dare[ia])
+    bins_diag_alb.append(ar['meas'].Rnir[igood][ia])
+    
 
 
-# In[190]:
+# In[52]:
 
 
 bins_ns = []
@@ -680,7 +695,7 @@ for i,b in enumerate(boxes_ns):
     bins_ns.append(dare[ia])
 
 
-# In[191]:
+# In[53]:
 
 
 bins_ew = []
@@ -689,7 +704,7 @@ for i,b in enumerate(boxes_ew):
     bins_ew.append(dare[ia])
 
 
-# In[192]:
+# In[54]:
 
 
 len(boxes_diag),len(bins_diag)
@@ -739,12 +754,14 @@ fig.tight_layout()
 plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes_v2.png',dpi=600,transparent=True)
 
 
-# In[200]:
+# In[55]:
 
 
 dat_out = {'dare':dare,'bins_diag':bins_diag,'bins_ew':bins_ew,'bins_ns':bins_ns,
            'boxes_diag':boxes_diag,'boxes_ew':boxes_ew,'boxes_ns':boxes_ns,
-           'boxes_diag_ct':boxes_diag_ct,'boxes_ew_ct':boxes_ew_ct,'boxes_ns_ct':boxes_ns_ct}
+           'boxes_diag_ct':boxes_diag_ct,'boxes_ew_ct':boxes_ew_ct,'boxes_ns_ct':boxes_ns_ct,
+           'lon':ar['LON'][igood],'lat':ar['LAT'][igood],'sza':ar['meas'].sza[igood],
+           'doy':ar['doy'][igood],'utc':ar['meas'].utc[igood]}
 sio.savemat(fp+'ORACLES_2016_DARE_params_v2.mat',dat_out)
 
 
@@ -773,19 +790,21 @@ plt.savefig(fp+'plot/ORACLES_2016_DARE_v2_map_param.png',dpi=600,transparent=Tru
 
 # ## Save to file for easier loading
 
-# In[36]:
+# In[59]:
 
 
-ar.keys()
+kar = ar.keys()
+kar.sort()
+kar
 
 
-# In[37]:
+# In[60]:
 
 
 ar['days']
 
 
-# In[38]:
+# In[61]:
 
 
 days
@@ -797,19 +816,19 @@ days
 from datetime import datetime
 
 
-# In[40]:
+# In[62]:
 
 
 doy = np.array([datetime.strptime(days[int(a)],'%Y%m%d').timetuple().tm_yday for a in ar['days']])
 
 
-# In[41]:
+# In[63]:
 
 
 doy
 
 
-# In[42]:
+# In[64]:
 
 
 out = {'sza':ar['sza'][igood],'dare':dare,'lon':ar['LON'][igood],'lat':ar['LAT'][igood],
@@ -823,41 +842,61 @@ out = {'sza':ar['sza'][igood],'dare':dare,'lon':ar['LON'][igood],'lat':ar['LAT']
 np.save(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong_v2.npy',out,allow_pickle=True)
 
 
-# In[47]:
+# In[65]:
 
 
 for k in out.keys():
     print k,out[k].shape
 
 
-# In[48]:
+# In[21]:
 
 
 in_ = np.load(fp+'ORACLES_2016_DARE_Above_cloud_for_Hong_v2.npy',allow_pickle=True).item()
 
 
+# In[22]:
+
+
+ar = in_
+
+
+# In[23]:
+
+
+ar.keys()
+
+
 # ## set up the LUT
 
-# In[257]:
+# In[66]:
 
 
 lut.keys()
 
 
-# In[124]:
+# In[67]:
 
 
 lut['tau'].shape, lut['ref'].shape, lut['sza'].shape, lut['irr_dn'].shape, lut['wvl'].shape, lut['zout'], lut['phase']
 
 
-# In[121]:
+# In[68]:
 
 
-lut['Rvis'] = np.zeros([23,27,48])
-lut['Rnir'] = np.zeros([23,27,48])
+nref = len(lut['ref'])
+ntau = len(lut['tau'])
+nsza = len(lut['sza'])
 
 
-# In[122]:
+# In[69]:
+
+
+lut['Rvis'] = np.zeros([nref,ntau,nsza])
+lut['Rnir'] = np.zeros([nref,ntau,nsza])
+
+
+# In[70]:
 
 
 for ir,r in enumerate(lut['ref']):
@@ -867,7 +906,7 @@ for ir,r in enumerate(lut['ref']):
             lut['Rnir'][ir,it,iz] = lut['irr_up'][0,1,1,ir,it,iz]/lut['irr_dn'][0,1,1,ir,it,iz]
 
 
-# In[126]:
+# In[71]:
 
 
 lut['sza']
@@ -875,65 +914,104 @@ lut['sza']
 
 # ### Make a hires version of the LUT
 
-# In[416]:
+# In[72]:
 
 
 lut['tau_hi'] = np.hstack([np.arange(1.0,25,0.5),np.arange(25,50,1),np.arange(50,102.5,2.5)])
 lut['ref_hi'] = np.hstack([np.arange(0,15,0.25),np.arange(15,30.5,0.5)])
 
 
-# In[417]:
+# In[73]:
 
 
 len(lut['tau_hi']), len(lut['ref_hi'])
 
 
-# In[418]:
+# In[74]:
 
 
 lut['Rvis_hi'] = np.zeros([91,94,48])
 lut['Rnir_hi'] = np.zeros([91,94,48])
 
 
-# In[419]:
+# In[75]:
 
 
 for i,z in enumerate(lut['sza']):
-    fv = interpolate.RectBivariateSpline(lut['ref'],lut['tau'],lut['Rvis'][:,:,i],kx=1,ky=1)
+    fv = interpolate.RectBivariateSpline(lut['ref'][0:23],lut['tau'],lut['Rvis'][0:23,:,i],kx=1,ky=1)
     lut['Rvis_hi'][:,:,i] = fv(lut['ref_hi'],lut['tau_hi'])
-    fn = interpolate.RectBivariateSpline(lut['ref'],lut['tau'],lut['Rnir'][:,:,i],kx=1,ky=1)
+    fn = interpolate.RectBivariateSpline(lut['ref'][0:23],lut['tau'],lut['Rnir'][0:23,:,i],kx=1,ky=1)
     lut['Rnir_hi'][:,:,i] = fn(lut['ref_hi'],lut['tau_hi'])
 
 
-# In[434]:
+# In[101]:
 
 
 plt.figure()
 for i,r in enumerate(lut['tau_hi']):
-    plt.plot(lut['Rvis_hi'][i,:,0],lut['Rnir_hi'][i,:,0],'x-')
+    plt.plot(lut['Rvis_hi'][:,i,0],lut['Rnir_hi'][:,i,0],'x-')
+plt.xlabel('Rvis')
+plt.ylabel('Rnir')
+
+
+# In[106]:
+
+
+plt.figure()
+plt.plot(lut['tau_hi'],lut['Rvis_hi'][40,:,0],'.')
 
 
 # # Run the retrieval
 
-# In[420]:
+# In[144]:
+
+
+vv = 'v2' # Found the bug in the ki^2 retrieval, missing the normalization, moved to 2100 nm instead of 1650 nm
+
+
+# In[145]:
 
 
 ar['tau'], ar['ref'] = np.zeros_like(ar['sza'])*np.nan,np.zeros_like(ar['sza'])*np.nan
 
 
-# In[421]:
+# In[146]:
 
 
 ar['ki'] = np.zeros_like(ar['sza'])
 
 
-# In[429]:
+# In[147]:
 
 
 ar['isza'] = []
 
 
-# In[430]:
+# In[148]:
+
+
+plt.figure()
+plt.plot(ar['meas'].Rvis,'.',label='vis')
+plt.plot(ar['meas'].Rnir,'.',label='nir')
+plt.legend(frameon=False)
+plt.ylim(0,1)
+
+
+# In[149]:
+
+
+plt.figure()
+plt.hist(ar['meas'].Rvis,range=[0,1],bins=30)
+
+
+# In[150]:
+
+
+rvis,rnir = np.zeros(len(ar['tau']))+np.nan,np.zeros(len(ar['tau']))+np.nan
+rvis_mod,rnir_mod = np.zeros(len(ar['tau']))+np.nan,np.zeros(len(ar['tau']))+np.nan
+
+
+# In[152]:
 
 
 pbar = tqdm(total=len(ar['sza']))
@@ -945,13 +1023,64 @@ for i,s in enumerate(ar['sza']):
         continue
     isza = np.argmin(np.abs(lut['sza']-s))
     ar['isza'].append(isza)
-    ki = (ar['meas'].Rvis[i]-lut['Rvis_hi'][:,:,isza]/ar['meas'].Rvis[i])**2+(ar['meas'].Rnir[i]-lut['Rnir_hi'][:,:,isza]/ar['meas'].Rnir[i])**2
+    ki = ((ar['meas'].Rvis[i]-lut['Rvis_hi'][:,:,isza])/ar['meas'].Rvis[i])**2+         ((ar['meas'].Rnir[i]-lut['Rnir_hi'][:,:,isza])/ar['meas'].Rnir[i])**2
     kimin = np.unravel_index(np.nanargmin(ki),ki.shape)
+    rvis[i] = ar['meas'].Rvis[i]
+    rnir[i] = ar['meas'].Rnir[i]
+    rvis_mod[i] = lut['Rvis_hi'][kimin[0],kimin[1],isza]
+    rnir_mod[i] = lut['Rnir_hi'][kimin[0],kimin[1],isza]
     ar['ki'][i] = np.nanmin(ki)
     ar['tau'][i],ar['ref'][i] = lut['tau_hi'][kimin[1]],lut['ref_hi'][kimin[0]]
+    if ar['meas'].Rvis[i]<np.nanmin(lut['Rvis_hi'][:,:,isza]):
+        ar['tau'][i] = 0.0
+        ar['ref'][i] = 0.0
+    if ar['meas'].Rnir[i]<np.nanmin(lut['Rnir_hi'][:,:,isza]):
+        ar['tau'][i] = 0.0
+        ar['ref'][i] = 0.0
 
 
-# In[432]:
+# ## Sanity check retrieved outputs
+
+# In[153]:
+
+
+plt.figure()
+plt.plot(rvis,rvis_mod,'.')
+plt.plot([0,1],[0,1],'k--',alpha=0.6)
+plt.xlabel('Measurements')
+plt.ylabel('Model')
+plt.title('vis Reflectance [500 nm]')
+
+
+# In[127]:
+
+
+plt.figure()
+plt.plot(rnir,rnir_mod,'.')
+plt.plot([0,1],[0,1],'k--',alpha=0.6)
+plt.xlabel('Measurements')
+plt.ylabel('Model')
+plt.title('NIR Reflectance [2100 nm]')
+
+
+# In[155]:
+
+
+plt.figure()
+plt.hist2d(rvis_mod[igood],ar['meas'].sza[igood],bins=40,range=[[0,1],[0,90]])
+plt.title('Modeled Rvis')
+plt.xlabel('Rvis [W/m^2]')
+plt.ylabel('SZA')
+
+
+# In[113]:
+
+
+plt.figure()
+plt.contourf(lut['tau_hi'],lut['ref_hi'],ki)
+
+
+# In[123]:
 
 
 plt.figure()
@@ -960,40 +1089,42 @@ plt.hist(ar['isza'],bins=20)
 
 # # Plot the retrieval results
 
-# In[423]:
+# In[156]:
 
 
 plt.figure()
 plt.plot(ar['tau'],'.')
 
 
-# In[426]:
+# In[157]:
 
 
 np.nanmean(ar['tau'])
 
 
-# In[427]:
+# In[158]:
 
 
 plt.figure()
-plt.hist(ar['tau'][np.isfinite(ar['tau'])])
+plt.hist(ar['tau'][np.isfinite(ar['tau'])],bins=30,label='tau')
+plt.hist(ar['ref'][np.isfinite(ar['ref'])],bins=30,label='ref',alpha=0.6)
+plt.legend()
 
 
-# In[216]:
+# In[159]:
 
 
 plt.figure()
 plt.plot(ar['ref'],'.')
 
 
-# In[424]:
+# In[136]:
 
 
 len(np.where(np.isfinite(ar['ref']))[0])
 
 
-# In[425]:
+# In[137]:
 
 
 len(ar['ref'])
@@ -1008,23 +1139,40 @@ plt.plot(np.where(np.isfinite(ar['ref']))[0])
 
 # # Save the retrieved output
 
-# In[263]:
+# In[160]:
 
 
 out = {}
 
 
-# In[264]:
+# In[161]:
 
 
-ar.keys()
+kk = ar.keys()
+kk.sort()
+kk
 
 
-# In[265]:
+# In[92]:
+
+
+plt.figure()
+plt.plot(ar['isza'])
+
+
+# In[94]:
+
+
+plt.figure()
+plt.plot(ar['sza'],'.')
+
+
+# In[162]:
 
 
 out['tau'] = ar['tau']
 out['ref'] = ar['ref']
+out['ki'] = ar['ki']
 out['sza'] = ar['sza']
 out['aod'] = ar['AOD_500']
 out['days'] = ar['days']
@@ -1032,21 +1180,25 @@ out['utc'] = ar['Start_UTC']
 out['lat'] = ar['LAT']
 out['lon'] = ar['LON']
 out['a0'],out['a1'],out['a2'] = ar['a0'],ar['a1'],ar['a2']
+out['Rvis'] = ar['meas'].Rvis
+out['Rnir'] = ar['meas'].Rnir
+out['Rvis_mod'] = rvis_mod
+out['Rnir_mod'] = rnir_mod
 
 
-# In[266]:
+# In[163]:
 
 
 fp
 
 
-# In[267]:
+# In[164]:
 
 
-hs.savemat(fp+'data_other/ssfr_2016_retrieved_COD.mat',out)
+hs.savemat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv),out)
 
 
-# In[268]:
+# In[165]:
 
 
 out['days']
