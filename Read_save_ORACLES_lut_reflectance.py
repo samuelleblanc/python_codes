@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Name:  
@@ -43,13 +43,22 @@
 
 # # Prepare the python environment
 
-# In[1]:
+# In[6]:
 
 
 import numpy as np
 import Run_libradtran as RL
 import hdf5storage as hs
 import os
+from path_utils import getpath
+from tqdm.notebook import tqdm 
+
+
+# In[3]:
+
+
+fp = getpath('ORACLES')
+fp_rtm = getpath('rtm')
 
 
 # In[2]:
@@ -67,13 +76,13 @@ else:
 
 # # Setup the variables used for lut
 
-# In[3]:
+# In[4]:
 
 
-vv = 'v5_irr'
+vv = 'v6_irr'
 
 
-# In[ ]:
+# In[10]:
 
 
 # try to read from the saved version file
@@ -90,7 +99,7 @@ try:
     use_json = True
 except ValueError: # not a json file try old way
     use_json = False
-    fmt='lut_irr_sza{sza:02.0f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat'
+    fmt='lut_irr_sza{sza:04.1f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat'
     if vv=='v1':
         mu = np.arange(1.05,4.0,0.2)
         sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
@@ -109,13 +118,19 @@ except ValueError: # not a json file try old way
         zout = [0.2,1.5,100.0]    
 
 
-# In[7]:
+# In[12]:
+
+
+fmt = 'lut_irr_sza{sza:04.1f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat'
+
+
+# In[8]:
 
 
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 
-# In[ ]:
+# In[13]:
 
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
@@ -124,21 +139,27 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   split_wvl=True,numrad=0)
 
 
-# In[ ]:
+# In[14]:
 
 
 if use_json:
     dat['lut_details'] = d
 
 
-# In[ ]:
+# In[15]:
 
 
 print 'Saving matlab file'
 
 
-# In[10]:
+# In[16]:
 
 
 hs.savemat(fp+'{}_ORACLES_lut.mat'.format(vv),dat)
+
+
+# In[ ]:
+
+
+
 
