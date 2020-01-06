@@ -260,11 +260,17 @@ elev_lon = np.arange(5.0,43.0,0.00833333)
 elev_lon.shape
 
 
-# In[115]:
+# In[116]:
+
+
+elev_lon[2200]
+
+
+# In[126]:
 
 
 plt.figure(figsize=(6,6))
-plt.contourf(elev_lon,elev_lat,elev)
+plt.contourf(elev_lon,elev_lat,elev,vmin=0,vmax=3200,extend='max')
 plt.colorbar(label='Surface Elevation [m]')
 plt.xlabel('Longitude [$^\\circ$]')
 plt.ylabel('Latitude [$^\\circ$]')
