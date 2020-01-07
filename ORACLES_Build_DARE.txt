@@ -6,16 +6,18 @@ import scipy.io as sio
 from path_utils import getpath
 import matplotlib.pyplot as plt
 import load_utils as lu
+from write_utils import nearest_neighbor, iterate_dict_unicode
 
 %matplotlib notebook
 
 from tqdm.notebook import tqdm 
+from datetime import datetime
 
 import Run_libradtran as Rl
 
 name = 'ORACLES'
 
-vv = 'v1'
+vv = 'v2'
 vr = 'R3'
 
 fp = getpath(name)
@@ -31,7 +33,16 @@ ar.keys()
 
 ar['AOD0501'].shape
 
-cl = hs.loadmat(fp+'data_other/ssfr_2016_retrieved_COD.mat')
+sza = np.arccos(1.0/ar['amass_aer'])*180.0/np.pi
+
+days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
+
+len(days)
+
+ar['days']
+
+cl = hs.loadmat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv))
 
 cl.keys()
 
@@ -40,9 +51,38 @@ cl['tau'].shape
 dds = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
+len(dds)
+
 cl['days']
 
-ae,ae_dict = lu.load_netcdf(fp+'aeroinv_2016/netcdf4/4STAR-aeroinv_P3_2016_R0.nc',everything=True)
+dd = np.unique(cl['days'])
+
+cod,ref = [],[]
+for d in dd:
+    print d
+    fld = cl['days']==d
+    fad = ar['days']==d+3.0
+    #nearest neighbor, but not more than a minute away
+    cod_tmp = nearest_neighbor(cl['utc'][fld],cl['tau'][fld],ar['Start_UTC'][fad],dist=1.0/60.0) 
+    ref_tmp = nearest_neighbor(cl['utc'][fld],cl['ref'][fld],ar['Start_UTC'][fad],dist=1.0/60.0)
+    cod = np.append(cod,cod_tmp)
+    ref = np.append(ref,ref_tmp)
+
+cod.shape
+
+len(dds)
+
+len(np.unique(ar['days']))
+
+try:
+    ae,ae_dict = lu.load_netcdf(fp+'aeroinv_2016/netcdf4/4STAR-aeroinv_P3_2016_R0.nc',everything=True)
+except:
+    import h5py as h5
+    f5 = h5.File(fp+'aeroinv_2016/netcdf4/4STAR-aeroinv_P3_2016_R0.nc','r')
+    ae5 = {}
+    for ka,kd in f5.iteritems():
+        ae5[ka] = kd.value
+    ae = ae5
 
 ke = ae.keys()
 ke.sort()
@@ -54,10 +94,36 @@ ae_dict['SSA']
 
 ae['SSA'].shape
 
+ae_dict['time']
+
+ae['time']/3600.0
+
+days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
+
+ar['doy'] = np.array([datetime.strptime(days[int(d)],'%Y%m%d').timetuple().tm_yday for d in ar['days']])
+
+datetime.strptime(days[4],'%Y%m%d').timetuple().tm_yday
+
+ar['time_ae'] = ar['Start_UTC']+(24.0*(ar['doy']-244))
+
+ar['time_ae']
+
 from datetime import datetime
 datetime(2015,11,17).timetuple().tm_yday
 
-fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA']
+# for all 4STAR aerosol arrays
+fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA'] & (ar['days']>2.0) 
+
+# for the cod and ref arrays
+fld = (ar['days']>2.0) & (ar['days']!=17.0) 
+flb = (ar['flag_acaod'][fld]==1) & ar['fl'][fld] & ar['fl_QA'][fld]
+
+len(ar['AOD0355'][fla])
+
+len(cod[flb])
+
+sum(np.isfinite(cod[~flb])),sum(np.isfinite(cod[flb])),len(cod[flb])
 
 ka = ar.keys()
 ka.sort()
@@ -70,7 +136,7 @@ doy
 geo = {'lat':ar['Latitude'][0],'lon':ar['Longitude'][0],'doy':doy,'zout':[0,1.5,100.0]}
 aero_no = {} # none
 cloud = {'ztop':1.0,'zbot':0.5,'write_moments_file':False}
-source = {'wvl_range':[201.0,5600.0],'source':'solar','integrate_values':True,'run_fuliou':True,
+source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'run_fuliou':True,
           'dat_path':fp_uvspec_dat}
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
@@ -94,7 +160,13 @@ def fx_aero(aprop):
     atmp = np.append([aprop[0]],np.append(aprop,aprop[-1]))
     return np.array([atmp,atmp])
 
-aero['ext'] = np.array([ae['AOD_meas'][0]/3.0,ae['AOD_meas'][0]*0.0])
+def fx_ext(a0,a1,a2,wvl=wvl):
+    'Function to create the extinction coefficients from 4STAR AODs'
+    aod = np.exp(np.polyval([a2,a1,a0],np.log(wvl)))
+    aod[-1] = 0.0 # set the last wavelength to zero
+    return np.array([aod/3.0,aod*0.0])
+
+aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][0],ar['AOD_polycoef_a1'][fla][0],ar['AOD_polycoef_a2'][fla][0])
 
 aero['asy'] = fx_aero(ae['g_total'][0])
 
@@ -128,44 +200,240 @@ if isjupyter():
     pbar = tqdm(total=len(ar['Start_UTC'][fla]))
 for i,u in enumerate(ar['Start_UTC'][fla]):
     
-        f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
-        geo['lat'],geo['lon'],geo['sza'] = ar['Latitude'][fla][i],ar['Longitude'][fla][i],
-        day = dds[ar['days'][ar['fl'].astype(bool)][i].astype(int)]
-        geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
-        cloud['tau'],cloud['ref'] = ar['tau_fl'][i],ar['ref_fl'][i]
-        cloud['write_moments_file'] = True
+    f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
 
-        i_aca = np.argmin(abs(aca['utc'][day]-ar['utc_fl'][i]))
-        i_aero = '{}'.format(aca['acaod_index'][day][i_aca])
-        
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aca['aero'][i_aero],cloud=cloud,source=source,albedo=albedo,
+    geo['lat'],geo['lon'],geo['sza'] = ar['Latitude'][fla][i],ar['Longitude'][fla][i],sza[fla][i]
+    day = days[ar['days'][fla][i].astype(int)]
+    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+
+    cloud['tau'],cloud['ref'] = cod[flb][i],ref[flb][i]
+    cloud['write_moments_file'] = True
+
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])
+        aero['ssa'] = fx_aero(ae['SSA'][iae])
+        aero['asy'] = fx_aero(ae['g_total'][iae])
+
+        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-        f_in = '{name}_{vv}_star_{i:03d}_withaero_clear.dat'.format(name=name,vv=vo,i=i)
-        cloud['tau'] = 0.0
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aca['aero'][i_aero],cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
-
-        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vo,i=i)
-        cloud['tau'] = ar['tau_fl'][i]
-        if cloud['ref']>25.0:
-            cloud['write_moments_file'] = True
-        else:
-            cloud['write_moments_file'] = False
+        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
         Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
                                    verbose=False,make_base=False,set_quiet=True)
         f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
 
-        f_in = '{name}_{vv}_star_{i:03d}_noaero_clear.dat'.format(name=name,vv=vo,i=i)
-        cloud['tau'] = 0.0
-        Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
-                                   verbose=False,make_base=False,set_quiet=True)
-        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
-        if isjupyter(): 
+    if isjupyter(): 
+        pbar.update(1)
+    else:
+        print i
+
+f.close()
+
+from multiprocessing import Pool, cpu_count
+
+from copy import deepcopy
+import signal
+
+import warnings
+warnings.simplefilter('ignore')
+
+def worker_init(verbose=True):
+    # ignore the SIGINI in sub process, just print a log
+    def sig_int(signal_num, frame):
+        if verbose: 
+            print 'signal: %s' % signal_num
+        raise IOError
+    signal.signal(signal.SIGINT, sig_int)
+
+# open the list file
+f = open(fp_rtm+'{}_DARE_{}.sh'.format(name,vv),'w')
+fpp_in = fp_rtm+'input/{}_DARE_{}/'.format(name,vv)
+fpp_out = fp_rtm+'output/{}_DARE_{}/'.format(name,vv)
+
+if not os.path.isdir(fpp_in):
+    os.mkdir(fpp_in)
+if not os.path.isdir(fpp_out):
+     os.mkdir(fpp_out)
+
+if isjupyter():
+    pbar = tqdm(total=len(ar['Start_UTC'][fla]))
+bb = []
+for i,u in enumerate(ar['Start_UTC'][fla]):
+    
+    f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+
+    geo['lat'],geo['lon'],geo['sza'] = ar['Latitude'][fla][i],ar['Longitude'][fla][i],sza[fla][i]
+    day = days[ar['days'][fla][i].astype(int)]
+    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+
+    if ~np.isfinite(cod[flb][i]):
+        if isjupyter():
             pbar.update(1)
-        else:
-            print i
+        continue
+    cloud['tau'],cloud['ref'] = cod[flb][i],ref[flb][i]
+    cloud['write_moments_file'] = True
 
-    f.close()
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])
+        aero['ssa'] = fx_aero(ae['SSA'][iae])
+        aero['asy'] = fx_aero(ae['g_total'][iae])
+
+        #Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+        #                           verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+        f_in_noa = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        #Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+        #                           verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in_noa,out=fpp_out+f_in_noa))
+        
+        bb.append({'geo':deepcopy(geo),'cod':cod[flb][i],'ref':ref[flb][i],'aero':deepcopy(aero),
+                   'f_in':deepcopy(f_in),'f_in_noa':deepcopy(f_in_noa)})
+
+    if isjupyter(): 
+        pbar.update(1)
+    else:
+        print i
+
+f.close()
+
+def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
+    'function to feed the pool of workers to write out the all the files'
+    cloud['tau'],cloud['ref'] = d['cod'],d['ref']
+    Rl.write_input_aac(fpp_in+d['f_in'],geo=d['geo'],aero=d['aero'],cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+    Rl.write_input_aac(fpp_in+d['f_in_noa'],geo=d['geo'],aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+
+p = Pool(cpu_count()-1,worker_init)
+
+len(bb)
+
+results = p.map(write_files,bb)
+
+f_list = fp_rtm+'{}_DARE_{}.sh'.format(name,vv)
+
+! wc -l $f_list
+
+f_listout = f_list+'.out'
+
+!parallel --jobs=7 --bar < $f_list 2> $f_listout
+
+fpp_out,name,vv,geo['zout']
+
+n = len(ar['Start_UTC'][fla])
+nz = len(geo['zout'])
+nw = len(aero['wvl_arr'])
+dat = {'cod':np.zeros(n)+np.nan,'ref':np.zeros(n)+np.nan,'ext':np.zeros((n,nw))+np.nan,
+       'ssa':np.zeros((n,nw))+np.nan,'asy':np.zeros((n,nw))+np.nan,'zout':geo['zout'],
+       'wvl':aero['wvl_arr'],'sza':np.zeros(n)+np.nan,
+       'dn':np.zeros((n,nz))+np.nan,'up':np.zeros((n,nz))+np.nan,
+       'dn_noa':np.zeros((n,nz))+np.nan,'up_noa':np.zeros((n,nz))+np.nan}
+
+for i,u in enumerate(ar['Start_UTC'][fla]):
+    
+    dat['cod'][i] = cod[flb][i]
+    dat['ref'][i] = ref[flb][i]
+    dat['sza'][i] = sza[fla][i]
+
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        dat['ext'][i,:] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])[0]
+        dat['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]
+        dat['asy'][i,:] = fx_aero(ae['g_total'][iae])[0]
+
+
+
+if isjupyter():
+    pbar = tqdm(total=n)
+    
+
+for i,u in enumerate(ar['Start_UTC'][fla]):
+    
+    dat['cod'][i] = cod[flb][i]
+    dat['ref'][i] = ref[flb][i]
+    dat['sza'][i] = sza[fla][i]
+
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        dat['ext'][i,:] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])[0]
+        dat['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]
+        dat['asy'][i,:] = fx_aero(ae['g_total'][iae])[0]
+        try:
+            f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+            o = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+            f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+            on = Rl.read_libradtran(fpp_out+f_in,zout=geo['zout'])
+
+            dat['dn'][i,:] = o['diffuse_down']+o['direct_down']
+            dat['dn_noa'][i,:] = on['diffuse_down']+on['direct_down']
+            dat['up'][i,:] = o['diffuse_up']
+            dat['up_noa'][i,:] = on['diffuse_up']
+        except:
+            pass
+
+    if isjupyter(): 
+        pbar.update(1)
+    else:
+        print i
+
+
+def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
+    'function to feed the pool of workers to read all the files'
+    out = {}
+    try:
+        f_in = '{name}_{vv}_DARE_{i:03d}_withaero.dat'.format(name=name,vv=vv,i=i)
+        o = Rl.read_libradtran(fpp_out+f_in,zout=zout)
+        f_in = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        on = Rl.read_libradtran(fpp_out+f_in,zout=zout)
+
+        #dat['dn'][i,:] = o['diffuse_down']+o['direct_down']
+        #dat['dn_noa'][i,:] = on['diffuse_down']+on['direct_down']
+        #dat['up'][i,:] = o['diffuse_up']
+        #dat['up_noa'][i,:] = on['diffuse_up']
+        
+        out['dn'] = o['diffuse_down']+o['direct_down']
+        out['dn_noa'] = on['diffuse_down']+on['direct_down']
+        out['up'] = o['diffuse_up']
+        out['up_noa'] = on['diffuse_up']
+        out['i'] = i
+        
+    except:
+        out['dn'] = np.zeros(len(zout))+np.nan
+        out['dn_noa'] = np.zeros(len(zout))+np.nan
+        out['up'] = np.zeros(len(zout))+np.nan
+        out['up_noa'] = np.zeros(len(zout))+np.nan
+        out['i'] = i
+    return out
+
+outputs = list(tqdm(p.imap(read_files, range(len(ar['Start_UTC'][fla]))), total=len(ar['Start_UTC'][fla])))
+
+#outputs = p.map(read_files,range(len(ar['Start_UTC'][fla])))
+
+dat['dare'] = (dat['dn']-dat['up']) - (dat['dn_noa']-dat['up_noa'])
+
+dat['utc'] = ar['Start_UTC'][fla]
+dat['lat'] = ar['Latitude'][fla]
+dat['lon'] = ar['Longitude'][fla]
+dat['doy'] = ar['doy'][fla]
+
+dat1 = iterate_dict_unicode(dat)
+print 'saving file to: '+fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv=vv)
+hs.savemat(fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv=vv),dat1)
+
+dat1 = iterate_dict_unicode(dat)
+print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
+hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
