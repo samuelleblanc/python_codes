@@ -59,17 +59,17 @@ import write_utils as wu
 import plotting_utils as pu
 
 
-# In[30]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[22]:
 
 
 name = 'ORACLES'
-vv = 'v1'
+vv = 'v2'
 fp = getpath(name)
 
 
@@ -77,25 +77,25 @@ fp = getpath(name)
 
 # ## Load DARE calculations
 
-# In[4]:
+# In[8]:
 
 
-s = hs.loadmat(fp+'model/ORACLES_DARE_v2.mat')
+s = hs.loadmat(fp+'model/ORACLES_DARE_{}.mat'.format(vv))
 
 
-# In[5]:
+# In[9]:
 
 
 s.keys()
 
 
-# In[8]:
+# In[10]:
 
 
-ss = hs.loadmat(fp+'model/ORACLES_DARE_aero_prop_v1.mat')
+ss = hs.loadmat(fp+'model/ORACLES_DARE_aero_prop_{}.mat'.format(vv))
 
 
-# In[9]:
+# In[11]:
 
 
 s['sza'] = ss['sza']
@@ -103,13 +103,13 @@ s['sza'] = ss['sza']
 
 # ## Load DARE parameters from SARE
 
-# In[11]:
-
-
-sa = sio.loadmat(fp+'ORACLES_2016_DARE_params_v2.mat')
-
-
 # In[12]:
+
+
+sa = sio.loadmat(fp+'ORACLES_2016_DARE_params_{}.mat'.format(vv))
+
+
+# In[13]:
 
 
 sa.keys()
@@ -117,25 +117,25 @@ sa.keys()
 
 # # Plot out data
 
-# In[13]:
+# In[14]:
 
 
 s['doy']
 
 
-# In[14]:
+# In[15]:
 
 
 s['doys'] = s['doy']+s['utc']/24.0
 
 
-# In[15]:
+# In[16]:
 
 
 ibad = (s['ref']==0.0) | (s['ref']>=25.0) | (s['cod']==0.0)
 
 
-# In[16]:
+# In[17]:
 
 
 s['cod'][ibad] = np.nan
@@ -149,7 +149,7 @@ s['dare'][ibad,:] = np.nan
 
 # ## Plot the time trace
 
-# In[17]:
+# In[18]:
 
 
 plt.figure()
@@ -160,7 +160,7 @@ plt.grid()
 plt.title('ORACLES 2016 SSFR retrieved COD')
 
 
-# In[18]:
+# In[19]:
 
 
 plt.figure()
@@ -173,7 +173,7 @@ plt.title('ORACLES 2016 SSFR retrieved REF')
 
 # ## histogram of retrieved properties
 
-# In[19]:
+# In[20]:
 
 
 plt.figure()
@@ -182,7 +182,7 @@ plt.xlabel('COD')
 plt.title('ORACLES 2016 SSFR COD histogram')
 
 
-# In[20]:
+# In[21]:
 
 
 plt.figure()
@@ -191,12 +191,12 @@ plt.xlabel('REF [${{\\mu}}$m]')
 plt.title('ORACLES 2016 SSFR REF histogram')
 
 
-# In[71]:
+# In[24]:
 
 
 plt.figure()
-plt.hist(s['ref'],range=[0,50],bins=30,label='R$_{{eff}}$',alpha=0.6,normed=True,color='g')
-plt.hist(s['cod']*2,range=[0,50],bins=30,label='COD',alpha=0.6,normed=True,color='m')
+plt.hist(s['ref'],range=[0,60],bins=30,label='R$_{{eff}}$',alpha=0.6,normed=True,color='g')
+plt.hist(s['cod']*2,range=[0,60],bins=30,label='COD',alpha=0.6,normed=True,color='m')
 
 plt.axvline(np.nanmean(s['ref']),ls='-',color='g',label='mean')
 plt.axvline(np.nanmedian(s['ref']),ls='--',color='g',label='median')
@@ -206,22 +206,22 @@ plt.axvline(np.nanmedian(s['cod']),ls='--',color='m')
 plt.legend(frameon=False)
 
 plt.xlabel('R$_{{eff}}$ [$\mu$m], COD')
-plt.savefig(fp+'plot_DARE/ORACLES2016_COD_REF_hist.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES2016_COD_REF_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[21]:
+# In[25]:
 
 
 np.nanmean(s['cod']*2.0),np.nanmedian(s['cod']*2.0)
 
 
-# In[22]:
+# In[26]:
 
 
 np.nanmean(s['ref']),np.nanmedian(s['ref'])
 
 
-# In[23]:
+# In[27]:
 
 
 s['ssa'].shape
@@ -229,14 +229,14 @@ s['ssa'].shape
 
 # ## Aerosol products
 
-# In[92]:
+# In[28]:
 
 
 plt.figure()
 plt.plot(s['ssa'][:,2])
 
 
-# In[58]:
+# In[30]:
 
 
 plt.figure()
@@ -245,16 +245,16 @@ plt.axvline(np.nanmean(s['ssa'][:,2]),ls='-',color='k',label='mean')
 plt.axvline(np.nanmedian(s['ssa'][:,2]),ls='--',color='k',label='median')
 plt.legend(frameon=False)
 plt.xlabel('SSA at 500 nm')
-plt.savefig(fp+'plot_DARE/ORACLES2016_SSA_500_hist.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES2016_SSA_500_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[75]:
+# In[31]:
 
 
 np.nanmean(s['ssa'][:,2]),np.nanmedian(s['ssa'][:,2])
 
 
-# In[61]:
+# In[32]:
 
 
 plt.figure()
@@ -263,23 +263,23 @@ plt.axvline(np.nanmean(s['asy'][:,2]),ls='-',color='k',label='mean')
 plt.axvline(np.nanmedian(s['asy'][:,2]),ls='--',color='k',label='median')
 plt.legend(frameon=False)
 plt.xlabel('ASY at 500 nm')
-plt.savefig(fp+'plot_DARE/ORACLES2016_ASY_500_hist.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES2016_ASY_500_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[19]:
+# In[33]:
 
 
 s['wvl']
 
 
-# In[23]:
+# In[34]:
 
 
 plt.figure()
 plt.hist(s['asy'][:,5],range=[0.2,1],bins=30)
 
 
-# In[ ]:
+# In[35]:
 
 
 plt.figure()
@@ -288,28 +288,28 @@ plt.axvline(np.nanmean(s['asy'][:,2]),ls='-',color='k',label='mean')
 plt.axvline(np.nanmedian(s['asy'][:,2]),ls='--',color='k',label='median')
 plt.legend(frameon=False)
 plt.xlabel('ASY at 500 nm')
-plt.savefig(fp+'plot_DARE/ORACLES2016_ASY_500_hist.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES2016_ASY_500_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[76]:
+# In[36]:
 
 
 np.nanmean(s['asy'][:,2]),np.nanmedian(s['asy'][:,2])
 
 
-# In[14]:
+# In[37]:
 
 
 s['ext'].shape
 
 
-# In[15]:
+# In[38]:
 
 
 s['wvl']
 
 
-# In[111]:
+# In[39]:
 
 
 plt.figure()
@@ -318,13 +318,13 @@ plt.hist(s['ext'][:,2],range=[np.nanmin(s['ext'][:,2]),np.nanmax(s['ext'][:,2])]
 
 # ## DARE
 
-# In[32]:
+# In[40]:
 
 
 s.keys()
 
 
-# In[33]:
+# In[41]:
 
 
 import cmaps
@@ -337,39 +337,39 @@ plt.figure()
 cmaps.cmaps()
 
 
-# In[35]:
+# In[42]:
 
 
 plt.figure()
 plt.hist2d(s['up'][:,2]/s['dn'][:,2],s['sza'],bins=40,range=[[0,1],[0,90]],cmap=plt.cm.jet)
 plt.ylabel('SZA [$^\\circ$]')
 plt.xlabel('TOA Albedo (BB)')
-plt.title('ORACLES 2016 Albedo from DARE calc')
+plt.title('ORACLES 2016 Albedo from DARE calc {}'.format(vv))
 
 cb = plt.colorbar()
 cb.set_label('counts')
 pu.prelim()
 
-plt.savefig(fp+'plot/ORACLES_2016_albedo_from_calc_vs_SZA.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_albedo_from_calc_vs_SZA_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[31]:
+# In[43]:
 
 
 plt.figure()
 plt.hist2d(s['dare'][:,2],s['sza'],bins=40,range=[[-70,150],[0,90]],cmap=plt.cm.Greens)
 plt.ylabel('SZA [$^\\circ$]')
 plt.xlabel('DARE [W/m$^2$]')
-plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - DARE calc')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - DARE calc {}'.format(vv))
 
 cb = plt.colorbar()
 cb.set_label('counts')
 pu.prelim()
 
-plt.savefig(fp+'plot/ORACLES_2016_DARE_from_calc_vs_SZA.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_from_calc_vs_SZA_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[53]:
+# In[44]:
 
 
 plt.figure()
@@ -380,18 +380,18 @@ plt.axhline(0,ls=':')
 plt.legend(frameon=False)
 plt.xlabel('DOY')
 plt.ylabel('DARE [W/m$^{{2}}$]')
-plt.title('ORACLES 2016 DARE calculations')
+plt.title('ORACLES 2016 DARE calculations {}'.format(vv))
 plt.grid()
-plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[93]:
+# In[46]:
 
 
 plt.figure()
-plt.hist(s['dare'][:,2],range=[-30,35],bins=30,label='TOA',alpha=0.6)
-plt.hist(s['dare'][:,1],range=[-50,0],bins=30,label='Above cloud',alpha=0.6)
-plt.hist(s['dare'][:,0],range=[-50,0],bins=30,label='Surface',alpha=0.6)
+plt.hist(s['dare'][:,2],range=[-30,150],bins=30,label='TOA',alpha=0.6)
+plt.hist(s['dare'][:,1],range=[-150,0],bins=30,label='Above cloud',alpha=0.6)
+plt.hist(s['dare'][:,0],range=[-150,0],bins=30,label='Surface',alpha=0.6)
 
 plt.axvline(np.nanmean(s['dare'][:,2]),ls='-',color='b',label='Mean')
 plt.axvline(np.nanmedian(s['dare'][:,2]),ls='--',color='b',label='Median')
@@ -405,24 +405,24 @@ pu.prelim()
 plt.xlabel('DARE [W/m$^{{2}}$]')
 plt.legend(frameon=False)
 
-plt.title('ORACLES 2016 DARE calculations')
-plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_hist.png',dpi=600,transparent=True)
+plt.title('ORACLES 2016 DARE calculations {}'.format(vv))
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[34]:
+# In[48]:
 
 
 igood = np.isfinite(s['dare'][:,0])
 
 
-# In[35]:
+# In[50]:
 
 
 plt.figure()
-plt.hist(s['dare'][igood,2],bins=30,range=[-30,35])
+plt.hist(s['dare'][igood,2],bins=30,range=[-30,175])
 
 
-# In[36]:
+# In[51]:
 
 
 np.nanmean(s['dare'][igood,2]),np.nanmedian(s['dare'][igood,2]),np.nanstd(s['dare'][igood,2])
@@ -432,7 +432,7 @@ np.nanmean(s['dare'][igood,2]),np.nanmedian(s['dare'][igood,2]),np.nanstd(s['dar
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[37]:
+# In[52]:
 
 
 boxes_diag = []
@@ -440,7 +440,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[38]:
+# In[53]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -450,43 +450,43 @@ boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.
 
 # Corners are [x0,x1,y0,y1]
 
-# In[39]:
+# In[54]:
 
 
 boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
 
 
-# In[40]:
+# In[55]:
 
 
 boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
 
 
-# In[41]:
+# In[56]:
 
 
 boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
 
 
-# In[42]:
+# In[57]:
 
 
 boxes_diag
 
 
-# In[43]:
+# In[58]:
 
 
 boxes_ew
 
 
-# In[44]:
+# In[59]:
 
 
 boxes_ns
 
 
-# In[45]:
+# In[60]:
 
 
 bins_diag = []
@@ -495,13 +495,13 @@ for i,b in enumerate(boxes_diag):
     bins_diag.append(s['dare'][igood,2][ia])
 
 
-# In[46]:
+# In[61]:
 
 
 bins_diag[0] = bins_diag[1][0:5]
 
 
-# In[47]:
+# In[62]:
 
 
 bins_ns = []
@@ -510,13 +510,13 @@ for i,b in enumerate(boxes_ns):
     bins_ns.append(s['dare'][igood,2][ia])
 
 
-# In[48]:
+# In[63]:
 
 
 bins_ns[-1] = bins_ns[-2][0:5]
 
 
-# In[49]:
+# In[64]:
 
 
 bins_ew = []
@@ -525,21 +525,21 @@ for i,b in enumerate(boxes_ew):
     bins_ew.append(s['dare'][igood,2][ia])
 
 
-# In[50]:
+# In[65]:
 
 
 len(boxes_diag),len(bins_diag)
 
 
-# In[51]:
+# In[68]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_diag_ct):
-    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-20,35),
+    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-30,150),
                zorder=10,normed=True,orientation='horizontal',label='Calculations')
-    ax[i].hist(sa['bins_diag'][0,i][0],bins=30,edgecolor='None',alpha=0.3,color='m',range=(-30,100),
+    ax[i].hist(sa['bins_diag'][0,i][0],bins=30,edgecolor='None',alpha=0.3,color='m',range=(-30,150),
                zorder=-1,normed=True,orientation='horizontal',label='Parameterization')
     ax[i].axhline(np.nanmean(bins_diag[i]),color='g',label='mean')
     ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
@@ -553,9 +553,9 @@ for i,b in enumerate(boxes_diag_ct):
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - TOA')
+fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - TOA {}'.format(vv))
 fig.tight_layout()
-#plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_diag_boxes.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_diag_boxes_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # In[ ]:
@@ -564,14 +564,14 @@ fig.tight_layout()
 
 
 
-# In[53]:
+# In[69]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_ns_ct):
-    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-50,100),zorder=10,normed=True,orientation='horizontal')
-    ax[i].hist(sa['bins_ns'][0,i][0],bins=30,edgecolor='None',alpha=0.2,color='orange',range=(-50,100),zorder=-1,normed=True,orientation='horizontal')
+    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-50,150),zorder=10,normed=True,orientation='horizontal')
+    ax[i].hist(sa['bins_ns'][0,i][0],bins=30,edgecolor='None',alpha=0.2,color='orange',range=(-50,150),zorder=-1,normed=True,orientation='horizontal')
     ax[i].axhline(np.nanmean(bins_ns[i]),color='b',label='mean')
     ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
@@ -582,12 +582,12 @@ for i,b in enumerate(boxes_ns_ct):
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - TOA')
+fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - TOA {}'.format(vv))
 fig.tight_layout()
-#plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_ns_boxes.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_ns_boxes_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[128]:
+# In[70]:
 
 
 plt.figure()
@@ -607,7 +607,7 @@ for i,b in enumerate(boxes_diag):
 
 plt.ylim(-25,-7)
 plt.title('ORACLES 2016 DARE TOA from calculations of\n4STAR AOD, skyscans and SSFR cloud retrievals')
-plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_map_param.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_map_param_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # In[ ]:

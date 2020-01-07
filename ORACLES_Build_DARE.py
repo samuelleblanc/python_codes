@@ -838,10 +838,10 @@ with tqdm(total=max_) as pbar:
         outputs.append(outs)
 
 
-# In[79]:
+# In[92]:
 
 
-outputs 
+outputs[0],outputs[2000]
 
 
 # In[81]:
@@ -893,10 +893,4 @@ hs.savemat(fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv=vv),dat1)
 dat1 = iterate_dict_unicode(dat)
 print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
 hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
-
-
-# In[ ]:
-
-
-
 
