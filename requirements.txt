@@ -60,7 +60,7 @@ mpltools==0.2.0
 nbconvert==5.3.1
 nbformat==4.4.0
 netCDF4==1.2.2
-notebook==5.2.1
+notebook==5.7.8
 numba==0.35.0
 numexpr==2.6.4
 numpy==1.11.0
