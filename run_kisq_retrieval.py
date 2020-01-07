@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Functions to run the ki$^{2}$ retrieval based on the parameters calculated in the Sp class, from modeled and measured source
