@@ -409,6 +409,31 @@ plt.title('ORACLES 2016 DARE calculations {}'.format(vv))
 plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[103]:
+
+
+plt.figure(figsize=(6,4))
+
+plt.hist(s['dare'][:,0],range=[-160,0],bins=20,label='Surface',alpha=0.6,normed=True)
+plt.hist(s['dare'][:,1],range=[-160,0],bins=20,label='Above cloud',alpha=0.6,normed=True)
+plt.hist(s['dare'][:,2],range=[-30,150],bins=20,label='Top of Atmosphere',alpha=0.6,normed=True)
+
+plt.axvline(np.nanmean(s['dare'][:,2]),ls='-',color='b',label='Mean')
+plt.axvline(np.nanmedian(s['dare'][:,2]),ls='--',color='b',label='Median')
+plt.axvline(np.nanmean(s['dare'][:,1]),ls='-',color='orange')
+plt.axvline(np.nanmedian(s['dare'][:,1]),ls='--',color='orange')
+plt.axvline(np.nanmean(s['dare'][:,0]),ls='-',color='g')
+plt.axvline(np.nanmedian(s['dare'][:,0]),ls='--',color='g')
+
+#pu.prelim()
+
+plt.xlabel('Instantaneous DARE [W/m$^{{2}}$]')
+plt.legend(frameon=False,loc=2)
+
+plt.title('ORACLES August 2016 DARE calculations')
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_normhist_{}.png'.format(vv),dpi=600,transparent=True)
+
+
 # In[48]:
 
 
@@ -531,24 +556,24 @@ for i,b in enumerate(boxes_ew):
 len(boxes_diag),len(bins_diag)
 
 
-# In[68]:
+# In[86]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_diag_ct):
     ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-30,150),
-               zorder=10,normed=True,orientation='horizontal',label='Calculations')
+               zorder=10,normed=True,orientation='horizontal',label='Calc')
     ax[i].hist(sa['bins_diag'][0,i][0],bins=30,edgecolor='None',alpha=0.3,color='m',range=(-30,150),
-               zorder=-1,normed=True,orientation='horizontal',label='Parameterization')
-    ax[i].axhline(np.nanmean(bins_diag[i]),color='g',label='mean')
-    ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
+               zorder=-1,normed=True,orientation='horizontal',label='Param')
+    ax[i].axhline(np.nanmean(bins_diag[i]),color='g')#,label='mean')
+    ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--')#,label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
     if i>0:
         [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
-    #else:
-        #ax[i].legend(frameon=False)
+    if i==0:
+        ax[i].legend(frameon=False,bbox_to_anchor=[0.08, 0.85])
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i%2: pu.prelim(ax[i])
@@ -558,26 +583,22 @@ fig.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_diag_boxes_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[ ]:
-
-
-
-
-
-# In[69]:
+# In[88]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_ns_ct):
-    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-50,150),zorder=10,normed=True,orientation='horizontal')
-    ax[i].hist(sa['bins_ns'][0,i][0],bins=30,edgecolor='None',alpha=0.2,color='orange',range=(-50,150),zorder=-1,normed=True,orientation='horizontal')
-    ax[i].axhline(np.nanmean(bins_ns[i]),color='b',label='mean')
-    ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
+    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-50,150),zorder=10,normed=True,orientation='horizontal',label='Calc')
+    ax[i].hist(sa['bins_ns'][0,i][0],bins=30,edgecolor='None',alpha=0.2,color='orange',range=(-50,150),zorder=-1,normed=True,orientation='horizontal',label='Param')
+    ax[i].axhline(np.nanmean(bins_ns[i]),color='b')#,label='mean')
+    ax[i].axhline(np.nanmedian(bins_ns[i]),color='b')#,linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
     if i>0:
         [ag.set_visible(False) for ag in ax[i].yaxis.get_ticklabels()]
+    else:
+        ax[i].legend(frameon=False,bbox_to_anchor=[0.08,0.85])
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
     if i%2: pu.prelim(ax[i])
