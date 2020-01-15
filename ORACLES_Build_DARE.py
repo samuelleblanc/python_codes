@@ -660,6 +660,118 @@ len(bb)
 results = p.map(write_files,bb)
 
 
+# ### Run only the CRE portion in multiprocessing
+
+# In[59]:
+
+
+def worker_init(verbose=True):
+    # ignore the SIGINI in sub process, just print a log
+    def sig_int(signal_num, frame):
+        if verbose: 
+            print 'signal: %s' % signal_num
+        raise IOError
+    signal.signal(signal.SIGINT, sig_int)
+
+
+# In[60]:
+
+
+# open the list file
+f = open(fp_rtm+'{}_DARE_CRE_{}.sh'.format(name,vv),'w')
+fpp_in = fp_rtm+'input/{}_DARE_CRE_{}/'.format(name,vv)
+fpp_out = fp_rtm+'output/{}_DARE_CRE_{}/'.format(name,vv)
+
+
+# In[61]:
+
+
+if not os.path.isdir(fpp_in):
+    os.mkdir(fpp_in)
+if not os.path.isdir(fpp_out):
+     os.mkdir(fpp_out)
+
+
+# In[63]:
+
+
+if isjupyter():
+    pbar = tqdm(total=len(ar['Start_UTC'][fla]))
+bb = []
+for i,u in enumerate(ar['Start_UTC'][fla]):
+    
+    f_in = '{name}_{vv}_DARE_CRE_{i:03d}_withaero_clear.dat'.format(name=name,vv=vv,i=i)
+
+    geo['lat'],geo['lon'],geo['sza'] = ar['Latitude'][fla][i],ar['Longitude'][fla][i],sza[fla][i]
+    day = days[ar['days'][fla][i].astype(int)]
+    geo['doy'] = datetime(int(day[0:4]),int(day[4:6]),int(day[6:])).timetuple().tm_yday
+
+    if ~np.isfinite(cod[flb][i]):
+        if isjupyter():
+            pbar.update(1)
+        continue
+    cloud['tau'],cloud['ref'] = 0.0,ref[flb][i]
+    cloud['write_moments_file'] = True
+
+    iae = np.argmin(abs(ar['time_ae'][fla][i]-ae['time']/3600.0))
+
+    # Only run for aerosol rertievals within 1 hour
+    if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
+
+        aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])
+        aero['ssa'] = fx_aero(ae['SSA'][iae])
+        aero['asy'] = fx_aero(ae['g_total'][iae])
+
+        #Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
+        #                           verbose=False,make_base=False,set_quiet=True)
+        f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in,out=fpp_out+f_in))
+
+     #   f_in_noa = '{name}_{vv}_star_{i:03d}_noaero.dat'.format(name=name,vv=vv,i=i)
+        #Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+        #                           verbose=False,make_base=False,set_quiet=True)
+     #   f.write('{uv} < {fin} > {out}\n'.format(uv=fp_uvspec,fin=fpp_in+f_in_noa,out=fpp_out+f_in_noa))
+        
+        bb.append({'geo':deepcopy(geo),'cod':cod[flb][i],'ref':ref[flb][i],'aero':deepcopy(aero),
+                   'f_in':deepcopy(f_in)})
+
+    if isjupyter(): 
+        pbar.update(1)
+    else:
+        print i
+
+f.close()
+
+
+# In[64]:
+
+
+def write_files_cre(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
+    'function to feed the pool of workers to write out the all the files'
+    cloud['tau'],cloud['ref'] = d['cod'],d['ref']
+    Rl.write_input_aac(fpp_in+d['f_in'],geo=d['geo'],aero=d['aero'],cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+    #Rl.write_input_aac(fpp_in+d['f_in_noa'],geo=d['geo'],aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+    #                               verbose=False,make_base=False,set_quiet=True)
+
+
+# In[67]:
+
+
+p = Pool(cpu_count()-1,worker_init)
+
+
+# In[68]:
+
+
+results_cre = p.map(write_files_cre,bb)
+
+
+# In[70]:
+
+
+len(results_cre)
+
+
 # ## Run the calculations
 
 # Run the files from command line:
@@ -685,6 +797,32 @@ f_listout = f_list+'.out'
 
 
 # In[191]:
+
+
+get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
+
+
+# ### For the CRE
+
+# In[71]:
+
+
+f_list = fp_rtm+'{}_DARE_CRE_{}.sh'.format(name,vv)
+
+
+# In[72]:
+
+
+get_ipython().system(u' wc -l $f_list')
+
+
+# In[73]:
+
+
+f_listout = f_list+'.out'
+
+
+# In[74]:
 
 
 get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
