@@ -43,7 +43,7 @@
 
 # # Import modules
 
-# In[1]:
+# In[73]:
 
 
 import numpy as np
@@ -55,13 +55,13 @@ from path_utils import getpath
 import matplotlib.pyplot as plt
 
 
-# In[248]:
+# In[2]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[42]:
+# In[3]:
 
 
 from Sp_parameters import smooth
@@ -69,7 +69,7 @@ from load_utils import load_from_json, mat2py_time,toutc
 import write_utils as wu
 
 
-# In[190]:
+# In[4]:
 
 
 import Sun_utils as su
@@ -78,19 +78,19 @@ import pytz
 import map_utils as mu
 
 
-# In[3]:
+# In[5]:
 
 
 name = 'SSFR3'
 
 
-# In[4]:
+# In[6]:
 
 
 vv = 'v9'
 
 
-# In[102]:
+# In[7]:
 
 
 fp = getpath('SSFR3')
@@ -99,14 +99,14 @@ fp_dat = getpath('SSFR3')+'data/'
 
 # # Load the files
 
-# In[7]:
+# In[8]:
 
 
 days = ['20120525','20120806','20130110']
 labels = ['Liquid','Mixed-phase','Ice']
 
 
-# In[25]:
+# In[9]:
 
 
 times = [[15.0,16.0],[22.0,23.0],[17.5,19.5]]
@@ -114,7 +114,7 @@ times = [[15.0,16.0],[22.0,23.0],[17.5,19.5]]
 
 # ## Load the 15 parameters retrievals
 
-# In[31]:
+# In[10]:
 
 
 f_liq = sio.idl.readsav(fp_dat+'retrieved_kisq_{d}_{v}.out'.format(d=days[0],v=vv))
@@ -122,7 +122,7 @@ f_mix = sio.idl.readsav(fp_dat+'retrieved_kisq_{d}_{v}.out'.format(d=days[1],v=v
 f_ice = sio.idl.readsav(fp_dat+'retrieved_kisq_{d}_{v}.out'.format(d=days[2],v=vv))
 
 
-# In[32]:
+# In[11]:
 
 
 f_liq.keys()
@@ -130,7 +130,7 @@ f_liq.keys()
 
 # ## Load the slope retrievals
 
-# In[10]:
+# In[12]:
 
 
 sl_liq = sio.idl.readsav(fp_dat+'{d}_cld_parms3_1600nm.out'.format(d=days[0]))
@@ -138,7 +138,7 @@ sl_mix = sio.idl.readsav(fp_dat+'{d}_cld_parms3_1600nm.out'.format(d=days[1]))
 sl_ice = sio.idl.readsav(fp_dat+'{d}_cld_parms3_ic_1600nm.out'.format(d=days[2]))
 
 
-# In[11]:
+# In[13]:
 
 
 sl_liq.keys()
@@ -146,7 +146,7 @@ sl_liq.keys()
 
 # ## Load the 2wvl retrievals
 
-# In[13]:
+# In[14]:
 
 
 twv_liq = sio.idl.readsav(fp_dat+'{d}_cld_parms3_2wvl_1600nm.out'.format(d=days[0]))
@@ -154,7 +154,7 @@ twv_mix = sio.idl.readsav(fp_dat+'{d}_cld_parms3_2wvl_1600nm.out'.format(d=days[
 twv_ice = sio.idl.readsav(fp_dat+'{d}_cld_parms3_ic_2wvl_1600nm.out'.format(d=days[2]))
 
 
-# In[14]:
+# In[15]:
 
 
 twv_liq.keys()
@@ -162,7 +162,7 @@ twv_liq.keys()
 
 # ## Load the spectra
 
-# In[23]:
+# In[16]:
 
 
 sp_liq = sio.idl.readsav(fp_dat+'{d}_calibspcs.out'.format(d=days[0],v=vv))
@@ -170,28 +170,126 @@ sp_mix = sio.idl.readsav(fp_dat+'{d}_calibspcs.out'.format(d=days[1],v=vv))
 sp_ice = sio.idl.readsav(fp_dat+'{d}_calibspcs.out'.format(d=days[2],v=vv))
 
 
-# In[24]:
+# In[17]:
 
 
 sp_liq.keys()
 
 
-# In[26]:
+# In[18]:
 
 
 sp_liq['zspectra'].shape
 
 
-# In[28]:
+# In[19]:
 
 
 sp_liq['tmhrs'].shape
 
 
-# In[29]:
+# In[20]:
 
 
 sp_liq['status']
+
+
+# ## Load the Kurudz solar downwelling
+
+# In[23]:
+
+
+fso = getpath('uvspec_dat')
+
+
+# In[26]:
+
+
+ku = np.genfromtxt(fso+'solar_flux/kurudz_1.0nm.dat')  # mW / (m2 nm), with wavelength in nm
+
+
+# In[27]:
+
+
+ku
+
+
+# In[45]:
+
+
+ku[980-250,0]
+
+
+# In[29]:
+
+
+vis_slit = np.genfromtxt(fp+'pro/rtm2/vis_1nm.dat')
+
+
+# In[30]:
+
+
+nir_slit = np.genfromtxt(fp+'pro/rtm2/nir_1nm.dat')
+
+
+# Calculate the downwelling solar irradiance at TOA by convolving the slit functions and the kurudz
+
+# In[36]:
+
+
+wvl_vis = sp_liq['zenlambda'][0:194]
+
+
+# In[38]:
+
+
+wvl_nir = sp_liq['zenlambda'][194:]
+
+
+# In[43]:
+
+
+vis_slit[:,1] = vis_slit[:,1]/np.sum(vis_slit[:,1])
+
+
+# In[44]:
+
+
+nir_slit[:,1] = nir_slit[:,1]/np.sum(nir_slit[:,1])
+
+
+# In[64]:
+
+
+ku_vis = np.array([np.sum([ku[i+7+int(j),1]*v for j,v in vis_slit]) for i,k in enumerate(ku[7:980-250,1])])
+
+
+# In[65]:
+
+
+ku_vis
+
+
+# In[71]:
+
+
+ku_nir = np.array([np.sum([ku[i+980-250+int(j),1]*v for j,v in nir_slit]) for i,k in enumerate(ku[980-250:-15,1])])
+
+
+# In[72]:
+
+
+plt.figure()
+plt.plot(ku[:,0],ku[:,1],'-k',label='orig')
+plt.plot(ku[7:980-250,0],ku_vis,'-g',label='slit_vis')
+plt.plot(ku[980-250:-15,0],ku_nir,'-r',label='slit_nir')
+plt.legend()
+
+
+# In[ ]:
+
+
+
 
 
 # # Verify the results and write out
@@ -884,4 +982,21 @@ hdict_sp_ice['special_comments'] = 'Ice cloud case from LeBlanc et al., 2015'
 
 wu.write_ict(hdict_sp_ice,dict_sp_ice,filepath=fp,
               data_id='SSFR_Zenith_radiance',loc_id='Boulder',date=days[2],rev='R0',order=order_spi)
+
+
+# # Update for specific format requested by Kokhanovsky
+
+# From: Kokhanovsky Alexander <a.kokhanovsky@vitrocisetbelgium.com>
+# Sent: Tuesday, December 3, 2019 1:46 AM
+# 
+# My ideal format is
+# 
+# Date, SZA, T at 3 wavelengths (440, 1020,1640nm), surface albedo at these 3 wavelengths, your results for COT, LWP,a_ef(spectral method)
+# 
+#  
+
+# In[ ]:
+
+
+
 
