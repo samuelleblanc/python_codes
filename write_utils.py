@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[1]:
@@ -38,7 +38,7 @@ def __init__():
 # In[366]:
 
 
-def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],default_format='.3f',file_comment=''):
+def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],default_format='.3f',file_comment='',delim=','):
     """
     Purpose:
         to write out a file in the ICARTT file format used by NASA archiving
@@ -95,6 +95,7 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
         default_format: (defaults to '.3f') The format to use when writing out numbers 
                         when no specific format is defined for each data variable
         file_comment: (optional) If you want to put in a comment in the file name
+        delim: (optional) delimiter of the written value seperator, defaults to ','
         
     Dependencies:
         Numpy
@@ -111,6 +112,8 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
         Written: Samuel LeBlanc, NASA Ames, Santa Cruz, 2016-03-25, Holy Friday
         Modified: Samuel LeBlanc, Santa Cruz, CA, 2016-11-28
                   - fixed non matching format of missing value and actual value
+        Modified: Samuel LeBlanc, Santa Cruz, CA, 2020-01-17
+                  - added delim keyword for changing the delimiter between written variables.
     """
     # module loads
     import numpy as np
@@ -153,8 +156,8 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     for n in order:
         if not n==head['indep_var_name']:
             head['fmt'] = data_dict[n].get('format',default_format)
-            head['data_format'] = head['data_format']+',{:'+'{fmt}'.format(fmt=head['fmt'])+'}'
-            head['data_head'] = head['data_head']+'{missing_val:{fmt}},'.format(**head)
+            head['data_format'] = head['data_format']+delim+'{:'+'{fmt}'.format(fmt=head['fmt'])+'}'
+            head['data_head'] = head['data_head']+'{missing_val:{fmt}}'.format(**head)+delim
     head['data_head'] = head['data_head'][:-1]    
                         #+\
                         #','.join(('{missing_val} '*head['num_data']).split()).format(**head)
