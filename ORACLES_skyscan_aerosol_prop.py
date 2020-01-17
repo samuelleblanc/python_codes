@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -42,6 +42,7 @@
 
 # In[1]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -50,30 +51,36 @@ import matplotlib.pyplot as plt
 
 # In[2]:
 
+
 import hdf5storage as hs
 
 
 # In[15]:
+
 
 import scipy.io as sio
 
 
 # In[44]:
 
+
 import plotting_utils as pu
 
 
 # In[45]:
+
 
 from map_interactive import build_basemap
 
 
 # In[3]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[4]:
+
 
 fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
@@ -82,10 +89,12 @@ fp = 'C:\\Users\\sleblan2\\Research\\ORACLES\\'
 
 # In[117]:
 
+
 aero = []
 
 
 # In[118]:
+
 
 # from aeeronet at St helena on 2016-09-03
 aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
@@ -98,6 +107,7 @@ aero.append({'ssa':np.array([0.867100,0.844300,0.834100,0.832300]),
 
 # In[119]:
 
+
 # from aeronet at Ascension on 2016-09-08
 aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
              'asy':np.array([0.695644,0.654167,0.657314,0.669468]),
@@ -109,6 +119,7 @@ aero.append({'ssa':np.array([0.878400,0.859500,0.846800,0.838000]),
 
 # In[120]:
 
+
 # from aeronet at Namibe on 2016-09-13
 aero.append({'ssa':np.array([0.853800,0.849600,0.844100,0.840000]),
                   'asy':np.array([0.699605,0.624855,0.611445,0.631931]),
@@ -119,6 +130,7 @@ aero.append({'ssa':np.array([0.853800,0.849600,0.844100,0.840000]),
 
 
 # In[121]:
+
 
 # from aeronet at Lubango on 2016-09-14
 aero.append({'ssa':np.array([0.867600,0.832200,0.795800,0.777500]),
@@ -133,41 +145,49 @@ aero.append({'ssa':np.array([0.867600,0.832200,0.795800,0.777500]),
 
 # In[12]:
 
+
 fp
 
 
 # In[14]:
+
 
 fp+'skyscan\\4STAR_.4STAR_20160920_033_STARSKYP.created_20161125_005553.mat'
 
 
 # In[16]:
 
+
 m = sio.loadmat(fp+'skyscan\\4STAR_.4STAR_20160920_033_STARSKYP.created_20161125_005553.mat')
 
 
 # In[82]:
+
 
 m2 = sio.loadmat(fp+'skyscan\\4STAR_.4STAR_20160920_030_STARSKYA.created_20161125_004250.mat')
 
 
 # In[17]:
 
+
 m.keys()
 
 
 # In[19]:
+
 
 m['Wavelength']
 
 
 # In[20]:
 
+
 m['lat'] = -16.5866
 m['lon'] = 10.1636
 
 
 # In[83]:
+
 
 m2['lat'] = -16.4704
 m2['lon'] = 10.5000
@@ -177,21 +197,25 @@ m2['lon'] = 10.5000
 
 # In[24]:
 
+
 m['ssa_total'].shape
 
 
 # In[25]:
+
 
 m['Wavelength'].shape
 
 
 # In[86]:
 
+
 import matplotlib
 matplotlib.rcParams.update({'font.size': 18})
 
 
 # In[128]:
+
 
 fig = plt.figure(figsize=(9,6))
 ax1 = fig.add_subplot(111)
@@ -213,6 +237,7 @@ plt.savefig(fp+'plot//SSA_4STAR_retrieval.png',transprent=True,dpi=600)
 
 
 # In[129]:
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -239,6 +264,7 @@ plt.savefig(fp+'plot//SSA_map.png',transparent=True,dpi=600)
 
 # In[11]:
 
+
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212,sharex=ax1)
@@ -252,6 +278,7 @@ ax1.legend(frameon=False,numpoints=1)
 
 
 # In[12]:
+
 
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
@@ -271,15 +298,18 @@ ax1.legend(frameon=False,numpoints=1)
 
 # In[30]:
 
+
 from scipy import interpolate
 
 
 # In[37]:
 
+
 wvl_new = [350.0,400.0,500.0,650.0,875.0,980.0,1020.0,1240.0,1710.0]
 
 
 # In[39]:
+
 
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
@@ -304,6 +334,7 @@ ax1.legend(frameon=False,numpoints=1)
 
 # In[45]:
 
+
 aero[-1]['ssa_new'] = aero[3]['ssa_new']
 aero[-1]['asy_new'] = aero[1]['asy_new']
 
@@ -312,25 +343,30 @@ aero[-1]['asy_new'] = aero[1]['asy_new']
 
 # In[46]:
 
+
 from load_utils import mat2py_time, toutc
 
 
 # In[40]:
+
 
 import scipy.io as sio
 
 
 # In[42]:
 
+
 s = sio.loadmat(fp+'data\\4STAR_20160914starsun.mat')
 
 
 # In[43]:
 
+
 s.keys()
 
 
 # In[47]:
+
 
 s['pyt'] = mat2py_time(s['t'])
 s['utc'] = toutc(s['pyt'])
@@ -338,10 +374,12 @@ s['utc'] = toutc(s['pyt'])
 
 # In[48]:
 
+
 s['tau_aero'].shape
 
 
 # In[50]:
+
 
 plt.figure()
 plt.plot(s['utc'],s['tau_aero'][:,400])
@@ -349,30 +387,36 @@ plt.plot(s['utc'],s['tau_aero'][:,400])
 
 # In[51]:
 
+
 i = np.argmin(abs(s['utc']-14.1))
 
 
 # In[52]:
+
 
 i
 
 
 # In[53]:
 
+
 from Sp_parameters import smooth
 
 
 # In[65]:
+
 
 ss = np.nanmean(s['tau_aero'][i-6:i+6,:],axis=0)
 
 
 # In[69]:
 
+
 s['w'].shape
 
 
 # In[80]:
+
 
 plt.figure()
 plt.plot(s['w'][0,:],s['tau_aero'][i,:]/3.0,'.')
@@ -384,6 +428,7 @@ plt.grid()
 
 # In[77]:
 
+
 ext_new = []
 for w in wvl_new:
     iw = np.argmin(abs(s['w']*1000.0-w))
@@ -392,11 +437,13 @@ for w in wvl_new:
 
 # In[78]:
 
+
 plt.figure()
 plt.plot(wvl_new,ext_new,'x-')
 
 
 # In[81]:
+
 
 ext_new[-1] = 0.015
 ext_new[5] = 0.035
@@ -404,10 +451,12 @@ ext_new[5] = 0.035
 
 # In[82]:
 
+
 ext_new
 
 
 # In[88]:
+
 
 plt.figure()
 plt.plot(wvl_new,ext_new,'x-')
@@ -418,6 +467,7 @@ plt.xlabel('Wavelenght [nm]')
 # # Make the dict to be saved and used in next calculations of cloud properties
 
 # In[83]:
+
 
 aero_save = {'z_arr':[2.0,5.0],
         'ext':np.array([ext_new,ext_new]),
@@ -430,10 +480,12 @@ aero_save = {'z_arr':[2.0,5.0],
 
 # In[85]:
 
+
 aero_save['ext'][1,:] = aero_save['ext'][1,:]*0.0
 
 
 # In[86]:
+
 
 aero_save
 
@@ -442,20 +494,24 @@ aero_save
 
 # In[126]:
 
+
 from load_utils import load_from_json, save_to_json
 
 
 # In[122]:
+
 
 save_to_json(fp+'aero_save.txt',aero_save)
 
 
 # In[123]:
 
+
 a = ()
 
 
 # In[127]:
+
 
 a = load_from_json(fp+'aero_save.txt')
 

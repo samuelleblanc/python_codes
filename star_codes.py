@@ -1,9 +1,10 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
 
 # In[1]:
+
 
 def __init__():
     """
@@ -77,20 +78,24 @@ History:
 
 # In[4]:
 
+
 uu = ['a','c','b','t','d','002','001','000']
 
 
 # In[6]:
+
 
 uu.sort()
 
 
 # In[8]:
 
+
 uu[0]
 
 
 # In[ ]:
+
 
 def allstarmat(f_list=None, save_file_path=None):
     """
@@ -168,6 +173,7 @@ History:
 
 # In[ ]:
 
+
 def concat_dict(d0,d1):
     """
     Simple program to concatenate the values of two dictionaries
@@ -176,6 +182,7 @@ def concat_dict(d0,d1):
 
 
 # In[ ]:
+
 
 def select_files():
     """
@@ -189,6 +196,7 @@ def select_files():
 
 # In[ ]:
 
+
 def select_save_path():
     """
     Another gui function to let user select the path of the file to be saved
@@ -199,6 +207,7 @@ def select_save_path():
 
 
 # In[ ]:
+
 
 def starread(f_in):
     """
@@ -277,6 +286,7 @@ History:
 
 # In[36]:
 
+
 def startype(f_in,return_daystr=False):
     """
 Name:  
@@ -335,6 +345,7 @@ History:
 
 # In[ ]:
 
+
 def to_dict(d):
     'Simple function to switch from numpy named array to dict with numpy arrays'
     dd = {}
@@ -344,6 +355,7 @@ def to_dict(d):
 
 
 # In[ ]:
+
 
 def get_header(f):
     """
@@ -369,25 +381,30 @@ def get_header(f):
 
 # In[37]:
 
+
 import numpy as np
 
 
 # In[66]:
+
 
 d = np.genfromtxt(f_in,names=True,delimiter=':',skip_header=1)
 
 
 # In[60]:
 
+
 d.dtype.names
 
 
 # In[67]:
 
+
 help(np.genfromtxt)
 
 
 # In[ ]:
+
 
 
 
