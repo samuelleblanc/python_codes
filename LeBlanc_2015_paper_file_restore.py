@@ -43,7 +43,7 @@
 
 # # Import modules
 
-# In[73]:
+# In[1]:
 
 
 import numpy as np
@@ -196,37 +196,37 @@ sp_liq['status']
 
 # ## Load the Kurudz solar downwelling
 
-# In[23]:
+# In[21]:
 
 
 fso = getpath('uvspec_dat')
 
 
-# In[26]:
+# In[22]:
 
 
 ku = np.genfromtxt(fso+'solar_flux/kurudz_1.0nm.dat')  # mW / (m2 nm), with wavelength in nm
 
 
-# In[27]:
+# In[23]:
 
 
 ku
 
 
-# In[45]:
+# In[24]:
 
 
 ku[980-250,0]
 
 
-# In[29]:
+# In[25]:
 
 
 vis_slit = np.genfromtxt(fp+'pro/rtm2/vis_1nm.dat')
 
 
-# In[30]:
+# In[26]:
 
 
 nir_slit = np.genfromtxt(fp+'pro/rtm2/nir_1nm.dat')
@@ -234,49 +234,49 @@ nir_slit = np.genfromtxt(fp+'pro/rtm2/nir_1nm.dat')
 
 # Calculate the downwelling solar irradiance at TOA by convolving the slit functions and the kurudz
 
-# In[36]:
+# In[27]:
 
 
 wvl_vis = sp_liq['zenlambda'][0:194]
 
 
-# In[38]:
+# In[28]:
 
 
 wvl_nir = sp_liq['zenlambda'][194:]
 
 
-# In[43]:
+# In[29]:
 
 
 vis_slit[:,1] = vis_slit[:,1]/np.sum(vis_slit[:,1])
 
 
-# In[44]:
+# In[30]:
 
 
 nir_slit[:,1] = nir_slit[:,1]/np.sum(nir_slit[:,1])
 
 
-# In[64]:
+# In[31]:
 
 
 ku_vis = np.array([np.sum([ku[i+7+int(j),1]*v for j,v in vis_slit]) for i,k in enumerate(ku[7:980-250,1])])
 
 
-# In[65]:
+# In[32]:
 
 
 ku_vis
 
 
-# In[71]:
+# In[33]:
 
 
 ku_nir = np.array([np.sum([ku[i+980-250+int(j),1]*v for j,v in nir_slit]) for i,k in enumerate(ku[980-250:-15,1])])
 
 
-# In[72]:
+# In[34]:
 
 
 plt.figure()
@@ -286,10 +286,46 @@ plt.plot(ku[980-250:-15,0],ku_nir,'-r',label='slit_nir')
 plt.legend()
 
 
-# In[ ]:
+# In[35]:
 
 
+from scipy import interpolate
 
+
+# In[38]:
+
+
+sp_liq['zenlambda'][0:194]
+
+
+# In[43]:
+
+
+sun_vis_fx = interpolate.interp1d(ku[7:980-250,0],ku_vis,fill_value='extrapolate')
+sun_vis = sun_vis_fx(sp_liq['zenlambda'][0:194])
+
+sun_nir_fx = interpolate.interp1d(ku[980-250:-15,0],ku_nir,fill_value='extrapolate')
+sun_nir = sun_nir_fx(sp_liq['zenlambda'][194:])
+
+
+# In[46]:
+
+
+sun = np.append(sun_vis,sun_nir)
+
+
+# In[47]:
+
+
+wvl = sp_liq['zenlambda']
+
+
+# In[50]:
+
+
+plt.figure()
+plt.plot(wvl,sun)
+plt.plot(ku[:,0],ku[:,1],zorder=-1)
 
 
 # # Verify the results and write out
@@ -318,13 +354,13 @@ order = ['COD','COD_err_low','COD_err_up','REF','REF_err_low','REF_err_up','Phas
 
 # ## 15 parameters retrieval
 
-# In[34]:
+# In[53]:
 
 
 f_liq.keys()
 
 
-# In[45]:
+# In[54]:
 
 
 plt.figure()
@@ -345,13 +381,13 @@ plt.plot(f_liq['ki_rtm'])
 f_liq['ref_err'].shape
 
 
-# In[77]:
+# In[55]:
 
 
 f = [f_liq,f_mix,f_ice]
 
 
-# In[86]:
+# In[56]:
 
 
 def fo(gu,nn):
@@ -367,7 +403,7 @@ def fo(gu,nn):
     return gu
 
 
-# In[91]:
+# In[57]:
 
 
 rtr = []
@@ -397,7 +433,7 @@ for i,g in enumerate(f):
     rtr.append(ff)
 
 
-# In[93]:
+# In[58]:
 
 
 rtr[0].keys()
@@ -851,7 +887,7 @@ for i,g in enumerate(sp):
     dtu = np.array([datetime(int(days[i][0:4]),int(days[i][4:6]),int(days[i][6:8])+(int(u)/24+1),
                              int(u%24),int((u-int(u))*60),int(((u-int(u))*60)-int((u-int(u))*60))*60,
                              tzinfo=pytz.timezone('UTC')) for u in g['tmhrs']])
-    sza, azi = mu.get_sza_azi(lat,lon,dtu,alt=alt)
+    sza, azi,solfac = mu.get_sza_azi(lat,lon,dtu,alt=alt,return_sunearthfactor=True)
     tp = (g['tmhrs']>=ut[i][0]) & (g['tmhrs']<=ut[i][1]) & (g['sat']==0) & (g['zspectra'][:,50]>0.0003)
     fsp['utc'] = g['tmhrs'][tp]
     fsp['sza'] = np.array(sza)[tp]
@@ -995,8 +1031,170 @@ wu.write_ict(hdict_sp_ice,dict_sp_ice,filepath=fp,
 # 
 #  
 
+# In[52]:
+
+
+hdict = {'PI':'Samuel LeBlanc',
+     'Institution':'NASA Ames Research Center',
+     'Instrument':'Solar Spectral Flux Radiometer - 3 (SSFR3)',
+     'campaign':'University of Colorado Skywatch Observatory',
+     'special_comments':'For Alexander Kokhanovsky',
+     'PI_contact':'Samuel.leblanc@nasa.gov',
+     'platform':'Roof top, University of Colorado',
+     'location':'University of Colorado, Duane rooftop, Boulder, Colorado, USA, Lat: 40.01 N, Lon: 105.25 W, Alt: 1660 m',
+     'instrument_info':'Selected Transmittances and derived product from SSFR with zenith narrow field of view radiance light collector',
+     'data_info':'Using the cloud property retrieval method based on spectral transmitted light measurements described by LeBlanc, Pileskie, Schmidt, and Coddington (2015), AMT, https://doi.org/10.5194/amt-8-1361-2015',
+     'uncertainty':'See included variables.',
+     'DM_contact':'Samuel LeBlanc, samuel.leblanc@nasa.gov',
+     'project_info':'N/A',
+     'stipulations':'',
+     'rev_comments':'R0: Data from LeBlanc et al., 2015 publication, released to A. Kohkanovsky in January, 2020.'
+    }
+order = ['SZA','T0440','T1020','T1640','COD','COD_err_low','COD_err_up','REF','REF_err_low','REF_err_up','Phase','Ki_square']
+
+
+# In[59]:
+
+
+f = [f_liq,f_mix,f_ice]
+
+
+# In[61]:
+
+
+def fo(gu,nn):
+
+    gu['tau_rtm'][nn] = np.nan
+    gu['ref_rtm'][nn] = np.nan
+    gu['tau_err'][0,nn] = np.nan
+    gu['ref_err'][0,nn] = np.nan
+    gu['tau_err'][1,nn] = np.nan
+    gu['ref_err'][1,nn] = np.nan
+    gu['ki_rtm'][nn] = np.nan
+    gu['wp_rtm'][nn] = np.nan
+    return gu
+
+
+# In[62]:
+
+
+rtr = []
+for i,g in enumerate(f):
+    ff = {}
+    for k in g.keys(): ff[k] = np.array(g[k])
+    ff['tau_rtm'] = smooth(ff['tau_rtm'],4,old=True)
+    ff['ref_rtm'] = smooth(ff['ref_rtm'],4,old=True)
+    tr = ff['tau_rtm']==0
+    if any(tr): ff = fo(ff,tr)
+    trm = ff['tau_rtm']>99.0
+    if any(trm): ff = fo(ff,trm)
+    rr = ff['ref_rtm']==0
+    if any(rr): ff = fo(ff,rr)
+    rrm = ff['ref_rtm']>99.0
+    if any(rrm): ff = fo(ff,rrm)
+    kr = ff['ki_rtm']>0.69
+    if any(kr): ff = fo(ff,kr)
+    rem = ff['ref_err'][0,:]>3.0
+    if any(rem): ff['ref_err'][0,rem] = 3.0
+    if i==0:
+        wr = ff['wp_rtm']==1
+        if any(wr): ff = fo(ff,wr)
+    elif i==2:
+        wr = ff['wp_rtm']==0
+        if any(wr): ff = fo(ff,wr)
+    rtr.append(ff)
+
+
+# In[63]:
+
+
+rtr[0].keys()
+
+
+# In[68]:
+
+
+lat = 40.01
+lon = -105.25
+alt = 1660.0
+
+
+# In[69]:
+
+
+sp = [sp_liq,sp_mix,sp_ice]
+
+
+# In[70]:
+
+
+ut = [[15.0,16.0],[22.0,23.0],[17.5,19.5]]
+
+
+# In[71]:
+
+
+rsp = []
+for i,g in enumerate(sp):
+    fsp = {}
+    dtu = np.array([datetime(int(days[i][0:4]),int(days[i][4:6]),int(days[i][6:8])+(int(u)/24+1),
+                             int(u%24),int((u-int(u))*60),int(((u-int(u))*60)-int((u-int(u))*60))*60,
+                             tzinfo=pytz.timezone('UTC')) for u in g['tmhrs']])
+    sza, azi,solfac = mu.get_sza_azi(lat,lon,dtu,alt=alt,return_sunearthfactor=True)
+    tp = (g['tmhrs']>=ut[i][0]) & (g['tmhrs']<=ut[i][1]) & (g['sat']==0) & (g['zspectra'][:,50]>0.0003)
+    fsp['utc'] = g['tmhrs'][tp]
+    fsp['sza'] = np.array(sza)[tp]
+    fsp['wvl'] = g['zenlambda']
+    fsp['rad'] = g['zspectra'][tp,:]
+    rsp.append(fsp)
+
+
+# ## Save liquid cloud in format
+
+# In[67]:
+
+
+s0440 = 
+
+
+# In[66]:
+
+
+T0440 = 
+
+
+# In[64]:
+
+
+dict_fliq =  {'Start_UTC':{'data':rtr[0]['tmhrs']*3600.0,'unit':'seconds from midnight UTC',
+                           'long_description':'time keeping, based on UTC midnight'},
+      'COD':{'data':rtr[0]['tau_rtm'],'unit':'None','long_description':'Cloud Optical Depth of overlying cloud'},
+      'REF':{'data':rtr[0]['ref_rtm'],'unit':'micrometer',
+             'long_description':'Cloud drop effective radius for liquid clouds'},
+      'COD_err_low':{'data':rtr[0]['tau_err'][0,:],'unit':'None',
+                     'long_description':'Lower value of retrieval uncertainty of Cloud Optical Depth'},
+      'COD_err_up':{'data':rtr[0]['tau_err'][1,:],'unit':'None',
+                    'long_description':'Upper value of retrieval uncertainty of Cloud Optical Depth'},
+      'REF_err_low':{'data':rtr[0]['ref_err'][0,:],'unit':'micrometer',
+                     'long_description':'Lower value of retrieval uncertainty of Cloud effective radius.'},
+      'REF_err_up':{'data':rtr[0]['ref_err'][1,:],'unit':'micrometer',
+                    'long_description':'Upper value of retrieval uncertainty of Cloud effective radius.'},
+      'Phase':{'data':rtr[0]['wp_rtm'],'unit':'None',
+               'long_description':'Thermodynamic phase, 0 for liquid cloud, 1 for ice cloud'},
+      'Ki_square':{'data':rtr[0]['ki_rtm'],'unit':'None',
+                   'long_description':'Ki square fit parameter. It is the remainder of the ki square fit, values higher than 0.69 are considered to be failed retrievals.'}}
+
+
+# In[65]:
+
+
+hdict_fliq = hdict
+hdict_fliq['special_comments'] = 'Liquid cloud case from LeBlanc et al., 2015'
+
+
 # In[ ]:
 
 
-
+wu.write_ict(hdict_fliq,dict_fliq,filepath=fp,
+              data_id='SSFR_15params_CLD',loc_id='Boulder',date=days[0],rev='R0',order=order,delim=' ')  
 
