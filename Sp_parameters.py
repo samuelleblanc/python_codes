@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Run the different import required at start
@@ -1599,6 +1599,8 @@ def plt_lut_zenrad(lut,range_variable='tau',phase=0,zout=0,norm=False,other_inde
     Modification History:
         Writtten: Samuel LeBlanc, 2016-10-19, NASA Ames, CA
                 added good_only keyword
+        Modified: Samuel LeBlanc, 20120-01-23, NASA Ames, CA
+                Added error checking for proper variable size
     """
     import matplotlib.pyplot as plt
     from mpltools import color
@@ -1616,7 +1618,10 @@ def plt_lut_zenrad(lut,range_variable='tau',phase=0,zout=0,norm=False,other_inde
         ssp = lut.sp[phase,:,zout,:,:]
         if np.nanmax(ssp)>50:
             ssp = ssp/1000.0
-    ix = np.where(np.array(ssp.shape)==lx)[0][0]
+    try:
+        ix = np.where(np.array(ssp.shape)==lx)[0][0]
+    except IndexError:
+        raise IndexError('The range_variable {} shape is not found on the norm variable in this lut.'.format(range_variable))
     sspn = np.rollaxis(ssp,ix,0)[:,:,other_index]
 
     color.cycle_cmap(lxx,cmap=plt.cm.get_cmap(cmapname),ax=plt.gca())
