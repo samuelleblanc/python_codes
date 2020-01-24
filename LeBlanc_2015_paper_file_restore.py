@@ -1173,7 +1173,7 @@ from math import pi
 from datetime import datetime
 
 
-# In[208]:
+# In[232]:
 
 
 rsp = []
@@ -1191,32 +1191,52 @@ for i,g in enumerate(sp):
     fsp['s1020'] = g['zspectra'][tp,i1020]
     fsp['s1640'] = g['zspectra'][tp,i1640]
     
-    fsp['t0440'] = fsp['s0440']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun0440
-    fsp['t1020'] = fsp['s1020']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun1020
-    fsp['t1640'] = fsp['s1640']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun1640
+    fsp['t0440'] = fsp['s0440']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun0440*pi
+    fsp['t1020'] = fsp['s1020']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun1020*pi
+    fsp['t1640'] = fsp['s1640']*fsp['solfac']/np.cos(fsp['sza']*pi/180.0) / sun1640*pi
     
     fsp['doy'] = np.array([ddt.timetuple().tm_yday+g['tmhrs'][j]/24.0 for j,ddt in enumerate(dtu)])
     fsp['doy'] = fsp['doy'][tp]
     rsp.append(fsp)
 
 
-# In[209]:
+# In[233]:
 
 
 g['zspectra'][tp,i1640]
 
 
-# In[210]:
+# In[234]:
+
+
+rtr[0]['doy']
+
+
+# In[235]:
 
 
 plt.figure()
-plt.plot(rsp[0]['utc'],rsp[0]['t0440'],'.',label='440 nm')
-plt.plot(rsp[0]['utc'],rsp[0]['t1020'],'.',label='1020 nm')
-plt.plot(rsp[0]['utc'],rsp[0]['t1640'],'.',label='1640 nm')
+plt.plot(rsp[1]['utc'],rsp[1]['t0440'],'.',label='440 nm')
+plt.plot(rsp[1]['utc'],rsp[1]['t1020'],'.',label='1020 nm')
+plt.plot(rsp[1]['utc'],rsp[1]['t1640'],'.',label='1640 nm')
+
+plt.plot(rtr[1]['tmhrs'],rtr[1]['tau_rtm']/100.0,'.',label='COD')
 plt.legend(frameon=False)
 
 
-# In[211]:
+# In[236]:
+
+
+plt.figure()
+plt.plot(rsp[2]['utc'],rsp[2]['t0440'],'.',label='440 nm')
+plt.plot(rsp[2]['utc'],rsp[2]['t1020'],'.',label='1020 nm')
+plt.plot(rsp[2]['utc'],rsp[2]['t1640'],'.',label='1640 nm')
+
+plt.plot(rtr[2]['tmhrs'],rtr[2]['tau_rtm']/100.0,'.',label='COD')
+plt.legend(frameon=False)
+
+
+# In[237]:
 
 
 plt.figure()
@@ -1226,13 +1246,13 @@ plt.plot(rsp[0]['utc'],rsp[0]['s1640'],'.',label='1640 nm')
 plt.legend(frameon=False)
 
 
-# In[212]:
+# In[238]:
 
 
 from write_utils import nearest_neighbor
 
 
-# In[213]:
+# In[239]:
 
 
 for i,rr in enumerate(rtr):
