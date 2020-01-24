@@ -1,0 +1,18 @@
+import numpy as np
+import Sp_parameters as Sp
+import load_utils as lu
+import write_utils as wu
+from path_utils import getpath
+import hdf5storage as hs
+import scipy.io as sio
+import matplotlib.pyplot as plt
+%matplotlib notebook
+import os
+
+
+name = 'ORACLES'
+vv = 'v1'
+fp = getpath(name)
+
+
+
