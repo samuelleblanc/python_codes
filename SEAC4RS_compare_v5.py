@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -97,6 +97,12 @@ import cPickle as pickle
 #py.sign_in("samuelleblanc", "4y3khh7ld4")
 #import mpld3
 #mpld3.enable_notbeook()
+
+
+# In[ ]:
+
+
+
 
 
 # In[4]:

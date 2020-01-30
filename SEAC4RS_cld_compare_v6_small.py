@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -1299,4 +1299,10 @@ plt.errorbar(modis_tau,star_tau,xerr=star_tau_std,yerr=modis_tau_std,label='MODI
 plt.errorbar(goes_t_star,star_tau,xerr=star_tau_std,yerr=goes_ts_star,label='GOES',linestyle='None')
 
 plt.legend(frameon=False,loc=4,numpoints=1)
+
+
+# In[ ]:
+
+
+
 
