@@ -46,7 +46,7 @@
 
 # # Import of modules
 
-# In[1]:
+# In[2]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -62,32 +62,32 @@ import hdf5storage as hs
 import Sp_parameters as Sp
 
 
-# In[2]:
+# In[3]:
 
 
 from path_utils import getpath
 
 
-# In[3]:
+# In[4]:
 
 
 from Sp_parameters import smooth
 
 
-# In[4]:
+# In[5]:
 
 
 fo = getpath('ORACLES')
 
 
-# In[5]:
+# In[6]:
 
 
 fp = fo+'starzen/'
 fp_plot = fo+'plot/'
 
 
-# In[6]:
+# In[7]:
 
 
 fp, fp_plot
@@ -97,17 +97,17 @@ fp, fp_plot
 
 
 # set the basic directory path
-fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
-fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
+#fp = 'C:/Users/sleblan2/Research/ORACLES/starzen/'
+#fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 
-# In[7]:
+# In[8]:
 
 
 vr = 'R2'
 
 
-# In[8]:
+# In[9]:
 
 
 vv = 'v5'
@@ -1516,7 +1516,7 @@ CRE_aero = c['star_aero_CRE']['up'][:,2] -c['star_aero_CRE_clear']['up'][:,2]
 CRE_noaero = c['star_noaero_CRE']['up'][:,2] -c['star_noaero_CRE_clear']['up'][:,2] 
 
 
-# In[315]:
+# In[1]:
 
 
 ca = hs.loadmat(fp+'../ORACLES_CRE_aerosol_{}.mat'.format(vv))
@@ -1839,25 +1839,25 @@ print 'std aero: {}, no aero: {}'.format(np.nanstd(star_aero_rC[:,2]),np.nanstd(
 
 # ### Get the AOD
 
-# In[252]:
+# In[12]:
 
 
 ar.keys()
 
 
-# In[254]:
+# In[13]:
 
 
 aca = hs.loadmat(fp+'acaod_index_{}.mat'.format('v5'))
 
 
-# In[255]:
+# In[14]:
 
 
 from load_utils import load_from_json
 
 
-# In[261]:
+# In[15]:
 
 
 aca['aero'] = {}
@@ -1866,13 +1866,13 @@ for ka in aca['files'].keys():
     aca['aero'][ka] = aa['aero']
 
 
-# In[262]:
+# In[16]:
 
 
 aca['aero']['1']['z_arr']
 
 
-# In[263]:
+# In[17]:
 
 
 aod = []
@@ -1893,6 +1893,108 @@ aod = np.array(aod)
 
 
 aod.shape
+
+
+# In[20]:
+
+
+aca['aero']['1']
+
+
+# ### plot the aerosol models
+
+# In[23]:
+
+
+aca['files']
+
+
+# In[41]:
+
+
+plt.figure()
+plt.plot(aca['aero']['0']['wvl_arr'],aca['aero']['0']['ext'][0,:],'x-',label='05aod')
+plt.plot(aca['aero']['1']['wvl_arr'],aca['aero']['1']['ext'][0,:],'+-',label='10aod')
+plt.plot(aca['aero']['2']['wvl_arr'],aca['aero']['2']['ext'][0,:],'s-',label='15aod')
+plt.plot(aca['aero']['3']['wvl_arr'],aca['aero']['3']['ext'][0,:],'v-',label='lowaod')
+plt.plot(aca['aero']['4']['wvl_arr'],aca['aero']['4']['ext'][0,:],'d-',label='midaod')
+plt.plot(aca['aero']['5']['wvl_arr'],aca['aero']['5']['ext'][0,:],'^-',label='65aod')
+plt.plot(aca['aero']['6']['wvl_arr'],aca['aero']['6']['ext'][0,:],'o-',label='80aod')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Extinction [km$^{{-1}}$]')
+plt.legend(frameon=False)
+plt.title('Above cloud Aerosol Model')
+plt.savefig(fp+'acaod_models_ext.png',dpi=600,transparent=True)
+
+
+# In[43]:
+
+
+plt.figure()
+plt.plot(aca['aero']['0']['wvl_arr'],aca['aero']['0']['ext'][0,:],'x-',label='05aod')
+plt.plot(aca['aero']['1']['wvl_arr'],aca['aero']['1']['ext'][0,:],'+-',label='10aod')
+plt.plot(aca['aero']['2']['wvl_arr'],aca['aero']['2']['ext'][0,:],'s-',label='15aod')
+plt.plot(aca['aero']['3']['wvl_arr'],aca['aero']['3']['ext'][0,:],'v-',label='lowaod')
+plt.plot(aca['aero']['4']['wvl_arr'],aca['aero']['4']['ext'][0,:],'d-',label='midaod')
+plt.plot(aca['aero']['5']['wvl_arr'],aca['aero']['5']['ext'][0,:],'^-',label='65aod')
+plt.plot(aca['aero']['6']['wvl_arr'],aca['aero']['6']['ext'][0,:],'o-',label='80aod')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Extinction [km$^{{-1}}$]')
+plt.yscale('log')
+plt.xscale('log')
+ax1 = plt.gca()
+ax1.set_xticks([200,350,500,600,750,1000,1500,2500,5000])
+ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+plt.grid()
+plt.legend(frameon=False)
+plt.title('Above cloud Aerosol Model')
+plt.savefig(fp+'acaod_models_ext_log.png',dpi=600,transparent=True)
+
+
+# In[42]:
+
+
+plt.figure()
+plt.plot(aca['aero']['0']['wvl_arr'],aca['aero']['0']['ssa'][0,:],'x-',label='05aod')
+plt.plot(aca['aero']['1']['wvl_arr'],aca['aero']['1']['ssa'][0,:],'+-',label='10aod')
+plt.plot(aca['aero']['2']['wvl_arr'],aca['aero']['2']['ssa'][0,:],'s-',label='15aod')
+plt.plot(aca['aero']['3']['wvl_arr'],aca['aero']['3']['ssa'][0,:],'v-',label='lowaod')
+plt.plot(aca['aero']['4']['wvl_arr'],aca['aero']['4']['ssa'][0,:],'d-',label='midaod')
+plt.plot(aca['aero']['5']['wvl_arr'],aca['aero']['5']['ssa'][0,:],'^-',label='65aod')
+plt.plot(aca['aero']['6']['wvl_arr'],aca['aero']['6']['ssa'][0,:],'o-',label='80aod')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Single Scattering Albedo')
+plt.xscale('log')
+ax1 = plt.gca()
+ax1.set_xticks([200,350,500,600,750,1000,1500,2500,5000])
+ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+plt.grid()
+plt.legend(frameon=False)
+plt.title('Above cloud Aerosol Model')
+plt.savefig(fp+'acaod_models_ssa_log.png',dpi=600,transparent=True)
+
+
+# In[44]:
+
+
+plt.figure()
+plt.plot(aca['aero']['0']['wvl_arr'],aca['aero']['0']['asy'][0,:],'x-',label='05aod')
+plt.plot(aca['aero']['1']['wvl_arr'],aca['aero']['1']['asy'][0,:],'+-',label='10aod')
+plt.plot(aca['aero']['2']['wvl_arr'],aca['aero']['2']['asy'][0,:],'s-',label='15aod')
+plt.plot(aca['aero']['3']['wvl_arr'],aca['aero']['3']['asy'][0,:],'v-',label='lowaod')
+plt.plot(aca['aero']['4']['wvl_arr'],aca['aero']['4']['asy'][0,:],'d-',label='midaod')
+plt.plot(aca['aero']['5']['wvl_arr'],aca['aero']['5']['asy'][0,:],'^-',label='65aod')
+plt.plot(aca['aero']['6']['wvl_arr'],aca['aero']['6']['asy'][0,:],'o-',label='80aod')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Asymmetry Parameter')
+plt.xscale('log')
+ax1 = plt.gca()
+ax1.set_xticks([200,350,500,600,750,1000,1500,2500,5000])
+ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+plt.grid()
+plt.legend(frameon=False)
+plt.title('Above cloud Aerosol Model')
+plt.savefig(fp+'acaod_models_asy_log.png',dpi=600,transparent=True)
 
 
 # ### Determine the DARE
