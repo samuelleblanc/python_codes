@@ -56,6 +56,19 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
+# In[ ]:
+
+
+from datetime import datetime
+from matplotlib import animation
+
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic(u'javascript', u'', u'IPython.notebook.kernel.execute(\'nb_name = "\' + IPython.notebook.notebook_name + \'"\')')
+
+
 # In[2]:
 
 
@@ -535,6 +548,8 @@ pl = Sp.plt_lut_zenrad(lut[im],range_variable='tausp',norm=False,lims=[0,60],cma
 
 # # Got through each parameter
 
+# ## All parameter definition
+
 # In[41]:
 
 
@@ -686,12 +701,6 @@ def display_animation(anim):
     return HTML(anim_to_html(anim))
 
 
-# In[38]:
-
-
-from matplotlib import animation
-
-
 # In[277]:
 
 
@@ -704,7 +713,7 @@ p.vertices[:,1]
 np.hstack([fit0_fn(wvln[i1000:i1077])[0],fit0_fn(wvln[i1000:i1077]),norm[i1000:i1077][-1],norm[i1000:i1077][:0:-1],norm[i1000:i1077][0],norm[i1000:i1077][0]])
 
 
-# In[135]:
+# In[255]:
 
 
 fig, line_og,line_nd,line_ft,line_cv,fill_pr = plt_param1(meas.sp[igood][0],meas.wvl)
@@ -749,19 +758,7 @@ def animate(i):
 
 anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(meas.utc[igood]), interval=20, blit=True)
 
-HTML(anim.to_jshtml())
-
-
-# In[136]:
-
-
-from datetime import datetime
-
-
-# In[137]:
-
-
-get_ipython().run_cell_magic(u'javascript', u'', u'IPython.notebook.kernel.execute(\'nb_name = "\' + IPython.notebook.notebook_name + \'"\')')
+#HTML(anim.to_jshtml())
 
 
 # In[138]:
@@ -868,7 +865,7 @@ lut[1].tausp.shape
 lut[1].sza[1]
 
 
-# In[143]:
+# In[254]:
 
 
 fig, line_og,line_nd,line_ft,line_cv,fill_pr = plt_param1(lut[1].sp[0,:,0,10,0],lut[1].wvl)
@@ -914,7 +911,7 @@ def animate(i):
 
 anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(lut[1].tausp), interval=10, blit=True)
 
-HTML(anim.to_jshtml())
+#HTML(anim.to_jshtml())
 
 
 # In[144]:
@@ -934,21 +931,500 @@ anim.save(fp+'starzen/Parameter1_LUT_{}.mp4'.format(vlut),writer=writer)
 
 # ## Parameter 2: Derivative at 1200 nm
 
-# In[ ]:
+# ### Define parameter
+
+# In[182]:
 
 
+def plt_param2(sp,wvl,fig=None):
+    from Sp_parameters import nanmasked
+    if not fig:
+        fig = plt.figure()
 
+
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1198 = np.argmin(abs(wvln-1198.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par2 = dsp[i1198]
+    
+    
+    ax1 = fig.add_subplot(2,1,1)
+    line_og = ax1.plot(wvln,spc,'.b',label='original')
+    line_sp = ax1.plot([wvln[i1198],wvln[i1198]],[spc[i1198],spc[i1198]],'ok')
+    ax1.set_ylabel('Radiance [W/m$^2$/nm/sr]')
+    ax1.set_ylim(0,300)
+    
+    ax2 = fig.add_subplot(2,1,2,sharex=ax1)
+    line_dsp = ax2.plot(wvln,dsp,'.k',label='Differential')
+    line_par = ax2.plot([wvln[i1198],wvln[i1198]],[par2,par2],'sg',label='Par2={:2.2f}'.format(par2)) 
+    ax2.set_xlim(970,1300)
+    ax2.set_ylim(-30,40)
+    ax2.set_ylabel('Derivative of\nnormalized radiance')
+    ax2.set_xlabel('Wavelength [nm]')
+    
+    plt.legend(frameon=False)
+    return fig, ax1,ax2,line_og[0],line_sp[0],line_dsp[0],line_par[0]
+
+
+# In[157]:
+
+
+sp = meas.sp[igood][0]
+wvl = meas.wvl
+
+
+# In[178]:
+
+
+plt_param2(meas.sp[igood][0],meas.wvl)
+
+
+# ### Plot the measurements
+
+# In[256]:
+
+
+fig, ax1,ax2,line_og,line_sp,line_dsp,line_par = plt_param2(meas.sp[igood][0],meas.wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_sp.set_data([], [])
+    line_dsp.set_data([], [])
+    line_par.set_data([], [])
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+def animate(i):
+    sp,wvl = meas.sp[igood][i],meas.wvl
+    ax1.set_title('For {} at UTC: {:2.4f}, sza:{:2.3f} and i: {}'.format(daystr,meas.utc[igood][i],meas.sza[igood][i][0],i))
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1198 = np.argmin(abs(wvln-1198.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par2 = dsp[i1198]
+    
+    line_og.set_data(wvln,spc)
+    line_sp.set_data([wvln[i1198],wvln[i1198]],[spc[i1198],spc[i1198]])
+    line_dsp.set_data(wvln,dsp)
+    line_par.set_data([wvln[i1198],wvln[i1198]],[par2,par2])
+    
+    line_par.set_label('Par2={:2.2f}'.format(par2))
+    ax2.legend(frameon=False)
+    
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(meas.utc[igood]), interval=20, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[186]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 2 animations for {}'.format(daystr),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[187]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter2_{}.mp4'.format(daystr),writer=writer)
+
+
+# ### Plot out the animation for the LUT
+
+# In[257]:
+
+
+fig, ax1,ax2,line_og,line_sp,line_dsp,line_par = plt_param2(lut[1].sp[0,:,0,10,0],lut[1].wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_sp.set_data([], [])
+    line_dsp.set_data([], [])
+    line_par.set_data([], [])
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+def animate(i):
+    sp,wvl = lut[1].sp[0,:,0,10,i],lut[1].wvl
+    ax1.set_title('Modeled For COD: {}, REF: {} $\\mu$m and i: {} at sza:{}'.format(lut[1].tausp[i],lut[1].refsp[10],i,lut[1].sza[1]))
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1198 = np.argmin(abs(wvln-1198.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par2 = dsp[i1198]
+    
+    line_og.set_data(wvln,spc)
+    line_sp.set_data([wvln[i1198],wvln[i1198]],[spc[i1198],spc[i1198]])
+    line_dsp.set_data(wvln,dsp)
+    line_par.set_data([wvln[i1198],wvln[i1198]],[par2,par2])
+    
+    line_par.set_label('Par2={:2.2f}'.format(par2))
+    ax2.legend(frameon=False)
+    
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(lut[1].tausp), interval=10, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[191]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 2 animations for LUT file {} for sza: {}'.format(fp_lut_mat.split('/')[-1],lut[1].sza[1]),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[192]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter2_LUT_{}.mp4'.format(vlut),writer=writer)
 
 
 # ## Parameter 3: Derivative at 1500 nm
 
-# In[ ]:
+# ### Define Parameter 3
+
+# In[205]:
 
 
+def plt_param3(sp,wvl,fig=None):
+    from Sp_parameters import nanmasked
+    if not fig:
+        fig = plt.figure()
 
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1493 = np.argmin(abs(wvln-1493.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par3 = dsp[i1493]
+    
+    ax1 = fig.add_subplot(2,1,1)
+    line_og = ax1.plot(wvln,spc,'.b',label='original')
+    line_sp = ax1.plot([wvln[i1493],wvln[i1493]],[spc[i1493],spc[i1493]],'ok')
+    ax1.set_ylabel('Radiance [W/m$^2$/nm/sr]')
+    ax1.set_ylim(0,150.0)
+    
+    ax2 = fig.add_subplot(2,1,2,sharex=ax1)
+    line_dsp = ax2.plot(wvln,dsp,'.k',label='Differential')
+    line_par = ax2.plot([wvln[i1493],wvln[i1493]],[par3,par3],'sg',label='Par3={:2.2f}'.format(par3)) 
+    ax2.set_xlim(1450,1650)
+    ax2.set_ylim(-20,20)
+    ax2.set_ylabel('Derivative of\nnormalized radiance')
+    ax2.set_xlabel('Wavelength [nm]')
+    
+    plt.legend(frameon=False)
+    return fig, ax1,ax2,line_og[0],line_sp[0],line_dsp[0],line_par[0]
+
+
+# In[206]:
+
+
+sp = meas.sp[igood][0]
+wvl = meas.wvl
+
+
+# In[208]:
+
+
+plt_param3(meas.sp[igood][0],meas.wvl)
+
+
+# ### Plot the measurements
+
+# In[258]:
+
+
+fig, ax1,ax2,line_og,line_sp,line_dsp,line_par = plt_param3(meas.sp[igood][0],meas.wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_sp.set_data([], [])
+    line_dsp.set_data([], [])
+    line_par.set_data([], [])
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+def animate(i):
+    sp,wvl = meas.sp[igood][i],meas.wvl
+    ax1.set_title('For {} at UTC: {:2.4f}, sza:{:2.3f} and i: {}'.format(daystr,meas.utc[igood][i],meas.sza[igood][i][0],i))
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1493 = np.argmin(abs(wvln-1493.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par3 = dsp[i1493]
+    
+    line_og.set_data(wvln,spc)
+    line_sp.set_data([wvln[i1493],wvln[i1493]],[spc[i1493],spc[i1493]])
+    line_dsp.set_data(wvln,dsp)
+    line_par.set_data([wvln[i1493],wvln[i1493]],[par3,par3])
+    
+    line_par.set_label('Par3={:2.2f}'.format(par3))
+    ax2.legend(frameon=False)
+    
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(meas.utc[igood]), interval=10, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[210]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 3 animations for {}'.format(daystr),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[211]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter3_{}.mp4'.format(daystr),writer=writer)
+
+
+# ### Plot the animations for the LUT
+
+# In[259]:
+
+
+fig, ax1,ax2,line_og,line_sp,line_dsp,line_par = plt_param3(lut[1].sp[0,:,0,10,0],lut[1].wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_sp.set_data([], [])
+    line_dsp.set_data([], [])
+    line_par.set_data([], [])
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+def animate(i):
+    sp,wvl = lut[1].sp[0,:,0,10,i],lut[1].wvl
+    ax1.set_title('Modeled For COD: {}, REF: {} $\\mu$m and i: {} at sza:{}'.format(lut[1].tausp[i],lut[1].refsp[10],i,lut[1].sza[1]))
+    spc, mask = nanmasked(sp)
+    wvln = wvl[mask]
+    i1000 = np.argmin(abs(wvln-1000.0))
+    i1493 = np.argmin(abs(wvln-1493.0))
+    norm2 = spc/spc[i1000]
+    dsp = smooth(deriv(norm2,wvln/1000.0),2,nan=False,old=True)
+
+    par3 = dsp[i1493]
+    
+    line_og.set_data(wvln,spc)
+    line_sp.set_data([wvln[i1493],wvln[i1493]],[spc[i1493],spc[i1493]])
+    line_dsp.set_data(wvln,dsp)
+    line_par.set_data([wvln[i1493],wvln[i1493]],[par3,par3])
+    
+    line_par.set_label('Par3={:2.2f}'.format(par3))
+    ax2.legend(frameon=False)
+    
+    return fig,ax1,ax2,line_og,line_sp,line_dsp,line_par
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(lut[1].tausp), interval=10, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[213]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 3 animations for LUT file {} for sza: {}'.format(fp_lut_mat.split('/')[-1],lut[1].sza[1]),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[214]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter3_LUT_{}.mp4'.format(vlut),writer=writer)
 
 
 # ## Parameter 4: Ratio between 1200 nm / 1237 nm
+
+# ### Define Parameter 4
+
+# In[243]:
+
+
+def plt_param4(sp,wvl,fig=None):
+    import Sp_parameters as Sp
+    import numpy as np
+    if not fig:
+        fig = plt.figure()
+
+    spc, mask = Sp.nanmasked(sp)
+    wvln = wvl[mask]
+    i1198 = np.argmin(abs(wvln-1198.0))
+    i1236 = np.argmin(abs(wvln-1236.0))
+    iws = np.where((wvln>=315.0)&(wvln<=940.0))[0]
+    norm = spc/np.nanmax(spc[iws]) 
+    par4 = norm[i1198]/norm[i1236]
+    
+    
+    line_og = plt.plot(wvln,norm,'.b',label='normed to max')
+    line_lo = plt.plot([wvln[i1198],wvln[i1198]],[norm[i1198],norm[i1198]],'sg',label='norm at 1200 nm')
+    line_loh = plt.axhline(norm[i1198],color='g')
+    line_lov = plt.axvline(wvln[i1198],color='g')
+    line_hi = plt.plot([wvln[i1236],wvln[i1236]],[norm[i1236],norm[i1236]],'sr',
+                       label='norm at 1236 nm\nPar4:{:2.2f}'.format(par4))
+    line_hih = plt.axhline(norm[i1236],color='r')
+    line_hiv = plt.axvline(wvln[i1236],color='r')
+    
+    plt.xlim(1100,1300)
+    plt.ylim(0,0.5)
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel('Normed Radiance to max')
+    plt.grid()
+    
+    plt.legend(frameon=False)
+    return fig, line_og[0],line_lo[0],line_loh,line_hi[0],line_hih
+
+
+# In[244]:
+
+
+fig,line_og,line_lo,line_loh,line_hi,line_hih = plt_param4(sp,wvl)
+
+
+# ### Plot the measurements
+
+# In[260]:
+
+
+fig,line_og,line_lo,line_loh,line_hi,line_hih = plt_param4(meas.sp[igood][0],meas.wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_lo.set_data([], [])
+    line_loh.set_data([],[])
+    line_hi.set_data([], [])
+    line_hih.set_data([],[])
+    return fig,line_og,line_lo,line_loh,line_hi,line_hih
+
+def animate(i):
+    sp,wvl = meas.sp[igood][i],meas.wvl
+    plt.title('For {} at UTC: {:2.4f}, sza:{:2.3f} and i: {}'.format(daystr,meas.utc[igood][i],meas.sza[igood][i][0],i))
+    spc, mask = Sp.nanmasked(sp)
+    wvln = wvl[mask]
+    i1198 = np.argmin(abs(wvln-1198.0))
+    i1236 = np.argmin(abs(wvln-1236.0))
+    iws = np.where((wvln>=315.0)&(wvln<=940.0))[0]
+    norm = spc/np.nanmax(spc[iws]) 
+    par4 = norm[i1198]/norm[i1236]
+    
+    line_og.set_data(wvln,norm)
+    line_lo.set_data([wvln[i1198],wvln[i1198]],[norm[i1198],norm[i1198]])
+    line_loh.set_data([0,1],[norm[i1198],norm[i1198]])
+    line_hi.set_data([wvln[i1236],wvln[i1236]],[norm[i1236],norm[i1236]])
+    line_hih.set_data([0,1],[norm[i1236],norm[i1236]])
+    line_hi.set_label('norm at 1236 nm\nPar4:{:2.2f}'.format(par4))
+    plt.legend(frameon=False)
+    
+    return fig,line_og,line_lo,line_loh,line_hi,line_hih
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(meas.utc[igood]), interval=10, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[247]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 4 animations for {}'.format(daystr),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[248]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter4_{}.mp4'.format(daystr),writer=writer)
+
+
+# ### Plot the animations for the LUT
+
+# In[261]:
+
+
+fig,line_og,line_lo,line_loh,line_hi,line_hih = plt_param4(lut[1].sp[0,:,0,10,0],lut[1].wvl)
+
+def init():
+    line_og.set_data([], [])
+    line_lo.set_data([], [])
+    line_loh.set_data([],[])
+    line_hi.set_data([], [])
+    line_hih.set_data([],[])
+    return fig,line_og,line_lo,line_loh,line_hi,line_hih
+
+def animate(i):
+    sp,wvl = lut[1].sp[0,:,0,10,i],lut[1].wvl
+    plt.title('Modeled For COD: {}, REF: {} $\\mu$m and i: {} at sza:{}'.format(lut[1].tausp[i],lut[1].refsp[10],i,lut[1].sza[1]))
+    spc, mask = Sp.nanmasked(sp)
+    wvln = wvl[mask]
+    i1198 = np.argmin(abs(wvln-1198.0))
+    i1236 = np.argmin(abs(wvln-1236.0))
+    iws = np.where((wvln>=315.0)&(wvln<=940.0))[0]
+    norm = spc/np.nanmax(spc[iws]) 
+    par4 = norm[i1198]/norm[i1236]
+    
+    line_og.set_data(wvln,norm)
+    line_lo.set_data([wvln[i1198],wvln[i1198]],[norm[i1198],norm[i1198]])
+    line_loh.set_data([0,1],[norm[i1198],norm[i1198]])
+    line_hi.set_data([wvln[i1236],wvln[i1236]],[norm[i1236],norm[i1236]])
+    line_hih.set_data([0,1],[norm[i1236],norm[i1236]])
+    line_hi.set_label('norm at 1236 nm\nPar4:{:2.2f}'.format(par4))
+    plt.legend(frameon=False)
+    
+    return fig,line_og,line_lo,line_loh,line_hi,line_hih
+
+anim = animation.FuncAnimation(fig, animate,init_func=init,frames=len(lut[1].tausp), interval=10, blit=True)
+
+#HTML(anim.to_jshtml())
+
+
+# In[252]:
+
+
+metadata = dict(artist='Samuel LeBlanc',title='Parameter 4 animations for LUT file {} for sza: {}'.format(fp_lut_mat.split('/')[-1],lut[1].sza[1]),
+                comment='Created on {} with the program {}'.format(datetime.now(),nb_name))
+
+
+# In[253]:
+
+
+# Set up formatting for the movie files
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=10, metadata=metadata, bitrate=1800)
+anim.save(fp+'starzen/Parameter4_LUT_{}.mp4'.format(vlut),writer=writer)
+
+
+# ## Parameter 5: mean of normalized rad between 1248 nm - 1270 nm
 
 # In[ ]:
 
