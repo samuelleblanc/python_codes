@@ -46,7 +46,7 @@
 
 # # Import of modules
 
-# In[2]:
+# In[45]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -62,32 +62,32 @@ import hdf5storage as hs
 import Sp_parameters as Sp
 
 
-# In[3]:
+# In[46]:
 
 
 from path_utils import getpath
 
 
-# In[4]:
+# In[47]:
 
 
 from Sp_parameters import smooth
 
 
-# In[5]:
+# In[48]:
 
 
 fo = getpath('ORACLES')
 
 
-# In[6]:
+# In[49]:
 
 
 fp = fo+'starzen/'
 fp_plot = fo+'plot/'
 
 
-# In[7]:
+# In[50]:
 
 
 fp, fp_plot
@@ -101,13 +101,13 @@ fp, fp_plot
 #fp_plot = 'C:/Users/sleblan2/Research/ORACLES/plot/'
 
 
-# In[8]:
+# In[51]:
 
 
 vr = 'R2'
 
 
-# In[9]:
+# In[52]:
 
 
 vv = 'v5'
@@ -1104,16 +1104,29 @@ hs.savemat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vv),ar)
 
 # ## Optionally load the all ict file
 
-# In[130]:
+# In[53]:
 
 
 if not 'ar' in locals():
     ar = hs.loadmat(fp+'..//zen_ict/v5/{}_all_cld_ict.mat'.format(vr))
 
 
+# In[55]:
+
+
+ar.keys()
+
+
+# In[56]:
+
+
+plt.figure()
+plt.hist(ar['ref_err_fl'])
+
+
 # ## plot the data on a map
 
-# In[86]:
+# In[54]:
 
 
 import plotting_utils as pu
