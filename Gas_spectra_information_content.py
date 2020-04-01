@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[179]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -58,7 +58,7 @@ import plotting_utils as pu
 from path_utils import getpath
 import hdf5storage as hs
 from datetime import datetime
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import UnivariateSpline,interp1d
 import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as st
@@ -77,41 +77,41 @@ import hapi
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[7]:
 
 
 fp =getpath('4STAR_gas')
 
 
-# # Load files
+# # Load files for NO2
 
 # ## Using the HAPI hitran python API
 
-# In[24]:
+# In[8]:
 
 
 hapi.getHelp('tutorial')
 
 
-# In[26]:
+# In[9]:
 
 
 hapi.getHelp('data')
 
 
-# In[27]:
+# In[10]:
 
 
 hapi.db_begin('data')
 
 
-# In[32]:
+# In[11]:
 
 
 hapi.getHelp(hapi.fetch)
 
 
-# In[39]:
+# In[12]:
 
 
 hapi.fetch('NO2',0,1,29164,40798)
@@ -119,20 +119,20 @@ hapi.fetch('NO2',0,1,29164,40798)
 
 # ## Load the crosssection files directly
 
-# In[23]:
+# In[13]:
 
 
 no2_xsc = []
 len(no2_xsc)
 
 
-# In[ ]:
+# In[14]:
 
 
 fname = fp+'no2/NO2_294.0_0.0_15002.0-42002.3_00.xsc'
 
 
-# In[79]:
+# In[15]:
 
 
 def read_xsc(fname):
@@ -156,30 +156,68 @@ def read_xsc(fname):
     return header
 
 
-# In[80]:
+# In[16]:
 
 
 no2 = read_xsc(fp+'no2/NO2_294.0_0.0_15002.0-42002.3_00.xsc')
 
 
-# In[81]:
+# In[17]:
 
 
 no2
 
 
-# In[82]:
+# In[18]:
 
 
 plt.figure()
 plt.plot(no2['wv'],no2['xsc'])
 
 
-# In[83]:
+# In[19]:
 
 
 plt.figure()
 plt.plot(no2['nm'],no2['xsc'])
+
+
+# ## Count the peaks
+
+# In[20]:
+
+
+import scipy.signal as sig
+
+
+# In[76]:
+
+
+no2['nm'][10360]
+
+
+# In[77]:
+
+
+ip = sig.find_peaks(no2['xsc'],width=7,prominence=0.005*no2['xsc'][10360])[0]
+
+
+# In[78]:
+
+
+len(ip)
+
+
+# In[290]:
+
+
+plt.figure()
+plt.plot(no2['nm'],no2['xsc'],label='measured')
+plt.plot(no2['nm'][ip],no2['xsc'][ip],'.r',label='peaks')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Absorption Cross Section')
+plt.title('NO2 Absorption at 294K')
 
 
 # ## Make the Shannon information content function
@@ -210,14 +248,14 @@ no2s
 # 
 # ## Build the gaussian smoothing slit functions
 
-# In[104]:
+# In[50]:
 
 
 def gaussian( x, u , s):
     return 1./np.sqrt( 2. * np.pi * s**2 ) * np.exp(-1.0/2.0*((x-u)/s)**2.0)
 
 
-# In[115]:
+# In[51]:
 
 
 plt.figure()
@@ -227,26 +265,298 @@ plt.plot(no2['nm'],gaussian(no2['nm'],400.0,30.5)*no2['xsc']*100.0,'.',label='fi
 plt.legend(frameon=False)
 
 
-# In[122]:
+# In[52]:
 
 
 integrate.simps(gaussian(no2['nm'],400.0,30.5),no2['nm'])
 
 
-# In[120]:
+# In[53]:
 
 
 integrate.simps(gaussian(no2['nm'],400.0,30.5)*no2['xsc'],no2['nm'])
 
 
-# In[125]:
+# In[54]:
 
 
 i4 = np.argmin(abs(no2['nm']-400.0))
 no2['xsc'][i4],no2['nm'][i4]
 
 
-# In[130]:
+# In[95]:
+
+
+len(np.diff(no2['nm']))
+
+
+# In[88]:
+
+
+integrate.simps(gaussian(no2['nm'],400.0,0.1),no2['nm'])
+
+
+# ## Run through and convolve gaussian with cross sections
+
+# In[139]:
+
+
+fwhms = np.around(np.logspace(-1,0.75,40),2)
+
+
+# In[140]:
+
+
+fwhms
+
+
+# In[141]:
+
+
+nns = np.array([sig.convolve(no2['xsc'],gaussian(np.arange(0,400,0.1),200,fw),mode='same')*0.1 for fw in fwhms])
+
+
+# In[142]:
+
+
+nns.shape
+
+
+# In[143]:
+
+
+from mpltools import color
+
+
+# In[291]:
+
+
+plt.figure()
+plt.plot(no2['nm'],no2['xsc'],label='og',color='k')
+cmap = 'plasma'
+color.cycle_cmap(length=len(fwhms)+1,cmap=cmap,ax=plt.gca())
+for i,fw in enumerate(fwhms):
+    plt.plot(no2['nm'],nns[i,:],label='conv: fwhm {}'.format(fw))
+scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap(cmap))
+scalarmap.set_array(fwhms)
+plt.colorbar(scalarmap,ticks=[0.1,0.5,1.0,1.5,2.0,5.0])
+
+
+# In[148]:
+
+
+scalarmap.autoscale_None()
+
+
+# ### Get the number of peaks for full distribution
+
+# In[168]:
+
+
+peaks = [len(sig.find_peaks(nx,prominence=0.005*no2['xsc'][10360])[0]) for nx in nns] # for 0.5% in tranmistance giving ~0.005 OD   
+
+
+# In[157]:
+
+
+no2['nm'][-1]
+
+
+# In[171]:
+
+
+import matplotlib.ticker as mti
+
+
+# In[172]:
+
+
+plt.figure()
+plt.plot(fwhms,peaks,'x-')
+plt.yscale('log')
+plt.yticks([25,50,100,150,200,300,500,750,1000])
+plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+plt.grid()
+plt.xlabel('FWHM [nm]')
+plt.ylabel('Number of peaks')
+plt.title('Peaks in NO2 cross-section for {:3.1f} nm to {:3.1f} nm'.format(no2['nm'][-1],no2['nm'][0]))
+
+
+# ### Get the number of peaks for 4STAR retrieval [460 nm - 490 nm]
+
+# In[167]:
+
+
+nm_rt = (no2['nm']>460.0) & (no2['nm']<490.0) 
+
+
+# In[169]:
+
+
+peaks_rt = [len(sig.find_peaks(nx[nm_rt],prominence=0.005*no2['xsc'][10360])[0]) for nx in nns]
+
+
+# In[178]:
+
+
+plt.figure()
+plt.plot(fwhms,peaks_rt,'x-')
+plt.yscale('log')
+plt.yticks([5,10,25,50,100,150])
+plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+plt.grid()
+plt.xlabel('FWHM [nm]')
+plt.ylabel('Number of peaks')
+plt.title('Peaks in NO2 cross-section for 4STAR retrievals {:3.1f} nm to {:3.1f} nm'.format(no2['nm'][nm_rt][-1],no2['nm'][nm_rt][0]))
+
+
+# ### Now subset for changing sampling values
+
+# In[196]:
+
+
+dsp = np.arange(0.1,3.2,0.2)
+
+
+# In[197]:
+
+
+dsp
+
+
+# In[198]:
+
+
+np.arange(460,490+dsp[5],dsp[5])
+
+
+# In[276]:
+
+
+peaks_d = np.zeros((len(nns[:,0]),len(dsp)))+np.nan
+peaks_d2 = np.zeros((len(nns[:,0]),len(dsp)))+np.nan
+peaks_d3 = np.zeros((len(nns[:,0]),len(dsp)))+np.nan
+
+for ni,nx in enumerate(nns):
+    for di, d in enumerate(dsp):
+        fsp = interp1d(no2['nm'][nm_rt],nx[nm_rt],fill_value='extrapolate')
+        nxd = fsp(np.arange(460.0,490.0,d))
+        peaks_d[ni,di] = len(sig.find_peaks(nxd,prominence=0.005*no2['xsc'][10360])[0])
+        peaks_d2[ni,di] = len(sig.find_peaks(nxd,prominence=0.01*no2['xsc'][10360])[0])
+        peaks_d3[ni,di] = len(sig.find_peaks(nxd,prominence=0.02*no2['xsc'][10360])[0])
+
+
+# In[209]:
+
+
+peaks_d.shape
+
+
+# In[286]:
+
+
+plt.figure()
+plt.contourf(dsp, fwhms,peaks_d,66,cmap='nipy_spectral')
+plt.yscale('log')
+plt.xscale('log')
+plt.yticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0,5.0])
+plt.xticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0])
+plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+plt.gca().get_xaxis().set_major_formatter(mti.ScalarFormatter())
+plt.xlabel('Spectral sampling resolution [nm] (size of pixel)')
+plt.ylabel('FWHM [nm]')
+plt.title('NO2 number of peaks in 460 nm to 490 nm  at 0.5\% transmision uncertainty')
+plt.colorbar(label='Number of peaks')
+plt.plot(0.8,2.34,'rx')
+plt.annotate('4STAR',(0.8,2.34),color='r')
+
+
+cs = plt.contour(dsp, fwhms,peaks_d,[6,7,10,15,25,35,50])
+ac = plt.gca()
+ac.clabel(cs,inline=1, fontsize=10,fmt='%2.0f')
+
+plt.savefig(fp+'NO2_peaks_per_FWHM_and_sampling_log_unc05.png',dpi=600,transparent=True)
+
+
+# In[287]:
+
+
+plt.figure()
+plt.contourf(dsp, fwhms,peaks_d2,66,cmap='nipy_spectral')
+plt.yscale('log')
+plt.xscale('log')
+plt.yticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0,5.0])
+plt.xticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0])
+plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+plt.gca().get_xaxis().set_major_formatter(mti.ScalarFormatter())
+plt.xlabel('Spectral sampling resolution [nm] (size of pixel)')
+plt.ylabel('FWHM [nm]')
+plt.title('NO2 number of peaks in 460 nm to 490 nm at 1.0\% transmision uncertainty')
+plt.colorbar(label='Number of peaks')
+plt.plot(0.8,2.34,'rx')
+plt.annotate('4STAR',(0.8,2.34),color='r')
+
+
+cs = plt.contour(dsp, fwhms,peaks_d2,[6,7,10,15,25,35,50])
+ac = plt.gca()
+ac.clabel(cs,inline=1, fontsize=10,fmt='%2.0f')
+plt.savefig(fp+'NO2_peaks_per_FWHM_and_sampling_log_unc10.png',dpi=600,transparent=True)
+
+
+# In[288]:
+
+
+plt.figure()
+plt.contourf(dsp, fwhms,peaks_d3,66,cmap='nipy_spectral')
+plt.yscale('log')
+plt.xscale('log')
+plt.yticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0,5.0])
+plt.xticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0])
+plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+plt.gca().get_xaxis().set_major_formatter(mti.ScalarFormatter())
+plt.xlabel('Spectral sampling resolution [nm] (size of pixel)')
+plt.ylabel('FWHM [nm]')
+plt.title('NO2 number of peaks in 460 nm to 490 nm at 2.0\% transmision uncertainty')
+plt.colorbar(label='Number of peaks')
+plt.plot(0.8,2.34,'rx')
+plt.annotate('4STAR',(0.8,2.34),color='r')
+
+
+cs = plt.contour(dsp, fwhms,peaks_d3,[6,7,10,15,25,35,50])
+ac = plt.gca()
+ac.clabel(cs,inline=1, fontsize=10,fmt='%2.0f')
+plt.savefig(fp+'NO2_peaks_per_FWHM_and_sampling_log_unc20.png',dpi=600,transparent=True)
+
+
+# In[262]:
+
+
+plt.figure()
+plt.contourf(dsp, fwhms,peaks_d,66,cmap='nipy_spectral')
+
+#plt.yticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0,5.0])
+#plt.xticks([0.1,0.2,0.3,0.5,0.75,1.0,1.5,2.0,3.0])
+#plt.gca().get_yaxis().set_major_formatter(mti.ScalarFormatter())
+#plt.gca().get_xaxis().set_major_formatter(mti.ScalarFormatter())
+plt.xlim(0.1,1.5)
+plt.ylim(0.1,3.5)
+plt.xlabel('Spectral sampling resolution [nm] (size of pixel)')
+plt.ylabel('FWHM [nm]')
+plt.title('NO2 number of peaks in 460 nm to 490 nm')
+plt.colorbar(label='Number of peaks')
+plt.plot(0.8,2.34,'rx')
+plt.annotate('4STAR',(0.8,2.34),color='r')
+
+
+cs = plt.contour(dsp, fwhms,peaks_d,10)
+ac = plt.gca()
+ac.clabel(cs,inline=1, fontsize=10,fmt='%2.0f')
+plt.savefig(fp+'NO2_peaks_per_FWHM_and_sampling.png',dpi=600,transparent=True)
+
+
+# ## Old method
+
+# In[55]:
 
 
 def convolver(xsc,nm,fwhm):
@@ -259,7 +569,7 @@ def convolver(xsc,nm,fwhm):
     
 
 
-# In[129]:
+# In[56]:
 
 
 plt.figure()
@@ -274,25 +584,31 @@ plt.plot(no2['nm'],convolver(no2['xsc'],no2['nm'],2.0),label='FWHM 2.0 nm')
 plt.legend(frameon=False)
 
 
-# In[150]:
+# In[123]:
 
 
 fwhms = np.around(np.logspace(-1,0.75,20),2)
 
 
-# In[151]:
+# In[124]:
 
 
 fwhms
 
 
-# In[152]:
+# In[80]:
+
+
+convolver(no2['xsc'],no2['nm'],0.1)
+
+
+# In[59]:
 
 
 subsamp = [convolver(no2['xsc'],no2['nm'],fw) for fw in fwhms]    
 
 
-# In[153]:
+# In[ ]:
 
 
 sub_sic = [sic(s) for s in subsamp]
@@ -341,8 +657,27 @@ snr = 1.0/1000.0
 np.random.rand(len(no2['nm']))*no2['max_xsc']*snr
 
 
-# # Run analysis and prepare variables
-# Do some of the calculations to the data here
+# # Load files for SO2
+
+# ## Load the crossections
+
+# In[ ]:
+
+
+fnameso2 = fp+'Sulfur_Dioxide/SO2_298.1K-760.0Torr_500.0-6500.0_0.11_N2_618_43.txt'
+
+
+# In[ ]:
+
+
+so2 = read_xsc(fp+'no2/NO2_294.0_0.0_15002.0-42002.3_00.xsc')
+
 
 # # Plotting
 # Present some fo the early plots here
+
+# In[ ]:
+
+
+
+
