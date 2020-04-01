@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -59,7 +59,7 @@
 #  
 #      Written: by Samuel LeBlanc, NASA Ames
 
-# In[63]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -83,7 +83,7 @@ from path_utils import getpath
 #fp='C:/Users/sleblan2/Research/ARISE/'
 
 
-# In[43]:
+# In[8]:
 
 
 import matplotlib.cm as cm
@@ -94,13 +94,13 @@ import map_utils as mu
 import h5py
 
 
-# In[3]:
+# In[15]:
 
 
 fp = getpath('ARISE')
 
 
-# In[124]:
+# In[16]:
 
 
 get_ipython().magic(u'matplotlib notebook')
@@ -110,7 +110,7 @@ get_ipython().magic(u'matplotlib notebook')
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[5]:
+# In[18]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.4.hdf'
@@ -118,7 +118,7 @@ fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
 
-# In[6]:
+# In[19]:
 
 
 def plt_amsr(ax='None'):
@@ -140,7 +140,7 @@ def plt_amsr(ax='None'):
     return m
 
 
-# In[7]:
+# In[20]:
 
 
 def plt_amsr_cnt(ax='None'):
@@ -163,20 +163,14 @@ def plt_amsr_cnt(ax='None'):
     return m
 
 
-# In[125]:
+# In[21]:
 
 
 plt.figure()
 m = plt_amsr_cnt()
 
 
-# In[220]:
-
-
-cs
-
-
-# In[12]:
+# In[23]:
 
 
 m = plt_amsr()
@@ -246,27 +240,27 @@ plt_amsr_zoom()
 
 # ## Load C130 nav data
 
-# In[10]:
+# In[24]:
 
 
 fnav = fp+'c130/ARISE-C130-Hskping_c130_20140919_R1.ict'
 nav,nav_header = lm.load_ict(fnav,return_header=True)
 
 
-# In[11]:
+# In[25]:
 
 
 nav_header
 
 
-# In[12]:
+# In[26]:
 
 
 nav['Longitude'][nav['Longitude']==0.0] = np.NaN
 nav['Latitude'][nav['Latitude']<0.0] = np.NaN
 
 
-# In[14]:
+# In[27]:
 
 
 flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitude']<0.0))[0]
@@ -274,7 +268,7 @@ flt = np.where((nav['Start_UTC']>19.0) & (nav['Start_UTC']<23.0) & (nav['Longitu
 
 # ### Plots of nav data
 
-# In[13]:
+# In[28]:
 
 
 plt.figure()
@@ -2517,6 +2511,12 @@ plt.savefig(fp+'plots_v2/box_ice_wat_COD_ref_LWP_area.png',dpi=600,transparent=T
 
 # ## Add coud probes
 
+# In[ ]:
+
+
+
+
+
 # # CRE
 
 # ## Downwelling and upwelling irradiance
@@ -2879,4 +2879,10 @@ savemetapng(fp+'plots_v2/box_ice_wat_COD_ref_LWP_area.png','ARISE_cloud_edge_v2'
 
 
 getname()
+
+
+# In[ ]:
+
+
+
 
