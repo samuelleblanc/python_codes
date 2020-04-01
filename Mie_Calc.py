@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-# <nbformat>3.0</nbformat>
+#!/usr/bin/env python
+# coding: utf-8
 
-# <codecell>
+# In[ ]:
+
 
 """
 Collection of codes to calculate mie related value of liquid and ice cloud particles
@@ -11,14 +12,16 @@ can be found at:
 Leinonen, J., Python code for calculating Mie scattering from single- and dual-layered spheres. Available at http://code.google.com/p/pymiecoated/.
 """
 
-# <codecell>
 
-%config InlineBackend.rc = {}
+# In[54]:
+
+
+get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 from mpltools import color
-%matplotlib inline
+get_ipython().magic(u'matplotlib inline')
 import numpy as np
 import scipy
 import IPython
@@ -26,11 +29,11 @@ IPython.InteractiveShell.cache_size = 0
 import pymiecoated as pmie
 fp='C:/Users/sleblan2/Research/ARISE/'
 
-# <markdowncell>
 
 # Load/define the wavelenghts and refractive indices
 
-# <codecell>
+# In[2]:
+
 
 wavelen_liq = [0.4, 0.405, 0.41, 0.415, 0.42, 0.425, 0.43, 0.435, 0.44, 0.445, 
     0.45, 0.455, 0.46, 0.465, 0.47, 0.475, 0.48, 0.485, 0.49, 0.495, 0.5, 
@@ -337,17 +340,19 @@ refim_ice = [2.816e-09, 2.5172e-09, 2.2685e-09, 2.08e-09, 1.8828e-09, 1.6049e-09
     0.00094571, 0.00082948, 0.00073815, 0.00064749, 0.00055682, 0.00046615, 
     0.00042279, 0.00038332, 0.00034385, 0.00030438, 0.00028282, 0.00026589]
 
-# <headingcell level=2>
 
-# Define the radii to run through
+# ## Define the radii to run through
 
-# <codecell>
+# In[68]:
+
 
 r = np.arange(1,51)
 qext_ice = np.zeros((len(r),len(wavelen_ice)))
 qext_liq = np.zeros((len(r),len(wavelen_liq)))
 
-# <codecell>
+
+# In[70]:
+
 
 for ir,rr in enumerate(r):
     for iv,v in enumerate(wavelen_ice):
@@ -357,7 +362,9 @@ for ir,rr in enumerate(r):
         m = pmie.Mie(x=2*pi/v*rr,m=complex(refre_liq[iv],refim_liq[iv]))
         qext_liq[ir,iv] = m.qext()
 
-# <codecell>
+
+# In[55]:
+
 
 fig,ax = plt.subplots(1,2,figsize=(10,5))
 ax = ax.ravel()
@@ -382,7 +389,9 @@ cbar = plt.colorbar(scalarmap)
 cbar.set_label('Particle radius [$\\mu$m]')
 plt.savefig(fp+'plots/Q_ext_vs_lambda_ice_liq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[80]:
+
 
 wvls = [0.5,0.65,0.85,1.0,1.2,1.4,1.65]
 fig,ax = plt.subplots(1,2,figsize=(10,5))
@@ -410,22 +419,30 @@ ax[1].legend(bbox_to_anchor=(1.3,0.9))
 #cbar.set_label('Particle radius [$\\mu$m]')
 plt.savefig(fp+'plots/Q_ext_vs_radius_ice_liq.png',dpi=600,transparent=True)
 
-# <codecell>
+
+# In[88]:
+
 
 wavelen_liq[250]
 
-# <codecell>
+
+# In[95]:
+
 
 def func(x, a, c, d):
     return a*np.exp(-c*x)+d
 
-# <codecell>
+
+# In[101]:
+
 
 from scipy.optimize import curve_fit
 popt,pcov = curve_fit(func, r, qext_liq[:,250], p0=(1, 0.2, 1))
 print popt,pcov
 
-# <codecell>
+
+# In[106]:
+
 
 plt.plot(r,func(r,*popt),label='%1.4f e$^{(-%1.4f x)}$+%1.4f' % (popt[0],popt[1],popt[2]))
 plt.xlabel('Radius [$\\mu$m]')
