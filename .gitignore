@@ -51,3 +51,8 @@ flight_planning/*
 /flight_planning/
 flight_planning\
 jupyter_notebook_config.json
+data/*
+scratch/*
+data
+scratch
+4STARB_laser_lines_SteveB
