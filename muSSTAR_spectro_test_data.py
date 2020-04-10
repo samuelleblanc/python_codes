@@ -1,22 +1,22 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
 # Name:  
 # 
-#     ## insert name here
+#     muSSTAR_spectro_test_data
 # 
 # Purpose:  
 # 
-#     ## add description
+#     Test out the data from different spectrometers to be used with musstar
 #   
 # Input:
 # 
-#     ## inputs
+#     none
 #   
 # Output:
 # 
-#     ##variables, figures and save files...
+#     figures
 #   
 # Keywords:
 # 
@@ -36,7 +36,7 @@
 # Modification History:
 # 
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2019-05-18
-#     Modified: 
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2020-04-01
 
 # # Prepare python environment
 
@@ -69,19 +69,19 @@ import scipy.stats as st
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[6]:
+# In[5]:
 
 
 fp = getpath('musstar')
 
 
-# In[4]:
+# In[6]:
 
 
 import pandas as pd
 
 
-# # Load files for the Darks
+# # Load files for the Darks analysis of C11482
 
 # In[7]:
 
@@ -136,6 +136,8 @@ dat = pd.read_csv(f+'File_HiGain_50msec.csv',header=21)
 
 dat
 
+
+# ## Plot out the darks
 
 # In[24]:
 
@@ -225,7 +227,7 @@ plt.savefig(f+'Darks_1650nm.png',dpi=600,transparent=True)
 fs
 
 
-# # Load files for the direct beam
+# # Load files for the direct beam Hammamatsu data
 
 # In[81]:
 
@@ -262,6 +264,8 @@ for ff in ffd:
     sd.append(sp)
     
 
+
+# ## Plot the spectra
 
 # In[166]:
 
@@ -387,5 +391,171 @@ ffd[2]
 fs[8]
 
 
-# # Plotting
-# Present some fo the early plots here
+# # Load the files for analysis of C11486
+
+# In[10]:
+
+
+fu = fp+'spectro_testdata/C11486GA/'
+
+
+# In[11]:
+
+
+fsu = os.listdir(fu)
+
+
+# In[12]:
+
+
+fsu
+
+
+# In[ ]:
+
+
+pd.read_excel()
+
+
+# In[18]:
+
+
+du = []
+for u in fsu:
+    ddu = pd.read_excel(fu+u,header=22)
+    du.append(ddu)
+
+
+# In[23]:
+
+
+du[2].drop(0)
+
+
+# In[24]:
+
+
+du[1]['WaveLength']
+
+
+# In[35]:
+
+
+len(du[1].keys())
+
+
+# In[40]:
+
+
+sp = np.stack([du[1][i].drop(0) for i in range(1,len(du[1].keys())-4)])
+
+
+# In[41]:
+
+
+sp.shape
+
+
+# In[43]:
+
+
+wvl = du[1]['WaveLength'].drop(0).to_numpy()
+
+
+# In[55]:
+
+
+sp1 = np.stack([du[2][i].drop(0) for i in range(1,len(du[2].keys())-4)])
+
+
+# In[56]:
+
+
+wvl1 = du[2]['WaveLength'].drop(0).to_numpy()
+
+
+# ## Plot out some spectra
+
+# In[48]:
+
+
+from mpltools import color
+
+
+# In[75]:
+
+
+plt.figure()
+cmap = 'plasma'
+color.cycle_cmap(length=len(sp[35:,0])+1,cmap=cmap,ax=plt.gca())
+plt.plot(wvl,sp.T[:,35:])
+plt.ylabel('Digital Counts')
+plt.xlabel('Wavelength [nm]')
+scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap(cmap))
+scalarmap.set_array(range(len(sp[35:,0])))
+plt.colorbar(scalarmap)
+plt.plot(wvl1,np.nanmean(sp.T[:,35:],axis=1),'-k',label='mean')
+plt.plot(wvl1,np.nanmean(sp.T[:,35:],axis=1)-np.nanstd(sp.T[:,35:],axis=1),'--k',
+         label='std {:2.2f}\%'.format(np.nanstd(sp.T[:,35:],axis=1)[i1020]/np.nanmean(sp.T[:,35:],axis=1)[i1020]*100.0))
+plt.plot(wvl1,np.nanmean(sp.T[:,35:],axis=1)+np.nanstd(sp.T[:,35:],axis=1),'--k')
+plt.legend(frameon=False)
+plt.title('C11486GA spectrometer Low time integration')
+
+
+# In[52]:
+
+
+i1020 = np.argmin(abs(wvl-1020.0))
+i1240 = np.argmin(abs(wvl-1240.0))
+i1630 = np.argmin(abs(wvl-1630.0))
+
+
+# In[60]:
+
+
+plt.figure()
+plt.plot(sp[:,i1020],label='1020 nm')
+plt.plot(sp[:,i1240],label='1240 nm')
+plt.plot(sp[:,i1630],label='1630 nm')
+plt.legend()
+plt.ylabel('Digital Counts')
+plt.xlabel('Measurement number')
+
+
+# In[74]:
+
+
+plt.figure()
+cmap = 'plasma'
+color.cycle_cmap(length=len(sp1[25:,0])+1,cmap=cmap,ax=plt.gca())
+plt.plot(wvl1,sp1.T[:,25:])
+plt.ylabel('Digital Counts')
+plt.xlabel('Wavelength [nm]')
+scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap(cmap))
+scalarmap.set_array(range(len(sp1[25:,0])))
+plt.colorbar(scalarmap)
+plt.plot(wvl1,np.nanmean(sp1.T[:,25:],axis=1),'-k',label='mean')
+plt.plot(wvl1,np.nanmean(sp1.T[:,25:],axis=1)-np.nanstd(sp1.T[:,25:],axis=1),'--k',
+         label='std {:2.2f}\%'.format(np.nanstd(sp1.T[:,25:],axis=1)[i1020]/np.nanmean(sp1.T[:,25:],axis=1)[i1020]*100.0))
+plt.plot(wvl1,np.nanmean(sp1.T[:,25:],axis=1)+np.nanstd(sp1.T[:,25:],axis=1),'--k')
+plt.legend(frameon=False)
+plt.title('C11486GA spectrometer High time integration')
+
+
+# In[58]:
+
+
+plt.figure()
+plt.plot(sp1[:,i1020],label='1020 nm')
+plt.plot(sp1[:,i1240],label='1240 nm')
+plt.plot(sp1[:,i1630],label='1630 nm')
+plt.legend()
+plt.ylabel('Digital Counts')
+plt.xlabel('Measurement number')
+
+
+# In[ ]:
+
+
+
+
