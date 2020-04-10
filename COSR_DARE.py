@@ -57,7 +57,7 @@ import matplotlib.pyplot as plt
 import Sun_utils as su
 
 
-# In[2]:
+# In[195]:
 
 
 get_ipython().magic(u'matplotlib notebook')
@@ -76,7 +76,7 @@ from tqdm.notebook import tqdm
 
 
 name = 'COSR'
-vv = 'v2'
+vv = 'v3'
 
 
 # In[5]:
@@ -85,16 +85,16 @@ vv = 'v2'
 fp =getpath('COSR')
 
 
-# In[193]:
+# In[6]:
 
 
 day = '20180609'
-#day = '20180618'
+day = '20180618'
 #day = '20180624'
 #day = '20180625'
 
 
-# In[194]:
+# In[7]:
 
 
 #get the paths
@@ -105,85 +105,54 @@ fp_uv = getpath('uvspecb')+'uvspec'
 fp_librad = getpath('libradtranb')+'data/'
 
 
-# ## Setup command line interface
-
-# In[8]:
-
-
-import argparse
-
-
-# In[13]:
-
-
-long_description = """    Prepare or save the direct Aerosol radiative effect files for calculations. """
-
-
-# In[14]:
-
-
-parser = argparse.ArgumentParser(description=long_description)
-parser.add_argument('-doread','--doread',help='if set, will only read the output, not produce them',
-                    action='store_true')
-parser.add_argument('-d','--daystr',nargs='?',help='The day string (yyyymmdd) for the desired flight data. Defaults to 20180624')
-
-
-# In[15]:
-
-
-in_ = vars(parser.parse_args())
-do_read = in_.get('doread',False)
-day = in_.get('daystr','20180624')
-
-
 # # Load files
 
 # ## Load the in situ files
 
-# In[270]:
+# In[8]:
 
 
 situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
 
 
-# In[196]:
+# In[9]:
 
 
 situ
 
 
-# In[271]:
+# In[10]:
 
 
 insitu = situ.to_dict('list')
 
 
-# In[272]:
+# In[11]:
 
 
 insitu.keys()
 
 
-# In[273]:
+# In[12]:
 
 
 insitu['ssa_500nm'] = np.array(insitu['totScatCalc_500nm'])/np.array(insitu['extCalc500nm'])
 
 
-# In[274]:
+# In[13]:
 
 
-insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])/10.0
+insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
 
 
-# In[275]:
+# In[14]:
 
 
 gu = pd.to_datetime(situ['DateTimeUTC']).to_list()
 insitu['utc'] = np.array([g.hour+g.minute/60.0+g.second/3600.0 for g in gu])
 
 
-# In[276]:
+# In[15]:
 
 
 plt.figure()
@@ -195,7 +164,7 @@ plt.ylabel('SSA at 500 nm')
 plt.title('SSA from in situ calculated on: {}'.format(day))
 plt.ylim(0.5,1.0)
 plt.grid()
-plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
+#plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
 # In[634]:
@@ -215,57 +184,195 @@ plt.tight_layout()
 plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_transp_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[277]:
+# In[16]:
 
 
 ssa_insitu = Sp.smooth(insitu['ssa_500nm'],60,old=True)
 
 
-# In[278]:
+# In[898]:
 
 
 len(ssa_insitu)
 
 
+# ### Apply Altitude change filter
+
+# Need to load the 4STAR spectra, then run the next cell first
+
+# In[42]:
+
+
+f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
+insitu['alt'] = f_alt(insitu['utc'])
+
+
+# In[43]:
+
+
+plt.figure()
+plt.plot(insitu['utc'],Sp.smooth(insitu['ssa_500nm']*2000.0,60,old=True),'-r')
+plt.plot(insitu['utc'],insitu['totScat_550nm'],'.g')
+plt.plot(insitu['utc'],insitu['alt'])
+
+
+# In[46]:
+
+
+def running_std(x,n):
+    'Function to do a running standard deviation on array (x) with window size (n)'
+    q = x**2
+    try: 
+        q = np.convolve(q, np.ones((n, )), mode="valid")
+    except ValueError:
+        x = x.flatten()
+        q = x**2
+        q = np.convolve(q, np.ones((n, )), mode="valid")        
+    s = np.convolve(x, np.ones((n, )), mode="valid")
+    o = (q-s**2/n)/float(n-1)
+    return o 
+
+
+# In[49]:
+
+
+nbox=30
+
+
+# In[50]:
+
+
+std_alt = running_std(insitu['alt'],nbox)
+
+
+# In[51]:
+
+
+infl = np.where(std_alt<50)[0]
+infl_not = np.where(std_alt>50)[0]
+
+
+# In[52]:
+
+
+insitu['ssa_500nm'][infl].shape
+
+
+# In[53]:
+
+
+insitu['ssa_500nm'].shape
+
+
+# In[54]:
+
+
+ssa_in = insitu['ssa_500nm'][:]*2.0
+ssa_in[infl_not] = np.nan
+ssa_in = ssa_in/2.0
+
+
+# In[55]:
+
+
+ssa_in.shape
+
+
+# In[56]:
+
+
+#xout = np.convolve(x, np.ones(window)/window, 'same')
+window = 15
+xmasked, mask = Sp.nanmasked(ssa_in)
+fx = interpolate.interp1d(insitu['utc'][mask],xmasked,bounds_error=False)
+xinterp = fx(insitu['utc'])
+ssaout = np.convolve(xinterp, np.ones(window)/window, 'same')
+
+ssaout[~mask] = np.nan
+
+#ssaout = np.convolve(ssa_in,np.ones(30)/30,'same')
+
+
+# In[59]:
+
+
+fig,ax1 = plt.subplots()
+
+ax1.plot(insitu['utc'],insitu['alt'],label='alt all')
+ax1.plot(insitu['utc'][infl],insitu['alt'][infl],'ob',label='good alt')
+
+ax2 = ax1.twinx()
+ax2.plot(insitu['utc'],insitu['ssa_500nm'],'--k',label='ssa all')
+ax2.plot(insitu['utc'][infl],insitu['ssa_500nm'][infl],'xg',label='good ssa')
+ax2.plot(insitu['utc'],ssa_in,'.y',label='presmooth')
+ax2.plot(insitu['utc'],ssaout,'sc',label='smooth ssa')
+
+plt.legend()
+
+
+# In[60]:
+
+
+plt.figure(figsize=(7,2.5))
+plt.plot(insitu['utc'],insitu['ssa_500nm'],'.',color='lightgrey',alpha=0.3,label='calculated from CLAP+neph at 500 nm')
+plt.plot(insitu['utc'][infl],insitu['ssa_500nm'][infl],'.',alpha=0.3,label='Filtered for altitude changes')
+plt.plot(insitu['utc'],ssaout,'-',color='tab:red',label='smooth over 15s')
+plt.legend()
+plt.xlabel('UTC [h]')
+plt.ylabel('SSA at 500 nm')
+#plt.title('SSA from in situ calculated on: {}'.format(day))
+plt.ylim(0.45,1.0)
+plt.xlim(15.0,18.7)
+plt.grid()
+plt.tight_layout()
+plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_transp_filtered_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
+
+
+# In[61]:
+
+
+ssa_insitu = ssaout
+
+
 # ## Load the UHSAS files
 
-# In[279]:
+# In[62]:
 
 
 uh = sio.loadmat(fp+'data_other/{}_UHSAS_ECCC.mat'.format(day))
 
 
-# In[280]:
+# In[63]:
 
 
 uh.keys()
 
 
-# In[281]:
+# In[64]:
 
 
 uh['utc'] = lu.toutc(lu.mat2py_time(uh['t']))
 
 
-# In[282]:
+# In[65]:
 
 
 uh['utc'].shape
 
 
-# In[283]:
+# In[66]:
 
 
 uh['binDataConc'].sum(axis=1).shape
 
 
-# In[284]:
+# In[67]:
 
 
 uh['nConc'] = uh['binDataConc'].sum(axis=1)
 
 
-# In[452]:
+# In[68]:
 
 
 plt.figure()
@@ -366,13 +473,13 @@ mout['asy'] = mie_out[:,5]
 
 # ## Load the flt table
 
-# In[318]:
+# In[69]:
 
 
 fp
 
 
-# In[320]:
+# In[70]:
 
 
 flttable = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format(day))
@@ -384,38 +491,38 @@ flttable = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format(day))
 flttable
 
 
-# In[325]:
+# In[71]:
 
 
 fromtime = flttable['FromTime'][flttable['FlightType']=='in plume']
 
 
-# In[326]:
+# In[72]:
 
 
 totime = flttable['ToTime'][flttable['FlightType']=='in plume']
 
 
-# In[333]:
+# In[73]:
 
 
 tt = fromtime.to_numpy()
 
 
-# In[337]:
+# In[74]:
 
 
 tt[0].second
 
 
-# In[338]:
+# In[75]:
 
 
 def time_utc(x):
     return np.array([y.hour+y.minute/60.0+y.second/3600.0 for y in x])
 
 
-# In[340]:
+# In[76]:
 
 
 from_utc = time_utc(fromtime.to_numpy())
@@ -424,7 +531,7 @@ to_utc = time_utc(totime.to_numpy())
 
 # ## Load the 4STAR AOD
 
-# In[211]:
+# In[18]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
@@ -436,7 +543,7 @@ s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 s.keys()
 
 
-# In[213]:
+# In[19]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -457,19 +564,19 @@ plt.pcolor(s['w'],s['utc'],s['tau_aero'][:-1],cmap='gist_ncar',vmin=0,vmax=0.8)
 
 # ### use the polyfit aod on the wavelength array
 
-# In[214]:
+# In[20]:
 
 
 s['tau_aero_polynomial'].shape
 
 
-# In[215]:
+# In[21]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[47]:
+# In[22]:
 
 
 s['aod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -479,19 +586,19 @@ for i in xrange(len(s['utc'])):
                                          np.log(wvl)))
 
 
-# In[403]:
+# In[23]:
 
 
 s['aod'].shape
 
 
-# In[49]:
+# In[24]:
 
 
 s['aod'][10:-1:200,:].shape
 
 
-# In[55]:
+# In[25]:
 
 
 plt.figure()
@@ -505,19 +612,19 @@ plt.xlim(0.25,5)
 
 # ### Alternative build of tau aero polynomials for AOD
 
-# In[216]:
+# In[26]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[217]:
+# In[27]:
 
 
 sai = s['aerosolcols'][0,:].astype(int)
 
 
-# In[218]:
+# In[28]:
 
 
 plt.figure()
@@ -530,19 +637,19 @@ plt.plot(s['tau_aero'][:,400],'.')
 i=13884
 
 
-# In[220]:
+# In[29]:
 
 
 s['tau_aero'].shape
 
 
-# In[221]:
+# In[30]:
 
 
 s['w'].shape
 
 
-# In[222]:
+# In[31]:
 
 
 plt.figure()
@@ -646,20 +753,20 @@ plt.plot(s['w'][0,saii],s['tau_aero'][i,saii],'.')
 plt.ylim(0,0.5)
 
 
-# In[582]:
+# In[32]:
 
 
 saii = sai[((s['w'][0,sai]>0.364) & (s['w'][0,sai]<0.370)) | ((s['w'][0,sai]>0.435) & (s['w'][0,sai]<1.566)) | 
             ((s['w'][0,sai]>1.584) & (s['w'][0,sai]<1.597)) ]
 
 
-# In[224]:
+# In[33]:
 
 
 pl = su.logaod_polyfit(np.append(s['w'][0,saii],[2.2,2.7,3.5]),np.append(s['tau_aero'][i,saii],[s['tau_aero'][i,saii][-1]*2.0/3.0,s['tau_aero'][i,saii][-1]/2.0,s['tau_aero'][i,saii][-1]/4.0]),polynum=2)
 
 
-# In[553]:
+# In[34]:
 
 
 plt.figure()
@@ -674,13 +781,13 @@ plt.ylim(0.01,2)
 plt.xlim(0.3,5)
 
 
-# In[226]:
+# In[35]:
 
 
 from scipy import polyfit
 
 
-# In[760]:
+# In[36]:
 
 
 tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_aero_subtract_all'][i,saii][-1]*2.0/3.0,
@@ -688,19 +795,19 @@ tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_a
                           for i in xrange(len(s['t']))])
 
 
-# In[761]:
+# In[37]:
 
 
 poly = np.array([polyfit(np.log(np.append(s['w'][0,saii],[2.2,2.7,3.7])),np.log(aodd),2) for aodd in tau_aero_good])
 
 
-# In[229]:
+# In[38]:
 
 
 poly.shape
 
 
-# In[762]:
+# In[39]:
 
 
 s['paod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -708,7 +815,7 @@ for i in xrange(len(s['utc'])):
     s['paod'][i,:] = np.exp(np.polyval(poly[i,:],np.log(wvl)))
 
 
-# In[763]:
+# In[40]:
 
 
 plt.figure()
@@ -721,7 +828,7 @@ plt.ylim(0.01,10)
 plt.xlim(0.25,5)
 
 
-# In[232]:
+# In[77]:
 
 
 s['aod'] = s['paod']
@@ -729,13 +836,13 @@ s['aod'] = s['paod']
 
 # ### Load the flag files
 
-# In[233]:
+# In[78]:
 
 
 fmat = getpath('4STAR_data')
 
 
-# In[234]:
+# In[79]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -745,25 +852,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[235]:
+# In[80]:
 
 
 sf.keys()
 
 
-# In[236]:
+# In[81]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[237]:
+# In[82]:
 
 
 flag.shape
 
 
-# In[238]:
+# In[83]:
 
 
 sum(flag)
@@ -828,7 +935,7 @@ plt.grid()
 
 # ## Load the skyscan results
 
-# In[239]:
+# In[84]:
 
 
 sk_names = {
@@ -840,7 +947,7 @@ sk_names = {
     '20180705':'4STAR_20180705_061_SKYP.created_20190508_003930.ppl_lv15.mat'}
 
 
-# In[240]:
+# In[85]:
 
 
 sk_n = {
@@ -852,26 +959,26 @@ sk_n = {
     '20180705':'061'}
 
 
-# In[241]:
+# In[86]:
 
 
 fp_name = sk_names[day]#'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
 
 
-# In[242]:
+# In[87]:
 
 
 sky = sio.loadmat(fp+fp_name)
 sky.keys()
 
 
-# In[447]:
+# In[88]:
 
 
 sky['refractive_index_real_r']
 
 
-# In[448]:
+# In[89]:
 
 
 sky['refractive_index_imaginary_r']
@@ -914,7 +1021,7 @@ sky['g_tot'][-1]
 
 # ## Expand the sky scans results to longer wavelengths
 
-# In[551]:
+# In[90]:
 
 
 #wvl = np.array([0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,4.0])
@@ -967,19 +1074,19 @@ if day=='20180609':
     ssa = f_ssa(wvl)
 
 
-# In[287]:
+# In[91]:
 
 
 np.append(sky['ssa_total'][0,:],[sky['ssa_total'][0,-1]-0.008,sky['ssa_total'][0,-1]-0.002])
 
 
-# In[431]:
+# In[92]:
 
 
 sky['Wavelength'][:,0]
 
 
-# In[430]:
+# In[93]:
 
 
 sky['sfc_alb'][0,:]
@@ -1078,7 +1185,7 @@ plt.savefig(fp+'plots/AERO_prop_extrapolated_plusalb_{}_{}.png'.format(day,vv),d
 
 # ## Get the vertical dependence of the extinction
 
-# In[288]:
+# In[94]:
 
 
 f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
@@ -1099,14 +1206,14 @@ if day=='20180609':
     insitu['extCalc500nm'] = insitu['extCalc500nm']*10.0
 
 
-# In[289]:
+# In[95]:
 
 
 plt.figure()
 plt.plot(insitu['extCalc500nm'],insitu['alt'],'.')
 
 
-# In[74]:
+# In[96]:
 
 
 plt.figure()
@@ -1132,7 +1239,7 @@ plt.savefig(fp+'plots/Extinction_UTC_{}_{}.png'.format(day,vv),dpi=600,transpare
 np.isfinite(insitu['extCalc500nm'])
 
 
-# In[290]:
+# In[97]:
 
 
 binned_ext,binned_alt,binned_num = [],[],[]
@@ -1144,7 +1251,7 @@ for i in xrange(17):
         binned_num.append(len(insitu['extCalc500nm'][flaa]))
 
 
-# In[291]:
+# In[98]:
 
 
 plt.figure()
@@ -1181,7 +1288,7 @@ plt.title('In situ calculated extinction CLAP+neph: {}'.format(day))
 plt.savefig(fp+'plots/extinction_vertical_bins_clap_neph_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[292]:
+# In[99]:
 
 
 ext_z = ext_means[:,1]/1000.0
@@ -1189,31 +1296,31 @@ ext_ = ext_means[:,0]/1000.0
 aod_ = ext_.sum()/10.0
 
 
-# In[293]:
+# In[100]:
 
 
 ext_z = np.append(ext_z,ext_z[-1]+0.1)
 
 
-# In[294]:
+# In[101]:
 
 
 nz = len(ext_z)
 
 
-# In[295]:
+# In[102]:
 
 
 ext_ = np.append(ext_,ext_[-1]*0.0)
 
 
-# In[296]:
+# In[103]:
 
 
 ext_,aod_
 
 
-# In[717]:
+# In[104]:
 
 
 ext_
@@ -1222,7 +1329,13 @@ ext_
 # # Now build the input files for DARE calculations
 # 
 
-# In[297]:
+# In[105]:
+
+
+from write_utils import nearest_neighbor
+
+
+# In[106]:
 
 
 geo = {'zout':[0,3,100],'year':int(day[0:4]),'month':int(day[4:6]),'day':int(day[6:8]),'hour':12,'minute':0,'second':0}
@@ -1233,15 +1346,19 @@ albedo = {'create_albedo_file':True,'alb':alb,'alb_wvl':wvl*1000.0}
 cloud = {'dummy':None}
 
 
-# In[298]:
+# In[107]:
 
 
-fx_ssa_insitu = interp1d(insitu['utc'],ssa_insitu,bounds_error=False)
-ssa_u = fx_ssa_insitu(s['utc'])
-ssa_u[ssa_u<0.8] = np.nan
+# Old way with no altitude filtering
+if False:
+    fx_ssa_insitu = interp1d(insitu['utc'],ssa_insitu,bounds_error=False)
+    ssa_u = fx_ssa_insitu(s['utc'])
+    ssa_u[ssa_u<0.8] = np.nan
+else:
+    ssa_u = nearest_neighbor(insitu['utc'],ssa_insitu,s['utc'],dist=1/3600.0)
 
 
-# In[299]:
+# In[108]:
 
 
 def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
@@ -1263,13 +1380,15 @@ def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
     return exts 
 
 
-# In[300]:
+# In[109]:
 
 
 geo.pop('sza')
 
 
-# In[301]:
+# ## Write the input files
+
+# In[110]:
 
 
 file_list = file(fp_rtm+'COSR_DARE_list_file_{d}_{v}.sh'.format(d=day,v=vv),'w')
@@ -1336,7 +1455,7 @@ file_list_clean.close()
 print 'done'
 
 
-# In[302]:
+# In[111]:
 
 
 aero_base['z_arr']
@@ -1344,73 +1463,73 @@ aero_base['z_arr']
 
 # ## Run the files
 
-# In[454]:
+# In[112]:
 
 
-fp_file_list = fp_rtm+'COSR_DARE_list_file_{d}_{v}_b.sh'.format(d=day,v=vv)
-fp_file_list_clean = fp_rtm+'COSR_DARE_list_file_clean_{d}_{v}_b.sh'.format(d=day,v=vv)
+fp_file_list = fp_rtm+'COSR_DARE_list_file_{d}_{v}.sh'.format(d=day,v=vv)
+fp_file_list_clean = fp_rtm+'COSR_DARE_list_file_clean_{d}_{v}.sh'.format(d=day,v=vv)
 
 
-# In[455]:
+# In[113]:
 
 
 get_ipython().system(u' wc -l $fp_file_list')
 get_ipython().system(u' wc -l $fp_file_list_clean')
 
 
-# In[456]:
+# In[114]:
 
 
 fp_file_list_out = fp_file_list+'.out'
 fp_file_list_clean_out = fp_file_list_clean+'.out'
 
 
-# In[ ]:
+# In[115]:
 
 
 get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out.csv < $fp_file_list  #2> $fp_file_list_out')
 
 
-# In[458]:
+# In[175]:
 
 
-get_ipython().system(u'parallel --jobs=22 < $fp_file_list_clean 2> $fp_file_list_clean_out')
+get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out_cl.csv < $fp_file_list_clean ')
 
 
 # ## Now read the libradtran output files
 
-# In[661]:
+# In[176]:
 
 
 out = {'ssa':[],'asy':[],'ext':[],'albedo':alb,'aod':[],'alt':[],
        'sza':[],'utc':[],'lat':[],'lon':[],'wvl':wvl,'z_aero':aero_base['z_arr']}
 
 
-# In[662]:
+# In[177]:
 
 
 nzout = len(geo['zout'])
 
 
-# In[663]:
+# In[178]:
 
 
 fl = flag & (np.isfinite(ssa_u))
 
 
-# In[664]:
+# In[179]:
 
 
 nl = fl.sum()
 
 
-# In[665]:
+# In[180]:
 
 
 nut = len(np.arange(0,24,0.5))
 
 
-# In[666]:
+# In[181]:
 
 
 star_aero = {'dn':np.zeros((nl,nut,nzout))+np.nan,'up':np.zeros((nl,nut,nzout))+np.nan}
@@ -1419,9 +1538,16 @@ star_aero_C = np.zeros((nl,nut,nzout))+np.nan
 star_aero_C_avg = np.zeros((nl,nzout))+np.nan
 
 
-# In[667]:
+# In[164]:
 
 
+import pixiedust
+
+
+# In[182]:
+
+
+#%%pixie_debugger
 nu = len(s['utc'])
 pbar = tqdm(total=nu)
 out['utcx'] = np.arange(0,24,0.5)
@@ -1504,7 +1630,13 @@ out['up_clear'] = star_aero_cl['up']
 print 'done'
 
 
-# In[668]:
+# In[183]:
+
+
+out['dare_avg'][out['dare_avg']==0] = np.nan
+
+
+# In[184]:
 
 
 #star = wu.iterate_dict_unicode(out)
@@ -1515,43 +1647,43 @@ hs.savemat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv=vv),out)
 
 # # Now plot out the DARE for this flight
 
-# In[311]:
+# In[186]:
 
 
 out['dare'].shape
 
 
-# In[312]:
+# In[187]:
 
 
 out['aod'][:-1,3].shape
 
 
-# In[313]:
+# In[188]:
 
 
 out['dare_avg'].shape
 
 
-# In[672]:
+# In[189]:
 
 
 out['sza'][4000]
 
 
-# In[671]:
+# In[190]:
 
 
 out['dare'][4000,:,0]
 
 
-# In[676]:
+# In[191]:
 
 
 out['ext'][4230,:,3]
 
 
-# In[669]:
+# In[193]:
 
 
 plt.figure()
@@ -1569,7 +1701,7 @@ plt.title('Surface DARE from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_avg_aod_utc_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[316]:
+# In[196]:
 
 
 plt.figure()
@@ -1587,7 +1719,7 @@ plt.title('DARE from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_aod_utc_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[547]:
+# In[197]:
 
 
 plt.figure()
@@ -1603,14 +1735,14 @@ plt.savefig(fp+'plots/DARE_vs_SSA_{}.png'.format(day),dpi=600,transparent=True)
 
 # ## Plot compared to UHSAS
 
-# In[548]:
+# In[198]:
 
 
 fx_h = interp1d(uh['utc'],uh['nConc'],bounds_error=False)
 nConc = fx_h(out['utc'])
 
 
-# In[549]:
+# In[199]:
 
 
 plt.figure()
@@ -1635,7 +1767,13 @@ plt.ylabel('Instantaneous DARE [W/m$^2$]')
 
 # ## Plot filtered for in plume
 
-# In[360]:
+# In[1048]:
+
+
+out = out1
+
+
+# In[1049]:
 
 
 ipl = []
@@ -1653,7 +1791,7 @@ for ii, fo in enumerate(from_utc):
     alt_out = np.append(alt_out,out['alt'][~pl,0])
 
 
-# In[635]:
+# In[1050]:
 
 
 plt.figure()
@@ -1765,6 +1903,68 @@ for outi in [out1,out2,out3,out4]:
     plt.title('{}'.format(outi['daystr']))
 
 
+# ## Plot filtered for level legs
+
+# In[811]:
+
+
+nbox = 30
+
+
+# In[812]:
+
+
+std_alt1 = running_std(out1['alt'],nbox)
+
+
+# In[813]:
+
+
+plt.figure()
+plt.plot(out1['utc'],out1['alt'],'.',label='alt')
+plt.plot(out1['utc'][:1-nbox],std_alt1,'.',label='std box')
+plt.legend()
+
+
+# In[816]:
+
+
+falt = np.where(std_alt1<100.0)[0]
+
+
+# In[827]:
+
+
+fig, ax1 = plt.subplots()
+
+ax1.plot(out1['utc'],out1['alt'],'.',label='all')
+ax1.plot(out1['utc'][falt],out1['alt'][falt],'s',label='filetered')
+plt.legend()
+
+ax2 = ax1.twinx()
+ax2.plot(out1['utc'],out1['ssa'][:,7,3],'ok',label='ssa')
+ax2.plot(out1['utc'][falt],out1['ssa'][falt,7,3],'xg',label='good ssa')
+plt.legend()
+
+
+# In[819]:
+
+
+out1.keys()
+
+
+# In[820]:
+
+
+out1['ssa'].shape
+
+
+# In[823]:
+
+
+out1['z_aero'].shape
+
+
 # # Combine the DARE calc for all days
 
 # In[ ]:
@@ -1776,13 +1976,13 @@ day = '20180609'
 #day = '20180625'
 
 
-# In[370]:
+# In[999]:
 
 
 out1 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180609',vv=vv))
 
 
-# In[372]:
+# In[204]:
 
 
 out2 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180618',vv=vv))
@@ -1804,62 +2004,69 @@ out4 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180625',vv
 
 # ### 20180609
 
-# In[376]:
+# In[1069]:
 
 
 flttable1 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180609'))
 fromtime1 = flttable['FromTime'][flttable['FlightType']=='in plume']
 totime1 = flttable['ToTime'][flttable['FlightType']=='in plume']
+plumeid1 = flttable['PlumeId'][(flttable['PlumeId']=='A') | (flttable['PlumeId']=='B')].to_numpy()
 
 
-# In[377]:
+# In[1064]:
 
 
 def time_utc(x):
     return np.array([y.hour+y.minute/60.0+y.second/3600.0 for y in x])
 
 
-# In[378]:
+# In[1065]:
 
 
 from_utc1 = time_utc(fromtime1.to_numpy())
 to_utc1 = time_utc(totime1.to_numpy())
 
 
-# In[415]:
+# In[1072]:
 
 
 ipl1 = []
-dare_pl1 = []
+dare_pl1,dare_pl1a,dare_pl1b = [],[],[]
 alt_pl1 = []
 dare_out1 = []
 alt_out1 = []
-dare_pl1_toa, dare_out1_toa  = [],[]
+dare_pl1_toa,dare_pl1a_toa,dare_pl1b_toa, dare_out1_toa  = [],[],[],[]
 for ii, fo in enumerate(from_utc1):
     pl1 = (out1['utc']>=fo)&(out1['utc']<=to_utc1[ii])
     if pl1.any():
         alt_pl1 = np.append(alt_pl1,out1['alt'][pl1])
         dare_pl1 = np.append(dare_pl1,out1['dare_avg'][pl1,0])
         dare_pl1_toa = np.append(dare_pl1_toa,out1['dare_avg'][pl1,2])
+        if plumeid1[ii]=='A':
+            dare_pl1a = np.append(dare_pl1a,out1['dare_avg'][pl1,0])
+            dare_pl1a_toa = np.append(dare_pl1a_toa,out1['dare_avg'][pl1,2])
+        else:
+            dare_pl1b = np.append(dare_pl1b,out1['dare_avg'][pl1,0])
+            dare_pl1b_toa = np.append(dare_pl1b_toa,out1['dare_avg'][pl1,2])
         ipl1.append(pl1)
     dare_out1 = np.append(dare_out1,out1['dare_avg'][~pl1,0])
     dare_out1_toa = np.append(dare_out1_toa,out1['dare_avg'][~pl1,2])
     alt_out1 = np.append(alt_out1,out1['alt'][~pl1,0])
 
 
-# In[636]:
+# In[1004]:
 
 
 out1.keys()
 
 
-# In[643]:
+# In[1005]:
 
 
 ppl1 = np.array(ipl1).flatten()
 
 
-# In[715]:
+# In[1010]:
 
 
 # Plot out the input extinction and aod
@@ -1884,7 +2091,13 @@ for ii, fo in enumerate(from_utc1):
         
 
 
-# In[658]:
+# In[1009]:
+
+
+insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
+
+
+# In[1011]:
 
 
 fig = plt.figure()
@@ -1913,9 +2126,31 @@ ax3.set_ylabel('SSA')
 out1['ext'].shape
 
 
+# In[1073]:
+
+
+plt.figure()
+plt.hist([dare_out1,dare_pl1a,dare_pl1b],color=['r','g','b'],label=['Background','In plume A','In plume B'],
+         normed=True,bins=30)
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.title('Diurnally averaged Surface DARE for {}'.format(day))
+
+
+# In[1074]:
+
+
+plt.figure()
+plt.hist([dare_out1_toa,dare_pl1a_toa,dare_pl1b_toa],color=['r','g','b'],label=['Background','In plume A','In plume B'],
+         normed=True,bins=30)
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.title('Diurnally averaged TOA DARE for {}'.format(day))
+
+
 # ### 20180618
 
-# In[380]:
+# In[200]:
 
 
 flttable2 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180618'))
@@ -1923,38 +2158,62 @@ fromtime2 = flttable2['FromTime'][flttable2['FlightType']=='in plume']
 totime2 = flttable2['ToTime'][flttable2['FlightType']=='in plume']
 
 
-# In[401]:
+# In[209]:
+
+
+plumeid2 = flttable2['PlumeId'][(flttable2['PlumeId']=='A') | (flttable2['PlumeId']=='B')].to_numpy()
+
+
+# In[201]:
 
 
 flttable2
 
 
-# In[381]:
+# In[202]:
 
 
 from_utc2 = time_utc(fromtime2.to_numpy())
 to_utc2 = time_utc(totime2.to_numpy())
 
 
-# In[417]:
+# In[210]:
 
 
 ipl2 = []
 dare_pl2 = []
+dare_pl2a,dare_pl2b = [], []
 alt_pl2 = []
 dare_out2 = []
 alt_out2 = []
-dare_pl2_toa, dare_out2_toa  = [],[]
+dare_pl2_toa,dare_pl2a_toa,dare_pl2b_toa, dare_out2_toa  = [],[],[],[]
 for ii, fo in enumerate(from_utc2):
     pl2 = (out2['utc']>=fo)&(out2['utc']<=to_utc2[ii])
     if pl2.any():
         alt_pl2 = np.append(alt_pl2,out2['alt'][pl2])
-        dare_pl2 = np.append(dare_pl2,out2['dare_avg'][pl2[:-1],0])
-        dare_pl2_toa = np.append(dare_pl2_toa,out2['dare_avg'][pl2[:-1],2])
+        dare_pl2 = np.append(dare_pl2,out2['dare_avg'][pl2[:],0])
+        dare_pl2_toa = np.append(dare_pl2_toa,out2['dare_avg'][pl2[:],2])
+        if plumeid2[ii]=='A':
+            dare_pl2a = np.append(dare_pl2a,out2['dare_avg'][pl2,0])
+            dare_pl2a_toa = np.append(dare_pl2a_toa,out2['dare_avg'][pl2,2])
+        else:
+            dare_pl2b = np.append(dare_pl2b,out2['dare_avg'][pl2,0])
+            dare_pl2b_toa = np.append(dare_pl2b_toa,out2['dare_avg'][pl2,2])
         ipl2.append(pl2)
-    dare_out2 = np.append(dare_out2,out2['dare_avg'][~pl2[:-1],0])
-    dare_out2_toa = np.append(dare_out2_toa,out2['dare_avg'][~pl2[:-1],2])
+    dare_out2 = np.append(dare_out2,out2['dare_avg'][~pl2[:],0])
+    dare_out2_toa = np.append(dare_out2_toa,out2['dare_avg'][~pl2[:],2])
     alt_out2 = np.append(alt_out2,out2['alt'][~pl2,0])
+
+
+# In[211]:
+
+
+plt.figure()
+plt.hist([dare_out2,dare_pl2a,dare_pl2b],color=['r','g','b'],label=['Background','In plume A','In plume B'],
+         normed=True,bins=30)
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.title('Diurnally averaged Surface DARE for {}'.format(day))
 
 
 # ### 20180624
