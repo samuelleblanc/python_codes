@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[179]:
+# In[292]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -673,8 +673,59 @@ fnameso2 = fp+'Sulfur_Dioxide/SO2_298.1K-760.0Torr_500.0-6500.0_0.11_N2_618_43.t
 so2 = read_xsc(fp+'no2/NO2_294.0_0.0_15002.0-42002.3_00.xsc')
 
 
-# # Plotting
-# Present some fo the early plots here
+# # Load examples for KORUSAQ NO2
+# 
+
+# In[296]:
+
+
+fpk = getpath('KORUS')
+
+
+# In[311]:
+
+
+mrg,mrg_h = lu.load_ict(fpk+'data_other/korusaq-mrg01-dc8_merge_20160516_R6.ict',return_header=True)
+
+
+# In[314]:
+
+
+mrg.dtype.names
+
+
+# In[313]:
+
+
+flk = mrg['HAE_GPS_ALT']<1000.0
+
+
+# In[ ]:
+
+
+mrg['']
+
+
+# In[305]:
+
+
+plt.figure()
+plt.plot(mrg['NO2_MixingRatio'][flk])
+
+
+# In[308]:
+
+
+plt.figure()
+plt.hist(mrg['NO2_MixingRatio'][flk],range=(0,np.nanmax(mrg['NO2_MixingRatio'][flk])),bins=50)
+plt.yscale('log')
+
+
+# In[310]:
+
+
+mrg_h
+
 
 # In[ ]:
 
