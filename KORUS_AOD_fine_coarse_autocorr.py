@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -1163,4 +1163,10 @@ np.isfinite(autocor_c)
 
 
 autocor_c_ma[:,0]
+
+
+# In[ ]:
+
+
+
 
