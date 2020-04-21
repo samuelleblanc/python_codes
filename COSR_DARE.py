@@ -115,7 +115,7 @@ fp_librad = getpath('libradtranb')+'data/'
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 
 
-# In[152]:
+# In[ ]:
 
 
 s.keys()
@@ -339,7 +339,7 @@ plt.gca().set_position([box.x0, box.y0, box.width * 0.96, box.height])
 plt.savefig(fp+'plots/Good_AOD_spectra_examples_zoomed_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[752]:
+# In[ ]:
 
 
 s['w'][0,saii]
@@ -461,7 +461,7 @@ s['Alt'][i]
 situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
 
 
-# In[9]:
+# In[ ]:
 
 
 situ
@@ -844,7 +844,7 @@ fp
 flttable = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format(day))
 
 
-# In[323]:
+# In[ ]:
 
 
 flttable
@@ -1608,13 +1608,13 @@ fp_file_list_out = fp_file_list+'.out'
 fp_file_list_clean_out = fp_file_list_clean+'.out'
 
 
-# In[376]:
+# In[ ]:
 
 
 get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out.csv < $fp_file_list  #2> $fp_file_list_out')
 
 
-# In[377]:
+# In[ ]:
 
 
 get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out_cl.csv < $fp_file_list_clean ')
@@ -1662,7 +1662,7 @@ star_aero_C = np.zeros((nl,nut,nzout))+np.nan
 star_aero_C_avg = np.zeros((nl,nzout))+np.nan
 
 
-# In[164]:
+# In[ ]:
 
 
 import pixiedust
@@ -2549,7 +2549,7 @@ totime2 = flttable2['ToTime'][flttable2['FlightType']=='in plume']
 plumeid2 = flttable2['PlumeId'][(flttable2['PlumeId']=='A') | (flttable2['PlumeId']=='B')].to_numpy()
 
 
-# In[201]:
+# In[ ]:
 
 
 flttable2
@@ -2790,6 +2790,7 @@ for ii, fo in enumerate(from_utc4):
 
 
 # ## Plot the DAREs
+# Old Versions (Prior to Jan 2020) - Should not use  
 
 # In[412]:
 
