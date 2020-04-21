@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[ ]:
+# In[11]:
 
 
 import numpy as np
@@ -57,13 +57,13 @@ import matplotlib.pyplot as plt
 import Sun_utils as su
 
 
-# In[ ]:
+# In[12]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[ ]:
+# In[13]:
 
 
 import Run_libradtran as RL
@@ -72,29 +72,29 @@ import write_utils as wu
 from tqdm.notebook import tqdm
 
 
-# In[ ]:
+# In[14]:
 
 
 name = 'COSR'
 vv = 'v3b'
 
 
-# In[ ]:
+# In[15]:
 
 
 fp =getpath('COSR')
 
 
-# In[6]:
+# In[285]:
 
 
 day = '20180609'
 day = '20180618'
-#day = '20180624'
-#day = '20180625'
+day = '20180624'
+day = '20180625'
 
 
-# In[149]:
+# In[286]:
 
 
 #get the paths
@@ -109,19 +109,19 @@ fp_librad = getpath('libradtranb')+'data/'
 
 # ## Load the 4STAR AOD
 
-# In[8]:
+# In[287]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 
 
-# In[9]:
+# In[152]:
 
 
 s.keys()
 
 
-# In[10]:
+# In[288]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -135,7 +135,7 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 fmat = getpath('4STAR_data')
 
 
-# In[21]:
+# In[289]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -145,25 +145,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[22]:
+# In[290]:
 
 
 sf.keys()
 
 
-# In[23]:
+# In[291]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[24]:
+# In[292]:
 
 
 flag.shape
 
 
-# In[25]:
+# In[293]:
 
 
 sum(flag)
@@ -219,44 +219,44 @@ plt.xlim(0.25,5)
 
 # ### Alternative build of tau aero polynomials for AOD
 
-# In[14]:
+# In[294]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[15]:
+# In[295]:
 
 
 sai = s['aerosolcols'][0,:].astype(int)
 
 
-# In[28]:
+# In[298]:
 
 
 plt.figure()
 plt.plot(s['tau_aero'][:,400],'.')
 
 
-# In[16]:
+# In[296]:
 
 
 i=13884
 
 
-# In[17]:
+# In[297]:
 
 
 s['tau_aero'].shape
 
 
-# In[18]:
+# In[299]:
 
 
 s['w'].shape
 
 
-# In[31]:
+# In[300]:
 
 
 plt.figure()
@@ -266,7 +266,7 @@ plt.plot(s['w'][0,sai],s['tau_aero'][i,sai],'.')
 plt.ylim(0,0.5)
 
 
-# In[26]:
+# In[301]:
 
 
 np.where(flag)[0]
@@ -345,7 +345,7 @@ plt.savefig(fp+'plots/Good_AOD_spectra_examples_zoomed_{}.png'.format(day),dpi=6
 s['w'][0,saii]
 
 
-# In[583]:
+# In[302]:
 
 
 plt.figure()
@@ -354,20 +354,20 @@ plt.plot(s['w'][0,saii],s['tau_aero'][i,saii],'.')
 plt.ylim(0,0.5)
 
 
-# In[27]:
+# In[303]:
 
 
 saii = sai[((s['w'][0,sai]>0.364) & (s['w'][0,sai]<0.370)) | ((s['w'][0,sai]>0.435) & (s['w'][0,sai]<1.566)) | 
             ((s['w'][0,sai]>1.584) & (s['w'][0,sai]<1.597)) ]
 
 
-# In[28]:
+# In[304]:
 
 
 pl = su.logaod_polyfit(np.append(s['w'][0,saii],[2.2,2.7,3.5]),np.append(s['tau_aero'][i,saii],[s['tau_aero'][i,saii][-1]*2.0/3.0,s['tau_aero'][i,saii][-1]/2.0,s['tau_aero'][i,saii][-1]/4.0]),polynum=2)
 
 
-# In[34]:
+# In[305]:
 
 
 plt.figure()
@@ -382,13 +382,13 @@ plt.ylim(0.01,2)
 plt.xlim(0.3,5)
 
 
-# In[29]:
+# In[306]:
 
 
 from scipy import polyfit
 
 
-# In[30]:
+# In[307]:
 
 
 tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_aero_subtract_all'][i,saii][-1]*2.0/3.0,
@@ -396,19 +396,19 @@ tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_a
                           for i in xrange(len(s['t']))])
 
 
-# In[31]:
+# In[308]:
 
 
 poly = np.array([polyfit(np.log(np.append(s['w'][0,saii],[2.2,2.7,3.7])),np.log(aodd),2) for aodd in tau_aero_good])
 
 
-# In[32]:
+# In[309]:
 
 
 poly.shape
 
 
-# In[33]:
+# In[310]:
 
 
 s['paod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -416,7 +416,7 @@ for i in xrange(len(s['utc'])):
     s['paod'][i,:] = np.exp(np.polyval(poly[i,:],np.log(wvl)))
 
 
-# In[46]:
+# In[311]:
 
 
 plt.figure()
@@ -429,25 +429,25 @@ plt.ylim(0.01,10)
 plt.xlim(0.25,5)
 
 
-# In[47]:
+# In[312]:
 
 
 s['aod'] = s['paod']
 
 
-# In[110]:
+# In[313]:
 
 
 i=3778
 
 
-# In[113]:
+# In[314]:
 
 
 s['aod'][i,3]
 
 
-# In[115]:
+# In[315]:
 
 
 s['Alt'][i]
@@ -455,7 +455,7 @@ s['Alt'][i]
 
 # ## Load the in situ files
 
-# In[48]:
+# In[316]:
 
 
 situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
@@ -467,38 +467,38 @@ situ = pd.read_csv(fp+'data_other/{}_nephclap.csv'.format(day))
 situ
 
 
-# In[49]:
+# In[317]:
 
 
 insitu = situ.to_dict('list')
 
 
-# In[50]:
+# In[318]:
 
 
 insitu.keys()
 
 
-# In[51]:
+# In[319]:
 
 
 insitu['ssa_500nm'] = np.array(insitu['totScatCalc_500nm'])/np.array(insitu['extCalc500nm'])
 
 
-# In[52]:
+# In[320]:
 
 
 insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
 
 
-# In[53]:
+# In[321]:
 
 
 gu = pd.to_datetime(situ['DateTimeUTC']).to_list()
 insitu['utc'] = np.array([g.hour+g.minute/60.0+g.second/3600.0 for g in gu])
 
 
-# In[54]:
+# In[322]:
 
 
 plt.figure()
@@ -513,7 +513,7 @@ plt.grid()
 #plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[634]:
+# In[325]:
 
 
 plt.figure(figsize=(7,2.5))
@@ -524,19 +524,21 @@ plt.xlabel('UTC [h]')
 plt.ylabel('SSA at 500 nm')
 #plt.title('SSA from in situ calculated on: {}'.format(day))
 plt.ylim(0.45,1.0)
-plt.xlim(15.4,20.3)
+#plt.xlim(15.4,20.3)
+#plt.xlim(14.9,19.3)
+plt.xlim(14.7,23.5)
 plt.grid()
 plt.tight_layout()
 plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_transp_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[55]:
+# In[326]:
 
 
 ssa_insitu = Sp.smooth(insitu['ssa_500nm'],60,old=True)
 
 
-# In[56]:
+# In[327]:
 
 
 len(ssa_insitu)
@@ -546,23 +548,24 @@ len(ssa_insitu)
 
 # Need to load the 4STAR spectra, then run the next cell first
 
-# In[57]:
+# In[328]:
 
 
 f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
 insitu['alt'] = f_alt(insitu['utc'])
 
 
-# In[58]:
+# In[412]:
 
 
 plt.figure()
 plt.plot(insitu['utc'],Sp.smooth(insitu['ssa_500nm']*2000.0,60,old=True),'-r')
-plt.plot(insitu['utc'],insitu['totScat_550nm'],'.g')
+plt.plot(insitu['utc'],insitu['totScatCalc_500nm'],'.g')
+plt.plot(insitu['utc'],insitu['totAbsCalc_500nm'],'xy')
 plt.plot(insitu['utc'],insitu['alt'])
 
 
-# In[59]:
+# In[330]:
 
 
 def running_std(x,n):
@@ -579,38 +582,38 @@ def running_std(x,n):
     return o 
 
 
-# In[60]:
+# In[331]:
 
 
 nbox=30
 
 
-# In[61]:
+# In[332]:
 
 
 std_alt = running_std(insitu['alt'],nbox)
 
 
-# In[62]:
+# In[333]:
 
 
 infl = np.where(std_alt<50)[0]
 infl_not = np.where(std_alt>50)[0]
 
 
-# In[63]:
+# In[334]:
 
 
 insitu['ssa_500nm'][infl].shape
 
 
-# In[64]:
+# In[335]:
 
 
 insitu['ssa_500nm'].shape
 
 
-# In[65]:
+# In[336]:
 
 
 ssa_in = insitu['ssa_500nm'][:]*2.0
@@ -618,13 +621,13 @@ ssa_in[infl_not] = np.nan
 ssa_in = ssa_in/2.0
 
 
-# In[141]:
+# In[337]:
 
 
 ssa_in.shape
 
 
-# In[67]:
+# In[338]:
 
 
 #xout = np.convolve(x, np.ones(window)/window, 'same')
@@ -639,7 +642,7 @@ ssaout[~mask] = np.nan
 #ssaout = np.convolve(ssa_in,np.ones(30)/30,'same')
 
 
-# In[68]:
+# In[339]:
 
 
 fig,ax1 = plt.subplots()
@@ -656,7 +659,7 @@ ax2.plot(insitu['utc'],ssaout,'sc',label='smooth ssa')
 plt.legend()
 
 
-# In[69]:
+# In[340]:
 
 
 plt.figure(figsize=(7,2.5))
@@ -668,19 +671,22 @@ plt.xlabel('UTC [h]')
 plt.ylabel('SSA at 500 nm')
 #plt.title('SSA from in situ calculated on: {}'.format(day))
 plt.ylim(0.45,1.0)
-plt.xlim(15.5,20.2)
+#plt.xlim(15.0,18.5)
+#plt.xlim(14.9,19.3)
+
+plt.xlim(14.7,23.5)
 plt.grid()
 plt.tight_layout()
 plt.savefig(fp+'plots/SSA_500_CLAP_neph_smooth_transp_filtered_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[142]:
+# In[341]:
 
 
 ssa_insitu = ssaout
 
 
-# In[144]:
+# In[342]:
 
 
 plt.figure()
@@ -884,25 +890,25 @@ to_utc = time_utc(totime.to_numpy())
 
 # ## Load the solar spectrum
 
-# In[615]:
+# In[443]:
 
 
 fp_librad
 
 
-# In[616]:
+# In[444]:
 
 
 sol = np.genfromtxt(fp_librad+'solar_flux/kurudz_1.0nm.dat')
 
 
-# In[617]:
+# In[445]:
 
 
 sol.shape
 
 
-# In[619]:
+# In[446]:
 
 
 plt.figure()
@@ -928,7 +934,7 @@ plt.title('Kurudz solar spectrum [1nm]')
 plt.xlabel('Wavelength [nm]')
 
 
-# In[624]:
+# In[447]:
 
 
 plt.figure()
@@ -939,9 +945,36 @@ plt.xlabel('Wavelength [nm]')
 plt.grid()
 
 
+# In[448]:
+
+
+# relative forcing efficiency to focing efficiency from fresh aerosol milagro LeBlanc 2012 / Schmidt 2010.
+wvlm = np.array([400,500,600,680,780,850,1000,2500])
+effm = np.array([60.0,40.0,22.0,20.0,16.0,11.0,10.0,1.0])/100.0
+feffm = interp1d(wvlm,effm,bounds_error=False,fill_value='extrapolate',kind='linear')
+reffm = feffm(sol[:,0])
+
+
+# In[453]:
+
+
+plt.figure()
+plt.plot(sol[:,0],(sol[:,1]*reffm).cumsum()/sol[:,1].sum()*100.0,'.')
+plt.ylabel('Cumulative Irradiance [\%]')
+plt.title('Reduction of the Kurudz solar spectrum due to MILAGRO fresh aerosol')
+plt.xlabel('Wavelength [nm]')
+plt.grid()
+
+
+# In[450]:
+
+
+(sol[:,1]*reffm).sum()/sol[:,1].sum()*100.0
+
+
 # ## Load the skyscan results
 
-# In[129]:
+# In[343]:
 
 
 sk_names = {
@@ -953,7 +986,7 @@ sk_names = {
     '20180705':'4STAR_20180705_061_SKYP.created_20190508_003930.ppl_lv15.mat'}
 
 
-# In[130]:
+# In[344]:
 
 
 sk_n = {
@@ -965,26 +998,26 @@ sk_n = {
     '20180705':'061'}
 
 
-# In[131]:
+# In[345]:
 
 
 fp_name = sk_names[day]#'4STAR_20180624_135_SKYP.created_20190329_003621.ppl_lv15.mat'
 
 
-# In[132]:
+# In[346]:
 
 
 sky = sio.loadmat(fp+fp_name)
 sky.keys()
 
 
-# In[133]:
+# In[347]:
 
 
 sky['refractive_index_real_r']
 
 
-# In[134]:
+# In[348]:
 
 
 sky['refractive_index_imaginary_r']
@@ -1027,7 +1060,7 @@ sky['g_tot'][-1]
 
 # ## Expand the sky scans results to longer wavelengths
 
-# In[136]:
+# In[349]:
 
 
 #wvl = np.array([0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,4.0])
@@ -1043,7 +1076,7 @@ f_alb = interp1d(np.append(np.append([0.25,0.35],sky['Wavelength'][:,0]),[1.65,2
 alb = f_alb(wvl)
 
 
-# In[70]:
+# In[213]:
 
 
 # for 20180624 only
@@ -1056,7 +1089,7 @@ if day=='20180624':
     ssa = f_ssa(wvl)
 
 
-# In[162]:
+# In[350]:
 
 
 if day=='20180625':
@@ -1080,19 +1113,19 @@ if day=='20180609':
     ssa = f_ssa(wvl)
 
 
-# In[138]:
+# In[351]:
 
 
 np.append(sky['ssa_total'][0,:],[sky['ssa_total'][0,-1]-0.008,sky['ssa_total'][0,-1]-0.002])
 
 
-# In[139]:
+# In[352]:
 
 
 sky['Wavelength'][:,0]
 
 
-# In[140]:
+# In[353]:
 
 
 sky['sfc_alb'][0,:]
@@ -1191,7 +1224,7 @@ plt.savefig(fp+'plots/AERO_prop_extrapolated_plusalb_{}_{}.png'.format(day,vv),d
 
 # ## Get the vertical dependence of the extinction
 
-# In[86]:
+# In[354]:
 
 
 f_alt = interp1d(x=s['utc'],y=s['Alt'][:,0])
@@ -1212,21 +1245,21 @@ if day=='20180609':
     insitu['extCalc500nm'] = insitu['extCalc500nm']*10.0
 
 
-# In[293]:
+# In[355]:
 
 
 plt.figure()
 plt.plot(insitu['extCalc500nm'][infl],insitu['alt'][infl],'.')
 
 
-# In[87]:
+# In[90]:
 
 
 plt.figure()
 plt.plot(insitu['utc'],insitu['alt'])
 
 
-# In[88]:
+# In[356]:
 
 
 plt.figure()
@@ -1239,25 +1272,25 @@ plt.title('In Situ Extinction coefficients on {}'.format(day))
 plt.savefig(fp+'plots/Extinction_UTC_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[89]:
+# In[357]:
 
 
 insitu['utc'].shape,insitu['alt'].shape,insitu['extCalc500nm'].shape
 
 
-# In[90]:
+# In[358]:
 
 
 np.isfinite(insitu['extCalc500nm'])
 
 
-# In[119]:
+# In[359]:
 
 
 dz_bin = 200.0 #in meters
 
 
-# In[91]:
+# In[360]:
 
 
 binned_ext,binned_alt,binned_num = [],[],[]
@@ -1269,7 +1302,7 @@ for i in xrange(15):
         binned_num.append(len(insitu['extCalc500nm'][infl][flaa]))
 
 
-# In[92]:
+# In[361]:
 
 
 plt.figure(figsize=(7,3))
@@ -1320,7 +1353,7 @@ plt.tight_layout()
 plt.savefig(fp+'plots/extinction_vertical_bins_clap_neph_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[223]:
+# In[222]:
 
 
 ext_z = np.arange(binned_alt[0],binned_alt[-1]+2*dz_bin,dz_bin)/1000.0 # in km
@@ -1328,31 +1361,31 @@ fext_ = interp1d(ext_means[:,1]/1000.0,ext_means[:,0]/1000.0,fill_value=0.0,boun
 ext_ = fext_(ext_z) # in 1/km
 
 
-# In[224]:
+# In[362]:
 
 
 nz = len(ext_z)
 
 
-# In[225]:
+# In[363]:
 
 
 ext_z
 
 
-# In[226]:
+# In[364]:
 
 
 ext_
 
 
-# In[227]:
+# In[365]:
 
 
 dz_km = ext_z[1]-ext_z[0]
 
 
-# In[228]:
+# In[366]:
 
 
 dz_km = ext_z[1]-ext_z[0]
@@ -1362,7 +1395,7 @@ np.sum(ext_*dz_km)
 # ##  Calculate the extinction coefficient from 4STAR
 # Abandoned inquiry for now, did not seem feasible - no full column profile within center of plume
 
-# In[317]:
+# In[228]:
 
 
 s['w'][0,405]
@@ -1424,13 +1457,13 @@ plt.plot(s['tau_aero'][fl_ea,405],s['Alt'][fl_ea],'.')
 # # Now build the input files for DARE calculations
 # 
 
-# In[95]:
+# In[367]:
 
 
 from write_utils import nearest_neighbor
 
 
-# In[229]:
+# In[368]:
 
 
 geo = {'zout':[0,3,100],'year':int(day[0:4]),'month':int(day[4:6]),'day':int(day[6:8]),'hour':12,'minute':0,'second':0}
@@ -1441,7 +1474,7 @@ albedo = {'create_albedo_file':True,'alb':alb,'alb_wvl':wvl*1000.0}
 cloud = {'dummy':None}
 
 
-# In[230]:
+# In[369]:
 
 
 # Old way with no altitude filtering
@@ -1453,7 +1486,7 @@ else:
     ssa_u = nearest_neighbor(insitu['utc'],ssa_insitu,s['utc'],dist=1/3600.0)
 
 
-# In[232]:
+# In[370]:
 
 
 def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
@@ -1477,7 +1510,7 @@ def expand_ext_vert_and_spect(ext_,ext_z,aod_sp,alt,wvl):
     return exts 
 
 
-# In[233]:
+# In[371]:
 
 
 geo.pop('sza')
@@ -1485,7 +1518,7 @@ geo.pop('sza')
 
 # ## Write the input files
 
-# In[234]:
+# In[372]:
 
 
 file_list = file(fp_rtm+'COSR_DARE_list_file_{d}_{v}.sh'.format(d=day,v=vv),'w')
@@ -1554,34 +1587,34 @@ print 'done'
 
 # ## Run the files
 
-# In[235]:
+# In[373]:
 
 
 fp_file_list = fp_rtm+'COSR_DARE_list_file_{d}_{v}.sh'.format(d=day,v=vv)
 fp_file_list_clean = fp_rtm+'COSR_DARE_list_file_clean_{d}_{v}.sh'.format(d=day,v=vv)
 
 
-# In[236]:
+# In[374]:
 
 
 get_ipython().system(u' wc -l $fp_file_list')
 get_ipython().system(u' wc -l $fp_file_list_clean')
 
 
-# In[237]:
+# In[375]:
 
 
 fp_file_list_out = fp_file_list+'.out'
 fp_file_list_clean_out = fp_file_list_clean+'.out'
 
 
-# In[238]:
+# In[376]:
 
 
 get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out.csv < $fp_file_list  #2> $fp_file_list_out')
 
 
-# In[239]:
+# In[377]:
 
 
 get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/out_cl.csv < $fp_file_list_clean ')
@@ -1589,38 +1622,38 @@ get_ipython().system(u'parallel --jobs=22 --bar --results /scratch/output_dir/ou
 
 # ## Now read the libradtran output files
 
-# In[240]:
+# In[378]:
 
 
 out = {'ssa':[],'asy':[],'ext':[],'albedo':alb,'aod':[],'alt':[],
        'sza':[],'utc':[],'lat':[],'lon':[],'wvl':wvl,'z_aero':aero_base['z_arr']}
 
 
-# In[241]:
+# In[379]:
 
 
 nzout = len(geo['zout'])
 
 
-# In[242]:
+# In[380]:
 
 
 fl = flag & (np.isfinite(ssa_u))
 
 
-# In[243]:
+# In[381]:
 
 
 nl = fl.sum()
 
 
-# In[244]:
+# In[382]:
 
 
 nut = len(np.arange(0,24,0.5))
 
 
-# In[245]:
+# In[383]:
 
 
 star_aero = {'dn':np.zeros((nl,nut,nzout))+np.nan,'up':np.zeros((nl,nut,nzout))+np.nan}
@@ -1635,7 +1668,7 @@ star_aero_C_avg = np.zeros((nl,nzout))+np.nan
 import pixiedust
 
 
-# In[246]:
+# In[255]:
 
 
 #%%pixie_debugger
@@ -1725,19 +1758,19 @@ print 'done'
 
 # ### For too high data
 
-# In[326]:
+# In[258]:
 
 
 itoohigh = (out['alt'] >= ext_z[-3]*1000.0)[:,0]
 
 
-# In[327]:
+# In[259]:
 
 
 itoohigh
 
 
-# In[328]:
+# In[260]:
 
 
 out['dare'][itoohigh,:,:] = np.nan
@@ -1746,7 +1779,7 @@ out['dare_avg'][itoohigh,:] = np.nan
 
 # ### For zeros
 
-# In[247]:
+# In[261]:
 
 
 out['dare_avg'][out['dare_avg']==0] = np.nan
@@ -1754,7 +1787,7 @@ out['dare_avg'][out['dare_avg']==0] = np.nan
 
 # ## Save DARE to file
 
-# In[333]:
+# In[262]:
 
 
 #star = wu.iterate_dict_unicode(out)
@@ -1765,19 +1798,19 @@ hs.savemat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv=vv),out)
 
 # # Now plot out the DARE for this flight
 
-# In[249]:
+# In[263]:
 
 
 out['dare'].shape
 
 
-# In[250]:
+# In[264]:
 
 
 out['aod'][:-1,3].shape
 
 
-# In[251]:
+# In[265]:
 
 
 out['dare_avg'].shape
@@ -1785,7 +1818,7 @@ out['dare_avg'].shape
 
 # ## Plot selection of input/output variables
 
-# In[334]:
+# In[266]:
 
 
 plt.figure()
@@ -1821,7 +1854,7 @@ plt.ylabel('Altitude [km]')
 
 # ## Plots the DARE
 
-# In[335]:
+# In[267]:
 
 
 plt.figure()
@@ -1839,7 +1872,7 @@ plt.title('Surface DARE from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_avg_aod_utc_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[332]:
+# In[131]:
 
 
 plt.figure()
@@ -1857,7 +1890,7 @@ plt.title('DARE from Oil Sands on {}'.format(day))
 plt.savefig(fp+'plots/DARE_aod_utc_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[336]:
+# In[268]:
 
 
 plt.figure()
@@ -2114,19 +2147,19 @@ day = '20180609'
 #day = '20180625'
 
 
-# In[349]:
+# In[389]:
 
 
 out1 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180609',vv=vv))
 
 
-# In[347]:
+# In[134]:
 
 
 out2 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180618',vv=vv))
 
 
-# In[348]:
+# In[269]:
 
 
 out3 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180624',vv=vv))
@@ -2140,36 +2173,38 @@ out4 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180625',vv
 
 # ## Get the time tables 
 
-# ### 20180609
-
-# In[350]:
-
-
-flttable1 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180609'))
-fromtime1 = flttable['FromTime'][flttable['FlightType']=='in plume']
-totime1 = flttable['ToTime'][flttable['FlightType']=='in plume']
-plumeid1 = flttable['PlumeId'][(flttable['PlumeId']=='A') | (flttable['PlumeId']=='B')].to_numpy()
-
-
-# In[351]:
+# In[388]:
 
 
 def time_utc(x):
     return np.array([y.hour+y.minute/60.0+y.second/3600.0 for y in x])
 
 
-# In[352]:
+# ### 20180609
+
+# In[391]:
+
+
+flttable1 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180609'))
+fromtime1 = flttable1['FromTime'][flttable1['FlightType']=='in plume']
+totime1 = flttable1['ToTime'][flttable1['FlightType']=='in plume']
+plumeid1 = flttable1['PlumeId'][(flttable1['PlumeId']=='A') | (flttable1['PlumeId']=='B')].to_numpy()
+
+
+# In[392]:
 
 
 from_utc1 = time_utc(fromtime1.to_numpy())
 to_utc1 = time_utc(totime1.to_numpy())
 
 
-# In[353]:
+# In[434]:
 
 
 ipl1 = []
 dare_pl1,dare_pl1a,dare_pl1b = [],[],[]
+aod_pl1,aod_pl1a,aod_pl1b,aod_out1 = [],[],[],[]
+ssa_pl1,ssa_pl1a,ssa_pl1b,ssa_out1 = [],[],[],[]
 alt_pl1 = []
 dare_out1 = []
 alt_out1 = []
@@ -2180,25 +2215,45 @@ for ii, fo in enumerate(from_utc1):
         alt_pl1 = np.append(alt_pl1,out1['alt'][pl1])
         dare_pl1 = np.append(dare_pl1,out1['dare_avg'][pl1,0])
         dare_pl1_toa = np.append(dare_pl1_toa,out1['dare_avg'][pl1,2])
+        aod_pl1 = np.append(aod_pl1,out1['aod'][pl1,3])
+        ssa_pl1 = np.append(ssa_pl1,out1['ssa'][pl1,2,3])
         if plumeid1[ii]=='A':
             dare_pl1a = np.append(dare_pl1a,out1['dare_avg'][pl1,0])
             dare_pl1a_toa = np.append(dare_pl1a_toa,out1['dare_avg'][pl1,2])
+            aod_pl1a = np.append(aod_pl1a,out1['aod'][pl1,3])
+            ssa_pl1a = np.append(ssa_pl1a,out1['ssa'][pl1,2,3])
         else:
             dare_pl1b = np.append(dare_pl1b,out1['dare_avg'][pl1,0])
             dare_pl1b_toa = np.append(dare_pl1b_toa,out1['dare_avg'][pl1,2])
+            aod_pl1b = np.append(aod_pl1b,out1['aod'][pl1,3])
+            ssa_pl1b = np.append(ssa_pl1b,out1['ssa'][pl1,2,3])
         ipl1.append(pl1)
     dare_out1 = np.append(dare_out1,out1['dare_avg'][~pl1,0])
     dare_out1_toa = np.append(dare_out1_toa,out1['dare_avg'][~pl1,2])
     alt_out1 = np.append(alt_out1,out1['alt'][~pl1,0])
+    aod_out1 = np.append(aod_out1,out1['aod'][~pl1,3])
+    ssa_out1 = np.append(ssa_out1,out1['ssa'][~pl1,2,3])
 
 
-# In[354]:
+# In[394]:
 
 
 out1.keys()
 
 
-# In[355]:
+# In[436]:
+
+
+np.nanmean(aod_pl1a),np.nanmean(aod_pl1b),np.nanmean(aod_out1)
+
+
+# In[437]:
+
+
+np.nanmean(ssa_pl1a),np.nanmean(ssa_pl1b),np.nanmean(ssa_out1)
+
+
+# In[395]:
 
 
 ppl1 = np.array(ipl1).flatten()
@@ -2264,7 +2319,7 @@ ax3.set_ylabel('SSA')
 out1['ext'].shape
 
 
-# In[389]:
+# In[428]:
 
 
 avgs1 = {'bmea':np.nanmean(dare_out1),'bmed':np.nanmedian(dare_out1),'bstd':np.nanstd(dare_out1),
@@ -2272,14 +2327,14 @@ avgs1 = {'bmea':np.nanmean(dare_out1),'bmed':np.nanmedian(dare_out1),'bstd':np.n
          'pbmea':np.nanmean(dare_pl1b),'pbmed':np.nanmedian(dare_pl1b),'pbstd':np.nanstd(dare_pl1b)}
 
 
-# In[387]:
+# In[438]:
 
 
 plt.figure(figsize=(7,3))
 plt.hist([dare_pl1a,dare_pl1b,dare_out1],color=['violet','silver','lightgreen'],
-         label=['In plume A, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs1),
-                'In plume B, {pbmea:2.2f} $\\pm$ {pbstd:2.2f} W/m$^2$'.format(**avgs1),
-                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs1)],
+         label=['In plume A, {pamea:2.1f} $\\pm$ {pastd:2.1f} W/m$^2$'.format(**avgs1),
+                'In plume B, {pbmea:2.1f} $\\pm$ {pbstd:2.1f} W/m$^2$'.format(**avgs1),
+                'Out of plume, {bmea:2.1f} $\\pm$ {bstd:2.1f} W/m$^2$'.format(**avgs1)],
          normed=True,bins=30)
 
 plt.legend(frameon=False)
@@ -2290,7 +2345,7 @@ plt.tight_layout()
 plt.savefig(fp+'plots/DARE_hist_surface_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[390]:
+# In[430]:
 
 
 avgs1_toa = {'bmea':np.nanmean(dare_out1_toa),'bmed':np.nanmedian(dare_out1_toa),'bstd':np.nanstd(dare_out1_toa),
@@ -2298,14 +2353,14 @@ avgs1_toa = {'bmea':np.nanmean(dare_out1_toa),'bmed':np.nanmedian(dare_out1_toa)
          'pbmea':np.nanmean(dare_pl1b_toa),'pbmed':np.nanmedian(dare_pl1b_toa),'pbstd':np.nanstd(dare_pl1b_toa)}
 
 
-# In[391]:
+# In[439]:
 
 
 plt.figure(figsize=(7,3))
 plt.hist([dare_pl1a_toa,dare_pl1b_toa,dare_out1_toa],color=['violet','silver','lightgreen'],
-         label=['In plume A, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs1_toa),
-                'In plume B, {pbmea:2.2f} $\\pm$ {pbstd:2.2f} W/m$^2$'.format(**avgs1_toa),
-                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs1_toa)],
+         label=['In plume A, {pamea:2.1f} $\\pm$ {pastd:2.1f} W/m$^2$'.format(**avgs1_toa),
+                'In plume B, {pbmea:2.1f} $\\pm$ {pbstd:2.1f} W/m$^2$'.format(**avgs1_toa),
+                'Out of plume, {bmea:2.1f} $\\pm$ {bstd:2.1f} W/m$^2$'.format(**avgs1_toa)],
          normed=True,bins=30)
 
 plt.legend(frameon=False)
@@ -2316,9 +2371,171 @@ plt.tight_layout()
 plt.savefig(fp+'plots/DARE_hist_TOA_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
+# In[399]:
+
+
+np.nanmean(dare_pl1a_toa[dare_pl1a_toa>(-15)]), np.nanmean(dare_pl1a_toa[dare_pl1a_toa<(-15)])
+
+
+# In[398]:
+
+
+fig = plt.figure()
+ax1 = fig.add_subplot(411)
+ax1.plot(out1['utc'],out1['dare_avg'][:,2],'.k',label='all')
+for ipp in ipl1:
+    ax1.plot(out1['utc'][ipp],out1['dare_avg'][ipp,2],'o')
+ax1.set_ylabel('DARE')
+    
+ax2 = fig.add_subplot(412,sharex = ax1)
+ax2.plot(out1['utc'],out1['aod'][:,0],'.k',label='all')
+for ipp in ipl1:
+    ax2.plot(out1['utc'][ipp],out1['aod'][ipp,0],'o')
+ax2.set_ylabel('AOD')
+    
+ax3 = fig.add_subplot(413,sharex = ax1)
+ax3.plot(out1['utc'],out1['ssa'][:,2,3],'.k',label='all')
+for ipp in ipl1:
+    ax3.plot(out1['utc'][ipp],out1['ssa'][ipp,2,3],'o')
+ax3.set_ylabel('SSA')
+
+ax4 = fig.add_subplot(414,sharex = ax1)
+ax4.plot(out1['utc'],out1['asy'][:,2,3],'.k',label='all')
+for ipp in ipl1:
+    ax4.plot(out1['utc'][ipp],out1['asy'][ipp,2,3],'o')
+ax4.set_ylabel('ASY')
+
+
+# #### Estimate the uncertainty in DARE
+
+# In[403]:
+
+
+import plotting_utils as pu
+
+
+# In[401]:
+
+
+out1['ssa'].shape
+
+
+# In[409]:
+
+
+plt.figure()
+plt.plot(out1['ssa'][:,2,3],out1['dare_avg'][:,0],'.',label='All data')
+pu.plot_lin(out1['ssa'][:,2,3],out1['dare_avg'][:,0],labels=True)
+plt.xlabel('SSA at 500 nm')
+plt.ylabel('DARE surface')
+plt.legend()
+
+
+# In[422]:
+
+
+np.nanmean(out1['ssa'][:,2,3])
+
+
+# In[425]:
+
+
+delta_ssa = 0.1*np.nanmean(out1['ssa'][:,2,3]) #assuming 10% uncertainty in SSA
+delta_dare_ssa = 40.41*delta_ssa
+delta_dare_ssa
+
+
+# In[410]:
+
+
+plt.figure()
+plt.plot(out1['aod'][:,3],out1['dare_avg'][:,0],'.',label='All data')
+pu.plot_lin(out1['aod'][:,3],out1['dare_avg'][:,0],labels=True)
+plt.xlabel('AOD at 500 nm')
+plt.ylabel('DARE surface')
+plt.legend()
+
+
+# In[442]:
+
+
+plt.figure()
+plt.plot(aod_pl1a,dare_pl1a,'.',color='violet',label='plume A')
+pu.plot_lin(aod_pl1a,dare_pl1a,color='violet',labels=True)
+plt.plot(aod_pl1b,dare_pl1b,'.',color='silver',label='plume B')
+pu.plot_lin(aod_pl1b,dare_pl1b,color='silver',labels=True)
+plt.plot(aod_out1,dare_out1,'.',color='lightgreen',label='out of plume')
+pu.plot_lin(aod_out1,dare_out1,color='lightgreen',labels=True)
+plt.legend()
+#color=['violet','silver','lightgreen']
+
+
+# In[426]:
+
+
+delta_aod = 0.02 #assuming 0.02 uncertainty in AOD
+delta_dare = -88.70*delta_aod
+delta_dare
+
+
+# In[433]:
+
+
+np.sqrt(delta_dare**2.0+delta_dare_ssa**2.0)
+
+
+# In[432]:
+
+
+np.sqrt((delta_dare_ssa*delta_ssa)**2.0+(delta_dare*delta_aod)**2.0)
+
+
+# In[418]:
+
+
+ac = 16.0
+sc = 500.0
+da = 3.2
+ds = 100.0
+dn = (1.0/(ac+sc)**2)
+up = np.sqrt((sc*da)**2+(ac*sc*ds)**2)
+
+
+# In[419]:
+
+
+up*dn
+
+
+# In[454]:
+
+
+out1['dn_clear'].shape
+
+
+# In[458]:
+
+
+out1['dn_clear'][0,:,0]*0.2412
+
+
+# In[460]:
+
+
+dare_milagro = np.nanmean(out1['dn_clear'][0,:,0] - out1['dn_clear'][0,:,0]*0.2412)
+dare_milagro
+
+
+# In[456]:
+
+
+plt.figure()
+plt.plot(out1['dn_clear'][0,:,2])
+
+
 # ### 20180618
 
-# In[200]:
+# In[135]:
 
 
 flttable2 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180618'))
@@ -2326,7 +2543,7 @@ fromtime2 = flttable2['FromTime'][flttable2['FlightType']=='in plume']
 totime2 = flttable2['ToTime'][flttable2['FlightType']=='in plume']
 
 
-# In[209]:
+# In[136]:
 
 
 plumeid2 = flttable2['PlumeId'][(flttable2['PlumeId']=='A') | (flttable2['PlumeId']=='B')].to_numpy()
@@ -2338,14 +2555,14 @@ plumeid2 = flttable2['PlumeId'][(flttable2['PlumeId']=='A') | (flttable2['PlumeI
 flttable2
 
 
-# In[202]:
+# In[139]:
 
 
 from_utc2 = time_utc(fromtime2.to_numpy())
 to_utc2 = time_utc(totime2.to_numpy())
 
 
-# In[210]:
+# In[140]:
 
 
 ipl2 = []
@@ -2373,20 +2590,61 @@ for ii, fo in enumerate(from_utc2):
     alt_out2 = np.append(alt_out2,out2['alt'][~pl2,0])
 
 
-# In[211]:
+# In[144]:
 
 
-plt.figure()
-plt.hist([dare_out2,dare_pl2a,dare_pl2b],color=['r','g','b'],label=['Background','In plume A','In plume B'],
+avgs2 = {'bmea':np.nanmean(dare_out2),'bmed':np.nanmedian(dare_out2),'bstd':np.nanstd(dare_out2),
+         'pamea':np.nanmean(dare_pl2a),'pamed':np.nanmedian(dare_pl2a),'pastd':np.nanstd(dare_pl2a),
+         'pbmea':np.nanmean(dare_pl2b),'pbmed':np.nanmedian(dare_pl2b),'pbstd':np.nanstd(dare_pl2b)}
+
+
+# In[146]:
+
+
+plt.figure(figsize=(7,3))
+plt.hist([dare_pl2a,dare_pl2b,dare_out2],color=['violet','silver','lightgreen'],
+         label=['In plume A, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs2),
+                'In plume B, {pbmea:2.2f} $\\pm$ {pbstd:2.2f} W/m$^2$'.format(**avgs2),
+                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs2)],
          normed=True,bins=30)
+
 plt.legend(frameon=False)
 plt.xlabel('DARE [W/m$^2$]')
+plt.ylabel('Normalized counts')
 plt.title('Diurnally averaged Surface DARE for {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plots/DARE_hist_surface_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
+
+
+# In[147]:
+
+
+avgs2_toa = {'bmea':np.nanmean(dare_out2_toa),'bmed':np.nanmedian(dare_out2_toa),'bstd':np.nanstd(dare_out2_toa),
+         'pamea':np.nanmean(dare_pl2a_toa),'pamed':np.nanmedian(dare_pl2a_toa),'pastd':np.nanstd(dare_pl2a_toa),
+         'pbmea':np.nanmean(dare_pl2b_toa),'pbmed':np.nanmedian(dare_pl2b_toa),'pbstd':np.nanstd(dare_pl2b_toa)}
+
+
+# In[148]:
+
+
+plt.figure(figsize=(7,3))
+plt.hist([dare_pl2a_toa,dare_pl2b_toa,dare_out2_toa],color=['violet','silver','lightgreen'],
+         label=['In plume A, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs2_toa),
+                'In plume B, {pbmea:2.2f} $\\pm$ {pbstd:2.2f} W/m$^2$'.format(**avgs2_toa),
+                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs2_toa)],
+         normed=True,bins=30)
+
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.ylabel('Normalized counts')
+plt.title('Diurnally averaged TOA DARE for {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plots/DARE_hist_TOA_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
 # ### 20180624
 
-# In[387]:
+# In[271]:
 
 
 flttable3 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180624'))
@@ -2394,14 +2652,14 @@ fromtime3 = flttable3['FromTime'][flttable3['FlightType']=='in plume']
 totime3 = flttable3['ToTime'][flttable3['FlightType']=='in plume']
 
 
-# In[388]:
+# In[272]:
 
 
 from_utc3 = time_utc(fromtime3.to_numpy())
 to_utc3 = time_utc(totime3.to_numpy())
 
 
-# In[418]:
+# In[273]:
 
 
 ipl3 = []
@@ -2420,6 +2678,77 @@ for ii, fo in enumerate(from_utc3):
     dare_out3 = np.append(dare_out3,out3['dare_avg'][~pl3,0])
     dare_out3_toa = np.append(dare_out3_toa,out3['dare_avg'][~pl3,0])
     alt_out3 = np.append(alt_out3,out3['alt'][~pl3,0])
+
+
+# In[274]:
+
+
+fig = plt.figure()
+ax1 = fig.add_subplot(311)
+ax1.plot(out3['utc'],out3['dare_avg'][:,0],'.k',label='all')
+for ipp in ipl3:
+    ax1.plot(out3['utc'][ipp],out3['dare_avg'][ipp,0],'o')
+ax1.set_ylabel('DARE')
+    
+ax2 = fig.add_subplot(312,sharex = ax1)
+ax2.plot(out3['utc'],out3['aod'][:,0],'.k',label='all')
+for ipp in ipl3:
+    ax2.plot(out3['utc'][ipp],out3['aod'][ipp,0],'o')
+ax2.set_ylabel('AOD')
+    
+ax3 = fig.add_subplot(313,sharex = ax1)
+ax3.plot(out3['utc'],out3['ssa'][:,2,3],'.k',label='all')
+for ipp in ipl3:
+    ax3.plot(out3['utc'][ipp],out3['ssa'][ipp,2,3],'o')
+ax3.set_ylabel('SSA')
+
+
+# In[278]:
+
+
+avgs3 = {'bmea':np.nanmean(dare_out3),'bmed':np.nanmedian(dare_out3),'bstd':np.nanstd(dare_out3),
+         'pamea':np.nanmean(dare_pl3),'pamed':np.nanmedian(dare_pl3),'pastd':np.nanstd(dare_pl3)}
+
+
+# In[282]:
+
+
+plt.figure(figsize=(7,3))
+plt.hist([dare_pl2,dare_out2],color=['violet','lightgreen'],
+         label=['In plume, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs2),
+                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs2)],
+         normed=True,bins=30)
+
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.ylabel('Normalized counts')
+plt.title('Diurnally averaged Surface DARE for {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plots/DARE_hist_surface_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
+
+
+# In[281]:
+
+
+avgs2_toa = {'bmea':np.nanmean(dare_out2_toa),'bmed':np.nanmedian(dare_out2_toa),'bstd':np.nanstd(dare_out2_toa),
+         'pamea':np.nanmean(dare_pl2_toa),'pamed':np.nanmedian(dare_pl2_toa),'pastd':np.nanstd(dare_pl2_toa)}
+
+
+# In[284]:
+
+
+plt.figure(figsize=(7,3))
+plt.hist([dare_pl2_toa,dare_out2_toa],color=['violet','lightgreen'],
+         label=['In plume, {pamea:2.2f} $\\pm$ {pastd:2.2f} W/m$^2$'.format(**avgs2_toa),
+                'Background, {bmea:2.2f} $\\pm$ {bstd:2.2f} W/m$^2$'.format(**avgs2_toa)],
+         normed=True,bins=30)
+
+plt.legend(frameon=False)
+plt.xlabel('DARE [W/m$^2$]')
+plt.ylabel('Normalized counts')
+plt.title('Diurnally averaged TOA DARE for {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plots/DARE_hist_TOA_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
 # ### 20180625
