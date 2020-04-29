@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Name:  
@@ -46,7 +46,7 @@
 # 
 #     Written: Samuel LeBlanc, NASA Ames, 2015-10-09
 
-# In[10]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -64,13 +64,13 @@ import Sp_parameters as Sp
 from path_utils import getpath
 
 
-# In[3]:
+# In[2]:
 
 
 from load_utils import mat2py_time, toutc
 
 
-# In[11]:
+# In[5]:
 
 
 # set the basic directory path
@@ -80,44 +80,44 @@ fp = getpath('SEAC4RS')
 
 # # Load the 4STAR starsun file
 
-# In[12]:
+# In[6]:
 
 
 fp
 
 
-# In[14]:
+# In[7]:
 
 
 os.path.isfile(fp+'dc8/20130816/20130816starsun_R2.mat')
 
 
-# In[15]:
+# In[12]:
 
 
-star = sio.loadmat(fp+'dc8/20130816/20130816starsun_R2.mat',variable_names=('w','tau_aero','t','Alt','Lat','Lon'))
+star = sio.loadmat(fp+'dc8/20130816/20130816starsun_R2.mat')#,variable_names=('w','tau_aero','t','Alt','Lat','Lon'))
 
 
-# In[4]:
+# In[ ]:
 
 
 star
 
 
-# In[16]:
+# In[14]:
 
 
 star.keys()
 
 
-# In[17]:
+# In[15]:
 
 
 star['tt'] = mat2py_time(star['t'])
 star['utc'] = toutc(star['tt'])
 
 
-# In[35]:
+# In[19]:
 
 
 plt.figure()
@@ -127,19 +127,19 @@ plt.plot(star['tt'][it2],star['Alt'][it2],'g+')
 plt.plot(star['tt'][it3],star['Alt'][it3],'yx')
 
 
-# In[20]:
+# In[16]:
 
 
 it = (star['utc']>14.5)&(star['utc']<14.8)
 
 
-# In[31]:
+# In[17]:
 
 
 it2 = (star['utc']>22.5)&(star['utc']<23.0)
 
 
-# In[53]:
+# In[18]:
 
 
 it3 = (star['utc']>21.65)&(star['utc']<21.85)
@@ -158,19 +158,19 @@ ax.set_ylabel('Altitude [km]')
 ax.set_xlabel('Wavelength [$\mu$m]')
 
 
-# In[22]:
+# In[21]:
 
 
 i515 = np.argmin(np.abs(star['w']-0.515))
 
 
-# In[23]:
+# In[22]:
 
 
 ii = np.where((star['Alt']>2100)&(star['utc']<14.75))[0][1]
 
 
-# In[24]:
+# In[23]:
 
 
 ii
@@ -205,20 +205,20 @@ plt.setp(ax.get_xticklabels(), visible=False)
 plt.savefig(fp+'plots\\AOD_Alt_profile_20130816.png',dpi=600,transparent=True)
 
 
-# In[43]:
+# In[24]:
 
 
 np.nanargmax(star['tau_aero'][it2,i515])
 
 
-# In[67]:
+# In[25]:
 
 
 import scipy.stats as st
 import scipy.interpolate as si
 
 
-# In[68]:
+# In[50]:
 
 
 def calc_binspline(aod,alt,dz,su=0.0006):
@@ -260,26 +260,39 @@ plt.axis((x1+0.05,x2+0.05,y1,y2))
 plt.savefig(fp+'Low_Alt_AOD_profile_20130816.png',dpi=600,transparent=True)
 
 
-# In[164]:
+# In[74]:
 
 
-star['Alt'][ii]
+plt.figure(figsize=(3,4))
+plt.plot(star['tau_aero'][it3,i515],star['Alt'][it3],'k.-',label='Airborne\naerosol')
+plt.plot(star['tau_tot_slant'][it3,i515]-star['tau_aero'][it3,i515],star['Alt'][it3],'r.-',label='Trace gas')
+plt.plot(star['tau_aero'][it2,i515][1325],[25.0],'bo',label='Ground\naerosol',markeredgecolor='None',markersize=30,alpha=0.5)
+new_aod = np.append(star['tau_aero'][it2,i515][1325],star['tau_aero'][it3,i515])
+new_alt = np.append([0.0],star['Alt'][it3])
+aod_spl,dz_spl = calc_binspline(new_aod,new_alt,100.0)
+plt.plot(aod_spl,dz_spl,'g--',label='Spline\ninterpolation')
+plt.fill_between([0.0,0.6],[380,380],[50,50],color='yellow',alpha=0.8,label='Not measured')
+plt.legend(frameon=True,numpoints=1,bbox_to_anchor=[1.08,1.0])
+plt.grid()
+plt.ylabel('Altitude [m]')
+plt.xlabel('Optical Depth @ 515 nm')
+#plt.yscale('log')
+plt.ylim(0,2500)
+plt.xticks([0.0,0.1,0.2,0.3,0.4])
+plt.xlim([0,0.5])
+plt.tight_layout()
+x1,x2,y1,y2 = plt.axis()
+plt.axis((x1+0.05,x2+0.05,y1,y2))
+
+plt.savefig(fp+'Proposal_Low_Alt_OD_profile_20130816.png',dpi=600,transparent=True)
 
 
-# In[148]:
+# In[64]:
 
 
 plt.figure()
-plt.plot(star['w'].flatten()*1000.0,star['tau_aero'][ii,:].flatten())
-plt.xlim([350,1650])
-plt.ylim([0,2.0])
-
-
-# In[117]:
-
-
-plt.figure()
-plt.plot(star['tau_aero'][it,i515],star['Alt'][it],'k.')
+plt.plot(star['tau_tot_slant'][it3,i515],star['Alt'][it3],'.')
+plt.plot(star['tau_tot_slant'][it3,i515]-star['tau_aero'][it3,i515],star['Alt'][it3],'.')
 
 
 # In[165]:
