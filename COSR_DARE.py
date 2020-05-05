@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[11]:
+# In[1]:
 
 
 import numpy as np
@@ -57,13 +57,13 @@ import matplotlib.pyplot as plt
 import Sun_utils as su
 
 
-# In[12]:
+# In[2]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[13]:
+# In[3]:
 
 
 import Run_libradtran as RL
@@ -72,14 +72,14 @@ import write_utils as wu
 from tqdm.notebook import tqdm
 
 
-# In[14]:
+# In[4]:
 
 
 name = 'COSR'
 vv = 'v3b'
 
 
-# In[15]:
+# In[5]:
 
 
 fp =getpath('COSR')
@@ -2138,7 +2138,7 @@ out1['z_aero'].shape
 
 # # Combine the DARE calc for all days
 
-# In[345]:
+# In[6]:
 
 
 day = '20180609'
@@ -2147,25 +2147,25 @@ day = '20180609'
 #day = '20180625'
 
 
-# In[389]:
+# In[7]:
 
 
 out1 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180609',vv=vv))
 
 
-# In[134]:
+# In[8]:
 
 
 out2 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180618',vv=vv))
 
 
-# In[269]:
+# In[9]:
 
 
 out3 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180624',vv=vv))
 
 
-# In[374]:
+# In[10]:
 
 
 out4 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180625',vv=vv))
@@ -2173,7 +2173,7 @@ out4 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180625',vv
 
 # ## Get the time tables 
 
-# In[388]:
+# In[11]:
 
 
 def time_utc(x):
@@ -2182,7 +2182,7 @@ def time_utc(x):
 
 # ### 20180609
 
-# In[391]:
+# In[12]:
 
 
 flttable1 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180609'))
@@ -2191,14 +2191,14 @@ totime1 = flttable1['ToTime'][flttable1['FlightType']=='in plume']
 plumeid1 = flttable1['PlumeId'][(flttable1['PlumeId']=='A') | (flttable1['PlumeId']=='B')].to_numpy()
 
 
-# In[392]:
+# In[13]:
 
 
 from_utc1 = time_utc(fromtime1.to_numpy())
 to_utc1 = time_utc(totime1.to_numpy())
 
 
-# In[434]:
+# In[14]:
 
 
 ipl1 = []
@@ -2235,31 +2235,31 @@ for ii, fo in enumerate(from_utc1):
     ssa_out1 = np.append(ssa_out1,out1['ssa'][~pl1,2,3])
 
 
-# In[394]:
+# In[15]:
 
 
 out1.keys()
 
 
-# In[436]:
+# In[16]:
 
 
 np.nanmean(aod_pl1a),np.nanmean(aod_pl1b),np.nanmean(aod_out1)
 
 
-# In[437]:
+# In[17]:
 
 
 np.nanmean(ssa_pl1a),np.nanmean(ssa_pl1b),np.nanmean(ssa_out1)
 
 
-# In[395]:
+# In[18]:
 
 
 ppl1 = np.array(ipl1).flatten()
 
 
-# In[356]:
+# In[19]:
 
 
 # Plot out the input extinction and aod
@@ -2290,7 +2290,7 @@ for ii, fo in enumerate(from_utc1):
 insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
 
 
-# In[357]:
+# In[20]:
 
 
 fig = plt.figure()
@@ -2313,13 +2313,19 @@ for ipp in ipl1:
 ax3.set_ylabel('SSA')
 
 
-# In[358]:
+# In[ ]:
+
+
+
+
+
+# In[21]:
 
 
 out1['ext'].shape
 
 
-# In[428]:
+# In[22]:
 
 
 avgs1 = {'bmea':np.nanmean(dare_out1),'bmed':np.nanmedian(dare_out1),'bstd':np.nanstd(dare_out1),
@@ -2345,7 +2351,7 @@ plt.tight_layout()
 plt.savefig(fp+'plots/DARE_hist_surface_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[430]:
+# In[23]:
 
 
 avgs1_toa = {'bmea':np.nanmean(dare_out1_toa),'bmed':np.nanmedian(dare_out1_toa),'bstd':np.nanstd(dare_out1_toa),
@@ -2371,13 +2377,51 @@ plt.tight_layout()
 plt.savefig(fp+'plots/DARE_hist_TOA_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[399]:
+# In[24]:
 
 
 np.nanmean(dare_pl1a_toa[dare_pl1a_toa>(-15)]), np.nanmean(dare_pl1a_toa[dare_pl1a_toa<(-15)])
 
 
-# In[398]:
+# In[27]:
+
+
+fig = plt.figure()
+ax1 = fig.add_subplot(411)
+ax1.plot(out1['utc'],out1['dare_avg'][:,2],'.k',label='all')
+for ii,ipp in enumerate(ipl1):
+    if plumeid1[ii]=='A':
+        ax1.plot(out1['utc'][ipp],out1['dare_avg'][ipp,2],'o',color='magenta')
+    else:
+        ax1.plot(out1['utc'][ipp],out1['dare_avg'][ipp,2],'o',color='grey')
+ax1.set_ylabel('DARE')
+    
+ax2 = fig.add_subplot(412,sharex = ax1)
+ax2.plot(out1['utc'],out1['aod'][:,0],'.k',label='all')
+for ii,ipp in enumerate(ipl1):
+    if plumeid1[ii]=='A':
+        ax2.plot(out1['utc'][ipp],out1['aod'][ipp,0],'o',color='magenta')
+    else:
+        ax2.plot(out1['utc'][ipp],out1['aod'][ipp,0],'o',color='grey')
+ax2.set_ylabel('AOD')
+    
+ax3 = fig.add_subplot(413,sharex = ax1)
+ax3.plot(out1['utc'],out1['ssa'][:,2,3],'.k',label='all')
+for ii,ipp in enumerate(ipl1):
+    if plumeid1[ii]=='A':
+        ax3.plot(out1['utc'][ipp],out1['ssa'][ipp,2,3],'o',color='magenta')
+    else:
+        ax3.plot(out1['utc'][ipp],out1['ssa'][ipp,2,3],'o',color='grey')
+ax3.set_ylabel('SSA')
+
+ax4 = fig.add_subplot(414,sharex = ax1)
+ax4.plot(out1['utc'],out1['asy'][:,2,3],'.k',label='all')
+for ipp in ipl1:
+    ax4.plot(out1['utc'][ipp],out1['asy'][ipp,2,3],'o')
+ax4.set_ylabel('ASY')
+
+
+# In[ ]:
 
 
 fig = plt.figure()
