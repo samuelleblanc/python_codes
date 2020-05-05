@@ -94,18 +94,18 @@ name = 'ORACLES'
 # In[7]:
 
 
-vv = 'v2'
+vv = 'v3'
 vr = 'R3'
 
 
-# In[8]:
+# In[123]:
 
 
 fp = getpath(name)
 fp_rtm = getpath('rtm')
-fp_uvspec = getpath('uvspec_bin')+'uvspec'
+fp_uvspec = getpath('uvspecb')+'uvspec'
 matfile = fp+'{}_all_cld_ict.mat'.format(vr)
-fp_uvspec_dat = getpath('uvspec_dat')
+fp_uvspec_dat = getpath('uvspec_dat') 
 fp_rtmdat = fp_rtm+'dat/'
 
 
@@ -158,50 +158,50 @@ ar['days']
 
 # ## Load the retrieved Cloud properties
 
-# In[16]:
+# In[219]:
 
 
 cl = hs.loadmat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv))
 
 
-# In[17]:
+# In[220]:
 
 
 cl.keys()
 
 
-# In[18]:
+# In[221]:
 
 
 cl['tau'].shape
 
 
-# In[19]:
+# In[222]:
 
 
 dds = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[20]:
+# In[223]:
 
 
 len(dds)
 
 
-# In[21]:
+# In[224]:
 
 
 cl['days']
 
 
-# In[22]:
+# In[225]:
 
 
 dd = np.unique(cl['days'])
 
 
-# In[23]:
+# In[226]:
 
 
 cod,ref = [],[]
@@ -216,19 +216,19 @@ for d in dd:
     ref = np.append(ref,ref_tmp)
 
 
-# In[24]:
+# In[227]:
 
 
 cod.shape
 
 
-# In[25]:
+# In[228]:
 
 
 len(dds)
 
 
-# In[26]:
+# In[229]:
 
 
 len(np.unique(ar['days']))
@@ -236,7 +236,7 @@ len(np.unique(ar['days']))
 
 # ## Load the skyscan retrievals
 
-# In[27]:
+# In[48]:
 
 
 try:
@@ -245,12 +245,18 @@ except:
     import h5py as h5
     f5 = h5.File(fp+'aeroinv_2016/netcdf4/4STAR-aeroinv_P3_2016_R0.nc','r')
     ae5 = {}
+    ae5_dict = {}
     for ka,kd in f5.iteritems():
         ae5[ka] = kd.value
+        ae5_dict[ka] = {}
+        for kdict in kd.attrs.iteritems():
+            if type(kdict[1])!=type(np.array([])):
+                ae5_dict[ka][kdict[0]] = kdict[1]
     ae = ae5
+    ae_dict = ae5_dict
 
 
-# In[28]:
+# In[43]:
 
 
 ke = ae.keys()
@@ -258,62 +264,68 @@ ke.sort()
 ke
 
 
-# In[29]:
+# In[44]:
 
 
 ae['AOD_meas'][0]
 
 
-# In[30]:
+# In[49]:
+
+
+ae_dict['AAOD']
+
+
+# In[50]:
 
 
 ae_dict['SSA']
 
 
-# In[31]:
+# In[51]:
 
 
 ae['SSA'].shape
 
 
-# In[32]:
+# In[52]:
 
 
 ae_dict['time']
 
 
-# In[33]:
+# In[53]:
 
 
 ae['time']/3600.0
 
 
-# In[34]:
+# In[54]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[35]:
+# In[55]:
 
 
 ar['doy'] = np.array([datetime.strptime(days[int(d)],'%Y%m%d').timetuple().tm_yday for d in ar['days']])
 
 
-# In[36]:
+# In[56]:
 
 
 datetime.strptime(days[4],'%Y%m%d').timetuple().tm_yday
 
 
-# In[37]:
+# In[57]:
 
 
 ar['time_ae'] = ar['Start_UTC']+(24.0*(ar['doy']-244))
 
 
-# In[38]:
+# In[58]:
 
 
 ar['time_ae']
@@ -321,21 +333,21 @@ ar['time_ae']
 
 # # Prepare the base dict and defaults
 
-# In[39]:
+# In[230]:
 
 
 from datetime import datetime
 datetime(2015,11,17).timetuple().tm_yday
 
 
-# In[40]:
+# In[231]:
 
 
 # for all 4STAR aerosol arrays
 fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA'] & (ar['days']>2.0) 
 
 
-# In[41]:
+# In[232]:
 
 
 # for the cod and ref arrays
@@ -343,25 +355,25 @@ fld = (ar['days']>2.0) & (ar['days']!=17.0)
 flb = (ar['flag_acaod'][fld]==1) & ar['fl'][fld] & ar['fl_QA'][fld]
 
 
-# In[42]:
+# In[233]:
 
 
 len(ar['AOD0355'][fla])
 
 
-# In[43]:
+# In[234]:
 
 
 len(cod[flb])
 
 
-# In[44]:
+# In[235]:
 
 
 sum(np.isfinite(cod[~flb])),sum(np.isfinite(cod[flb])),len(cod[flb])
 
 
-# In[45]:
+# In[236]:
 
 
 ka = ar.keys()
@@ -369,19 +381,19 @@ ka.sort()
 ka
 
 
-# In[46]:
+# In[237]:
 
 
 doy = datetime.strptime(dds[int(ar['days'][fla][0])],'%Y%m%d').timetuple().tm_yday
 
 
-# In[47]:
+# In[238]:
 
 
 doy
 
 
-# In[48]:
+# In[239]:
 
 
 geo = {'lat':ar['Latitude'][0],'lon':ar['Longitude'][0],'doy':doy,'zout':[0,1.5,100.0]}
@@ -392,7 +404,7 @@ source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'r
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
-# In[49]:
+# In[240]:
 
 
 cloud['phase'] = 'wc'
@@ -403,27 +415,27 @@ pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=False)
 cloud['moms_dict'] = pmom
 
 
-# In[50]:
+# In[241]:
 
 
 pmom['wvl'][0] = 0.250
 
 
-# In[51]:
+# In[242]:
 
 
 wvl = np.append(np.append([250.0],ae['wavelength']),4900.0)
 wvl
 
 
-# In[52]:
+# In[243]:
 
 
 aero = {'expand_hg':True,'disort_phase':False,'z_arr':[2.0,5.0],
         'wvl_arr':wvl}
 
 
-# In[53]:
+# In[244]:
 
 
 def fx_aero(aprop):
@@ -432,7 +444,7 @@ def fx_aero(aprop):
     return np.array([atmp,atmp])
 
 
-# In[54]:
+# In[245]:
 
 
 def fx_ext(a0,a1,a2,wvl=wvl):
@@ -442,19 +454,19 @@ def fx_ext(a0,a1,a2,wvl=wvl):
     return np.array([aod/3.0,aod*0.0])
 
 
-# In[55]:
+# In[246]:
 
 
 aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][0],ar['AOD_polycoef_a1'][fla][0],ar['AOD_polycoef_a2'][fla][0])
 
 
-# In[56]:
+# In[247]:
 
 
 aero['asy'] = fx_aero(ae['g_total'][0])
 
 
-# In[57]:
+# In[248]:
 
 
 aero['ssa'] = fx_aero(ae['SSA'][0])
@@ -462,7 +474,7 @@ aero['ssa'] = fx_aero(ae['SSA'][0])
 
 # ## Prepare the file list and saving
 
-# In[58]:
+# In[249]:
 
 
 def isjupyter():
@@ -482,7 +494,7 @@ def isjupyter():
 
 # ### Conventional
 
-# In[59]:
+# In[80]:
 
 
 # open the list file
@@ -491,7 +503,7 @@ fpp_in = fp_rtm+'input/{}_DARE_{}/'.format(name,vv)
 fpp_out = fp_rtm+'output/{}_DARE_{}/'.format(name,vv)
 
 
-# In[59]:
+# In[81]:
 
 
 if not os.path.isdir(fpp_in):
@@ -506,7 +518,19 @@ if not os.path.isdir(fpp_out):
 # for writing out the files
 
 
-# In[89]:
+# In[109]:
+
+
+ae['time']/3600.0
+
+
+# In[110]:
+
+
+ar['time_ae'][fla]
+
+
+# In[82]:
 
 
 if isjupyter():
@@ -550,7 +574,7 @@ f.close()
 
 # ### Multiprocessing
 
-# In[64]:
+# In[250]:
 
 
 def worker_init(verbose=True):
@@ -562,7 +586,7 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[66]:
+# In[251]:
 
 
 # open the list file
@@ -571,7 +595,7 @@ fpp_in = fp_rtm+'input/{}_DARE_{}/'.format(name,vv)
 fpp_out = fp_rtm+'output/{}_DARE_{}/'.format(name,vv)
 
 
-# In[67]:
+# In[252]:
 
 
 if not os.path.isdir(fpp_in):
@@ -580,7 +604,7 @@ if not os.path.isdir(fpp_out):
      os.mkdir(fpp_out)
 
 
-# In[168]:
+# In[253]:
 
 
 if isjupyter():
@@ -630,7 +654,7 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
 f.close()
 
 
-# In[169]:
+# In[254]:
 
 
 def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
@@ -642,22 +666,182 @@ def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
                                    verbose=False,make_base=False,set_quiet=True)
 
 
-# In[65]:
+# In[255]:
 
 
 p = Pool(cpu_count()-1,worker_init)
 
 
-# In[69]:
+# In[256]:
 
 
 len(bb)
 
 
-# In[174]:
+# In[257]:
 
 
 results = p.map(write_files,bb)
+
+
+# ### Test out using fifo instead of files
+
+# In[119]:
+
+
+import os
+from multiprocessing import Process, Event
+import subprocess as sub
+
+
+# In[113]:
+
+
+fp_fifo_in = '/tmp/uvspec_input.fifo'
+
+
+# In[114]:
+
+
+os.mkfifo(fp_fifo_in)
+
+
+# In[118]:
+
+
+p = open(fp_fifo_in,'w')
+p.write('quiet\n')
+p.write('mol_abs_param fu\n')
+p.write('rte_solver twostr\n')
+p.write('output_process sum\n')
+p.write('data_files_path /home/sam/libradtran/libRadtran-2.0.2b/data/ \n')
+p.write('source solar /home/sam/libradtran/libRadtran-2.0.2b/data/solar_flux/kurudz_1.0nm.dat per_nm\n')
+p.write('wavelength 350.000000 4000.000000\n')
+p.write('zout 0 3 100\n')
+p.write('latitude N 56.938700\n')
+p.write('longitude W 111.866900\n')
+p.write('time 2018 06 09 15 30 00\n')
+p.write('aerosol_default\n')
+p.write('aerosol_modify ssa scale 0.85\n')
+p.write('disort_intcor moments\n')
+p.write('albedo 0.33\n')
+p.close()
+
+
+# In[154]:
+
+
+def print_fifo():
+    p = open(fp_fifo_in,'w')
+    p.write('quiet\n')
+    p.write('mol_abs_param fu\n')
+    p.write('rte_solver twostr\n')
+    p.write('output_process sum\n')
+    p.write('data_files_path /home/sam/libradtran/libRadtran-2.0.2b/data/ \n')
+    p.write('source solar /home/sam/libradtran/libRadtran-2.0.2b/data/solar_flux/kurudz_1.0nm.dat per_nm\n')
+    p.write('wavelength 350.000000 4000.000000\n')
+    p.write('zout 0 3 100\n')
+    p.write('latitude N 56.938700\n')
+    p.write('longitude W 111.866900\n')
+    p.write('time 2018 06 09 15 30 00\n')
+    p.write('aerosol_default\n')
+    p.write('aerosol_modify ssa scale 0.85\n')
+    p.write('disort_intcor moments\n')
+    p.write('albedo 0.33\n')
+    p.close()
+
+
+# In[155]:
+
+
+def run():
+    process = sub.Popen([fp_uvspec],stdin=p, stdout=sub.PIPE,stderr=sub.PIPE)
+    stdout,stderr = process.communicate()
+    #stderr = process.stderr.read()
+    print 'STDOUT:{},{},{}'.format(stdout,stderr,process.poll())
+
+
+# In[175]:
+
+
+p = open(fp_fifo_in,'w+')
+print 'fifo: ',p
+p.flush()
+p.write('quiet\n')
+p.write('mol_abs_param fu\n')
+p.write('rte_solver twostr\n')
+p.write('output_process sum\n')
+p.write('data_files_path /home/sam/libradtran/libRadtran-2.0.2b/data/ \n')
+p.write('source solar /home/sam/libradtran/libRadtran-2.0.2b/data/solar_flux/kurudz_1.0nm.dat per_nm\n')
+p.write('wavelength 350.000000 4000.000000\n')
+p.write('zout 0 3 100\n')
+p.write('latitude N 56.938700\n')
+p.write('longitude W 111.866900\n')
+p.write('time 2018 06 09 15 30 00\n')
+p.write('aerosol_default\n')
+p.write('aerosol_modify ssa scale 0.85\n')
+p.write('disort_intcor moments\n')
+p.write('albedo 0.33\n')
+#p.close()
+process = sub.Popen([fp_uvspec],stdin=p,stdout=sub.PIPE,stderr=sub.PIPE)
+stdout,stderr = process.communicate()
+print 'STDOUT:{},{},{}'.format(stdout,stderr,process.poll())
+p.close()
+
+
+# In[216]:
+
+
+def write_xtrf(fp_fifo_in):
+    if not os.path.exists(fp_fifo_in):
+        os.mkfifo(fp_fifo_in)
+    p = open(fp_fifo_in,'w')
+    p.flush()
+    g = ['# wvl[nm]    alb[unitless','250.000000      -0.043171','350.000000      -0.010611','400.000000      0.005669','500.000000      0.038229','675.000000      0.058627','870.000000      0.229436','995.000000      0.234727','1200.000000     0.240584','1400.000000     0.246298','1600.000000     0.252013','2100.000000     0.266298','3200.000000     0.297727','4900.000000     0.346298']
+    for llj in g:
+        p.write('{}\n'.format(llj))
+    #p.flush()
+    p.close()
+    os.unlink(fp_fifo_in)
+    #os.remove(fp_fifo_in)
+
+
+# In[209]:
+
+
+write_xtrf(fp_fifo_in)
+
+
+# In[218]:
+
+
+r, w = os.pipe()
+os.write(w,'verbose\n')
+os.write(w,'mol_abs_param fu\n')
+os.write(w,'rte_solver twostr\n')
+os.write(w,'output_process sum\n')
+os.write(w,'data_files_path /home/sam/libradtran/libRadtran-2.0.2b/data/ \n')
+os.write(w,'source solar /home/sam/libradtran/libRadtran-2.0.2b/data/solar_flux/kurudz_1.0nm.dat per_nm\n')
+os.write(w,'wavelength 350.000000 4000.000000\n')
+os.write(w,'zout 0 3 100\n')
+os.write(w,'latitude N 56.938700\n')
+os.write(w,'longitude W 111.866900\n')
+os.write(w,'time 2018 06 09 15 30 00\n')
+os.write(w,'aerosol_default\n')
+os.write(w,'aerosol_modify ssa scale 0.85\n')
+os.write(w,'disort_intcor moments\n')
+os.write(w,'albedo 0.33\n')
+os.write(w,'albedo_file {}'.format(fp_fifo_in))
+os.close(w)
+#p.close()
+
+p1 = Process(target=write_xtrf,args=(fp_fifo_in,))
+p1.start()
+
+process = sub.Popen([fp_uvspec],stdin=r,stdout=sub.PIPE,stderr=sub.PIPE)
+stdout,stderr = process.communicate()
+print 'STDOUT:{},{},{}'.format(stdout,stderr,process.poll())
+#p.close()
 
 
 # ### Run only the CRE portion in multiprocessing
@@ -778,28 +962,28 @@ len(results_cre)
 # 
 # using command parallel --jobs=20 < ORACLES_DARE_v1.sh
 
-# In[175]:
+# In[258]:
 
 
 f_list = fp_rtm+'{}_DARE_{}.sh'.format(name,vv)
 
 
-# In[176]:
+# In[259]:
 
 
 get_ipython().system(u' wc -l $f_list')
 
 
-# In[179]:
+# In[260]:
 
 
 f_listout = f_list+'.out'
 
 
-# In[191]:
+# In[ ]:
 
 
-get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
+get_ipython().system(u'parallel --jobs=22 --bar < $f_list #2> $f_listout')
 
 
 # ### For the CRE
@@ -830,13 +1014,13 @@ get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
 
 # ## Read the files
 
-# In[61]:
+# In[263]:
 
 
 fpp_out,name,vv,geo['zout']
 
 
-# In[62]:
+# In[264]:
 
 
 n = len(ar['Start_UTC'][fla])
@@ -907,13 +1091,13 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
 
 # ### Multiprocessing
 
-# In[63]:
+# In[265]:
 
 
 class KeyboardInterruptError(Exception): pass
 
 
-# In[64]:
+# In[266]:
 
 
 def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
@@ -947,7 +1131,7 @@ def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
     return out
 
 
-# In[65]:
+# In[267]:
 
 
 def worker_init(verbose=True):
@@ -959,13 +1143,13 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[77]:
+# In[268]:
 
 
 p = Pool(cpu_count()-1,worker_init)
 
 
-# In[78]:
+# In[269]:
 
 
 outputs = []
@@ -976,19 +1160,19 @@ with tqdm(total=max_) as pbar:
         outputs.append(outs)
 
 
-# In[92]:
+# In[270]:
 
 
 outputs[0],outputs[2000]
 
 
-# In[81]:
+# In[271]:
 
 
 dat.keys()
 
 
-# In[83]:
+# In[272]:
 
 
 for oo in outputs:
@@ -1000,13 +1184,13 @@ for oo in outputs:
 
 # ### combine
 
-# In[87]:
+# In[273]:
 
 
 dat['dare'] = (dat['dn']-dat['up']) - (dat['dn_noa']-dat['up_noa'])
 
 
-# In[88]:
+# In[274]:
 
 
 dat['utc'] = ar['Start_UTC'][fla]
@@ -1017,7 +1201,7 @@ dat['doy'] = ar['doy'][fla]
 
 # ## Save the file
 
-# In[89]:
+# In[275]:
 
 
 dat1 = iterate_dict_unicode(dat)
@@ -1025,10 +1209,16 @@ print 'saving file to: '+fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv
 hs.savemat(fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv=vv),dat1)
 
 
-# In[90]:
+# In[276]:
 
 
 dat1 = iterate_dict_unicode(dat)
 print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
 hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
+
+
+# In[ ]:
+
+
+
 

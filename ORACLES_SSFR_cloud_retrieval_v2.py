@@ -766,7 +766,7 @@ fig.tight_layout()
 plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes_v2.png',dpi=600,transparent=True)
 
 
-# In[55]:
+# In[203]:
 
 
 dat_out = {'dare':dare,'bins_diag':bins_diag,'bins_ew':bins_ew,'bins_ns':bins_ns,
@@ -774,7 +774,7 @@ dat_out = {'dare':dare,'bins_diag':bins_diag,'bins_ew':bins_ew,'bins_ns':bins_ns
            'boxes_diag_ct':boxes_diag_ct,'boxes_ew_ct':boxes_ew_ct,'boxes_ns_ct':boxes_ns_ct,
            'lon':ar['LON'][igood],'lat':ar['LAT'][igood],'sza':ar['meas'].sza[igood],
            'doy':ar['doy'][igood],'utc':ar['meas'].utc[igood]}
-sio.savemat(fp+'ORACLES_2016_DARE_params_v2.mat',dat_out)
+sio.savemat(fp+'ORACLES_2016_DARE_params_v3.mat',dat_out)
 
 
 # In[78]:
@@ -979,31 +979,31 @@ plt.plot(lut['tau_hi'],lut['Rvis_hi'][40,:,0],'.')
 
 # # Run the retrieval
 
-# In[138]:
+# In[204]:
 
 
 vv = 'v3' # Found the bug in the ki^2 retrieval, missing the normalization, moved to 2100 nm instead of 1650 nm
 
 
-# In[139]:
+# In[205]:
 
 
 ar['tau'], ar['ref'] = np.zeros_like(ar['sza'])*np.nan,np.zeros_like(ar['sza'])*np.nan
 
 
-# In[140]:
+# In[206]:
 
 
 ar['ki'] = np.zeros_like(ar['sza'])
 
 
-# In[141]:
+# In[207]:
 
 
 ar['isza'] = []
 
 
-# In[142]:
+# In[208]:
 
 
 plt.figure()
@@ -1013,21 +1013,21 @@ plt.legend(frameon=False)
 plt.ylim(0,1)
 
 
-# In[143]:
+# In[209]:
 
 
 plt.figure()
 plt.hist(ar['meas'].Rvis,range=[0,1],bins=30)
 
 
-# In[144]:
+# In[210]:
 
 
 rvis,rnir = np.zeros(len(ar['tau']))+np.nan,np.zeros(len(ar['tau']))+np.nan
 rvis_mod,rnir_mod = np.zeros(len(ar['tau']))+np.nan,np.zeros(len(ar['tau']))+np.nan
 
 
-# In[145]:
+# In[211]:
 
 
 pbar = tqdm(total=len(ar['sza']))
@@ -1057,16 +1057,22 @@ for i,s in enumerate(ar['sza']):
 
 # ## Filter out bad data
 
-# In[167]:
+# In[212]:
 
 
 (lut['Rvis_hi'][5,6,isza] - lut['Rvis_hi'][5,7,isza])**2+(lut['Rnir_hi'][5,6,isza]-lut['Rnir_hi'][5,7,isza])**2
 
 
-# In[168]:
+# In[213]:
 
 
 (lut['Rvis_hi'][10,6,isza] - lut['Rvis_hi'][10,7,isza])**2+(lut['Rnir_hi'][10,6,isza]-lut['Rnir_hi'][10,7,isza])**2
+
+
+# In[214]:
+
+
+(lut['Rvis_hi'][0,6,isza] - lut['Rvis_hi'][0,7,isza])**2+(lut['Rnir_hi'][0,6,isza]-lut['Rnir_hi'][0,7,isza])**2
 
 
 # In[169]:
@@ -1090,7 +1096,7 @@ ar['ref'][ar['ibad']] = np.nan
 
 # ## Sanity check retrieved outputs
 
-# In[177]:
+# In[219]:
 
 
 plt.figure()
@@ -1101,7 +1107,7 @@ plt.ylabel('Model')
 plt.title('vis Reflectance [500 nm]')
 
 
-# In[178]:
+# In[220]:
 
 
 plt.figure()
@@ -1112,7 +1118,7 @@ plt.ylabel('Model')
 plt.title('NIR Reflectance [2100 nm]')
 
 
-# In[180]:
+# In[221]:
 
 
 plt.figure()
@@ -1151,7 +1157,7 @@ plt.plot(ar['tau'],'.')
 np.nanmean(ar['tau']),np.nanmean(ar['ref'])
 
 
-# In[190]:
+# In[222]:
 
 
 plt.figure()
@@ -1167,19 +1173,19 @@ plt.figure()
 plt.plot(ar['ref'],'.')
 
 
-# In[136]:
+# In[193]:
 
 
 len(np.where(np.isfinite(ar['ref']))[0])
 
 
-# In[137]:
+# In[194]:
 
 
 len(ar['ref'])
 
 
-# In[269]:
+# In[195]:
 
 
 plt.figure()
@@ -1188,13 +1194,13 @@ plt.plot(np.where(np.isfinite(ar['ref']))[0])
 
 # # Save the retrieved output
 
-# In[160]:
+# In[223]:
 
 
 out = {}
 
 
-# In[161]:
+# In[224]:
 
 
 kk = ar.keys()
@@ -1202,7 +1208,7 @@ kk.sort()
 kk
 
 
-# In[92]:
+# In[198]:
 
 
 plt.figure()
@@ -1216,7 +1222,7 @@ plt.figure()
 plt.plot(ar['sza'],'.')
 
 
-# In[162]:
+# In[225]:
 
 
 out['tau'] = ar['tau']
@@ -1235,19 +1241,19 @@ out['Rvis_mod'] = rvis_mod
 out['Rnir_mod'] = rnir_mod
 
 
-# In[163]:
+# In[226]:
 
 
 fp
 
 
-# In[164]:
+# In[227]:
 
 
 hs.savemat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv),out)
 
 
-# In[165]:
+# In[228]:
 
 
 out['days']
