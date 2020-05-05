@@ -1,0 +1,7 @@
+import os
+from multiprocessing import Process, Event
+import subprocess as sub
+
+fp_fifo_in = '/tmp/uvspec_input.fifo'
+
+
