@@ -47,11 +47,97 @@
 #     Wrtten: Samuel LeBlanc, NASA Ames, from Santa Cruz, 2015-06-26
 #     Modified: Samuel LeBlanc, NASA Ames, 2015-10-06
 #             - added function to write out the write_aac dictionaries to a version file
+#     Modified: Samuel LeBlanc, Santa Cruz, 2020-05-11, Under stay at home for COVID-19
+#             - added fifo writing option.
+
+# In[ ]:
+
+
+def process_wrapper_file_print(output_file,string_list,append=False,fifo=False):
+    'Wrapper to make separate process for writing file when using fifo'
+    if fifo:
+        from multiprocessing import Process
+        p1 = Process(target=print_to_file,args=(output_file,string_list,append,fifo))
+        p1.start()
+    else:
+        print_to_file(output_file,string_list,append=append,fifo=fifo)
+    return
+    
+
+
+# In[ ]:
+
+
+def print_to_file(output_file, string_list,append=False,fifo=False):
+    """
+    Purpose:
+    
+        Program to print to file from an output string. 
+        Generalized for all ascii file printing needs.
+        
+    Input:
+    
+        output_file: full path to file to be written
+        string_list: List of strings to be output (each on its own line)
+    
+    Output:
+    
+        output file (ascii)
+        
+    Keywords:
+    
+        append: (default False), if True, appends to the end of the file    
+        fifo: (default False), if True makes a fifo file
+        
+    Dependencies:
+    
+        - N/A
+    
+    Required files:
+    
+        - None
+        
+    Example:
+    
+    ...
+    
+    Modification History:
+
+    Written (v1.0): Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, in COVID-19 Stay at home order
+        
+    """
+    import os
+       
+    if fifo: 
+        if not os.path.exists(output_file):
+            os.mkfifo(output_file)
+            
+    try:
+        if append and not fifo:
+            p = open(output_file,'a')
+        else:
+            p = open(output_file,'w')
+    except Exception,e:
+        print 'Problem with accessing file, return Exception: ',e
+        return
+
+    if fifo:
+        p.flush()
+    
+    for ll in string_list:
+        p.write('{}\n'.format(ll.replace('\n','')))
+    
+    p.close()
+    if fifo: 
+        os.unlink(p)
+    
+    return
+
 
 # In[182]:
 
 
-def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly_below=False):
+def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly_below=False,fifo=False,use_old=False):
     """
     Purpose:
 
@@ -82,6 +168,9 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
         verbose: (default False) if true prints out info about file writing 
         append_directly_below: (default False) if true then opens a already existing file
                                and only writes out the last line as an append
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
     
     Dependencies:
 
@@ -99,6 +188,7 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
         Modified (v1.1): Samuel LeBlanc, DC8 flying above Korea, 2016-05-02
+        Modified (v1.2): Samuel LeBlanc, Santa Cruz in COVID-19 stay at home, 2020-05-11
     """
     import numpy as np
     if (zbot >= ztop):
@@ -117,25 +207,36 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
     lwc = lwp/(ztop-zbot)*0.001
     if verbose:
         print('..Cloud water content is: %f' % lwc)
-    if not append_directly_below:
-        try:
-            output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
-            return
-        if verbose:
-            print('..printing to file: %s' % output_file)
-        output.write('# z [km]    IWC/LWC [g/m^3]    Reff [um] \n')
-        output.write('%4.4f\t%4.5f\t%3.2f\n' % (ztop,0,0))
-        output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+    
+    if use_old:
+        if not append_directly_below:
+            try:
+                output = file(output_file,'w')
+            except Exception,e:
+                print 'Problem with accessing file, return Exception: ',e
+                return
+            if verbose:
+                print('..printing to file: %s' % output_file)
+            output.write('# z [km]    IWC/LWC [g/m^3]    Reff [um] \n')
+            output.write('%4.4f\t%4.5f\t%3.2f\n' % (ztop,0,0))
+            output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+        else:
+            try:
+                output = file(output_file,'a')
+            except Exception,e:
+                print 'Problem with accessing file, return Exception: ',e
+                return
+            output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+        output.close() 
     else:
-        try:
-            output = file(output_file,'a')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
-            return
-        output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
-    output.close() 
+        out_string = []
+        if not append_directly_below:
+            out_string.append('# z [km]    IWC/LWC [g/m^3]    Reff [um] \n')
+            out_string.append('%4.4f\t%4.5f\t%3.2f\n' % (ztop,0,0))
+            out_string.append('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+        else:
+            out_string.append('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
+        process_wrapper_file_print(output_file,out_string,append=append_directly_below,fifo=fifo)
     if verbose:
         print('..File finished write_cloud_file, closed')
 
@@ -143,7 +244,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
 # In[204]:
 
 
-def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False,expand_hg=False):
+def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=False,expand_hg=False,
+                                fifo=False,use_old=False):
     """
     Purpose:
 
@@ -173,6 +275,9 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
 
         verbose: (default False) if true prints out info about file writing 
         expand_hg: (default False) if true expands the Henyey Greenstein legendre moments from the assymetry parameter
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
     
     Dependencies:
 
@@ -190,6 +295,8 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1):Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                        - added fifo writing handling
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit_wvl
@@ -206,35 +313,61 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     else:
         if not len(wvl_arr)==np.shape(ext)[1]:
             raise LookupError('*** Error wvl_arr not same size as ext ***')
-        
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to file: %s' % output_file)
     
-    output.write('# z [km] \t file_path\n')
-    izs = np.argsort(z_arr)[::-1]
-    zs = np.sort(z_arr)[::-1]
-    if verbose:
-        print('..printing %i lines onto profile file' % len(zs))
-    for iz,z in enumerate(zs):
-        file_iz = output_file+'_z%03i' % iz
-        if two_z:
-            if iz>0:
-                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose,expand_hg=expand_hg)
-                output.write('%4.4f\t%s\n' % (z,file_iz))
+    if use_old:
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to file: %s' % output_file)
+
+        output.write('# z [km] \t file_path\n')
+        izs = np.argsort(z_arr)[::-1]
+        zs = np.sort(z_arr)[::-1]
+        if verbose:
+            print('..printing %i lines onto profile file' % len(zs))
+        for iz,z in enumerate(zs):
+            file_iz = output_file+'_z%03i' % iz
+            if two_z:
+                if iz>0:
+                    write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose,expand_hg=expand_hg,
+                                                    fifo=fifo,use_old=use_old)
+                    output.write('%4.4f\t%s\n' % (z,file_iz))
+                else:
+                    output.write('%4.4f\t%s\n' % (z,'NULL'))
             else:
-                output.write('%4.4f\t%s\n' % (z,'NULL'))
-        else:
-            if any(ext[izs[iz],:]):
-                write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],verbose=verbose,expand_hg=expand_hg)
-                output.write('%4.4f\t%s\n' % (z,file_iz))
+                if any(ext[izs[iz],:]):
+                    write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],
+                                                    verbose=verbose,expand_hg=expand_hg,fifo=fifo,use_old=use_old)
+                    output.write('%4.4f\t%s\n' % (z,file_iz))
+                else:
+                    output.write('%4.4f\t%s\n' % (z,'NULL'))
+        output.close() 
+    else:
+        out_string = []
+        out_string.append('# z [km] \t file_path\n')
+        izs = np.argsort(z_arr)[::-1]
+        zs = np.sort(z_arr)[::-1]
+        for iz,z in enumerate(zs):
+            file_iz = output_file+'_z%03i' % iz
+            if two_z:
+                if iz>0:
+                    write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext,ssa,asy,verbose=verbose,expand_hg=expand_hg,
+                                                    fifo=fifo,use_old=use_old)
+                    out_string.append('%4.4f\t%s\n' % (z,file_iz))
+                else:
+                    out_string.append('%4.4f\t%s\n' % (z,'NULL'))
             else:
-                output.write('%4.4f\t%s\n' % (z,'NULL'))
-    output.close() 
+                if any(ext[izs[iz],:]):
+                    write_aerosol_file_explicit_wvl(file_iz,wvl_arr,ext[izs[iz],:],ssa[izs[iz],:],asy[izs[iz],:],
+                                                    verbose=verbose,expand_hg=expand_hg)
+                    out_string.append('%4.4f\t%s\n' % (z,file_iz))
+                else:
+                    out_string.append('%4.4f\t%s\n' % (z,'NULL'))
+        process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        
     if verbose:
         print('..File finished write_aerosol_file_explicit, closed')
 
@@ -242,7 +375,8 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
 # In[184]:
 
 
-def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False,expand_hg=False):
+def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=False,expand_hg=False,
+                                    fifo=False,use_old=False):
     """
     Purpose:
 
@@ -272,7 +406,10 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
         verbose: (default False) if true prints out info about file writing 
         expand_hg: (default False) if true, then epands the Henyey-Greenstein phase function, not just printing the asymmetry p
-    
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
+        
     Dependencies:
 
         numpy
@@ -289,6 +426,8 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1):Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                         - added fifo writing handling
     """
     if not len(wvl_arr)==len(ext):
         raise LookupError("ext and wvl_arr don't have the same size")
@@ -297,23 +436,37 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
     if not len(wvl_arr)==len(asy):
         raise LookupError("asy and wvl_arr don't have the same size")  
     
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to explicit aerosol wavelength defined file: %s' % output_file)
-    output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
-    for iw,wvl in enumerate(wvl_arr):
-        if expand_hg:
-            asys = [asy[iw]**n for n in range(100)]
-            st = '%f\t%f\t%1.6f\t' % (wvl,ext[iw],ssa[iw])
-            stt = st+'\t'.join(map(str,asys))+'\n'
-            output.write(stt)
-        else:
-            output.write('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
-    output.close()
+    if use_old:
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to explicit aerosol wavelength defined file: %s' % output_file)
+        output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
+        for iw,wvl in enumerate(wvl_arr):
+            if expand_hg:
+                asys = [asy[iw]**n for n in range(100)]
+                st = '%f\t%f\t%1.6f\t' % (wvl,ext[iw],ssa[iw])
+                stt = st+'\t'.join(map(str,asys))+'\n'
+                output.write(stt)
+            else:
+                output.write('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
+        output.close()
+    else:
+        out_string = []
+        out_string.append('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
+        for iw,wvl in enumerate(wvl_arr):
+            if expand_hg:
+                asys = [asy[iw]**n for n in range(100)]
+                st = '%f\t%f\t%1.6f\t' % (wvl,ext[iw],ssa[iw])
+                stt = st+'\t'.join(map(str,asys))+'\n'
+                out_string.append(stt)
+            else:
+                out_string.append('%f\t%f\t%1.6f\t%1.6f\t%1.6f\n' % (wvl,ext[iw],ssa[iw],1.0,asy[iw]))
+        process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        
     if verbose:
         print('..File finished write_aerosol_file_explicit_wvl, closed')
 
@@ -322,7 +475,7 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
 
 
 def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
-                             verbose=False,append_directly_below=False,wvl_range=None):
+                             verbose=False,append_directly_below=False,wvl_range=None,fifo=False,use_old=False):
     """
     Purpose:
 
@@ -351,6 +504,9 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
         verbose: (default False) if true prints out info about file writing 
         append_directly_below: (default False) if true appends a new line to an existing file with cloud properties directly 
                                below the last line of the already existing file
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
     
     Dependencies:
 
@@ -372,6 +528,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
                         - added the append_directly_below keyword
         Modified (v1.2): Samuel LeBlanc, Santa Cruz, CA, 2017-02-17
                         - added the wvl_range keyword
+        Modified (v1.3): Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                         - added fifo writing handling
     """
     import numpy as np
     from Run_libradtran import write_cloud_file_moments_wvl, get_cloud_ext_ssa_moms
@@ -387,34 +545,47 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
     lwc = lwp/(ztop-zbot)*0.001
     ext,ssa,wvl,moments,nmom = get_cloud_ext_ssa_moms(ref,lwc,moms_dict=moms_dict,verbose=False)
     
-    if not append_directly_below:
-        try:
-            output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
-            return
-        if verbose:
-            print('..printing to file: %s' % output_file)
+    if use_old:
+        if not append_directly_below:
+            try:
+                output = file(output_file,'w')
+            except Exception,e:
+                print 'Problem with accessing file, return Exception: ',e
+                return
+            if verbose:
+                print('..printing to file: %s' % output_file)
 
-        output.write('# z [km] \t file_path\n')
-        output.write('%4.4f\t%s\n' % (ztop,'NULL'))
-        file_cloud = output_file+'_zbot'
-        output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+            output.write('# z [km] \t file_path\n')
+            output.write('%4.4f\t%s\n' % (ztop,'NULL'))
+            file_cloud = output_file+'_zbot'
+            output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+        else:
+            try:
+                output = file(output_file,'a')
+            except Exception,e:
+                print 'Problem with accessing file, return Exception: ',e
+                return
+            if verbose:
+                print('..printing to file: %s' % output_file)
+
+            file_cloud = output_file+'_zbelow'
+            output.write('%4.4f\t%s\n' % (zbot,file_cloud))
+
+        write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose,wvl_range=wvl_range,use_old=use_old)
+
+        output.close()
     else:
-        try:
-            output = file(output_file,'a')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
-            return
-        if verbose:
-            print('..printing to file: %s' % output_file)
-
-        file_cloud = output_file+'_zbelow'
-        output.write('%4.4f\t%s\n' % (zbot,file_cloud))
-    
-    write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose,wvl_range=wvl_range)
-    
-    output.close() 
+        out_string = []
+        out_string.append('# z [km] \t file_path\n')
+        out_string.append('%4.4f\t%s\n' % (ztop,'NULL'))
+        file_cloud = output_file+'_zbot'
+        out_string.append('%4.4f\t%s\n' % (zbot,file_cloud))
+        process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        
+        write_cloud_file_moments_wvl(file_cloud,wvl,ext,ssa,moments,nmom,verbose=verbose,wvl_range=wvl_range,
+                                     use_old=use_old,fifo=fifo)
+        
+            
     if verbose:
         print('..File finished write_cloud_file_moments, closed')
 
@@ -422,7 +593,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
 # In[ ]:
 
 
-def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False,wvl_range=None):
+def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=False,wvl_range=None,
+                                 fifo=False,use_old=False):
     """
     Purpose:
 
@@ -447,6 +619,9 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
     
     Dependencies:
 
@@ -464,6 +639,8 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-29, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1): Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                 - added fifo writing handling
     """
     if not len(wvl)==len(ext):
         raise LookupError("ext and wvl_arr don't have the same size")
@@ -474,20 +651,52 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         wvl_range = [min(wvl),max(wvl)]
     if verbose: print '... wvl_range:',wvl_range[0],wvl_range[1]
         
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
-    output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
-    for iw,wv in enumerate(wvl):
-        if (wv<wvl_range[0]-10.0 or wv>wvl_range[1]+10.0) and wvl_range[1]<10000.0:
-            continue
+    if use_old:
         try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
+        output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
+        for iw,wv in enumerate(wvl):
+            if (wv<wvl_range[0]-10.0 or wv>wvl_range[1]+10.0) and wvl_range[1]<10000.0:
+                continue
+            try:
+                if len(moments.shape)>1:
+                    output.write('%f\t%f\t%1.6f\t%s \n' % 
+                                 (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:int(nmom[iw])])])))
+                else:
+                    st = '%f\t%f\t%1.6f\t%s \n' %                                 (wv,ext[iw],ssa[iw],
+                                  " ".join(['{:1.5g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
+                    if len(st)>1000000:
+                        st = '%f\t%f\t%1.6f\t%s \n' %                                 (wv,ext[iw],ssa[iw],
+                                  " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
+                        an = len(moments[iw][0,0:int(nmom[iw])])-1
+                        print 'trying to reduce size', len(st), an
+                        while len(st)>1000000:
+                            df = int((len(st)-1000000)/10)
+                            an = an-df-10
+                            st = '%f\t%f\t%1.6f\t%s \n' %                                 (wv,ext[iw],ssa[iw],
+                                  " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:an])]))
+                            print 'in size reduction', len(st),an
+                    output.write(st)
+                    #output.write('%f\t%f\t%1.6f\t%s \n' % 
+                    #             (wv,ext[iw],ssa[iw],
+                    #" ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:nmom[iw]])])))
+            except:
+                import pdb
+                pdb.set_trace()
+        output.close()
+    else:
+        out_string = []
+        out_string.append('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
+        for iw,wv in enumerate(wvl):
+            if (wv<wvl_range[0]-10.0 or wv>wvl_range[1]+10.0) and wvl_range[1]<10000.0:
+                continue
             if len(moments.shape)>1:
-                output.write('%f\t%f\t%1.6f\t%s \n' % 
+                out_string.append('%f\t%f\t%1.6f\t%s \n' % 
                              (wv,ext[iw],ssa[iw]," ".join([str(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw,0:int(nmom[iw])])])))
             else:
                 st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
@@ -503,14 +712,10 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
                         st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
                               " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:an])]))
                         print 'in size reduction', len(st),an
-                output.write(st)
-                #output.write('%f\t%f\t%1.6f\t%s \n' % 
-                #             (wv,ext[iw],ssa[iw],
-                #" ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:nmom[iw]])])))
-        except:
-            import pdb
-            pdb.set_trace()
-    output.close()
+                out_string.append(st)
+        
+        process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        
     if verbose:
         print('..File write_cloud_file_moments_wvl finished, closed')
 
@@ -518,7 +723,7 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
 # In[185]:
 
 
-def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
+def write_albedo_file(output_file,wvl=[],alb=[],verbose=False,fifo=False,use_old=False):
     """
     Purpose:
 
@@ -539,6 +744,9 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
     
     Dependencies:
 
@@ -555,23 +763,35 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False):
     Modification History:
     
         Written (v1.0): Samuel LeBlanc, 2015-06-26, NASA Ames, from Santa Cruz, CA
+        Modified (v1.1): Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                 - added fifo writing handling
     """
     if not len(wvl)==len(alb):
         raise LookupError("wvl and alb don't have the same size")
     
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose:
-        print('..printing to albedo wavelength defined file: %s' % output_file)
-    output.write('# wvl[nm]    alb[unitless] \n')
-    for iw,w in enumerate(wvl):
-        if not w>100.0:
-            print '** Possible error with wavelenght, values below 100 nm, check units **'
-        output.write('%f\t%f\n' % (w,alb[iw]))
-    output.close()
+    if use_old:
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose:
+            print('..printing to albedo wavelength defined file: %s' % output_file)
+        output.write('# wvl[nm]    alb[unitless] \n')
+        for iw,w in enumerate(wvl):
+            if not w>100.0:
+                print '** Possible error with wavelenght, values below 100 nm, check units **'
+            output.write('%f\t%f\n' % (w,alb[iw]))
+        output.close()
+    else:
+        out_string = []
+        out_string.append('# wvl[nm]    alb[unitless] \n')
+        for iw,w in enumerate(wvl):
+            if not w>100.0:
+                print '** Possible error with wavelenght, values below 100 nm, check units **'
+            out_string.append('%f\t%f\n' % (w,alb[iw]))
+        process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        
     if verbose:
         print('..File write_albedo_file finished, closed')
 
@@ -656,7 +876,8 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
 
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
-                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None,solver='disort'):
+                    verbose=False,make_base=False,fp_base_file=None,set_quiet=True,max_nmom=None,solver='disort',
+                    fifo=False,use_old=False,return_string=False):
     """
     Name:
 
@@ -692,7 +913,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             asy: value of aerosol asymmetry parameter at each altitude and wavelength [alt,wvl]
             z_arr: value of altitudes to use with ext,ssa,asy
             wvl_arr: array of wavelengths in nm
-            link_to_mom_file: if True then no moments file is written out, but it is referenced via file_name saved to aero dict
+            link_to_mom_file: if True then no moments file is written out, but it is referenced via
+                              file_name saved to aero dict
             file_name: file name and paths of explicit file for aerosol defined. 
                        By default it is created in this program if it is not set, 
                        if link_to_mom_file is set, this must be defined
@@ -754,6 +976,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     Keywords: 
 
         verbose: (default False) if true prints out info about file writing 
+        fifo: (default False) if true, then writes to a fifo file, and starts a seperate thread to only write this file, 
+              then immediatly close
+        use_old: (default False) if True, then uses previous method of file writing.
+        return_False: (default False) if True, then returns a string list instead of an input file
     
     Dependencies:
 
@@ -814,21 +1040,25 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                 - added expansion of henyey greenstein legendre moments for aerosol explict files
         Modified: Samuel LeBlanc, Santa Cruz, CA, 2017-12-06
                 - modified use of mie_hi.out for mie_hi_delta.mat with new delta-scaling legendre functions
+        Modified: Samuel LeBlanc, 2020-05-11, Santa Cruz, CA, under COVID-19 stay-at-home
+                 - added fifo writing handling, and string file return
     """
     import numpy as np
     from Run_libradtran import write_aerosol_file_explicit,write_cloud_file,write_albedo_file,merge_dicts
     from Run_libradtran import write_cloud_file_moments
     
-    try:
-        output = file(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
-        return
-    if verbose: print 'Opening input file %s' % output_file
-    
+    if use_old:
+        if return_string: print '** return_string option not enabled with use_old **'
+        try:
+            output = file(output_file,'w')
+        except Exception,e:
+            print 'Problem with accessing file, return Exception: ',e
+            return
+        if verbose: print 'Opening input file %s' % output_file
+
     if make_base:
         if fp_base_file:
-            base = file(fp_base_file,'w')
+            if use_old: base = file(fp_base_file,'w')
             include_base = True
         else:
             print 'Problem: No fp_base_file set, please set before running'
@@ -837,8 +1067,8 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         if fp_base_file:
             include_base = True
         else:
-            include_base = False
-    
+            include_base = False    
+                
     if verbose: print '..setting the dicts to defaults'
     source = merge_dicts({'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
                           'source':'solar',
@@ -850,160 +1080,293 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                           'albedo':0.29},albedo)
     geo = merge_dicts({'zout':[0,100]},geo)
     cloud = merge_dicts({'write_moments_file':False,'cloud_below':False},cloud)
-    
+
     if source.get('source')=='solar':
         source['source'] = 'solar '+source['dat_path']+'solar_flux/kurudz_1.0nm.dat per_nm'
-    
+
     if verbose: print '..write out general default values'
-    if make_base:
-        if source['run_fuliou']:
-            base.write('mol_abs_param fu\n')
-        else:
-            base.write('mol_abs_param sbdart\n')
-        base.write('rte_solver {}\n'.format(solver))
-        if set_quiet:
-            base.write('quiet\n')
-    else:
-        if set_quiet:
-            output.write('quiet\n')
-        if source['run_fuliou']:
-            output.write('mol_abs_param fu\n')
-        else:
-            output.write('mol_abs_param sbdart\n')
-        output.write('rte_solver {}\n'.format(solver))
-        
-    if include_base:
-        output.write('include %s\n' % fp_base_file)
-    
-    if verbose: print '..write out source dict values'
-    if make_base:
-        if source['integrate_values']:
-            if source['run_fuliou']:
-                base.write('output_process sum\n')
-            else:
-                base.write('output_process integrate\n')
-        else:
-            base.write('output_process per_nm\n')
-        base.write('data_files_path %s\n' % source['dat_path'])
-    elif not include_base:
-        if source['integrate_values']:
-            if source['run_fuliou']:
-                output.write('output_process sum\n')
-            else:
-                output.write('output_process integrate\n')
-        else:
-            output.write('output_process per_nm\n')
-        output.write('data_files_path %s\n' % source['dat_path'])
-    output.write('source %s \n' % source['source'])
-    
-    if source.get('wvl_filename'):
-        output.write('wavelength %s\n' % source['wvl_filename'])
-    else:
-        if source['wvl_range'][0]>source['wvl_range'][1]:
-            if verbose:
-                print 'wvl_range was set inverse, inversing'
-            source['wvl_range'] = list(reversed(source['wvl_range'])) 
-        if source['wvl_range'][0]<250:
-            if verbose:
-                print 'wvl_range starting too low, setting to 250 nm'
-            source['wvl_range'][0] = 250.0
-        output.write('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
-        
-    if source.get('slit_file'):
-        output.write('slit_function_file %s\n'%source['slit_file'])
-        
-    if source.get('atm_file'):
-        output.write('atmosphere_file %s\n'%source['atm_file'])
-        
-    if source['zenith']:
-        output.write('umu -1.0\n')
-        output.write('phi 130.0\n')
-        output.write('phi0 130.0\n')
-    
-    
-    
-    if verbose: print '..write out the albedo values'
-    if albedo['create_albedo_file']:
-        albedo['albedo_file'] = output_file+'_alb'
-        write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'])
-        output.write('albedo_file %s\n' % albedo['albedo_file'])
-    elif albedo.get('albedo_file'):
-        output.write('albedo_file %s\n' % albedo['albedo_file'])
-    elif albedo.get('sea_surface_albedo'):
-        output.write('brdf_cam u10 %i\n' % albedo['wind_speed'])
-    else:
-        output.write('albedo %f\n' % albedo['albedo'])
-    
-    if verbose: print '..write out the geo values'
-    output.write('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
-    if geo.get('lat'):
-        output.write("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
-        output.write("longitude %s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
-    if geo.get('sza'):
-        output.write('sza %f\n' % geo['sza'])
-    if geo.get('doy'):
-        output.write('day_of_year %i\n' % geo['doy'])
-    if geo.get('year'):
-        output.write('time %04i %02i %02i %02i %02i %02i\n' 
-                     %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
-        
-    if 'ext' in aero:
-        if verbose: print '..write out the aerosol parameters'
-        if aero.get('disort_phase'):
-            dd = 'phase'
-        else:
-            dd = 'moments'
-        aero['expand_hg'] = aero.get('expand_hg',False)
+    if use_old:
         if make_base:
-            base.write('aerosol_default\n')
-            base.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
-        elif not include_base:    
-            output.write('aerosol_default\n')
-            output.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
-        if not aero.get('link_to_mom_file'):
-            if not aero.get('file_name'):
-                aero['file_name'] = output_file+'_aero'
-            write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],
-                                        aero['asy'],aero['wvl_arr'],verbose=verbose,expand_hg=aero['expand_hg'])
-        output.write('aerosol_file explicit %s\n' % aero['file_name'])
-    
-    if 'tau' in cloud:
-        if verbose: print '..write out the cloud properties'
-        if not cloud.get('link_to_mom_file'):
-            if not cloud.get('file_name'):
-                cloud['file_name'] = output_file+'_cloud'
-        if cloud['phase']=='ic':
-            if verbose: print '..Ice cloud'
-            output.write('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
-            output.write('ic_properties baum_v36 interpolate\n')
-        elif cloud['phase']=='wc':
-            if verbose: print '..Liquid water cloud'
-            output.write('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
-            output.write('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
+            if source['run_fuliou']:
+                base.write('mol_abs_param fu\n')
+            else:
+                base.write('mol_abs_param sbdart\n')
+            base.write('rte_solver {}\n'.format(solver))
+            if set_quiet:
+                base.write('quiet\n')
         else:
-            raise ValueError('phase value in cloud dict not recognised')
-        if cloud['write_moments_file']:
-            if not 'ext' in aero:
-                output.write('disort_intcor moments\n') 
+            if set_quiet:
+                output.write('quiet\n')
+            if source['run_fuliou']:
+                output.write('mol_abs_param fu\n')
+            else:
+                output.write('mol_abs_param sbdart\n')
+            output.write('rte_solver {}\n'.format(solver))
+
+        if include_base:
+            output.write('include %s\n' % fp_base_file)
+
+        if verbose: print '..write out source dict values'
+        if make_base:
+            if source['integrate_values']:
+                if source['run_fuliou']:
+                    base.write('output_process sum\n')
+                else:
+                    base.write('output_process integrate\n')
+            else:
+                base.write('output_process per_nm\n')
+            base.write('data_files_path %s\n' % source['dat_path'])
+        elif not include_base:
+            if source['integrate_values']:
+                if source['run_fuliou']:
+                    output.write('output_process sum\n')
+                else:
+                    output.write('output_process integrate\n')
+            else:
+                output.write('output_process per_nm\n')
+            output.write('data_files_path %s\n' % source['dat_path'])
+        output.write('source %s \n' % source['source'])
+
+        if source.get('wvl_filename'):
+            output.write('wavelength %s\n' % source['wvl_filename'])
+        else:
+            if source['wvl_range'][0]>source['wvl_range'][1]:
+                if verbose:
+                    print 'wvl_range was set inverse, inversing'
+                source['wvl_range'] = list(reversed(source['wvl_range'])) 
+            if source['wvl_range'][0]<250:
+                if verbose:
+                    print 'wvl_range starting too low, setting to 250 nm'
+                source['wvl_range'][0] = 250.0
+            output.write('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+
+        if source.get('slit_file'):
+            output.write('slit_function_file %s\n'%source['slit_file'])
+
+        if source.get('atm_file'):
+            output.write('atmosphere_file %s\n'%source['atm_file'])
+
+        if source['zenith']:
+            output.write('umu -1.0\n')
+            output.write('phi 130.0\n')
+            output.write('phi0 130.0\n')
+
+
+
+        if verbose: print '..write out the albedo values'
+        if albedo['create_albedo_file']:
+            albedo['albedo_file'] = output_file+'_alb'
+            write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'],use_old=use_old)
+            output.write('albedo_file %s\n' % albedo['albedo_file'])
+        elif albedo.get('albedo_file'):
+            output.write('albedo_file %s\n' % albedo['albedo_file'])
+        elif albedo.get('sea_surface_albedo'):
+            output.write('brdf_cam u10 %i\n' % albedo['wind_speed'])
+        else:
+            output.write('albedo %f\n' % albedo['albedo'])
+
+        if verbose: print '..write out the geo values'
+        output.write('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
+        if geo.get('lat'):
+            output.write("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
+            output.write("longitude %s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
+        if geo.get('sza'):
+            output.write('sza %f\n' % geo['sza'])
+        if geo.get('doy'):
+            output.write('day_of_year %i\n' % geo['doy'])
+        if geo.get('year'):
+            output.write('time %04i %02i %02i %02i %02i %02i\n' 
+                         %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
+
+        if 'ext' in aero:
+            if verbose: print '..write out the aerosol parameters'
+            if aero.get('disort_phase'):
+                dd = 'phase'
+            else:
+                dd = 'moments'
+            aero['expand_hg'] = aero.get('expand_hg',False)
+            if make_base:
+                base.write('aerosol_default\n')
+                base.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
+            elif not include_base:    
+                output.write('aerosol_default\n')
+                output.write('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
+            if not aero.get('link_to_mom_file'):
+                if not aero.get('file_name'):
+                    aero['file_name'] = output_file+'_aero'
+                write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],
+                                            aero['asy'],aero['wvl_arr'],verbose=verbose,
+                                            expand_hg=aero['expand_hg'],use_old=use_old)
+            output.write('aerosol_file explicit %s\n' % aero['file_name'])
+
+        if 'tau' in cloud:
+            if verbose: print '..write out the cloud properties'
             if not cloud.get('link_to_mom_file'):
-                write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
-                                         verbose=verbose,moms_dict=cloud.get('moms_dict'),wvl_range=source['wvl_range'])
-            if cloud['cloud_below']:
+                if not cloud.get('file_name'):
+                    cloud['file_name'] = output_file+'_cloud'
+            if cloud['phase']=='ic':
+                if verbose: print '..Ice cloud'
+                output.write('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+                output.write('ic_properties baum_v36 interpolate\n')
+            elif cloud['phase']=='wc':
+                if verbose: print '..Liquid water cloud'
+                output.write('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+                output.write('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
+            else:
+                raise ValueError('phase value in cloud dict not recognised')
+            if cloud['write_moments_file']:
+                if not 'ext' in aero:
+                    output.write('disort_intcor moments\n') 
                 if not cloud.get('link_to_mom_file'):
-                    write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
-                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),
-                                             append_directly_below=True,wvl_range=source['wvl_range'])
+                    write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),wvl_range=source['wvl_range'],
+                                             use_old=use_old)
+                if cloud['cloud_below']:
+                    if not cloud.get('link_to_mom_file'):
+                        write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                                 verbose=verbose,moms_dict=cloud.get('moms_dict'),
+                                                 append_directly_below=True,wvl_range=source['wvl_range'],use_old=use_old)
+
+            else:
+                if not cloud.get('link_to_mom_file'):
+                    write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                     verbose=verbose,use_old=use_old)
+                if cloud['cloud_below']:
+                    if not cloud.get('link_to_mom_file'):
+                        write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                         verbose=verbose,append_directly_below=True,use_old=use_old)
+        output.close()
+        if make_base:
+            base.close()
+    else:
+        out_string = []
+        base_string = []
+        if set_quiet: base_string.append('quiet\n')
+        base_string.append('rte_solver {}\n'.format(solver))
+        if source['run_fuliou']:
+            base_string.append('mol_abs_param fu\n')
+        else:
+            base_string.append('mol_abs_param sbdart\n')
+        
+        if include_base: out_string.append('include %s\n' % fp_base_file)
+        
+        if verbose: print '..write out source dict values'
+        if source['integrate_values']:
+            if source['run_fuliou']:
+                base_string.append('output_process sum\n')
+            else:
+                base_string.append('output_process integrate\n')
+        else:
+            base_string.append('output_process per_nm\n')
+        base_string.append('data_files_path %s\n' % source['dat_path'])
+        base_string.append('source %s \n' % source['source'])
+        if source.get('wvl_filename'):
+            base_string.append('wavelength %s\n' % source['wvl_filename'])
+        else:
+            if source['wvl_range'][0]>source['wvl_range'][1]:
+                if verbose:
+                    print 'wvl_range was set inverse, inversing'
+                source['wvl_range'] = list(reversed(source['wvl_range'])) 
+            if source['wvl_range'][0]<250:
+                if verbose:
+                    print 'wvl_range starting too low, setting to 250 nm'
+                source['wvl_range'][0] = 250.0
+            base_string.append('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
+
+        if source.get('slit_file'): base_string.append('slit_function_file %s\n'%source['slit_file'])
+        if source.get('atm_file'): base_string.append('atmosphere_file %s\n'%source['atm_file'])
+        if source['zenith']:
+            base_string.append('umu -1.0\n')
+            base_string.append('phi 130.0\n')
+            base_string.append('phi0 130.0\n')
+        
+        if verbose: print '..write out the albedo values'
+        if albedo['create_albedo_file']:
+            albedo['albedo_file'] = output_file+'_alb'
+            write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'],use_old=use_old,fifo=fifo)
+            out_string.append('albedo_file %s\n' % albedo['albedo_file'])
+        elif albedo.get('albedo_file'):
+            out_string.append('albedo_file %s\n' % albedo['albedo_file'])
+        elif albedo.get('sea_surface_albedo'):
+            out_string.append('brdf_cam u10 %i\n' % albedo['wind_speed'])
+        else:
+            out_string.append('albedo %f\n' % albedo['albedo'])
+        
+        if verbose: print '..write out the geo values'
+        out_string.append('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
+        if geo.get('lat'):
+            out_string.append("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
+            out_string.append("longitude %s %f\n" % ('W' if geo['lon']<0 else 'E',abs(geo['lon'])))
+        if geo.get('sza'): out_string.append('sza %f\n' % geo['sza'])
+        if geo.get('doy'): out_string.append('day_of_year %i\n' % geo['doy'])
+        if geo.get('year'):
+            out_string.append('time %04i %02i %02i %02i %02i %02i\n' 
+                         %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
+        
+        if 'ext' in aero:
+            if verbose: print '..write out the aerosol parameters'
+            if aero.get('disort_phase'):
+                dd = 'phase'
+            else:
+                dd = 'moments'
+            aero['expand_hg'] = aero.get('expand_hg',False)
+            base_string.append('aerosol_default\n')
+            base_string.append('disort_intcor {}\n'.format(dd)) #set to use moments for explicit aerosol file
+            if not aero.get('link_to_mom_file'):
+                if not aero.get('file_name'):
+                    aero['file_name'] = output_file+'_aero'
+                write_aerosol_file_explicit(aero['file_name'],aero['z_arr'],aero['ext'],aero['ssa'],
+                                            aero['asy'],aero['wvl_arr'],verbose=verbose,
+                                            expand_hg=aero['expand_hg'],use_old=use_old,fifo=fifo)
+            out_string.append('aerosol_file explicit %s\n' % aero['file_name'])
+            
+        if 'tau' in cloud:
+            if verbose: print '..write out the cloud properties'
+            if not cloud.get('link_to_mom_file'):
+                if not cloud.get('file_name'):
+                    cloud['file_name'] = output_file+'_cloud'
+            if cloud['phase']=='ic':
+                if verbose: print '..Ice cloud'
+                out_string.append('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+                out_string.append('ic_properties baum_v36 interpolate\n')
+            elif cloud['phase']=='wc':
+                if verbose: print '..Liquid water cloud'
+                out_string.append('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
+                out_string.append('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
+            else:
+                raise ValueError('phase value in cloud dict not recognised')
+            if cloud['write_moments_file']:
+                if not 'ext' in aero:
+                    out_string.append('disort_intcor moments\n') 
+                if not cloud.get('link_to_mom_file'):
+                    write_cloud_file_moments(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                             verbose=verbose,moms_dict=cloud.get('moms_dict'),wvl_range=source['wvl_range'],
+                                             use_old=use_old,fifo=fifo)
+                if cloud['cloud_below']:
+                    if not cloud.get('link_to_mom_file'):
+                        write_cloud_file_moments(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                                 verbose=verbose,moms_dict=cloud.get('moms_dict'),
+                                                 append_directly_below=True,wvl_range=source['wvl_range'],
+                                                 use_old=use_old,fifo=fifo)
+
+            else:
+                if not cloud.get('link_to_mom_file'):
+                    write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],
+                                     verbose=verbose,use_old=use_old,fifo=fifo)
+                if cloud['cloud_below']:
+                    if not cloud.get('link_to_mom_file'):
+                        write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
+                                         verbose=verbose,append_directly_below=True,use_old=use_old,fifo=fifo)
+        
+        if make_base:
+            if return_string: print '** Cant have both make_base and return_string enabled... Making files and not returning string'
+            process_wrapper_file_print(fp_base_file,base_string,append=False,fifo=fifo)
+            process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
+        elif return_string:
+            return base_string.extend(out_string)
+        else:
+            process_wrapper_file_print(output_file,base_string.extend(out_string),append=False,fifo=fifo)
                 
-        else:
-            if not cloud.get('link_to_mom_file'):
-                write_cloud_file(cloud['file_name'],cloud['tau'],cloud['ref'],cloud['zbot'],cloud['ztop'],verbose=verbose)
-            if cloud['cloud_below']:
-                if not cloud.get('link_to_mom_file'):
-                    write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
-                                     verbose=verbose,append_directly_below=True)
-    output.close()
-    if make_base:
-        base.close()
     if verbose: print 'Finished printing main input file: Closing file'   
 
 
