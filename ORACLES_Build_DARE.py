@@ -811,19 +811,89 @@ def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
                                    verbose=False,make_base=False,set_quiet=True)
 
 
-# In[67]:
+# In[73]:
+
+
+import datetime
+ud = datetime.datetime(2016,1,1) + datetime.timedelta(bb[0]['geo']['doy'])
+bb[0]['geo']['doy']
+
+
+# In[75]:
+
+
+ud.month
+
+
+# In[ ]:
+
+
+def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
+    'function to feed the pool of workers to write out the all the files'
+    cloud['tau'],cloud['ref'] = d['cod'],d['ref']
+    d['f_in'] = d['f_in'].replace('.dat','')+'_{ux:04.1f}.dat'
+    d['f_in_noa'] = d['f_in_noa'].replace('.dat','')+'_{ux:04.1f}.dat'
+    ud = datetime.datetime(2016,1,1) + datetime.timedelta(d['geo']['doy'])
+    d['geo']['day'] = ud.day
+    d['geo']['year'] = ud.year
+    d['geo']['month'] = ud.month
+    for ux in np.arange(0,24,0.5):
+        d['geo']['utc'] = ux
+        d['geo']['hour'] = int(ux)
+        d['geo']['minute'] = int((ux-int(ux))*60.0)
+        d['geo']['second'] = 0
+        d['geo'].pop('sza',None)
+        Rl.write_input_aac(fpp_in+d['f_in'].format(ux=ux),geo=d['geo'],aero=d['aero'],cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+        Rl.write_input_aac(fpp_in+d['f_in_noa'].format(ux=ux),geo=d['geo'],aero=aero_no,cloud=cloud,source=source,albedo=albedo,
+                                   verbose=False,make_base=False,set_quiet=True)
+
+
+# In[82]:
+
+
+def write_files_sub(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
+    'function to feed the pool of workers to write out the all the files'
+    cloud['tau'],cloud['ref'] = d['cod'],d['ref']
+    d['f_in'] = d['f_in'].replace('.dat','')+'_{ux:04.1f}.dat'
+    d['f_in_noa'] = d['f_in_noa'].replace('.dat','')+'_{ux:04.1f}.dat'
+    ud = datetime.datetime(2016,1,1) + datetime.timedelta(d['geo']['doy'])
+    d['geo']['day'] = ud.day
+    d['geo']['year'] = ud.year
+    d['geo']['month'] = ud.month
+    source['run_fuliou'] = True
+    d['aero']['link_to_mom_file'] = True
+    d['aero']['file_name'] = fpp_in+d['f_in'].format(ux=0.0)+'_aero'
+    cloud['link_to_mom_file'] = True
+    cloud['file_name'] = fpp_in+d['f_in'].format(ux=0.0)+'_cloud'
+    d['geo'].pop('doy',None)
+    for ux in np.arange(0,24,0.5):
+        d['geo']['utc'] = ux
+        d['geo']['hour'] = int(ux)
+        d['geo']['minute'] = int((ux-int(ux))*60.0)
+        d['geo']['second'] = 0
+        d['geo'].pop('sza',None)
+        Rl.write_input_aac(fpp_in+d['f_in'].format(ux=ux),geo=d['geo'],aero=d['aero'],cloud=cloud,
+                           source=source,albedo=albedo,solver='twostr',
+                           verbose=False,make_base=False,set_quiet=True)
+        Rl.write_input_aac(fpp_in+d['f_in_noa'].format(ux=ux),geo=d['geo'],aero=aero_no,cloud=cloud,
+                           source=source,albedo=albedo,solver='twostr',
+                           verbose=False,make_base=False,set_quiet=True)
+
+
+# In[83]:
 
 
 p = Pool(cpu_count()-1,worker_init)
 
 
-# In[68]:
+# In[84]:
 
 
 results = []
 max_ = len(bb)
 with tqdm(total=max_) as pbar:
-    for i, res in tqdm(enumerate(p.imap_unordered(write_files, bb))):
+    for i, res in tqdm(enumerate(p.imap_unordered(write_files_sub, bb))):
         pbar.update()
         results.append(res)
 

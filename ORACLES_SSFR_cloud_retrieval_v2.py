@@ -40,7 +40,7 @@
 
 # # Prepare the python environment
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -49,20 +49,20 @@ import os
 import matplotlib.pyplot as plt
 
 
-# In[2]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[4]:
 
 
 import load_utils as lu
 import Sp_parameters as Sp
 
 
-# In[4]:
+# In[5]:
 
 
 import hdf5storage as hs
@@ -72,27 +72,27 @@ from tqdm import tqdm_notebook as tqdm
 import math
 
 
-# In[5]:
+# In[6]:
 
 
 from datetime import datetime 
 import plotting_utils as pu
 
 
-# In[6]:
+# In[7]:
 
 
 from scipy import interpolate
 
 
-# In[7]:
+# In[8]:
 
 
 fp = getpath('ORACLES')
 fp
 
 
-# In[36]:
+# In[9]:
 
 
 vv='v3'
@@ -100,14 +100,14 @@ vv='v3'
 
 # # Load files
 
-# In[8]:
+# In[10]:
 
 
 days = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[9]:
+# In[11]:
 
 
 doy = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
@@ -115,7 +115,7 @@ doy = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d i
 
 # ## Load the SSFR ict files for 2016
 
-# In[10]:
+# In[12]:
 
 
 ssfr_a, ssfr_ah = [],[]
@@ -125,13 +125,13 @@ for d in days:
     ssfr_ah.append(sfh)
 
 
-# In[11]:
+# In[13]:
 
 
 ssfr_ah[0]
 
 
-# In[11]:
+# In[14]:
 
 
 ssfr_a[0]
@@ -151,13 +151,13 @@ plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['UP500'][ialt]/ssfr_a[5]['DN500'
 plt.plot(ssfr_a[5]['Start_UTC'][ialt],ssfr_a[5]['DN500'][ialt],'.')
 
 
-# In[13]:
+# In[15]:
 
 
 iflt = (ssfr_a[5]['Start_UTC']>11.4692) & (ssfr_a[5]['Start_UTC']<11.5)
 
 
-# In[14]:
+# In[16]:
 
 
 sk =  ssfr_a[5].keys()
@@ -167,14 +167,14 @@ for k in sk:
         print k, np.nanmean(ssfr_a[5][k.replace('DN','UP')][iflt])/np.nanmean(ssfr_a[5][k][iflt])
 
 
-# In[15]:
+# In[18]:
 
 
 albedo_wvl = [415.0,440.0,500.0,675.0,870.0,990.0,1020.0,1064.0,1250.0,1650.0,2100.0]
 albedos = [0.0589,0.0560,0.0523,0.0383,0.0381,0.0383,0.0383,0.0375,0.0383,0.0361,0.0558]
 
 
-# In[16]:
+# In[19]:
 
 
 albedo_wvl,albedos
@@ -182,7 +182,7 @@ albedo_wvl,albedos
 
 # ## Load the 4STAR files with flagacaod
 
-# In[17]:
+# In[20]:
 
 
 star_a, star_ah = [],[]
@@ -192,7 +192,7 @@ for d in days:
     star_ah.append(sfh)
 
 
-# In[18]:
+# In[21]:
 
 
 ssfr_a[3]['Start_UTC'][100]
@@ -206,7 +206,7 @@ star_ah[4]
 
 # ## Get the flagacaod on the timescale of the ssfr measurements
 
-# In[20]:
+# In[22]:
 
 
 for i,d in enumerate(days):
@@ -227,7 +227,7 @@ for i,d in enumerate(days):
     ssfr_a[i]['a0'] = a0
 
 
-# In[21]:
+# In[23]:
 
 
 ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
@@ -235,13 +235,13 @@ ssfr_a[0]['flagacaod'].shape,ssfr_a[0]['Start_UTC'].shape
 
 # ## Load the LUT for 2wvl reflectance retrieval
 
-# In[23]:
+# In[24]:
 
 
 lut = hs.loadmat(fp+'rtm/v6_irr_ORACLES_lut.mat')
 
 
-# In[24]:
+# In[25]:
 
 
 lut.keys()
@@ -249,13 +249,13 @@ lut.keys()
 
 # ## Combine into one array
 
-# In[109]:
+# In[26]:
 
 
 nm = ssfr_a[1].keys()
 
 
-# In[110]:
+# In[27]:
 
 
 ar = {}
@@ -263,14 +263,14 @@ for n in ssfr_a[1].keys():
     ar[n] = np.array([])
 
 
-# In[111]:
+# In[28]:
 
 
 ar['days'] = np.array([])
 ar['doy'] = np.array([])
 
 
-# In[112]:
+# In[29]:
 
 
 for i,d in enumerate(days):
@@ -285,13 +285,13 @@ for i,d in enumerate(days):
             ar[n] = np.append(ar[n],ssfr_a[i]['Start_UTC']*0)
 
 
-# In[113]:
+# In[30]:
 
 
 ar['days'].shape
 
 
-# In[114]:
+# In[31]:
 
 
 nm
@@ -299,7 +299,7 @@ nm
 
 # # Format the LUT and data for retrievals
 
-# In[115]:
+# In[32]:
 
 
 class so:
@@ -308,7 +308,7 @@ class so:
 
 # ## Set up the data
 
-# In[116]:
+# In[33]:
 
 
 ar['meas'] = so
@@ -318,7 +318,7 @@ ar['meas'].Rnir = ar['UP2100']/ar['DN2100']
 ar['meas'].utc = ar['Start_UTC']
 
 
-# In[117]:
+# In[34]:
 
 
 # filter out the bad data. 
@@ -327,7 +327,7 @@ ar['meas'].Rvis[bad] = np.nan
 ar['meas'].Rvis[bad] = np.nan
 
 
-# In[118]:
+# In[35]:
 
 
 igood = np.where((np.isfinite(ar['meas'].Rvis)) & (ar['meas'].Rvis > 0.0) & (np.isfinite(ar['meas'].Rnir)) & (ar['meas'].Rnir > 0.0) & (ar['flagacaod']==1))[0]
@@ -436,7 +436,7 @@ plt.savefig(fp+'plot/ORACLES_2016_AOD_vs_reflectance500nm_{}.png'.format(vv),dpi
 
 # ## Get the DARE parameterization
 
-# In[46]:
+# In[36]:
 
 
 fp
@@ -445,10 +445,56 @@ fp
 # In[50]:
 
 
+## Old do not use
+
 sares = []
 for i in xrange(9):
-    sares.append(sio.idl.readsav(fp+'data_other/ssfr/AOD_DARE_param_coeffs_{}0sza_for_sam_v2.out'.format(i)))
+    sares.append(sio.idl.readsav(fp+'data_other/ssfr/AOD_DARE_param_coeffs_{}0sza_for_sam_v2.out'.format(i)))  
 sares_sza = [0.0,10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0]
+
+
+# In[37]:
+
+
+## Update from table 4a and 4b on Cochrane et al. 2020 manuscript submitted for publication:
+sares = []
+sares_sza = [0.0,10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0]
+
+
+# In[43]:
+
+
+l0 = [-135.2,-136.1,-138.5,-142.5,-147.9,-153.9,-158.0,-152.6,-116.0]
+l0e = [17.1,17.1,16.9,16.6,16.1,15.2,13.7,11.6,8.6]
+l1 = [751.1,743.3,720.2,682.4,630.5,564.5,482.5,378.5,239.4]
+l1e = [57.3,56.6,54.6,51.2,46.5,40.5,33.3,25.5,18.2]
+l2 = [-168.1,-164.8, -154.9,-138.8, -117.0, -90.4, -60.7, -32.7, -24.1]
+l2e = [26.1,25.7,24.4,22.4,19.6,16.2,12.1,7.6,3.4]
+q0 = [31.6,32.36,34.6,38.7,45.1,54.7,67.5,80.3,77.4]
+q0e = [6.1,6.1,6.2,6.4,6.5,6.5,6.2,6.7,5.6]
+q1 = [-269.8,-268.1,-263.3,-255.7,-246.1,-235.1,-221.6,-200.5,-156.8]
+q1e = [31.9,31.6,30.9,29.5,27.6,24.9,21.2,16.8,13.1]
+q2 = [126.7,124.6,118.4,108.0,93.5,74.7,51.9,27.1,15.5]
+q2e = [17.2,16.9,16.2,14.9,13.2,11.1,8.6,5.7,2.5]
+
+
+# In[44]:
+
+
+c1 = [-652.0,-657.0,-665.3,-682.0,-703.2,-725.6,-733.1,-692.5,-524.3]
+c2 = [113.5,120.9,129.0,151.2,185.6,235.7,295.9,353.7,353.2]
+d1 = [-2741.3,-2112.1,-2625.2,-2482.3,-2284.9,-2032.9,-1721.7,-1335.1,-817.6]
+d2 = [1210.9,1201.6,1174.6,1131.2,1072.8,999.9,909.4,787.5,577.3]
+
+
+# In[50]:
+
+
+sares = []
+for i,z in enumerate(sares_sza):
+    sares.append({'avl0':l0[i],'avl1':l1[i],'avl2':l2[i],'avq0':q0[i],'avq1':q1[i],'avq2':q2[i],
+                'erl0':l0e[i],'erl1':l1e[i],'erl2':l2e[i],'erq0':q0e[i],'erq1':q1e[i],'erq2':q2e[i],
+                'c1':c1[i],'c2':c2[i],'d1':d1[i],'d2':d2[i]})
 
 
 # In[51]:
@@ -523,8 +569,57 @@ sares[6]['avl1']
 sare['sza'] = [20.0]
 
 
+# In[53]:
+
+
+def P_dare_fx(aod_550,albedo_550,sza,sares=sares,sares_sza=sares_sza):
+    'Function from manuscript, to calculate the DARE (P(AOD550,ssa550)) eq. 12, Cochrane, 2020, AMT - no doy specific'
+    
+    dare = np.zeros_like(sza)+np.nan
+    szai = []
+    for j,z in enumerate(sza):
+        i = np.argmin(abs(z-sares_sza))
+        szai.append(i)
+        
+        l_term = sares[i]['avl0']+sares[i]['avl1']*albedo_550[j]+sares[i]['avl2']*(albedo_550[j])**2.0
+        q_term = sares[i]['avq0']+sares[i]['avq1']*albedo_550[j]+sares[i]['avq2']*(albedo_550[j])**2.0
+        dare[j] = l_term*aod_550[j] + q_term*(aod_550[j])**2.0    
+    
+    return dare,np.array(szai)
+
+
+# In[54]:
+
+
+def PX_dare_fx(aod_550,albedo_550,ssa_550,sza,sares=sares,sares_sza=sares_sza):
+    'Function from manuscript, to calculate the DARE (P(AOD550,ssa550)) eq. 12, Cochrane, 2020, AMT - no doy specific'
+    
+    ssa_mean = 0.83
+    dare = np.zeros_like(sza)+np.nan
+    szai = []
+    for j,z in enumerate(sza):
+        i = np.argmin(abs(z-sares_sza))
+        szai.append(i)
+        crit_alb = 0.21+(ssa_550[j]-ssa_mean)        
+        l_term = sares[i]['avl0']+sares[i]['avl1']*albedo_550[j]+sares[i]['avl2']*(albedo_550[j])**2.0
+        q_term = sares[i]['avq0']+sares[i]['avq1']*albedo_550[j]+sares[i]['avq2']*(albedo_550[j])**2.0
+        c_term = sares[i]['c1']*aod_550[j]+sares[i]['c2']*aod_550[j]**2.0
+        d_term = sares[i]['d1']*aod_550[j]+sares[i]['d2']*aod_550[j]**2.0
+        delta_crit = c_term*(ssa_550[j]-ssa_mean)
+        delta_max = d_term*(ssa_550[j]-ssa_mean)
+          
+        if albedo_550[j] < crit_alb: 
+            delta = delta_crit
+        else:
+            delta = (albedo_550[j]-crit_alb)/(1.0-crit_alb) * delta_max + (1.0-albedo_550[j])/(1.0-crit_alb)*delta_crit
+        dare[j] = l_term*aod_550[j] + q_term*(aod_550[j])**2.0 + delta
+    return dare,np.array(szai)
+
+
 # In[55]:
 
+
+# Old pre manuscript
 
 def sare_fx(alb,aod,sares,sza,doy,sares_sza=np.array(sares_sza)):
     'Function to calculate the Scalable Aerosol Radiative Effect (SARE) from Cochrane et al., 2019 in prep v2'
@@ -546,16 +641,50 @@ def sare_fx(alb,aod,sares,sza,doy,sares_sza=np.array(sares_sza)):
     return dare,np.array(szai)
 
 
-# In[56]:
+# In[55]:
 
 
 dare,szai = sare_fx(ar['meas'].Rvis[igood],ar['AOD_550'][igood],sares,ar['meas'].sza[igood],ar['doy'][igood])
+
+
+# In[78]:
+
+
+s = hs.loadmat(fp+'ORACLES_DARE_{}.mat'.format('v3'))
+s['doys'] = s['doy']+s['utc']/24.0
+ar['doys'] = ar['doy']+ar['Start_UTC']/24.0
+s_ssa_fx = interpolate.interp1d(s['doys'],s['ssa'][:,2],kind='linear',fill_value="extrapolate")
+ar['ssa'] = s_ssa_fx(ar['doys'])
+
+
+# In[56]:
+
+
+dare_p,szai = P_dare_fx(ar['AOD_550'][igood],ar['meas'].Rvis[igood],ar['meas'].sza[igood])
+
+
+# In[79]:
+
+
+dare_px,szaix = PX_dare_fx(ar['AOD_550'][igood],ar['meas'].Rvis[igood],ar['ssa'][igood],ar['meas'].sza[igood])
 
 
 # In[57]:
 
 
 np.nanmin(dare),np.nanmax(dare),np.nanmean(dare),np.nanmedian(dare)
+
+
+# In[80]:
+
+
+np.nanmin(dare_p),np.nanmax(dare_p),np.nanmean(dare_p),np.nanmedian(dare_p)
+
+
+# In[81]:
+
+
+np.nanmin(dare_px),np.nanmax(dare_px),np.nanmean(dare_px),np.nanmedian(dare_px)
 
 
 # In[58]:
