@@ -687,21 +687,21 @@ np.nanmin(dare_p),np.nanmax(dare_p),np.nanmean(dare_p),np.nanmedian(dare_p)
 np.nanmin(dare_px),np.nanmax(dare_px),np.nanmean(dare_px),np.nanmedian(dare_px)
 
 
-# In[58]:
+# In[87]:
 
 
 plt.figure()
-plt.hist(dare,bins=30,edgecolor='None',alpha=0.7,color='g',range=(np.nanmin(dare),np.nanmax(dare)),zorder=10)
-plt.xlabel('DARE [w/m^2]')
+plt.hist(dare_p,bins=30,edgecolor='None',alpha=0.7,color='g',range=(np.nanmin(dare_p),np.nanmax(dare_p)),zorder=10)
+plt.xlabel('Instantaneous DARE [w/m^2]')
 plt.ylabel('counts')
-plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - SARE v2')
+plt.title('ORACLES 2016 DARE from P3 SSFR and 4STAR - P [Cochrane et al., 2020]')
 
 plt.axvline(0,color='k',alpha=0.5,linestyle='--',zorder = -10)
-plt.axvline(np.nanmean(dare),color='g',label='mean')
-plt.axvline(np.nanmedian(dare),color='g',linestyle='--',label='median')
+plt.axvline(np.nanmean(dare_p),color='g',label='mean={:2.1f} W/m$^2$'.format(np.nanmean(dare_p)))
+plt.axvline(np.nanmedian(dare_p),color='g',linestyle='--',label='median={:2.1f} W/m$^2$'.format(np.nanmedian(dare_p)))
 plt.legend(frameon=False)
-pu.prelim()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_from_param_hist_v2.png',dpi=600,transparent=True)
+#pu.prelim()
+plt.savefig(fp+'plot/ORACLES_2016_DARE_P_fx_hist.png',dpi=600,transparent=True)
 
 
 # In[60]:
@@ -761,7 +761,7 @@ pu.prelim()
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[64]:
+# In[88]:
 
 
 boxes_diag = []
@@ -769,7 +769,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[65]:
+# In[89]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -779,87 +779,95 @@ boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.
 
 # Corners are [x0,x1,y0,y1]
 
-# In[66]:
+# In[90]:
 
 
 boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
 
 
-# In[67]:
+# In[91]:
 
 
 boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
 
 
-# In[68]:
+# In[92]:
 
 
 boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
 
 
-# In[69]:
+# In[93]:
 
 
 boxes_diag
 
 
-# In[70]:
+# In[94]:
 
 
 boxes_ew
 
 
-# In[71]:
+# In[95]:
 
 
 boxes_ns
 
 
-# In[72]:
+# In[122]:
 
 
-bins_diag = []
+bins_diag_p,bins_diag_px = [],[]
 bins_diag_alb = []
 for i,b in enumerate(boxes_diag):
-    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
-    bins_diag.append(dare[ia])
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_p))
+    bins_diag_p.append(dare_p[ia])
+    iax = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_px))
+    
+    bins_diag_px.append(dare_px[iax])
     bins_diag_alb.append(ar['meas'].Rnir[igood][ia])
     
 
 
-# In[73]:
+# In[120]:
 
 
-bins_ns = []
+bins_ns_p,bins_ns_px = [],[]
 for i,b in enumerate(boxes_ns):
-    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
-    bins_ns.append(dare[ia])
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_p))
+    bins_ns_p.append(dare_p[ia])
+    iax = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_px))
+    bins_ns_px.append(dare_px[iax])
 
 
-# In[74]:
+# In[121]:
 
 
-bins_ew = []
+bins_ew_p,bins_ew_px = [],[]
 for i,b in enumerate(boxes_ew):
-    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare))
-    bins_ew.append(dare[ia])
+    ia = (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_p))
+    bins_ew_p.append(dare_p[ia])
+    iax= (ar['LON'][igood]>= b[0]) & (ar['LON'][igood]<=b[1]) &(ar['LAT'][igood]>=b[2]) & (ar['LAT'][igood]<=b[3]) & (np.isfinite(dare_px))
+    
+    bins_ew_px.append(dare_px[iax])
 
 
-# In[75]:
+# In[102]:
 
 
-len(boxes_diag),len(bins_diag)
+len(boxes_diag),len(bins_diag_p)
 
 
-# In[76]:
+# In[104]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_diag_ct):
-    ax[i].hist(bins_diag[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
-    ax[i].axhline(np.nanmean(bins_diag[i]),color='g',label='mean')
-    ax[i].axhline(np.nanmedian(bins_diag[i]),color='g',linestyle='--',label='median')
+    ax[i].hist(bins_diag_p[i],bins=30,edgecolor='None',alpha=0.7,color='g',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
+    ax[i].axhline(np.nanmean(bins_diag_p[i]),color='g',label='mean')
+    ax[i].axhline(np.nanmedian(bins_diag_p[i]),color='g',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
@@ -868,20 +876,20 @@ for i,b in enumerate(boxes_diag_ct):
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - 4STAR+SSFR SARE params v2')
+fig.suptitle('ORACLES 2016 Routine Diagonal (Lon,Lat) - 4STAR+SSFR SARE params v3')
 fig.tight_layout()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_v2_diag_boxes.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_v3_diag_boxes.png',dpi=600,transparent=True)
 
 
-# In[77]:
+# In[105]:
 
 
 [fig,ax] = plt.subplots(1,8,figsize=(13,3))
 
 for i,b in enumerate(boxes_ns_ct):
-    ax[i].hist(bins_ns[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
-    ax[i].axhline(np.nanmean(bins_ns[i]),color='b',label='mean')
-    ax[i].axhline(np.nanmedian(bins_ns[i]),color='b',linestyle='--',label='median')
+    ax[i].hist(bins_ns_p[i],bins=30,edgecolor='None',alpha=0.7,color='b',range=(-60,150),zorder=10,normed=True,orientation='horizontal')
+    ax[i].axhline(np.nanmean(bins_ns_p[i]),color='b',label='mean')
+    ax[i].axhline(np.nanmedian(bins_ns_p[i]),color='b',linestyle='--',label='median')
     xmin, xmax = ax[i].get_xlim()
     ax[i].set_xticks(np.round(np.linspace(xmin, xmax, 3), 2))
     ax[i].axhline(0,ls=':',color='k',alpha=0.2)
@@ -890,9 +898,9 @@ for i,b in enumerate(boxes_ns_ct):
     ax[i].set_title('{}$^\\circ$ ,{}$^\\circ$'.format(b[0],b[1]))
     if i%2: pu.prelim(ax[i])
 ax[0].set_ylabel('DARE [W/m$^2$]')
-fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - 4STAR+SSFR SARE param v2')
+fig.suptitle('ORACLES 2016 North-South (Lon,Lat) - 4STAR+SSFR SARE param v3')
 fig.tight_layout()
-plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes_v2.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/ORACLES_2016_DARE_ns_boxes_v3.png',dpi=600,transparent=True)
 
 
 # In[203]:
@@ -906,18 +914,31 @@ dat_out = {'dare':dare,'bins_diag':bins_diag,'bins_ew':bins_ew,'bins_ns':bins_ns
 sio.savemat(fp+'ORACLES_2016_DARE_params_v3.mat',dat_out)
 
 
-# In[78]:
+# In[123]:
 
 
-plt.figure()
-sca = plt.scatter(ar['LON'][igood],ar['LAT'][igood],c=dare,edgecolor='None',s=40,alpha=0.5,cmap=plt.cm.viridis)
+dat_out = {'dare_p':dare_p,'dare_px':dare_px,
+           'bins_diag_p':bins_diag_p,'bins_ew_p':bins_ew_p,'bins_ns_p':bins_ns_p,
+           'bins_diag_px':bins_diag_px,'bins_ew_px':bins_ew_px,'bins_ns_px':bins_ns_px,
+           'boxes_diag':boxes_diag,'boxes_ew':boxes_ew,'boxes_ns':boxes_ns,
+           'boxes_diag_ct':boxes_diag_ct,'boxes_ew_ct':boxes_ew_ct,'boxes_ns_ct':boxes_ns_ct,
+           'lon':ar['LON'][igood],'lat':ar['LAT'][igood],'sza':ar['meas'].sza[igood],
+           'doy':ar['doy'][igood],'utc':ar['meas'].utc[igood]}
+sio.savemat(fp+'ORACLES_2016_DARE_params_v3_px.mat',dat_out)
+
+
+# In[118]:
+
+
+plt.figure(figsize=(4,3))
+sca = plt.scatter(ar['LON'][igood],ar['LAT'][igood],c=dare_p,edgecolor='None',s=40,alpha=0.5,cmap=plt.cm.viridis)
 plt.grid()
 plt.xlim(-1,16)
 plt.xlabel('Longitude [$^\\circ$]')
 plt.ylabel('Latitude [$^\\circ$]')
-cb = plt.colorbar(sca)
-cb.set_label('DARE [W/m$^2$]')
-pu.prelim()
+cb = plt.colorbar(sca,extend='both')
+cb.set_label('Instantaneous DARE [W/m$^2$]')
+#pu.prelim()
 
 for i,b in enumerate(boxes_ns): 
     plt.plot([b[0],b[0],b[1],b[1],b[0]],[b[2],b[3],b[3],b[2],b[2]],'-b')
@@ -925,8 +946,9 @@ for i,b in enumerate(boxes_diag):
     plt.plot([b[0],b[0],b[1],b[1],b[0]],[b[2],b[3],b[3],b[2],b[2]],'-g')
 
 plt.ylim(-25,-7)
-plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR v2')
-plt.savefig(fp+'plot/ORACLES_2016_DARE_v2_map_param.png',dpi=600,transparent=True)
+plt.tight_layout()
+#plt.title('ORACLES 2016 DARE from parameterization 4STAR and SSFR v2')
+plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_v3_map_param.png',dpi=600,transparent=True)
 
 
 # ## Save to file for easier loading

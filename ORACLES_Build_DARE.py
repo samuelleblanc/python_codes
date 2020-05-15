@@ -1240,17 +1240,20 @@ get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
 fpp_out,name,vv,geo['zout']
 
 
-# In[264]:
+# In[98]:
 
 
 n = len(ar['Start_UTC'][fla])
 nz = len(geo['zout'])
 nw = len(aero['wvl_arr'])
+nt = 48
 dat = {'cod':np.zeros(n)+np.nan,'ref':np.zeros(n)+np.nan,'ext':np.zeros((n,nw))+np.nan,
        'ssa':np.zeros((n,nw))+np.nan,'asy':np.zeros((n,nw))+np.nan,'zout':geo['zout'],
        'wvl':aero['wvl_arr'],'sza':np.zeros(n)+np.nan,
-       'dn':np.zeros((n,nz))+np.nan,'up':np.zeros((n,nz))+np.nan,
-       'dn_noa':np.zeros((n,nz))+np.nan,'up_noa':np.zeros((n,nz))+np.nan}
+       'dn':np.zeros((n,nt,nz))+np.nan,'up':np.zeros((n,nt,nz))+np.nan,
+       'dn_noa':np.zeros((n,nt,nz))+np.nan,'up_noa':np.zeros((n,nt,nz))+np.nan,
+       'dn_avg':np.zeros((n,nz))+np.nan,'up_avg':np.zeros((n,nz))+np.nan,
+       'dn_noa_avg':np.zeros((n,nz))+np.nan,'up_noa_avg':np.zeros((n,nz))+np.nan}
 
 for i,u in enumerate(ar['Start_UTC'][fla]):
     
@@ -1402,15 +1405,121 @@ for oo in outputs:
     dat['up_noa'][oo['i'],:] = oo['up_noa']
 
 
+# ### Multiprocessing reading for diurnal averaging
+
+# In[85]:
+
+
+class KeyboardInterruptError(Exception): pass
+
+
+# In[90]:
+
+
+v = np.zeros((48,3))+np.nan
+
+
+# In[92]:
+
+
+np.nanmean(v,axis=0)
+
+
+# In[93]:
+
+
+def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
+    'function to feed the pool of workers to read all the files'
+    nz = len(zout)
+    out = {'dn':np.zeros((48,nz))+np.nan,'dn_noa':np.zeros((48,nz))+np.nan,
+           'up':np.zeros((48,nz))+np.nan,'up_noa':np.zeros((48,nz))+np.nan}
+    out['i'] = i
+    for u,ux in enumerate(np.arange(0,24,0.5)):
+        f_in = '{name}_{vv}_DARE_{i:03d}_withaero_{ux:04.1f}.dat'.format(name=name,vv=vv,i=i,ux=ux)
+        f_in_noa = '{name}_{vv}_star_{i:03d}_noaero_{ux:04.1f}.dat'.format(name=name,vv=vv,i=i,ux=ux)
+        
+        try:
+            o = Rl.read_libradtran(fpp_out+f_in,zout=zout)
+            on = Rl.read_libradtran(fpp_out+f_in_noa,zout=zout)
+
+            #dat['dn'][i,:] = o['diffuse_down']+o['direct_down']
+            #dat['dn_noa'][i,:] = on['diffuse_down']+on['direct_down']
+            #dat['up'][i,:] = o['diffuse_up']
+            #dat['up_noa'][i,:] = on['diffuse_up']
+
+            out['dn'][u,:] = o['diffuse_down']+o['direct_down']
+            out['dn_noa'][u,:] = on['diffuse_down']+on['direct_down']
+            out['up'][u,:] = o['diffuse_up']
+            out['up_noa'][u,:] = on['diffuse_up']
+            
+        except KeyboardInterrupt:
+            raise KeyboardInterruptError()
+
+        except:
+            out['dn'][u,:] = np.zeros(len(zout))+np.nan
+            out['dn_noa'][u,:] = np.zeros(len(zout))+np.nan
+            out['up'][u,:] = np.zeros(len(zout))+np.nan
+            out['up_noa'][u,:] = np.zeros(len(zout))+np.nan
+
+    out['dn_avg'] = np.nanmean(out['dn'],axis=0)
+    out['dn_noa_avg'] = np.nanmean(out['dn_noa'],axis=0)
+    out['up_avg'] = np.nanmean(out['up'],axis=0)
+    out['up_noa_avg'] = np.nanmean(out['up_noa'],axis=0)
+    return out
+
+
+# In[94]:
+
+
+def worker_init(verbose=True):
+    # ignore the SIGINI in sub process, just print a log
+    def sig_int(signal_num, frame):
+        if verbose: 
+            print 'signal: %s' % signal_num
+        raise IOError
+    signal.signal(signal.SIGINT, sig_int)
+
+
+# In[95]:
+
+
+p = Pool(cpu_count()-1,worker_init)
+
+
+# In[96]:
+
+
+outputs = []
+max_ = len(ar['Start_UTC'][fla])
+with tqdm(total=max_) as pbar:
+    for i, outs in tqdm(enumerate(p.imap_unordered(read_files, range(0, max_)))):
+        pbar.update()
+        outputs.append(outs)
+
+
+# In[99]:
+
+
+for oo in outputs:
+    dat['dn_avg'][oo['i'],:] = oo['dn_avg']
+    dat['dn_noa_avg'][oo['i'],:] = oo['dn_noa_avg']
+    dat['up_avg'][oo['i'],:] = oo['up_avg']
+    dat['up_noa_avg'][oo['i'],:] = oo['up_noa_avg']
+    dat['dn'][oo['i'],:,:] = oo['dn']
+    dat['dn_noa'][oo['i'],:,:] = oo['dn_noa']
+    dat['up'][oo['i'],:,:] = oo['up']
+    dat['up_noa'][oo['i'],:,:] = oo['up_noa']
+
+
 # ### combine
 
-# In[273]:
+# In[101]:
 
 
 dat['dare'] = (dat['dn']-dat['up']) - (dat['dn_noa']-dat['up_noa'])
 
 
-# In[274]:
+# In[102]:
 
 
 dat['utc'] = ar['Start_UTC'][fla]
@@ -1419,9 +1528,15 @@ dat['lon'] = ar['Longitude'][fla]
 dat['doy'] = ar['doy'][fla]
 
 
+# In[103]:
+
+
+dat['dare_avg'] = (dat['dn_avg']-dat['up_avg']) - (dat['dn_noa_avg']-dat['up_noa_avg'])
+
+
 # ## Save the file
 
-# In[275]:
+# In[105]:
 
 
 dat1 = iterate_dict_unicode(dat)
@@ -1429,16 +1544,10 @@ print 'saving file to: '+fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv
 hs.savemat(fp+'{name}_DARE_aero_prop_{vv}.mat'.format(name=name,vv=vv),dat1)
 
 
-# In[276]:
+# In[106]:
 
 
 dat1 = iterate_dict_unicode(dat)
 print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
 hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
-
-
-# In[ ]:
-
-
-
 
