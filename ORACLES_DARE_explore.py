@@ -1175,6 +1175,55 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_boxplot_NS_lat.png',dpi=600,transparent=True)
 
 
+# In[572]:
+
+
+dare_means
+
+
+# In[576]:
+
+
+np.arange(0,-22,-2)
+
+
+# In[587]:
+
+
+plt.figure(figsize=(4,4))
+#plt.plot(s['dare'][igood,2],s['lat'][igood],'.',alpha=0.05)
+bp = plt.boxplot(bins_ns_24h,positions=ns_ct[:,1],vert=False,showfliers=True,widths=1,showmeans=True,patch_artist=True)
+plt.xlabel('TOA Diurnally averaged DARE [W/m$^2$]')
+plt.ylabel('Latitude [$^{{\\circ}}$S]')
+
+#plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.',alpha=0.005)
+color_boxes(bp,'tab:blue')
+
+dare_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
+plt.plot(dare_means[:,0],dare_means[:,1],'-',color='tab:blue',alpha=0.6,label='Means')
+la = plt.plot(AL_dare_2016, AL_Lat,'s-',color='tab:red',alpha=0.6,label='ALADIN Model')
+plt.ylim(-23,1)
+plt.yticks(np.arange(-22,2,2))
+plt.gca().set_yticklabels(np.arange(-22,2,2))
+#plt.yticks([-22.0-20.0,-18.0,-16.0,-14.0,-12.0,-10.0,-8.0,-6.0,-4.0,-2.0])
+plt.xlim(-25,60)
+#plt.ylim(0,2500)
+
+for j,nn in enumerate(bins_ns_num): 
+    if nn>0:
+        plt.text(min(bp['means'][j].get_data()[0])+5,ns_ct[j,1],'{:2.0f}'.format(nn),
+                 color='tab:blue',fontsize=7,verticalalignment='center',horizontalalignment='left')
+#pu.prelim()
+plt.axvline(0,ls='--',lw=1,color='k',alpha=0.6)
+
+plt.legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0],bp['fliers'][0],la[0]],
+           ['Mean','Median','25% - 75%','min-max','outliers','ALADIN\n(August 2016)'],
+           frameon=False,loc=1,numpoints=1)
+#plt.title('In situ calculated extinction CLAP+neph: {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_with_ALADIN_boxplot_NS_lat.png',dpi=600,transparent=True)
+
+
 # In[299]:
 
 
@@ -1274,7 +1323,7 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_boxplot_NS_lat.png',dpi=600,transparent=True)
 
 
-# In[375]:
+# In[561]:
 
 
 plt.figure()
