@@ -1339,7 +1339,7 @@ plt.plot(AL_Lat,AL_dare_2016,'-',color='tab:red',alpha=0.6,label='ALADIN Diurnal
 s.keys()
 
 
-# In[328]:
+# In[588]:
 
 
 s['wvl']
@@ -1350,6 +1350,7 @@ s['wvl']
 
 bins_ns_aod,bins_ns_aodn = [],[]
 bins_ns_cod,bins_ns_codn = [],[]
+bins_ns_clear,bins_ns_clearn = [],[]
 bins_ns_ssa,bins_ns_ssan = [],[]
 bins_ns_asy,bins_ns_asyn = [],[]
 bins_ns_ref,bins_ns_refn = [],[]
@@ -1369,6 +1370,9 @@ for i,b in enumerate(boxes_ns):
     ie = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) &           (s['lat'][igood]<=b[3]) & (np.isfinite(s['ref'][igood]))
     bins_ns_ref.append(s['ref'][igood][ie])
     bins_ns_refn.append(len(s['ref'][igood][ie]))
+    iaf = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) &           (s['lat'][igood]<=b[3]) & (np.isfinite(s['ref'][igood]))
+    bins_ns_ref.append(s['ref'][igood][iaf])
+    bins_ns_refn.append(len(s['ref'][igood][iaf]))
 
 
 # In[346]:
