@@ -68,11 +68,12 @@ from mpl_toolkits.basemap import Basemap
 import scipy.stats as st
 
 
-# In[2]:
+# In[287]:
 
 
 import map_utils as mu
 from scipy import interpolate
+import math
 
 
 # In[3]:
@@ -122,19 +123,19 @@ ka.sort()
 ka
 
 
-# In[9]:
+# In[10]:
 
 
 nwl = ka[0:17]
 
 
-# In[10]:
+# In[11]:
 
 
 nwl
 
 
-# In[39]:
+# In[12]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
@@ -143,96 +144,134 @@ nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1
 # # Run analysis and prepare variables
 # Do some of the calculations to the data here
 
-# In[11]:
+# In[126]:
 
 
 fl1 = ar['days']==ar['days'][0]
 
 
-# In[12]:
+# In[127]:
 
 
 fl1.shape
 
 
-# In[13]:
+# In[128]:
 
 
-fl = ar['fl_QA']==0
+fl = (ar['fl_QA']==0) & (np.isfinite(ar['AOD0501'])) 
+
+
+# In[129]:
+
+
+fl1.shape
+
+
+# ## Calculate the Angstrom Exponent
+
+# In[88]:
+
+
+nwl,nm
+
+
+# In[89]:
+
+
+aodrr = np.array([ar[n] for n in nwl])
+
+
+# In[90]:
+
+
+aodrr.shape
+
+
+# In[91]:
+
+
+angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
 # ## Subset the level legs
 
-# In[14]:
+# In[140]:
 
 
 def running_std(x,n):
     'Function to do a running standard deviation on array (x) with window size (n)'
     q = x**2
-    q = np.convolve(q, np.ones((n, )), mode="valid")
-    s = np.convolve(x, np.ones((n, )), mode="valid")
+    q = np.convolve(q, np.ones((n, )), mode="same")
+    s = np.convolve(x, np.ones((n, )), mode="same")
     o = (q-s**2/n)/float(n-1)
     return o 
 
 
-# In[15]:
+# In[141]:
 
 
 nbox = 20
 
 
-# In[16]:
+# In[142]:
 
 
 std_alt = running_std(ar['GPS_Alt'][fl],nbox)
 
 
-# In[17]:
+# In[143]:
 
 
 std_alt.shape
 
 
-# In[18]:
+# In[144]:
 
 
 ar['GPS_Alt'][fl].shape
 
 
-# In[19]:
+# In[145]:
 
 
 f_level = np.where(std_alt<5.0)[0]
 
 
-# In[20]:
+# In[146]:
 
 
-ar['GPS_Alt'].shape
+std_alt1 = running_std(ar['GPS_Alt'][fl1],nbox)
 
 
-# In[50]:
+# In[147]:
 
 
-ar['Start_UTC'][fl1][f_level]
+f_level1 = np.where(std_alt1<5.0)[0]
 
 
-# In[49]:
+# In[149]:
+
+
+ar['Start_UTC'][fl1][f_level1]
+
+
+# In[151]:
 
 
 plt.figure()
 ax1 = plt.subplot(2,1,1)
 plt.plot(ar['Start_UTC'][fl1],ar['GPS_Alt'][fl1],'.')
-plt.plot(ar['Start_UTC'][fl1][f_level],ar['GPS_Alt'][fl1][f_level],'r.')
+plt.plot(ar['Start_UTC'][fl1][f_level1],ar['GPS_Alt'][fl1][f_level1],'r.')
 
 
 ax2 = plt.subplot(2,1,2,sharex=ax1)
-plt.plot(ar['Start_UTC'][fl1][:1-nbox],std_alt,'.')
-plt.plot(ar['Start_UTC'][fl1][f_level],std_alt[f_level],'r.')
+plt.plot(ar['Start_UTC'][fl1],std_alt1,'.')
+plt.plot(ar['Start_UTC'][fl1][f_level1],std_alt[f_level1],'r.')
 plt.ylim(0,100)
 
 
-# In[51]:
+# In[152]:
 
 
 plt.figure()
@@ -242,14 +281,14 @@ plt.plot(ar['Start_UTC'][fl][f_level],ar['GPS_Alt'][fl][f_level],'r.')
 
 
 ax2 = plt.subplot(2,1,2,sharex=ax1)
-plt.plot(ar['Start_UTC'][fl][:1-nbox],std_alt,'.')
+plt.plot(ar['Start_UTC'][fl],std_alt,'.')
 plt.plot(ar['Start_UTC'][fl][f_level],std_alt[[f_level]],'r.')
 plt.ylim(0,100)
 
 
 # ## Seperate each of the level legs into distinct segments
 
-# In[21]:
+# In[183]:
 
 
 def get_segments(index,vals_dict,nsep=150,set_nan=True):
@@ -262,11 +301,14 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
     kv = vals_dict.keys()
     d = {k:[] for k in kv}
     for i,start in enumerate(discontinuity_istart_long): # loop through discontinuities 
+        if discontinuity_iend_long[i]-start < 2: continue
         for k in kv: # loop through keys
             try:
                 d[k].append(vals_dict[k][start:discontinuity_iend_long[i]])
             except:
-                d[k].append([np.nan])
+                print start, discontinuity_iend_long[i]
+                continue
+                #d[k].append([np.nan])
     
     for k in kv:
         d[k] = np.array(d[k])
@@ -274,26 +316,26 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
     return d
 
 
-# In[22]:
+# In[184]:
 
 
 vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][fl],'lon':ar['Longitude'][fl],
-        'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl]}
+        'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl],'AE':angs[fl]}
 
 
-# In[23]:
+# In[185]:
 
 
 dvals = get_segments(f_level,vals,nsep=100)
 
 
-# In[24]:
+# In[186]:
 
 
 dvals.keys()
 
 
-# In[31]:
+# In[157]:
 
 
 for n in dvals['utc']:
@@ -303,7 +345,7 @@ for n in dvals['utc']:
         print np.nan
 
 
-# In[25]:
+# In[188]:
 
 
 def discrete_matshow(data,cmapname='RdBu'):
@@ -318,14 +360,15 @@ def discrete_matshow(data,cmapname='RdBu'):
     return cax
 
 
-# In[112]:
+# In[ ]:
 
 
 for q in np.unique(ar['days']):
-    flq = ar['days']==q
+    flq = ar['days'][fl]==q
+    flql = ar['days'][fl][f_level]==q
     plt.figure()
-    plt.plot(ar['Start_UTC'][flq],ar['GPS_Alt'][flq],'.')
-    plt.plot(ar['Start_UTC'][f_level][flq],ar['GPS_Alt'][f_level][flq],'r.')
+    plt.plot(ar['Start_UTC'][fl][flq],ar['GPS_Alt'][fl][flq],'.')
+    plt.plot(ar['Start_UTC'][fl][f_level][flql],ar['GPS_Alt'][fl][f_level][flql],'r.')
     ax = plt.gca()
 
     ax.set_color_cycle([plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(dvals['utc'])+1)])
@@ -347,7 +390,7 @@ for q in np.unique(ar['days']):
 
 # ## Now calculate the distances travelled within each segments
 
-# In[26]:
+# In[189]:
 
 
 def get_distances(seg_dict):
@@ -379,19 +422,19 @@ def get_distances(seg_dict):
     return seg_dict
 
 
-# In[27]:
+# In[190]:
 
 
 ddv = get_distances(dvals)
 
 
-# In[34]:
+# In[191]:
 
 
 dvals['cumdist']
 
 
-# In[28]:
+# In[192]:
 
 
 dvals.keys()
@@ -399,14 +442,103 @@ dvals.keys()
 
 # ## Calculate the autocorrelation of AOD with respect to distance
 
-# In[29]:
+# **From Shinozuka and Redemann, 2011, Horizontal variability of aerosol optical depth observed during the ARCTAS airborne experiment, ACP**
+# 
+# Autocorrelation is the correlation coefficient among all
+# data pairs xj and xj+k that exist at a separation, or lag, of k. That is,
+# 
+# ![image.png](attachment:image.png)
+# 
+# where k indicates the spatial lag (or distance), m+k and std+k denote the mean and standard deviation, respectively, of all data points that are located a distance of +k away from an- other data point, and m−k and std−k are the corresponding quantities for data points located a distance of −k away from another data point (Redemann et al., 2006; Anderson et al., 2003).
+# Figure 1c shows pairs of 499nm AOD measured 20km (±0.2 km) away from each other in the Canada phase. The correlation coefficient, r, is 0.37. This is the autocorrelation for 20km.
+
+# ### Test out Shinozuka & Redemann autocorrelation 
+
+# In[263]:
+
+
+dvals['cumdist'][2]
+
+
+# In[230]:
+
+
+dvals.keys()
+
+
+# In[288]:
+
+
+math.gamma(10)
+
+
+# In[320]:
+
+
+cr = []
+for i,cd in enumerate(dvals['cumdist']):
+    #cd = dvals['cumdist'][i]
+    corr = {'aod1040':[],'aod0500':[],'AE':[]}
+    corr_ks =[0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
+              25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
+    for ik, k in enumerate(corr_ks):
+
+    #k = 5.0 # for 5km distance
+        if k>np.nanmax(cd):
+            [corr[val].append(np.nan) for val in corr.keys()]
+            continue
+        ipk = np.argmin(abs(cd-k)) #ipk:
+        imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
+        N = len(cd)
+        #c = np.sqrt(2.0/(N-1))*math.gamma(N/2.0)/math.gamma((N-1.0)/2.0)
+
+        for val in dvals.keys():
+            if val in ['lon','utc','lat','cumdist','cdist_n','dist','alt','autocor','aod1040_r','AE_r','aod_n']: continue
+            #print val, len(dvals[val][i])
+            mpk = np.nanmean(dvals[val][i][ipk:]) #mean +k
+            mmk = np.nanmean(dvals[val][i][0:imk]) #mean -k
+            spk = np.nanstd(dvals[val][i][ipk:]) #std +k
+            smk = np.nanstd(dvals[val][i][0:imk]) #std -k
+            top = [(dvals[val][i][j]-mpk)*(dvals[val][i][j+ipk]-mmk) for j in xrange(N-ipk-1)]
+            #dvals[val+'_r'] = []
+            corr[val].append(np.sum(top)/((N-1)*spk*smk))
+            if (corr[val][-1]>1.0) | (corr[val][-1]<0.0):
+                print '{} has bad corr: {:2.2f} val for key {}: std+k:{:2.2f}, std-k:{:2.2f}, m+k:{:2.2f}, m-k:{:2.2f} '.format(i,
+                    corr[val][-1],val,spk,smk,mpk,mmk)
+
+    for val in corr.keys():
+        corr[val] = np.array(corr[val])
+    cr.append(corr)
+
+
+# In[316]:
+
+
+len(cr)
+
+
+# In[321]:
+
+
+plt.figure()
+for corr in cr:
+   # plt.plot(corr_ks,corr['AE']**2.0,'x-')
+    plt.plot(corr_ks,corr['aod1040']**2.0,'s-')
+    plt.plot(corr_ks,corr['aod0500']**2.0,'v-')
+plt.xscale('log')
+plt.ylim(0,1)
+
+
+# ### Integrated autocorrelation
+
+# In[193]:
 
 
 def autocorr(x, t=1):
     return np.corrcoef(np.array([x[:-t], x[t:]]))
 
 
-# In[30]:
+# In[194]:
 
 
 def autocorr2(x):
@@ -414,7 +546,7 @@ def autocorr2(x):
     return result[result.size // 2:]/result.max()
 
 
-# In[31]:
+# In[195]:
 
 
 def autocorr5(x):
@@ -429,7 +561,7 @@ def autocorr5(x):
     return corr[:n]
 
 
-# In[32]:
+# In[196]:
 
 
 authcor = autocorr(dvals['aod0500'][1])
@@ -437,25 +569,25 @@ authcor2 = autocorr2(dvals['aod0500'][1])
 authcor3 = autocorr5(dvals['aod0500'][1])
 
 
-# In[35]:
+# In[197]:
 
 
 len(authcor2)
 
 
-# In[36]:
+# In[198]:
 
 
 len(dvals['aod0500'][1])
 
 
-# In[36]:
+# In[199]:
 
 
 dvals['dist'][1]
 
 
-# In[37]:
+# In[200]:
 
 
 [(dvals['dist'][i].mean(),np.size(dvals['dist'][i])) for i in xrange(len(dvals['dist']))]
@@ -463,13 +595,16 @@ dvals['dist'][1]
 
 # ### interpolate AODs to a constant distance grid
 
-# In[33]:
+# In[204]:
 
 
-def interp_dist(d,dist=0.12):
+def interp_dist(d,dist=0.12,verbose=False):
     'function to insterpolate the AOD from the dict to an even grid spacing accroding to distance (default 0.12 km)'
     d['cdist_n'],d['aod_n'] = [],[]
     for i,cd in enumerate(d['cumdist']):
+        if verbose:
+            print i, cd.min(),cd.max(), np.nanmin(cd),np.nanmax(cd)
+            if not np.isfinite(cd.min()): print cd
         d['cdist_n'].append(np.arange(cd.min(),cd.max(),dist))
         try:
             fcd = interpolate.interp1d(cd,d['aod0500'][i])
@@ -478,19 +613,19 @@ def interp_dist(d,dist=0.12):
             d['aod_n'].append(np.array(np.nan))
 
 
-# In[43]:
+# In[202]:
 
 
 dvals['aod0500']
 
 
-# In[34]:
+# In[205]:
 
 
 interp_dist(dvals)
 
 
-# In[35]:
+# In[206]:
 
 
 dvals['autocor'] = [] 
@@ -503,7 +638,7 @@ for i,a in enumerate(dvals['aod_n']):
 
 # ### Autocorrelation plots
 
-# In[76]:
+# In[207]:
 
 
 plt.figure()
@@ -512,7 +647,7 @@ plt.xlabel('Lag Distance [km]')
 plt.ylabel('Correlation')
 
 
-# In[78]:
+# In[208]:
 
 
 plt.figure()
@@ -523,7 +658,7 @@ for i,j in enumerate(dvals['cdist_n']):
         pass
 
 
-# In[46]:
+# In[209]:
 
 
 plt.figure()
@@ -539,25 +674,25 @@ plt.xscale('log')
 
 # ## Now get the angstrom exponent and plot it vertically
 
-# In[40]:
+# In[210]:
 
 
 nwl,nm
 
 
-# In[41]:
+# In[89]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[42]:
+# In[90]:
 
 
 aodrr.shape
 
 
-# In[43]:
+# In[91]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
