@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[36]:
 
 
 import numpy as np
@@ -56,26 +56,26 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[ ]:
+# In[2]:
 
 
 from datetime import datetime
 from matplotlib import animation
 
 
-# In[ ]:
+# In[3]:
 
 
 get_ipython().run_cell_magic(u'javascript', u'', u'IPython.notebook.kernel.execute(\'nb_name = "\' + IPython.notebook.notebook_name + \'"\')')
 
 
-# In[2]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[5]:
 
 
 name = 'ORACLES'
@@ -98,7 +98,7 @@ fp = getpath(name)
 
 # # Load files
 
-# In[104]:
+# In[38]:
 
 
 daystr = '20160831'
@@ -106,74 +106,74 @@ daystr = '20160831'
 
 # ## Load the starzen
 
-# In[4]:
+# In[39]:
 
 
 fp_starzen = fp+'/starzen/4STAR_{}starzen.mat'.format(daystr)
 mea = sio.loadmat(fp_starzen)
 
 
-# In[5]:
+# In[40]:
 
 
 tt = lu.mat2py_time(mea['t'])
 mea['utc'] = lu.toutc(tt)
 
 
-# In[6]:
+# In[43]:
 
 
 print 'Running the parameter calculations on measured spectra'
 meas = Sp.Sp(mea,verbose=False)
-meas.params()
+meas.params(norm_1050=True)
 
 
 # ### Starzen for different date
 
-# In[103]:
+# In[44]:
 
 
 daystr2 = '20160914'
 
 
-# In[105]:
+# In[45]:
 
 
 fp_starzen2 = fp+'/starzen/4STAR_{}starzen.mat'.format(daystr2)
 mea2 = sio.loadmat(fp_starzen2)
 
 
-# In[106]:
+# In[46]:
 
 
 tt2 = lu.mat2py_time(mea2['t'])
 mea2['utc'] = lu.toutc(tt2)
 
 
-# In[107]:
+# In[47]:
 
 
 print 'Running the parameter calculations on measured spectra'
 meas2 = Sp.Sp(mea2,verbose=False)
-meas2.params()
+meas2.params(norm_1050=True)
 
 
 # ## Load the LUT
 
-# In[98]:
+# In[48]:
 
 
 vlut = 'v5_10aod'
 
 
-# In[7]:
+# In[49]:
 
 
 fp_lut_mat = fp+'model/{}_ORACLES_lut.mat'.format(vlut)
 luts = hs.loadmat(fp_lut_mat)
 
 
-# In[8]:
+# In[50]:
 
 
 airmass = 1./np.cos(luts['sza']*np.pi/180.0)
@@ -181,7 +181,7 @@ airmass = 1./np.cos(luts['sza']*np.pi/180.0)
 
 # # Start the retrieval pieces
 
-# In[9]:
+# In[51]:
 
 
 start_tau = 1.0
@@ -195,27 +195,27 @@ iz = 0
 
 # ## Prep the LUT
 
-# In[10]:
+# In[52]:
 
 
 meas.airmass = 1.0/np.cos(meas.sza*np.pi/180.0)
 idx = Sp.find_closest(airmass,meas.airmass)
 
 
-# In[108]:
+# In[53]:
 
 
 meas2.airmass = 1.0/np.cos(meas2.sza*np.pi/180.0)
 idx2 = Sp.find_closest(airmass,meas2.airmass)
 
 
-# In[11]:
+# In[54]:
 
 
 lut = []
 
 
-# In[12]:
+# In[55]:
 
 
 for s in xrange(len(luts['sza'])):
@@ -232,39 +232,39 @@ for s in xrange(len(luts['sza'])):
     sptemp['rad'] = luts['rad'][:,:,:,:,:,s]
     ltemp = Sp.Sp(sptemp,verbose=False)
     if s in idx:
-        ltemp.params(liq_only=forceliq,ice_only=forceice,iz=iz)
+        ltemp.params(liq_only=forceliq,ice_only=forceice,iz=iz,norm_1050=True)
         ltemp.param_hires(start_ref=start_ref,end_ref=end_ref,start_tau=start_tau,end_tau=end_tau)
     lut.append(ltemp)
 
 
 # ## Now run through the retrieval
 
-# In[13]:
+# In[56]:
 
 
 (meas.taut,meas.ref,meas.phase,meas.ki) = (np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc),np.zeros_like(meas.utc))
 
 
-# In[14]:
+# In[57]:
 
 
 (meas.taut,meas.ref,meas.phase,meas.ki) = (meas.taut*np.nan,meas.ref*np.nan,meas.phase*np.nan,meas.ki*np.nan)
 
 
-# In[109]:
+# In[58]:
 
 
 (meas2.taut,meas2.ref,meas2.phase,meas2.ki) = (np.zeros_like(meas2.utc),np.zeros_like(meas2.utc),np.zeros_like(meas2.utc),np.zeros_like(meas2.utc))
 (meas2.taut,meas2.ref,meas2.phase,meas2.ki) = (meas2.taut*np.nan,meas2.ref*np.nan,meas2.phase*np.nan,meas2.ki*np.nan)
 
 
-# In[15]:
+# In[59]:
 
 
 import run_kisq_retrieval as rk
 
 
-# In[16]:
+# In[60]:
 
 
 print 'Running through the airmasses'
@@ -297,13 +297,13 @@ for i in np.unique(idx):
     meas.ki[meas.good] = ki[meas.good]
 
 
-# In[17]:
+# In[61]:
 
 
 meas.tau = meas.taut
 
 
-# In[110]:
+# In[62]:
 
 
 print 'Running through the airmasses'
@@ -336,7 +336,7 @@ for i in np.unique(idx2):
     meas2.ki[meas2.good] = ki[meas2.good]
 
 
-# In[111]:
+# In[63]:
 
 
 meas2.tau = meas2.taut
@@ -346,50 +346,50 @@ meas2.tau = meas2.taut
 
 # ## Look at overall values
 
-# In[18]:
+# In[64]:
 
 
 meas.keys()
 
 
-# In[19]:
+# In[65]:
 
 
 plt.figure()
 plt.plot(meas['utc'],meas['par'][:,0],'.')
 
 
-# In[20]:
+# In[66]:
 
 
 lut[0].keys()
 
 
-# In[22]:
+# In[67]:
 
 
 lut[0]['par'].shape
 
 
-# In[23]:
+# In[68]:
 
 
 lut[0]['tau'].shape
 
 
-# In[24]:
+# In[69]:
 
 
 lut[0]['ref'].shape
 
 
-# In[25]:
+# In[70]:
 
 
 lut[0]['sza'].shape
 
 
-# In[26]:
+# In[71]:
 
 
 plt.figure()
@@ -398,25 +398,25 @@ plt.plot(lut[0]['tau'],lut[0]['par'][0,10,:,0],'.')
 
 # ## Plot out the lut
 
-# In[27]:
+# In[72]:
 
 
 from mpltools import color
 
 
-# In[28]:
+# In[73]:
 
 
 sza = np.arccos(1.0/airmass)*180.0/np.pi
 
 
-# In[29]:
+# In[74]:
 
 
 im = 1
 
 
-# In[113]:
+# In[75]:
 
 
 for im in range(4):
@@ -447,13 +447,46 @@ for im in range(4):
 #plt.show()
 
 
-# In[115]:
+# In[103]:
+
+
+for im in range(4):
+    fig3,ax3 = plt.subplots(5,3,sharex=True,figsize=(15,8))
+    ax3 = ax3.ravel()
+
+    for i in range(lut[im].npar-1):
+        color.cycle_cmap(len(lut[im].ref[lut[im].ref<30]),cmap=plt.cm.RdBu,ax=ax3[i])
+        for j in xrange(len(lut[im].ref)):
+            ax3[i].plot(lut[im].tau,lut[im].par[0,j,:,i])
+        ax3[i].set_title('Parameter '+str(i+1))
+        ax3[i].grid()
+        ax3[i].set_xlim([0,60])
+        if i > 11: 
+            ax3[i].set_xlabel('Tau')
+        ig = np.where(np.isfinite(meas.par[:,0]) & (idx[:,0]==im))[0]
+        ax3[i].plot(meas.tau[ig],meas.par[ig,i],'xk')
+
+    fig3.tight_layout()
+    plt.suptitle('Liquid SZA={:2.1f}$^{{\circ}}$'.format(sza[im]))
+    plt.subplots_adjust(top=0.93,right=0.93)
+
+    cbar_ax = fig3.add_axes([0.95,0.10,0.02,0.8])
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.RdBu,norm=plt.Normalize(vmin=0,vmax=1))
+    scalarmap.set_array(lut[im].ref[lut[im].ref<30])
+    cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
+    cba.ax.set_ylabel('R$_{ef}$ [$\\mu$m]')
+    cba.ax.set_yticklabels(np.linspace(lut[im].ref[0],29,6));
+    
+#plt.show()
+
+
+# In[76]:
 
 
 meas.par.shape
 
 
-# In[127]:
+# In[80]:
 
 
 
@@ -627,13 +660,13 @@ def param(sp,wvlin,iws=None):
     return param
 
 
-# In[32]:
+# In[78]:
 
 
 igood = np.where((idx[:,0]==1) & np.isfinite(meas.par[:,0]))[0]
 
 
-# In[146]:
+# In[79]:
 
 
 igood2 = np.where((idx2[:,0]==1) & np.isfinite(meas2.par[:,0]))[0]

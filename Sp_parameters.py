@@ -164,7 +164,7 @@ def norm2max(x,iws=None):
         pass
     return x/np.nanmax(x[iws])    
     
-def param(sp,wvlin,iws=None):
+def param(sp,wvlin,iws=None,norm_1050=False):
     " Calculates the parameters from a spectrum."
     from linfit import linfit
     from Sp_parameters import nanmasked, norm2max, smooth, deriv, find_closest
@@ -190,10 +190,16 @@ def param(sp,wvlin,iws=None):
      i1050,i1040,i1065,i600,i870,i515] = find_closest(wvl,np.array([1000,1077,1493,1600,1200,1300,530,
                                                      610,1565,1634,1193,1198,1236,1248,
                                                      1270,1644,1050,1040,1065,600,870,515]))
-    if np.isnan(spc[i1000]) or not spc[i1000]:
-        par = np.zeros(npar)*np.nan
-        return par
-    norm2 = spc/spc[i1000]
+    if norm_1050:
+        if np.isnan(spc[i1050]) or not spc[i1050]:
+            par = np.zeros(npar)*np.nan
+            return par
+        norm2 = spc/np.nanmean(spc[i1040:i1050])
+    else:
+        if np.isnan(spc[i1000]) or not spc[i1000]:
+            par = np.zeros(npar)*np.nan
+            return par
+        norm2 = spc/spc[i1000]
     try:
         dsp = smooth(deriv(norm2,wvl/1000),2,nan=False,old=True)
     except:
@@ -554,7 +560,7 @@ class Sp:
                 raise IOError('No defined time array (key t or utc) in input object')
         return utc, datestr
     
-    def params(self,liq_only=False,ice_only=True,iz=0):
+    def params(self,liq_only=False,ice_only=True,iz=0,norm_1050=False):
         """
         Purpose:
             Runs through each spectrum in the sp array to calculate the parameters
@@ -563,6 +569,8 @@ class Sp:
             - liq_only: (default False) if True, copies the keywords from liquid to ice values
             - ice_only: (default False) if True, copies the keywords from ice to liquid values
             - iz: (default 0 or lowest) zout index value used in calculating the parameters
+            - norm_1050: (default False) if True, then the parameters are calculated not with 
+                          respect to 1000 nm, but the average between 1040 and 1050 nm.
         """
         useezmap = False
         from Sp_parameters import param
@@ -580,11 +588,11 @@ class Sp:
         if sp.ndim == 5:
             w,r,t = np.mgrid[0:2,0:len(self.ref),0:len(self.tau)]
             if useezmap:
-                gx = lambda a:param(sp[a[0],:,iz,a[1],a[2]],wvl)
+                gx = lambda a:param(sp[a[0],:,iz,a[1],a[2]],wvl,norm_1050=norm_1050)
                 args = ((aw,ar,at) for aw in w.ravel() for ar in r.ravel() for at in t.ravel())
                 partemp = zmap(gx,args,progress=True,ncpu=2)
             else:
-                applypar = lambda w,r,t:param(sp[w,:,iz,r,t],wvl)
+                applypar = lambda w,r,t:param(sp[w,:,iz,r,t],wvl,norm_1050=norm_1050)
                 #import pdb; pdb.set_trace()
                 partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
             par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
@@ -598,7 +606,7 @@ class Sp:
                 par[0,:,:,:] = par[1,:,:,:]
             self.npar = par.shape[3]
         elif sp.ndim == 2:
-            applypartime = lambda tt:param(sp[tt,:],wvl)
+            applypartime = lambda tt:param(sp[tt,:],wvl,norm_1050=norm_1050)
             if useezmap:
                 par = np.array(zmap(applypartime,xrange(len(self.utc)),ncpu=2,progress=True))
             else:

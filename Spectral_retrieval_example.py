@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -543,6 +543,18 @@ lut.trans[1,w1650,0,3,0]
 
 # ## Movie of spectral changes in transmitted light and reflected light
 
+# In[ ]:
+
+
+
+
+
 # # Now modify measurement with an uncertainty and show results
 
 # ## Put on results of measured radiance and retrieved properties
+
+# In[ ]:
+
+
+
+
