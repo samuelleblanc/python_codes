@@ -141,6 +141,45 @@ nwl
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
+# In[325]:
+
+
+days = ['20160501','20160503','20160504','20160506','20160510','20160511',
+        '20160512','20160516','20160517','20160519','20160521','20160524',
+        '20160526','20160529','20160601','20160602','20160604','20160608',
+        '20160609','20160614']
+
+
+# In[326]:
+
+
+doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
+
+
+# In[327]:
+
+
+doys
+
+
+# In[336]:
+
+
+fdoys = np.array(doys)
+
+
+# In[343]:
+
+
+ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
+
+
+# In[344]:
+
+
+ar['doys']
+
+
 # # Run analysis and prepare variables
 # Do some of the calculations to the data here
 
@@ -192,6 +231,26 @@ aodrr.shape
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
+
+
+# ## Calculate the fine mode fraction
+
+# In[345]:
+
+
+fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
+
+
+# In[346]:
+
+
+fmf.keys()
+
+
+# In[348]:
+
+
+fmf['tauc'].shape, ar['GPS_Alt'].shape
 
 
 # ## Subset the level legs
@@ -316,26 +375,33 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
     return d
 
 
-# In[184]:
+# In[324]:
+
+
+ar['days']
+
+
+# In[349]:
 
 
 vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][fl],'lon':ar['Longitude'][fl],
-        'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl],'AE':angs[fl]}
+        'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl],'AE':angs[fl],'doys':ar['doys'][fl],
+        'aod_fine':fmf['tauf'][fl],'aod_coarse':fmf['tauc'][fl]}
 
 
-# In[185]:
+# In[350]:
 
 
 dvals = get_segments(f_level,vals,nsep=100)
 
 
-# In[186]:
+# In[351]:
 
 
 dvals.keys()
 
 
-# In[157]:
+# In[352]:
 
 
 for n in dvals['utc']:
@@ -390,7 +456,7 @@ for q in np.unique(ar['days']):
 
 # ## Now calculate the distances travelled within each segments
 
-# In[189]:
+# In[353]:
 
 
 def get_distances(seg_dict):
@@ -422,19 +488,19 @@ def get_distances(seg_dict):
     return seg_dict
 
 
-# In[190]:
+# In[354]:
 
 
 ddv = get_distances(dvals)
 
 
-# In[191]:
+# In[355]:
 
 
 dvals['cumdist']
 
 
-# In[192]:
+# In[356]:
 
 
 dvals.keys()
@@ -451,6 +517,48 @@ dvals.keys()
 # 
 # where k indicates the spatial lag (or distance), m+k and std+k denote the mean and standard deviation, respectively, of all data points that are located a distance of +k away from an- other data point, and m−k and std−k are the corresponding quantities for data points located a distance of −k away from another data point (Redemann et al., 2006; Anderson et al., 2003).
 # Figure 1c shows pairs of 499nm AOD measured 20km (±0.2 km) away from each other in the Canada phase. The correlation coefficient, r, is 0.37. This is the autocorrelation for 20km.
+
+# Define the different time periods from Met. From: 
+#     Peterson, D.A., Hyer, E.J., Han, S.-O., Crawford, J.H., Park, R.J., Holz, R., Kuehn, R.E., Eloranta, E., Knote, C., Jordan, C.E. and Lefer, B.L., 2019. Meteorology influencing springtime air quality, pollution transport, and visibility in Korea. Elem Sci Anth, 7(1), p.57. DOI: http://doi.org/10.1525/elementa.395
+# 
+#     - Dynamic meteorology and complex aerosol vertical profiles (01–16 May);
+#     - Stagnation under a persistent anticyclone (17–22 May);
+#     - Dynamic meteorology, low-level transport, and haze development (25–31 May); (Extreme pollution)
+#     - Blocking pattern (01–07 June).
+# 
+# 
+# ![image.png](attachment:image.png)
+
+# The distribution and source of pm 2.5 during different met periods
+# 
+# ![image.png](attachment:image.png)
+
+# ### Build the limits of the autocorrelation
+
+# In[357]:
+
+
+# for met times
+dt1 = ['20160501','20160516']
+dt2 = ['20160517','20160522']
+dt3 = ['20160523','20160531']
+dt4 = ['20160601','20160607']
+
+
+# In[360]:
+
+
+t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
+t2 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt2]
+t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt3]
+t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
+
+
+# In[361]:
+
+
+t1,t2,t3,t4
+
 
 # ### Test out Shinozuka & Redemann autocorrelation 
 
@@ -792,19 +900,7 @@ plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical.png',
             transparent=True,dpi=500)
 
 
-# ## Calculate the Fine mode fraction
-
-# In[48]:
-
-
-fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
-
-
-# In[49]:
-
-
-fmf.keys()
-
+# ## Analyse the Fine mode fraction
 
 # In[50]:
 
