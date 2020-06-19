@@ -557,7 +557,17 @@ t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 # In[361]:
 
 
+# limits of DOY for each of the met times
 t1,t2,t3,t4
+
+
+# In[514]:
+
+
+#altitude limits in m
+z1 = [0.0, 1000.0] 
+z2 = [1000.0, 3000.0]
+z3 = [3000.0, 15000.0]
 
 
 # ### Test out Shinozuka & Redemann autocorrelation 
@@ -568,55 +578,51 @@ t1,t2,t3,t4
 dvals['cumdist'][2]
 
 
-# In[230]:
+# In[363]:
 
 
 dvals.keys()
 
 
-# In[288]:
+# In[ ]:
 
 
-math.gamma(10)
+# method for making one autocorrelation per segment. Old not recommended
+if False:
+    cr = []
+    for i,cd in enumerate(dvals['cumdist']):
+        #cd = dvals['cumdist'][i]
+        corr = {'aod1040':[],'aod0500':[],'AE':[]}
+        corr_ks =[0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
+                  25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
+        for ik, k in enumerate(corr_ks):
 
+        #k = 5.0 # for 5km distance
+            if k>np.nanmax(cd):
+                [corr[val].append(np.nan) for val in corr.keys()]
+                continue
+            ipk = np.argmin(abs(cd-k)) #ipk:
+            imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
+            N = len(cd)
+            #c = np.sqrt(2.0/(N-1))*math.gamma(N/2.0)/math.gamma((N-1.0)/2.0)
 
-# In[320]:
+            for val in dvals.keys():
+                if val in ['lon','utc','lat','cumdist','cdist_n','dist','alt','autocor','aod1040_r','AE_r','aod_n']: continue
+                #print val, len(dvals[val][i])
+                mpk = np.nanmean(dvals[val][i][ipk:]) #mean +k
+                mmk = np.nanmean(dvals[val][i][0:imk]) #mean -k
+                spk = np.nanstd(dvals[val][i][ipk:]) #std +k
+                smk = np.nanstd(dvals[val][i][0:imk]) #std -k
+                top = [(dvals[val][i][j]-mpk)*(dvals[val][i][j+ipk]-mmk) for j in xrange(N-ipk-1)]
+                #dvals[val+'_r'] = []
+                corr[val].append(np.sum(top)/((N-1)*spk*smk))
+                if (corr[val][-1]>1.0) | (corr[val][-1]<0.0):
+                    print '{} has bad corr: {:2.2f} val for key {}: std+k:{:2.2f}, std-k:{:2.2f}, m+k:{:2.2f}, m-k:{:2.2f} '.format(i,
+                        corr[val][-1],val,spk,smk,mpk,mmk)
 
-
-cr = []
-for i,cd in enumerate(dvals['cumdist']):
-    #cd = dvals['cumdist'][i]
-    corr = {'aod1040':[],'aod0500':[],'AE':[]}
-    corr_ks =[0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
-              25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
-    for ik, k in enumerate(corr_ks):
-
-    #k = 5.0 # for 5km distance
-        if k>np.nanmax(cd):
-            [corr[val].append(np.nan) for val in corr.keys()]
-            continue
-        ipk = np.argmin(abs(cd-k)) #ipk:
-        imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
-        N = len(cd)
-        #c = np.sqrt(2.0/(N-1))*math.gamma(N/2.0)/math.gamma((N-1.0)/2.0)
-
-        for val in dvals.keys():
-            if val in ['lon','utc','lat','cumdist','cdist_n','dist','alt','autocor','aod1040_r','AE_r','aod_n']: continue
-            #print val, len(dvals[val][i])
-            mpk = np.nanmean(dvals[val][i][ipk:]) #mean +k
-            mmk = np.nanmean(dvals[val][i][0:imk]) #mean -k
-            spk = np.nanstd(dvals[val][i][ipk:]) #std +k
-            smk = np.nanstd(dvals[val][i][0:imk]) #std -k
-            top = [(dvals[val][i][j]-mpk)*(dvals[val][i][j+ipk]-mmk) for j in xrange(N-ipk-1)]
-            #dvals[val+'_r'] = []
-            corr[val].append(np.sum(top)/((N-1)*spk*smk))
-            if (corr[val][-1]>1.0) | (corr[val][-1]<0.0):
-                print '{} has bad corr: {:2.2f} val for key {}: std+k:{:2.2f}, std-k:{:2.2f}, m+k:{:2.2f}, m-k:{:2.2f} '.format(i,
-                    corr[val][-1],val,spk,smk,mpk,mmk)
-
-    for val in corr.keys():
-        corr[val] = np.array(corr[val])
-    cr.append(corr)
+        for val in corr.keys():
+            corr[val] = np.array(corr[val])
+        cr.append(corr)
 
 
 # In[316]:
@@ -635,6 +641,157 @@ for corr in cr:
     plt.plot(corr_ks,corr['aod0500']**2.0,'v-')
 plt.xscale('log')
 plt.ylim(0,1)
+
+
+# In[574]:
+
+
+types = ['all','t1','t2','t3','t4','z1','z2','z3']
+
+
+# In[575]:
+
+
+corr_ks =[0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
+          25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
+corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)],
+             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]] \
+            for j in types] 
+#corr_all = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_t1 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_t2 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_t3 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_t4 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_z1 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_z2 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+#corr_z3 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
+corr_vals = corr_all[0][0][0].keys()
+corr_vals.remove('k')
+
+
+# In[576]:
+
+
+corr_all[0][0][0]
+
+
+# In[577]:
+
+
+np.array(corr_all).shape #type, [minusk,plusk], distance
+
+
+# In[578]:
+
+
+for ik, k in enumerate(corr_ks):
+    for i,cd in enumerate(dvals['cumdist']):
+        if k>np.nanmax(cd):
+            continue
+        ipk = np.argmin(abs(cd-k)) #ipk:
+        imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
+        if imk<2:
+            continue
+        iip = Sp.find_closest(cd,cd[0:imk]+k)
+        N = len(cd)
+        for val in corr_vals:
+            #all
+            corr_all[0][0][ik][val] = np.append(corr_all[0][0][ik][val],dvals[val][i][0:imk])
+            corr_all[0][1][ik][val] = np.append(corr_all[0][1][ik][val],dvals[val][i][iip])
+            #type 1
+            if (dvals['doys'][i][0]> t1[0]) & (dvals['doys'][i][0]< t1[1]):
+                corr_all[1][0][ik][val] = np.append(corr_all[1][0][ik][val],dvals[val][i][0:imk])
+                corr_all[1][1][ik][val] = np.append(corr_all[1][1][ik][val],dvals[val][i][iip])
+            #type 2
+            if (dvals['doys'][i][0]> t2[0]) & (dvals['doys'][i][0]< t2[1]):
+                corr_all[2][0][ik][val] = np.append(corr_all[2][0][ik][val],dvals[val][i][0:imk])
+                corr_all[2][1][ik][val] = np.append(corr_all[2][1][ik][val],dvals[val][i][iip])
+            #type 3
+            if (dvals['doys'][i][0]> t3[0]) & (dvals['doys'][i][0]< t3[1]):
+                corr_all[3][0][ik][val] = np.append(corr_all[3][0][ik][val],dvals[val][i][0:imk])
+                corr_all[3][1][ik][val] = np.append(corr_all[3][1][ik][val],dvals[val][i][iip])
+            #type 4
+            if (dvals['doys'][i][0]> t4[0]) & (dvals['doys'][i][0]< t4[1]):
+                corr_all[4][0][ik][val] = np.append(corr_all[4][0][ik][val],dvals[val][i][0:imk])
+                corr_all[4][1][ik][val] = np.append(corr_all[4][1][ik][val],dvals[val][i][iip])
+            #type 5
+            if (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z1[1]):
+                corr_all[5][0][ik][val] = np.append(corr_all[5][0][ik][val],dvals[val][i][0:imk])
+                corr_all[5][1][ik][val] = np.append(corr_all[5][1][ik][val],dvals[val][i][iip])
+            #type 6
+            if (dvals['alt'][i][0]> z2[0]) & (dvals['alt'][i][0]< z2[1]):
+                corr_all[6][0][ik][val] = np.append(corr_all[6][0][ik][val],dvals[val][i][0:imk])
+                corr_all[6][1][ik][val] = np.append(corr_all[6][1][ik][val],dvals[val][i][iip])
+            #type 7
+            if (dvals['alt'][i][0]> z3[0]) & (dvals['alt'][i][0]< z3[1]):
+                corr_all[7][0][ik][val] = np.append(corr_all[7][0][ik][val],dvals[val][i][0:imk])
+                corr_all[7][1][ik][val] = np.append(corr_all[7][1][ik][val],dvals[val][i][iip])
+
+
+# In[591]:
+
+
+autocorr = {}
+for val in corr_vals:
+    autocorr[val] = np.zeros((len(types),len(corr_ks)))+np.nan
+    
+    for ik,k in enumerate(corr_ks):
+        for j,jt in enumerate(types):
+            if val is 'AE':
+                igd = np.where(corr_all[2][1][3]['AE']<5.0)[0] #np.isfinite(corr_all[j][0][ik][val])
+                mmk = np.nanmean(corr_all[j][0][ik][val][igd])
+                mpk = np.nanmean(corr_all[j][1][ik][val][igd])
+                smk = np.nanstd(corr_all[j][0][ik][val][igd])
+                spk = np.nanstd(corr_all[j][1][ik][val][igd])
+                top = [(v-mpk)*(corr_all[j][1][ik][val][igd][iv]-mmk) for iv,v in enumerate(corr_all[j][0][ik][val][igd])]
+                print val,ik,j,mmk,mpk,smk,spk,np.nansum(top)
+                autocorr[val][j,ik] = np.nansum(top)/((len(corr_all[j][0][ik][val][igd])-1)*spk*smk)
+            else:
+                mmk = np.nanmean(corr_all[j][0][ik][val])
+                mpk = np.nanmean(corr_all[j][1][ik][val])
+                smk = np.nanstd(corr_all[j][0][ik][val])
+                spk = np.nanstd(corr_all[j][1][ik][val])
+                top = [(v-mpk)*(corr_all[j][1][ik][val][iv]-mmk) for iv,v in enumerate(corr_all[j][0][ik][val])]
+                print val,ik,j,mmk,mpk,smk,spk,np.nansum(top)
+                autocorr[val][j,ik] = np.nansum(top)/((len(corr_all[j][0][ik][val])-1)*spk*smk)
+
+
+# In[582]:
+
+
+max(corr_all[2][1][3]['AE'])
+
+
+# In[584]:
+
+
+len(corr_all[2][1][3]['AE'])
+
+
+# In[586]:
+
+
+np.where(corr_all[2][1][3]['AE']>5.0)
+
+
+# In[590]:
+
+
+corr_all[2][1][3]['AE'][7091]
+
+
+# In[585]:
+
+
+plt.figure()
+plt.plot(corr_all[2][1][3]['AE'])
+
+
+# In[523]:
+
+
+plt.figure()
+plt.plot(corr_ks,autocorr['AE'][0,:],'s-')
 
 
 # ### Integrated autocorrelation
