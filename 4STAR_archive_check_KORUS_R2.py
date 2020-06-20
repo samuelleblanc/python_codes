@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -464,4 +464,10 @@ np.nanmean(ar['AOD0501'][ar['fl2']])
 
 
 np.nanmedian(ar['AOD0501'][ar['fl2']])
+
+
+# In[ ]:
+
+
+
 

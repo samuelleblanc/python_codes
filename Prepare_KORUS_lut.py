@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -49,6 +49,7 @@
 
 # In[3]:
 
+
 import numpy as np
 import scipy.io as sio
 import os
@@ -58,15 +59,18 @@ reload(RL)
 
 # In[ ]:
 
+
 from load_utils import load_from_json
 
 
 # In[ ]:
 
+
 name = 'KORUS'
 
 
 # In[68]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\{}\\'.format(name)
@@ -86,6 +90,7 @@ else:
 
 # In[84]:
 
+
 vv = 'v3b'
 mu = np.arange(1.05,4.0,0.2)
 mu.shape
@@ -93,12 +98,14 @@ mu.shape
 
 # In[139]:
 
+
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
 #sza = np.arange(40,91,5)
 print(sza)
 
 
 # In[108]:
+
 
 tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
        6.0,7.0,8.0,9.0,10.0,12.5,15.0,17.5,20.0,25.0,30.0,35.0,40.0,50.0,
@@ -108,10 +115,12 @@ ref = np.append(np.append(np.arange(1,15),np.arange(15,30,2)),np.ceil(np.arange(
 
 # In[109]:
 
+
 ref
 
 
 # In[112]:
+
 
 print(ref.shape)
 print(tau.shape)
@@ -119,15 +128,18 @@ print(tau.shape)
 
 # In[ ]:
 
+
 pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',cloudtype='ic')
 
 
 # In[ ]:
 
+
 #aero = load_from_json(fp+'aero_save.txt')
 
 
 # In[4]:
+
 
 geo = {'lat':36.9921,
        'lon':127.1129,
@@ -162,6 +174,7 @@ albedo = {'create_albedo_file':False,
 
 # In[60]:
 
+
 RL.print_version_details(fp+'{name}_lut_{vv}.txt'.format(name=name,vv=vv),vv,geo=geo,
                          aero=aero,cloud=cloud,source=source,albedo=albedo,tau=tau,ref=ref,sza=sza,
                          cloud_pmom_file=cloud['moms_dict']['file_name'])
@@ -169,17 +182,20 @@ RL.print_version_details(fp+'{name}_lut_{vv}.txt'.format(name=name,vv=vv),vv,geo
 
 # In[71]:
 
+
 fp_in = os.path.join(fp_rtm,'input','{vv}_{name}'.format(vv=vv,name=name))
 fp_out = os.path.join(fp_rtm,'output','{vv}_{name}'.format(vv=vv,name=name))
 
 
 # In[82]:
 
+
 f_slit_vis = os.path.join(fp_rtm,'4STAR_vis_slit_1nm.dat')
 f_slit_nir = os.path.join(fp_rtm,'4STAR_nir_slit_1nm.dat')
 
 
 # In[72]:
+
 
 if not os.path.exists(fp_in):
     os.makedirs(fp_in)
@@ -189,11 +205,13 @@ if not os.path.exists(fp_out):
 
 # In[79]:
 
+
 f_list = open(os.path.join(fp,'run','{name}_list_{vv}.sh'.format(vv=vv,name=name)),'w')
 print f_list.name
 
 
 # In[ ]:
+
 
 after_first_sza = False
 for s in sza:
@@ -245,6 +263,7 @@ for s in sza:
 
 
 # In[ ]:
+
 
 f_list.close()
 

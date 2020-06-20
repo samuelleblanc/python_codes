@@ -381,7 +381,13 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
 ar['days']
 
 
-# In[349]:
+# In[592]:
+
+
+angs[angs>5.0] = np.nan
+
+
+# In[593]:
 
 
 vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][fl],'lon':ar['Longitude'][fl],
@@ -389,19 +395,19 @@ vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][f
         'aod_fine':fmf['tauf'][fl],'aod_coarse':fmf['tauc'][fl]}
 
 
-# In[350]:
+# In[594]:
 
 
 dvals = get_segments(f_level,vals,nsep=100)
 
 
-# In[351]:
+# In[595]:
 
 
 dvals.keys()
 
 
-# In[352]:
+# In[596]:
 
 
 for n in dvals['utc']:
@@ -456,7 +462,7 @@ for q in np.unique(ar['days']):
 
 # ## Now calculate the distances travelled within each segments
 
-# In[353]:
+# In[597]:
 
 
 def get_distances(seg_dict):
@@ -488,19 +494,19 @@ def get_distances(seg_dict):
     return seg_dict
 
 
-# In[354]:
+# In[598]:
 
 
 ddv = get_distances(dvals)
 
 
-# In[355]:
+# In[599]:
 
 
 dvals['cumdist']
 
 
-# In[356]:
+# In[600]:
 
 
 dvals.keys()
@@ -535,7 +541,7 @@ dvals.keys()
 
 # ### Build the limits of the autocorrelation
 
-# In[357]:
+# In[601]:
 
 
 # for met times
@@ -545,7 +551,7 @@ dt3 = ['20160523','20160531']
 dt4 = ['20160601','20160607']
 
 
-# In[360]:
+# In[602]:
 
 
 t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
@@ -554,14 +560,14 @@ t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
 
 
-# In[361]:
+# In[603]:
 
 
 # limits of DOY for each of the met times
 t1,t2,t3,t4
 
 
-# In[514]:
+# In[604]:
 
 
 #altitude limits in m
@@ -643,13 +649,13 @@ plt.xscale('log')
 plt.ylim(0,1)
 
 
-# In[574]:
+# In[605]:
 
 
 types = ['all','t1','t2','t3','t4','z1','z2','z3']
 
 
-# In[575]:
+# In[606]:
 
 
 corr_ks =[0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
@@ -669,19 +675,19 @@ corr_vals = corr_all[0][0][0].keys()
 corr_vals.remove('k')
 
 
-# In[576]:
+# In[607]:
 
 
 corr_all[0][0][0]
 
 
-# In[577]:
+# In[608]:
 
 
 np.array(corr_all).shape #type, [minusk,plusk], distance
 
 
-# In[578]:
+# In[609]:
 
 
 for ik, k in enumerate(corr_ks):
@@ -728,7 +734,7 @@ for ik, k in enumerate(corr_ks):
                 corr_all[7][1][ik][val] = np.append(corr_all[7][1][ik][val],dvals[val][i][iip])
 
 
-# In[591]:
+# In[610]:
 
 
 autocorr = {}
@@ -737,7 +743,7 @@ for val in corr_vals:
     
     for ik,k in enumerate(corr_ks):
         for j,jt in enumerate(types):
-            if val is 'AE':
+            if False: #val is 'AE':
                 igd = np.where(corr_all[2][1][3]['AE']<5.0)[0] #np.isfinite(corr_all[j][0][ik][val])
                 mmk = np.nanmean(corr_all[j][0][ik][val][igd])
                 mpk = np.nanmean(corr_all[j][1][ik][val][igd])
@@ -756,42 +762,11 @@ for val in corr_vals:
                 autocorr[val][j,ik] = np.nansum(top)/((len(corr_all[j][0][ik][val])-1)*spk*smk)
 
 
-# In[582]:
-
-
-max(corr_all[2][1][3]['AE'])
-
-
-# In[584]:
-
-
-len(corr_all[2][1][3]['AE'])
-
-
-# In[586]:
-
-
-np.where(corr_all[2][1][3]['AE']>5.0)
-
-
-# In[590]:
-
-
-corr_all[2][1][3]['AE'][7091]
-
-
-# In[585]:
+# In[618]:
 
 
 plt.figure()
-plt.plot(corr_all[2][1][3]['AE'])
-
-
-# In[523]:
-
-
-plt.figure()
-plt.plot(corr_ks,autocorr['AE'][0,:],'s-')
+plt.plot(corr_ks,autocorr['AE'][6,:],'s-')
 
 
 # ### Integrated autocorrelation
@@ -901,7 +876,7 @@ for i,a in enumerate(dvals['aod_n']):
         dvals['autocor'].append(np.array(np.nan))
 
 
-# ### Autocorrelation plots
+# ### Autocorrelation plots (old)
 
 # In[207]:
 
@@ -935,6 +910,184 @@ for i,j in enumerate(dvals['cdist_n']):
 plt.ylabel('Correlation Coefficient')
 plt.xlabel('Distance [km]')
 plt.xscale('log')
+
+
+# ### Autocorrelation plot with Anderson method
+
+# In[704]:
+
+
+key_list = ['aod0500','aod1040','AE','aod_fine','aod_coarse']
+legend_list = ['All','Dynamic','Stagnation','Extreme pollution','Blocking','0-1 km','1-3 km','3+ km']
+cl_list = ['k','tab:red','tab:blue','tab:orange','tab:green','tab:olive','tab:cyan','tab:purple']
+m_list = ['.','o','s','v','^','*','+','x']
+tit = ['AOD$_{{500}}$','AOD$_{{1040}}$','AE','AOD$_{{fine}}$','AOD$_{{coarse}}$']
+
+
+# In[705]:
+
+
+fig, ax = plt.subplots(5,3,figsize=(12,9))
+for i,k in enumerate(key_list):
+    for j in [0,1,2,3,4]:
+        ax[i,0].plot(corr_ks,autocorr[k][j,:],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+    for j in [0,5,6,7]:    
+        ax[i,1].plot(corr_ks,autocorr[k][j,:],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+    ax[i,0].set_ylim(0,1)
+    ax[i,1].set_ylim(0,1)
+    ax[i,0].set_xscale('log')
+    ax[i,1].set_xscale('log')
+    ax[i,0].grid()
+    ax[i,1].grid()
+    
+    ax[i,2].set_visible(False)
+    
+    #print 'r({})'.format(k)
+    ax[i,0].set_ylabel('r({})'.format(tit[i]))
+    plt.setp(ax[i,0].get_xticklabels(), visible=False)
+    plt.setp(ax[i,1].get_xticklabels(), visible=False)
+    
+    if i==0:
+        ax[i,0].set_title('Meteorology')
+        ax[i,1].set_title('Altitude')
+    if i==1:
+        ax[i,0].legend(frameon=False,bbox_to_anchor=[3.1,1.9])
+        ax[i,1].legend(frameon=False,bbox_to_anchor=[1.1,0.4])
+    if i==4:
+        ax[i,0].set_xlabel('Distance [km]')
+        ax[i,1].set_xlabel('Distance [km]')
+        plt.setp(ax[i,0].get_xticklabels(), visible=True)
+        plt.setp(ax[i,1].get_xticklabels(), visible=True)
+
+plt.savefig(fp+'plot/KORUS_Autocorr_all.png',dpi=600,transparent=True)
+
+
+# ## Load the Autocorrelations from Shinozuka & Redemann
+
+# In[706]:
+
+
+SR_corr_ks = [0.45,1.0,3.0,6.0,10.0,20.0,34.2]
+SR_aod_corr_long = [0.998,0.997,0.995,0.985,0.981,0.946,0.917]
+SR_aod_corr_loc = [0.975,0.941,0.830,0.712,0.584,0.365,0.328]
+SR_AE_corr_long = [1.000,0.977,0.975,0.960,0.944,0.913,0.919]
+SR_AE_corr_loc = [0.975,0.956,0.919,0.831,0.747,0.519,0.366]
+
+
+# In[ ]:
+
+
+#AOD local
+
+0,4376084276355722; 0,9757725145572111
+0,9955912496957824; 0,9408298503197231
+2,993269282069332; 0,8303668774336445
+5,997701705897239; 0,711850105383489
+9,981245014250291; 0,5844939806380168
+20,005524337736603; 0,36462079805665715
+35,166804844012965; 0,32825206301575405
+
+
+# In[ ]:
+
+
+#AE local
+0,43836153494904556; 0,9757721573250459
+0,9972623352215253; 0,9556260493694856
+2,9925078192756667; 0,9191462151252102
+5,985354161428386; 0,8309627406851716
+9,993780925398312; 0,7465159146929592
+19,996703813167056; 0,5185049833887045
+35,22351663341235; 0,36598292430250434
+
+
+# In[ ]:
+
+
+#AOD long
+0,43833272405336876; 0,9987068195620337
+0,9971397077970326; 0,9985360625870756
+2,9918543848699146; 0,9953484799771375
+6,0033122296001995; 0,985586039366985
+9,969908496905848; 0,9810416889936774
+19,972213345966814; 0,9461254599364131
+35,10743016861416; 0,9178948308505701
+
+
+# In[ ]:
+
+
+#AE long
+0,43757781072798063; 1,0001868324223917
+0,9989150464154728; 0,9778205265602119
+2,992025659700471; 0,9753731289965352
+5,9831337971357215; 0,9604326081520385
+9,970944322675367; 0,9447901261029547
+19,97407661698948; 0,9135730361161722
+35,10728129935923; 0,9193744864787629
+
+
+# In[712]:
+
+
+note = [['a)','b)'],['c)','d)'],['e)','f)'],['g)','h)'],['i)','j)']]
+
+
+# In[716]:
+
+
+reload(pu)
+
+
+# In[718]:
+
+
+fig, ax = plt.subplots(5,3,figsize=(12,9))
+for i,k in enumerate(key_list):
+    for j in [0,1,2,3,4]:
+        ax[i,0].plot(corr_ks,autocorr[k][j,:],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+    for j in [0,5,6,7]:    
+        ax[i,1].plot(corr_ks,autocorr[k][j,:],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+    ax[i,0].set_ylim(0,1)
+    ax[i,1].set_ylim(0,1)
+    ax[i,0].set_xscale('log')
+    ax[i,1].set_xscale('log')
+    ax[i,0].grid()
+    ax[i,1].grid()
+    
+    ax[i,2].set_visible(False)
+    
+    #print 'r({})'.format(k)
+    ax[i,0].set_ylabel('r({})'.format(tit[i]))
+    plt.setp(ax[i,0].get_xticklabels(), visible=False)
+    plt.setp(ax[i,1].get_xticklabels(), visible=False)
+    pu.sub_note(note[i][0],ax=ax[i,0],out=True,fontsize=12)
+    pu.sub_note(note[i][1],ax=ax[i,1],out=True,fontsize=12)
+    
+    if i==0:
+        ax[i,0].set_title('Meteorology')
+        ax[i,1].set_title('Altitude')
+        
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_loc,'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_long,'>--',c='yellow',label='SR 2011 Long')
+        
+    if i==1:
+        ax[i,0].plot([],[],'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot([],[],'>--',c='yellow',label='SR 2011 Long')
+        ax[i,0].legend(frameon=False,bbox_to_anchor=[3.1,1.9])
+        ax[i,1].legend(frameon=False,bbox_to_anchor=[1.1,0.1])
+    
+    if i==3:
+        ax[i,0].plot(SR_corr_ks,SR_AE_corr_loc,'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot(SR_corr_ks,SR_AE_corr_long,'>--',c='yellow',label='SR 2011 Long')
+    
+    if i==4:
+        ax[i,0].set_xlabel('Distance [km]')
+        ax[i,1].set_xlabel('Distance [km]')
+        plt.setp(ax[i,0].get_xticklabels(), visible=True)
+        plt.setp(ax[i,1].get_xticklabels(), visible=True)
+
+plt.savefig(fp+'plot/KORUS_Autocorr_all_with_SR2011.png',dpi=600,transparent=True)
 
 
 # ## Now get the angstrom exponent and plot it vertically
