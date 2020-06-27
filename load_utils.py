@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[ ]:
@@ -403,8 +403,13 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
     import numpy as np
     from osgeo import gdal
     from Sp_parameters import startprogress, progress, endprogress
+    from load_utils import load_hdf_h5py
     
-    datsds = gdal.Open(datfile)
+    try:
+        datsds = gdal.Open(datfile)
+    except:
+        print 'Trying with load_hdf_h5py'
+        return load_hdf_h5py(datfile,values=values,verbose=verbose,all_values=all_values)
     datsub = datsds.GetSubDatasets()
     if verbose: 
         print 'Outputting the Data subdatasets:'
@@ -467,6 +472,134 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
         endprogress()
         print hdf.keys()
     del datsds,sds,datsub
+    return hdf,hdf_dicts
+
+
+# In[ ]:
+
+
+def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
+    """
+    Name:
+
+        load_hdf_h5py
+    
+    Purpose:
+
+        to compile functions required to load hdf5 files, through h5py python modules. 
+        from within another script.
+        Similar to load_modis
+    
+    Calling Sequence:
+
+        hdf_dat,hdf_dict = load_hdf_h5py(datfile,Values=None,verbose=True,all_values=False) 
+    
+    Input: 
+  
+        datfile name (hdf files)
+    
+    Output:
+
+        hdf_dat dictionary with the names of values saved, with associated dictionary values
+        hdf_dicts : metadate for each of the variables
+    
+    Keywords: 
+
+        values: if ommitted, only outputs the names of the variables in file
+                needs to be a tuple of 2 element tuples (first element name of variable, second number of record)
+                example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
+        verbose: if true (default), then everything is printed. if false, nothing is printed
+        all_values: if True, then outputs all the values with their original names, (defaults to False), overrides values keyword
+    
+    Dependencies:
+
+        gdal
+        numpy
+        gc: for clearing the garbage
+        Sp_parameters for progress issuer
+    
+    Required files:
+   
+        dat files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2020-06-26, Santa Cruz, CA, COVID-19 Quarantining
+        Modified (v1.1): 
+    """
+    import numpy as np
+    import h5py
+    from Sp_parameters import startprogress, progress, endprogress
+    
+    dat = h5py.File(datfile,'r')
+    if verbose: print 'Reading file: {}'.format(datfile)
+    datsub = dat.items()
+    if verbose: 
+        print 'Outputting the Data subdatasets:'
+        for i in range(len(datsub)):
+            if values:
+                if any(i in val for val in values):
+                    print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][0])
+                else:
+                    print str(i)+': '+datsub[i][0]
+            else:
+                print str(i)+': '+datsub[i][0]
+    if all_values:
+        values = []
+        for i in range(len(datsub)):
+            values.append((datsub[i][0],i))
+        values = tuple(values)
+    if not values:
+        if verbose:
+            print 'Done going through file... Please supply pairs of name and index for reading file'
+            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
+            print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
+        return None, None
+    hdf = dict()
+    meta = dict(dat.attrs)
+    import gc; gc.collect()
+    hdf_dicts = dict()
+    if verbose:
+        startprogress('Running through data values')
+    for i,j in values:
+        sds = dat[i]
+        hdf_dicts[i] = dict(sds.attrs)
+        hdf[i] = np.array(dat[i].value)
+        if not hdf[i].any():
+            import pdb; pdb.set_trace()
+        try:
+            bad_points = np.where(hdf[i] == sds.fillvalue)
+            makenan = True
+        except KeyError:
+            makenan = False
+        except ValueError:
+            makenan = False
+            print '*** FillValue not used to replace NANs, will have to do manually ***'
+        try:
+            scale = float(hdf_dicts[i]['scale_factor'])
+            offset = float(hdf_dicts[i]['add_offset'])
+            # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+            if scale.is_integer():
+               scale = int(scale)
+               makenan = False
+            if scale != 1 and offset == 0:
+               hdf[i] = hdf[i]*scale+offset
+        except:
+            if issubclass(hdf[i].dtype.type, np.integer):
+                makenan = False
+        if makenan:
+            hdf[i][bad_points] = np.nan
+        if verbose:
+            progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
+    if verbose:
+        endprogress()
+        print hdf.keys()
+    hdf_dicts['Global'] = meta
+    del sds,datsub
     return hdf,hdf_dicts
 
 
