@@ -89,7 +89,7 @@ import Sun_utils as su
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[5]:
+# In[1103]:
 
 
 fp =getpath('KORUS')
@@ -476,32 +476,142 @@ goci2ar['CF'][bad_ig4] = np.nan
 #                 :DODS_EXTRA.Unlimited_Dimension = "time" ;
 #                 :history = "2020-06-26 22:21:20 GMT Hyrax-1.15.1 https://goldsmr4.gesdisc.eosdis.nasa.gov:443/opendap/MERRA2/M2I3NXGAS.5.12.4/2016/05/MERRA2_400.inst3_2d_gas_Nx.20160501.nc4.nc4?AODANA[0:7][243:259][484:499],time,lat[243:259],lon[484:499]" ;
 
-# In[1005]:
+# In[1208]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2')
 
 
-# In[1012]:
+# In[1209]:
 
 
 ml = [ m for m in ml if m.endswith('nc4')] 
 ml.sort()
 
 
-# In[1102]:
+# In[1211]:
 
 
 merra = []
 for m in ml:
-    mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/'+m,all_values=True)
+    print 'Loading file: {}'.format(m)
+    mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/'+m,all_values=True,verbose=False)
     merra.append(mtmp)
 
 
-# In[1101]:
+# In[1212]:
 
 
-reload(lu)
+len(merra),len(ml)
+
+
+# In[1214]:
+
+
+mdict['AODINC']
+
+
+# In[1106]:
+
+
+merra[0]['time']
+
+
+# In[1215]:
+
+
+merra[0]['time']/60.0/24.0
+
+
+# In[1216]:
+
+
+(1-0.875)/2
+
+
+# ### Collocate to 4STAR
+
+# In[1217]:
+
+
+merra_doy = [datetime(int(l[-16:-12]),int(l[-12:-10]),int(l[-10:-8])).timetuple().tm_yday for l in ml]
+
+
+# In[1219]:
+
+
+for m in merra:
+    m['aod'] = m['AODANA']+m['AODINC']
+
+
+# In[1220]:
+
+
+im4 = Sp.find_closest(np.array(merra_doy),(ar['doys']+0.0625).astype(int))
+
+
+# In[1221]:
+
+
+np.unique(im4)
+
+
+# In[1222]:
+
+
+nmerra = len(merra)
+nlat = len(merra[0]['lat'])
+nlon = len(merra[0]['lon'])
+ntime = len(merra[0]['time'])
+
+
+# In[1223]:
+
+
+merra2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'ind':[]}
+for ii in np.unique(im4):
+    print ii
+    imeas = np.where(im4==ii)[0]
+    itime = Sp.find_closest(merra[ii]['time']/60.0/24.0+merra_doy[ii],ar['doys'][imeas])
+    ilat = Sp.find_closest(merra[0]['lat'],ar['Latitude'][imeas])
+    ilon = Sp.find_closest(merra[0]['lon'],ar['Longitude'][imeas])
+    
+    if len(imeas)<1:
+        merra2ar['lat'] = np.append(merra2ar['lat'],ar['Latitude'][imeas])
+        merra2ar['lon'] = np.append(merra2ar['lon'],ar['Longitude'][imeas])
+        merra2ar['aod'] = np.append(merra2ar['aod'],ar['Latitude'][imeas]+np.nan)
+        merra2ar['doys'] = np.append(merra2ar['doys'],ar['doys'][imeas])
+        merra2ar['ind'] = np.append(merra2ar['ind'],ar['doys'][imeas].astype(int)*0) #pixel index
+    else:
+        merra2ar['lat'] = np.append(merra2ar['lat'],merra[ii]['lat'][ilat])
+        merra2ar['lon'] = np.append(merra2ar['lon'],merra[ii]['lon'][ilon])
+        merra2ar['aod'] = np.append(merra2ar['aod'],merra[ii]['aod'][itime,ilat,ilon])
+        merra2ar['doys'] = np.append(merra2ar['doys'],merra[ii]['time'][itime]/60.0/24.0+merra_doy[ii])
+        merra2ar['ind'] = np.append(merra2ar['ind'],
+                                    np.ravel_multi_index((imeas*0+ii,itime,ilat,ilon),(nmerra,ntime,nlat,nlon)).astype(int))
+
+for k in merra2ar.keys():
+    merra2ar[k] = np.array(merra2ar[k])
+
+
+# In[1224]:
+
+
+merra2ar['aod'].shape
+
+
+# In[1225]:
+
+
+merra2ar['ind']
+
+
+# In[1226]:
+
+
+plt.figure()
+plt.plot(merra2ar['doys'],merra2ar['aod'],'.')
+plt.plot(ar['doys'],ar['AOD0501'],'.')
 
 
 # # Run analysis and prepare variables
@@ -711,22 +821,23 @@ ar['days']
 angs[angs>5.0] = np.nan
 
 
-# In[874]:
+# In[1227]:
 
 
 vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][fl],'lon':ar['Longitude'][fl],
         'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl],'AE':angs[fl],'doys':ar['doys'][fl],
         'aod_fine':fmf['tauf'][fl],'aod_coarse':fmf['tauc'][fl],'fmf':fmf['eta'][fl],
-        'GOCI_AOD':goci2ar['aod'][fl],'GOCI_AE':goci2ar['AE'][fl],'GOCI_fmf':goci2ar['fmf'][fl]}
+        'GOCI_AOD':goci2ar['aod'][fl],'GOCI_AE':goci2ar['AE'][fl],'GOCI_fmf':goci2ar['fmf'][fl],
+        'MERRA_AOD':merra2ar['aod'][fl]}
 
 
-# In[875]:
+# In[1228]:
 
 
 dvals = get_segments(f_level,vals,nsep=100)
 
 
-# In[876]:
+# In[1229]:
 
 
 dvals.keys()
@@ -819,7 +930,7 @@ def get_distances(seg_dict):
     return seg_dict
 
 
-# In[877]:
+# In[1230]:
 
 
 ddv = get_distances(dvals)
@@ -829,12 +940,6 @@ ddv = get_distances(dvals)
 
 
 dvals['cumdist']
-
-
-# In[879]:
-
-
-dvals.keys()
 
 
 # ## Calculate the autocorrelation of AOD with respect to distance
@@ -980,13 +1085,13 @@ plt.ylim(0,1)
 types = ['all','t1','t2','t3','t4','z1','z2','z3']
 
 
-# In[908]:
+# In[1231]:
 
 
 corr_ks =[0.08,0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
           25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
-corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[]} for i,k in enumerate(corr_ks)],
-             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[]} for i,k in enumerate(corr_ks)]] \
+corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[]} for i,k in enumerate(corr_ks)],
+             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[]} for i,k in enumerate(corr_ks)]] \
             for j in types] 
 #corr_all = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
 #corr_t1 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
@@ -1000,31 +1105,31 @@ corr_vals = corr_all[0][0][0].keys()
 corr_vals.remove('k')
 
 
-# In[886]:
+# In[1232]:
 
 
 corr_all[0][0][0]
 
 
-# In[887]:
+# In[1233]:
 
 
 np.array(corr_all).shape #type, [minusk,plusk], distance
 
 
-# In[907]:
+# In[1234]:
 
 
 np.nanmedian(np.diff(dvals['cumdist'][20]))
 
 
-# In[899]:
+# In[1195]:
 
 
 dvals['cumdist'][1]-adiff(dvals['cumdist'][1])
 
 
-# In[911]:
+# In[1235]:
 
 
 for ik, k in enumerate(corr_ks):
@@ -1076,7 +1181,7 @@ for ik, k in enumerate(corr_ks):
                 corr_all[7][1][ik][val] = np.append(corr_all[7][1][ik][val],dvals[val][i][iip])
 
 
-# In[912]:
+# In[1236]:
 
 
 autocorr = {}
@@ -1558,6 +1663,83 @@ for i,k in enumerate(key_list2):
 plt.savefig(fp+'plot/KORUS_Autocorr_rel_all_with_SR2011_with_GOCI.png',dpi=600,transparent=True)
 
 
+# ### Add MERRA
+
+# In[1237]:
+
+
+fig, ax = plt.subplots(4,3,figsize=(12,9))
+for i,k in enumerate(key_list2):
+    for j in [0,1,2,3,4]:
+        ax[i,0].plot(corr_ks[1:],autocorr[k][j,1:]/autocorr[k][j,1],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+        if k is 'aod0500':
+            ax[i,0].plot(corr_ks[1:],autocorr['GOCI_AOD'][j,1:]/autocorr['GOCI_AOD'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+            ax[i,0].plot(corr_ks[1:],autocorr['MERRA_AOD'][j,1:]/autocorr['MERRA_AOD'][j,1],
+                        color=cl_list[j],ls='--',lw=1)
+        if k is 'AE':
+            ax[i,0].plot(corr_ks[1:],autocorr['GOCI_AE'][j,1:]/autocorr['GOCI_AE'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+        if k is 'fmf':
+            ax[i,0].plot(corr_ks[1:],autocorr['GOCI_fmf'][j,1:]/autocorr['GOCI_fmf'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+    for j in [0,5,6,7]:    
+        ax[i,1].plot(corr_ks[1:],autocorr[k][j,1:]/autocorr[k][j,1],label=legend_list[j],color=cl_list[j],marker=m_list[j])
+        if k is 'aod0500':
+            ax[i,1].plot(corr_ks[1:],autocorr['GOCI_AOD'][j,1:]/autocorr['GOCI_AOD'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+            ax[i,1].plot(corr_ks[1:],autocorr['MERRA_AOD'][j,1:]/autocorr['MERRA_AOD'][j,1],
+                         color=cl_list[j],ls='--',lw=1)
+        if k is 'AE':
+            ax[i,1].plot(corr_ks[1:],autocorr['GOCI_AE'][j,1:]/autocorr['GOCI_AE'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+        if k is 'fmf':
+            ax[i,1].plot(corr_ks[1:],autocorr['GOCI_fmf'][j,1:]/autocorr['GOCI_fmf'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+    ax[i,0].set_ylim(0,1)
+    ax[i,1].set_ylim(0,1)
+    ax[i,0].set_xscale('log')
+    ax[i,1].set_xscale('log')
+    ax[i,0].grid()
+    ax[i,1].grid()
+    
+    ax[i,2].set_visible(False)
+    
+    #print 'r({})'.format(k)
+    ax[i,0].set_ylabel('r({})'.format(tit2[i]))
+    plt.setp(ax[i,0].get_xticklabels(), visible=False)
+    plt.setp(ax[i,1].get_xticklabels(), visible=False)
+    pu.sub_note(note[i][0],ax=ax[i,0],out=True,fontsize=12)
+    pu.sub_note(note[i][1],ax=ax[i,1],out=True,fontsize=12)
+    
+    if i==0:
+        ax[i,0].set_title('Meteorology')
+        ax[i,1].set_title('Altitude')
+        
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_loc,'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_long,'>--',c='yellow',label='SR 2011 Long')
+        
+    if i==1:
+        ax[i,0].plot([],[],'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot([],[],'>--',c='yellow',label='SR 2011 Long')
+        ax[i,0].plot([],[],':',c='k',lw=1,label='GOCI YAER v2')
+        ax[i,0].plot([],[],'--',c='grey',lw=1,label='MERRA2 AODANA')
+        ax[i,0].legend(frameon=False,bbox_to_anchor=[3.1,1.9])
+        ax[i,1].legend(frameon=False,bbox_to_anchor=[1.1,0.1])
+    
+    if i==3:
+        ax[i,0].plot(SR_corr_ks,SR_AE_corr_loc,'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot(SR_corr_ks,SR_AE_corr_long,'>--',c='yellow',label='SR 2011 Long')
+    
+    if i==3:
+        ax[i,0].set_xlabel('Distance [km]')
+        ax[i,1].set_xlabel('Distance [km]')
+        plt.setp(ax[i,0].get_xticklabels(), visible=True)
+        plt.setp(ax[i,1].get_xticklabels(), visible=True)
+
+plt.savefig(fp+'plot/KORUS_Autocorr_rel_all_with_SR2011_GOCI_MERRA.png',dpi=600,transparent=True)
+
+
 # ## Plot the comparison of GOCI to 4STAR AOD
 
 # In[930]:
@@ -1668,6 +1850,76 @@ plt.xlim(0.2,1.8)
 plt.xlabel('4STAR AE averaged within GOCI pixel')
 plt.ylabel('GOCI AE')
 plt.title('Average AE below 0.5 km')
+
+
+# ## Compare MERRA2 AOD to 4STAR
+
+# In[1238]:
+
+
+plt.figure()
+fla = ar['fl_QA'] & (ar['GPS_Alt']<500.0)
+flan = ar['fl_QA'] & (ar['GPS_Alt']<500.0) & np.isfinite(ar['AOD0501']) & np.isfinite(merra2ar['aod'])
+r = np.corrcoef(ar['AOD0501'][flan],merra2ar['aod'][flan])[0,1]**2.0
+plt.plot(ar['AOD0501'][fla],merra2ar['aod'][fla],'.',label='R$^2$ = {:1.3f}'.format(r))
+plt.xlim(0,1.5)
+plt.ylim(0,1.5)
+plt.xlabel('4STAR AOD$_{{500}}$')
+plt.ylabel('MERRA2 AOD-ANA')
+plt.plot([0,1.5],[0,1.5],'--k',label='1:1')
+pu.plot_lin(ar['AOD0501'][fla],merra2ar['aod'][fla],x_err=ar['UNCAOD0501'][fla],labels=True,shaded_ci=True,ci=95)
+
+plt.legend()
+plt.title('All 4STAR samples below 0.5km with nearby MERRA2 AOD')
+
+
+# In[1239]:
+
+
+nsub = len(np.unique(merra2ar['ind'][flan]))
+aod_star_m = np.zeros((nsub))
+aod_merra = np.zeros((nsub))
+aod_star_m_std = np.zeros((nsub))
+for j,la in enumerate(np.unique(merra2ar['ind'][flan])):
+    ipixel = np.where(merra2ar['ind'][flan]==la)[0]
+    aod_merra[j] = np.mean(merra2ar['aod'][flan][ipixel])
+    aod_star_m[j] = np.mean(ar['AOD0501'][flan][ipixel])
+    aod_star_m_std[j] = np.std(ar['AOD0501'][flan][ipixel])
+    
+
+
+# In[1241]:
+
+
+plt.figure(figsize=(7,6))
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
+rbinae = np.corrcoef(aod_star_m[flae],aod_merra[flae])[0,1]**2.0
+plt.plot(aod_star_m,aod_merra,'.',label='R$^2$ = {:1.3f}'.format(rbinae))
+plt.errorbar(aod_star_m,aod_merra,xerr=aod_star_m_std,color='b',marker='.',ls='None',elinewidth=0.4,label='std dev')
+plt.plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(aod_star_m,aod_merra,labels=True,shaded_ci=True,ci=95)
+plt.legend()
+plt.ylim(0.0,1.5)
+plt.xlim(0.0,1.5)
+plt.xlabel('4STAR AOD averaged within MERRA pixel')
+plt.ylabel('MERRA2 AODANA+AODINC')
+plt.title('Average AOD below 0.5 km during KORUS-AQ (May-June 2016)')
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD.png',dpi=600,transparent=True)
+
+
+# In[1251]:
+
+
+plt.figure()
+plt.hist(aod_star_m[flae]-aod_merra[flae],bins=50,normed=True)
+plt.axvline(0,ls='--',color='k',alpha=0.6)
+plt.axvline(np.nanmean(aod_star_m[flae]-aod_merra[flae]),ls='-',color='darkblue',alpha=0.6,
+            label='mean={:2.2f}'.format(np.nanmean(aod_star_m[flae]-aod_merra[flae])))
+plt.axvline(np.nanmedian(aod_star_m[flae]-aod_merra[flae]),ls='--',color='darkblue',alpha=0.6,
+            label='median={:2.2f}'.format(np.nanmedian(aod_star_m[flae]-aod_merra[flae])))
+plt.legend()
+plt.xlabel('AOD difference (4STAR-MERRA2)')
+plt.ylabel('Normalized counts')
 
 
 # ## Now get the angstrom exponent and plot it vertically

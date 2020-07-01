@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -787,4 +787,10 @@ pickle.dump(dict_out,open(fp+'{}_GOCI_Aeronet_4STAR.p'.format(daystr),"wb"))
 
 
 hs.savemat(fp+'{}_GOCI_Aeronet_4STAR.mat',dict_out)
+
+
+# In[ ]:
+
+
+
 
