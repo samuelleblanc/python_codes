@@ -32,7 +32,7 @@
 #     - mpltools
 #     - numpy
 #     - scipy : for saving and reading
-#     - load_utils: for mat2py_time and toutc functions
+#     - load_modis: for mat2py_time and toutc functions
 #     - Sp_parameters: for find_closest function
 #     - mpl_toolkits
 #   
@@ -56,7 +56,7 @@ import numpy as np, h5py
 import scipy.io as sio
 import math
 import os
-from load_utils import mat2py_time, toutc
+from load_modis import mat2py_time, toutc
 from Sp_parameters import find_closest
 
 

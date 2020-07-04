@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -260,4 +260,10 @@ plt.figure()
 plt.plot(s['oxa_delta']/s['Alt'],s['angs_470_865'],'.')
 #plt.xlim(-50000,200000)
 plt.colorbar()
+
+
+# In[ ]:
+
+
+
 
