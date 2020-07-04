@@ -540,8 +540,12 @@ merra_doy = [datetime(int(l[-16:-12]),int(l[-12:-10]),int(l[-10:-8])).timetuple(
 # In[1219]:
 
 
-for m in merra:
-    m['aod'] = m['AODANA']+m['AODINC']
+if False:
+    for m in merra:
+        m['aod'] = m['AODANA']+m['AODINC']
+else:
+    for m in merra:
+        m['aod'] = m['AODANA']
 
 
 # In[1220]:
@@ -612,6 +616,44 @@ merra2ar['ind']
 plt.figure()
 plt.plot(merra2ar['doys'],merra2ar['aod'],'.')
 plt.plot(ar['doys'],ar['AOD0501'],'.')
+
+
+# ## Load in situ extinction
+
+# In[1256]:
+
+
+lrgl = os.listdir(fp+'data_other/LARGE')
+
+
+# In[1257]:
+
+
+lrgl.sort()
+
+
+# In[1258]:
+
+
+lrgl
+
+
+# In[1260]:
+
+
+large = []
+for g in lrgl:
+    print 'Loading file: {}'.format(g)
+    gtmp, gdict = lu.load_ict(fp+'data_other/LARGE/'+g,return_header=True)
+    large.append(gtmp)
+
+
+# ### Match to 4STAR
+
+# In[ ]:
+
+
+lg2ar = []
 
 
 # # Run analysis and prepare variables
