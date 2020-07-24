@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -90,6 +90,12 @@ from Sp_parameters import deriv, smooth
 
 
 f_star = fp+'data\\20160501starsun.mat'
+
+
+# In[ ]:
+
+
+
 
 
 # In[6]:
@@ -352,4 +358,10 @@ s['O3col']
 
 
 s['tau_aero_noscreening']
+
+
+# In[ ]:
+
+
+
 

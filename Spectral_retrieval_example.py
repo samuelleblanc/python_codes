@@ -84,6 +84,12 @@ from path_utils import getpath
 # In[2]:
 
 
+fp_in = getpath('SEAC4RS')
+
+
+# In[2]:
+
+
 fp = getpath('cloud_retrieval',make_path=True,verbose=True)
 fp_in = getpath('SEAC4RS',make_path=True,verbose=True)
 
@@ -197,22 +203,46 @@ meas.sp
 
 # ## First plot the spectra of reflected light and transmitted light
 
-# In[18]:
+# In[11]:
 
 
 lut.sp.shape
 
 
-# In[19]:
+# In[12]:
 
 
 lut.ref
 
 
-# In[20]:
+# In[13]:
 
 
 lut.tau
+
+
+# In[14]:
+
+
+lut.sza
+
+
+# In[17]:
+
+
+1.0/np.cos(lut.sza*np.pi/180.0)
+
+
+# In[18]:
+
+
+1.0/np.cos(55.0*np.pi/180.0)
+
+
+# In[19]:
+
+
+1.0508/1.7434
 
 
 # In[52]:
