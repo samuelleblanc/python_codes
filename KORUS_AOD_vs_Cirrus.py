@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -552,6 +552,12 @@ import Sun_utils as su
 reload(su)
 
 
+# In[ ]:
+
+
+
+
+
 # In[102]:
 
 
@@ -588,6 +594,12 @@ su.angstrom_from_poly(c,[400,500,600])
 
 
 np.gradient(polyval(c,[499,500,501]))
+
+
+# In[ ]:
+
+
+
 
 
 # In[76]:
@@ -1106,6 +1118,12 @@ print 'AVERAGE COD', np.nanmean(cr['tau_fl']),np.nanmedian(cr['tau_fl'])
 print 'AVERAGE REF', np.nanmean(cr['ref_fl']),np.nanmedian(cr['ref_fl']),
 
 
+# In[ ]:
+
+
+
+
+
 # # Combine Aerosol and Cloud properties into a single figure
 
 # In[302]:
@@ -1177,4 +1195,10 @@ plt.ylim(0.01,40)
 
 plt.figure()
 plt.hist([cr['tau_fl'],arc['AOD0501'][ar['fl_1.0']]],bins=30,range=[0,5],label=['Cirrus','AOD @ 501 nm'],normed=True)
+
+
+# In[ ]:
+
+
+
 
