@@ -1,0 +1,127 @@
+%config InlineBackend.rc = {}
+import matplotlib 
+import os
+matplotlib.rc_file(os.path.join(os.getcwd(),'file.rc'))
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import numpy as np
+import Sp_parameters as Sp
+from load_utils import mat2py_time, toutc, load_ict
+import load_utils as lu
+import plotting_utils as pu
+from path_utils import getpath
+import hdf5storage as hs
+from datetime import datetime
+from scipy.interpolate import UnivariateSpline
+import matplotlib.dates as mdates
+from mpl_toolkits.basemap import Basemap
+import scipy.stats as st
+import scipy.io as sio
+
+import map_utils as mu
+import write_utils as wu
+from scipy import interpolate
+import math
+
+from linfit import linfit
+import Sun_utils as su
+
+%matplotlib notebook
+
+fpk = getpath('KORUS')
+fpo = getpath('ORACLES')
+fps = getpath('SEAC4RS')
+fpa = getpath('ARCTAS',path='/data/sam/arctas',make_path=True)
+
+fls = os.listdir(fps+'merge/')
+fls.sort()
+
+fls
+
+se,sed = [],[]
+for f in fls:
+    s,d = lu.load_ict(fps+'merge/'+f,return_header=True)
+    se.append(s)
+    sed.append(d)
+
+len(se)
+
+se[0]['JDAY']
+
+s = {'AOD380nm_4STAR':[],'AOD452nm_4STAR':[],'AOD501nm_4STAR':[],'AOD865nm_4STAR':[],'LATITUDE':[],'LONGITUDE':[],'UTC':[],'GPS_ALT':[],
+     'JDAY':[],'DN500nm_SSFR':[],'UP500nm_SSFR':[],'UP350to2150nm_SSFR':[],'UP350to2150nm_SSFR':[],
+     'DNSolarIrrad_BBR':[],'UPSolarIrrad_BBR':[],'Flag_4STAR':[],'ABS660nmTD_PAS_NOAAAeroAbs':[]}
+for e in se:
+    for k in s.keys():
+        s[k] = np.append(s[k],e[k])
+        
+
+fl = (s['Flag_4STAR']==0) & (s['GPS_ALT']<1.0)
+
+len(s['AOD501nm_4STAR'])
+
+# calculate the angstrom exponent
+s['AE'] = su.calc_angs(s['UTC'],[380.0,452.0,501.0,865.0],
+np.array([s['AOD380nm_4STAR'],s['AOD452nm_4STAR'],s['AOD501nm_4STAR'],s['AOD865nm_4STAR']]))
+
+np.nanmin(s['AE'][fl]),np.nanmax(s['AE'][fl])
+
+plt.figure()
+plt.scatter(s['UP500nm_SSFR'][fl]/s['DN500nm_SSFR'][fl],s['AOD501nm_4STAR'][fl],c=s['AE'][fl],marker='.',vmin=0,vmax=2.0)
+plt.xlim([0,1])
+plt.yscale('log')
+plt.ylim(0.01,2.0)
+plt.ylabel('AOD at 500 nm')
+plt.xlabel('Flight-level Albedo at 500 nm')
+plt.colorbar(label='Angstrom Exponent')
+plt.title('SEAC4RS')
+
+plt.savefig(fps+'plots/SEAC4RS_AOD_vs_Alebdo_AE.png',transparent=True,dpi=600)
+
+s['GPS_ALT'].min()
+
+plt.figure()
+plt.scatter(s['UP500nm_SSFR'][fl]/s['DN500nm_SSFR'][fl],s['AOD501nm_4STAR'][fl],c=s['ABS660nmTD_PAS_NOAAAeroAbs'][fl],marker='.',vmin=0,vmax=5.0)
+plt.xlim([0,1])
+plt.yscale('log')
+plt.ylim(0.01,2.0)
+plt.ylabel('AOD at 500 nm')
+plt.xlabel('Flight-level Albedo at 500 nm')
+plt.colorbar(label='Aerosol Absorption [1/Mm]')
+plt.title('SEAC4RS')
+
+plt.savefig(fps+'plots/SEAC4RS_AOD_vs_Alebdo_abs.png',transparent=True,dpi=600)
+
+a = sio.idl.readsav(fpa+'nasa/20080709/seven/20080709_forcing_abs.out')
+
+a.keys()
+
+a['wvl_arr']
+
+a['asy'].shape
+
+a['forcing'].shape
+
+for k in a.keys():
+    print k, a[k].shape
+
+a['eff'].shape
+
+a['forcing'][1,:,:]
+
+forc = np.zeros((165,13))+np.nan
+for q in xrange(165):
+    if any(np.isfinite(a['forcing'][1,q,:])):
+        forc[q,:] = Sp.smooth(a['forcing'][1,q,:],1,nan=True,old=True)
+
+dare = np.trapz(forc,a['wvl_arr'])
+
+plt.figure()
+plt.scatter(a['aot'][:,3],dare,c=a['asy'][0:165,3],vmin=0.5,vmax=0.8)
+plt.xlabel('AOD at 500nm')
+plt.ylabel('DARE [W/m$^2$]')
+plt.title('ARCTAS Biomass burning plume')
+plt.colorbar(label='Asymmetry Parameter')
+plt.savefig(fpa+'plots/ARCTAS_DARE_vs_AOD_asy.png',transparent=True,dpi=600)
+
+

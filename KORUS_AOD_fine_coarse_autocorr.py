@@ -969,10 +969,113 @@ ref660/ref860
 mod['refsb'][5,:,:]/mod['refsb'][10,:,:]
 
 
-# In[ ]:
+# ## Load OCO-2 data
+
+# In[59]:
 
 
-oco, oco_dict = lu.load_hdf(fp+'data_other/oco2_L1bScND_10010a_160519_B10003r_200110104031.h5')
+oco, oco_dict = lu.load_hdf(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5')
+
+
+# In[60]:
+
+
+lu.load_hdf_h5py(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5')
+
+
+# In[65]:
+
+
+import h5py
+
+
+# In[66]:
+
+
+foco = h5py.File(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5','r')
+
+
+# In[81]:
+
+
+ko = foco.keys()
+
+
+# In[85]:
+
+
+for k in ko:
+    jk = foco[k].keys()
+    print [(k,i) for i in jk if 'lat' in i]
+    
+
+
+# In[68]:
+
+
+foco['AlbedoResults'].keys()
+
+
+# In[86]:
+
+
+foco['Shapes'].keys()
+
+
+# In[114]:
+
+
+foco['Shapes']['InputPtr_Array'].attrs.items()
+
+
+# In[97]:
+
+
+ra = foco['Shapes']['Retrieval_Array']
+
+
+# In[102]:
+
+
+ra.attrs.items()
+
+
+# In[76]:
+
+
+foco['AlbedoResults']['albedo_o2_fph'].attrs.items()
+
+
+# In[120]:
+
+
+aoo = foco['AlbedoResults']['albedo_o2_fph']
+
+
+# In[122]:
+
+
+aoo.value.shape
+
+
+# In[125]:
+
+
+foco['SoundingGeometry']['sounding_latitude'].value
+
+
+# In[132]:
+
+
+foco['RetrievalResults']['retrieved_o2_column'].value
+
+
+# In[129]:
+
+
+plt.figure()
+plt.scatter(foco['SoundingGeometry']['sounding_longitude'].value,
+          foco['SoundingGeometry']['sounding_latitude'].value,c=foco['AlbedoResults']['albedo_o2_fph'].value)
 
 
 # # Run analysis and prepare variables
