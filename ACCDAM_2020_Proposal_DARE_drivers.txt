@@ -124,4 +124,49 @@ plt.title('ARCTAS Biomass burning plume')
 plt.colorbar(label='Asymmetry Parameter')
 plt.savefig(fpa+'plots/ARCTAS_DARE_vs_AOD_asy.png',transparent=True,dpi=600)
 
+rh,rhdict = lu.load_ict(fpa+'nasa/pds_p3b_20080709_r2.ict',return_header=True)
+
+rh['C_RelHumidityWater']
+
+rh_utc = rh['Time']/3600.0
+
+il10 = np.argmin(abs(rh_utc-19.613))
+il11 = np.argmin(abs(rh_utc-19.686))
+
+il20 = np.argmin(abs(rh_utc-19.245))
+il21 = np.argmin(abs(rh_utc-19.343))
+
+rh['FMS_LAT'][il10],rh['FMS_LAT'][il11],rh['FMS_LAT'][il20],rh['FMS_LAT'][il21]
+
+fl1 = Sp.find_closest(rh['FMS_LAT'][il10:il11],rtma[:,0])
+fl2 = Sp.find_closest(rh['FMS_LAT'][il20:il21],rtma[:,0])
+
+rh_rt = rh['C_RelHumidityWater'][il10:il11][fl1]
+rh_rt2 = rh['C_RelHumidityWater'][il20:il21][fl2]
+
+rh_rt
+
+rtma = np.genfromtxt(fpa+'nasa/20080709/seven/rtm_hsrl_20080709_wvl0499.txt',skip_header=1)
+
+#lat     lon   ssa   asy   asy2    albedo     correction    tau modification    flux divergence   model down      model up       tau    Ft_up   Ft_dn    Fb_up   Fb_dn
+
+rtma
+
+rtma.shape
+
+rtma[:,11]
+
+plt.figure()
+plt.plot(rtma[:,0],rtma[:,2],'v',label='SSA')
+plt.plot(rtma[:,0],rtma[:,3],'+',label='ASY')
+plt.plot(rtma[:,0],rtma[:,5],'x',label='Albedo')
+
+plt.plot(rtma[:,0],rh_rt/100.0,'.',label='RH/100 [$\%$]')
+plt.plot(rtma[:,0],rtma[:,11],'o',label='AOD')
+
+
+plt.legend(frameon=False)
+plt.xlabel('Latitude [$^{{\\circ}}$]')
+#plt.xlim(60.9267,61.06)
+
 
