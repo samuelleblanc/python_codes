@@ -215,7 +215,8 @@ def data2figpoints(x,dx,fig,ax1):
 # In[1]:
 
 
-def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_ci=True,use_method='linfit',ax=None,*args,**kwargs):
+def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
+             shaded_ci=True,use_method='linfit',ax=None,lblfmt='2.2f',*args,**kwargs):
     """
     function to plot on top of previous a linear fit line, 
     with the line equation in legend.
@@ -225,7 +226,8 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
        x_err: uncertainty in x (default None)
        y_err: uncertainty in y (default None)
        color: color of the plot (default blue)
-       labels if include label in legend of linear equation values (default True)
+       labels: if include label in legend of linear equation values (default True)
+       lblfmt: format of labels (default is 2.2f) 
        ci: Confidence interval (in percent) (default 95)
        shaded_ci: plot the shaded confidence interval (default True)
        use_method: Define which method to use for linear regression
@@ -283,7 +285,9 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,shaded_
         return
     xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
     if labels:
-        ax.plot(xx,lin(p,xx),color=color,label='y=(%2.2f$\pm$%2.2f)+\n(%2.2f$\pm$%2.2f)x' % (p[0],perr[0],p[1],perr[1]),*args,**kwargs)
+        ax.plot(xx,lin(p,xx),color=color,
+                label='y=({:{fmt}}$\pm${:{fmt}})+\n({:{fmt}}$\pm${:{fmt}})x'.format(p[0],perr[0],p[1],perr[1],fmt=lblfmt),
+                *args,**kwargs)
     else:
         ax.plot(xx,lin(p,xx),color=color,*args,**kwargs)
     if shaded_ci:
@@ -715,7 +719,7 @@ def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False,
         b.set_alpha(0.7)
     for j,b in enumerate(bp['caps']):
         b.set_alpha(0.7)
-        b.set_color(whisker_color)#gr(binned_ndays[j]*1.0/bndm))
+        b.set_color(whiskers_color)#gr(binned_ndays[j]*1.0/bndm))
     for j,b in enumerate( bp['medians']):
         b.set_linewidth(4)
         b.set_color(median_color)
