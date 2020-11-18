@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Simple Program to load and check the 4STAR archive files.
@@ -6,6 +6,7 @@
 # For R2 of SEAC4RS
 
 # In[1]:
+
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
@@ -20,15 +21,18 @@ from Sp_parameters import smooth
 
 # In[2]:
 
+
 get_ipython().magic(u'matplotlib notebook')
 
 
 # In[3]:
 
+
 fp ='C:/Users/sleblan2/Research/SEAC4RS/'
 
 
 # In[4]:
+
 
 days = ['20130806','20130808','20130812','20130814','20130816','20130819',
         '20130821','20130823','20130826','20130827','20130830','20130902',
@@ -38,10 +42,12 @@ days = ['20130806','20130808','20130812','20130814','20130816','20130819',
 
 # In[5]:
 
+
 help(load_ict)
 
 
 # In[6]:
+
 
 out_R2 = []
 out_head_R2 = []
@@ -61,6 +67,7 @@ for d in days:
 
 # In[15]:
 
+
 for i,s in enumerate(out_head_R2[0]):
     for ig,g in enumerate(out_head_R2):
         if not s==g[i]:
@@ -72,6 +79,7 @@ for i,s in enumerate(out_head_R2[0]):
 
 # In[26]:
 
+
 print 'day:       R1     R2'
 for i,d in enumerate(days):
     try:
@@ -82,30 +90,36 @@ for i,d in enumerate(days):
 
 # In[51]:
 
+
 out_head_R2[0]
 
 
 # In[49]:
+
 
 nm = out_R2[0].dtype.names
 
 
 # In[50]:
 
+
 nm
 
 
 # In[63]:
+
 
 nm[9:26]
 
 
 # In[83]:
 
+
 np.where(out_R2[i][nm[4]]==1)[0]
 
 
 # In[94]:
+
 
 plt.figure()
 plt.plot(out_R2[0][nm[0]],out_R2[0][nm[9]],'.')
@@ -115,15 +129,18 @@ for x in out_R2[0][nm[0]][np.where(out_R2[0][nm[4]]==1)[0]]:
 
 # In[104]:
 
+
 import cmaps
 
 
 # In[105]:
 
+
 cmaps.cmaps()
 
 
 # In[112]:
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -133,6 +150,7 @@ for i in np.linspace(0,1,26-9):
 
 
 # In[113]:
+
 
 for i,d in enumerate(days):
     fig,ax = plt.subplots(3,sharex=True,figsize=(12,5))
@@ -167,6 +185,7 @@ for i,d in enumerate(days):
 
 
 # In[ ]:
+
 
 
 
