@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Intro
@@ -46,6 +46,7 @@
 
 # In[1]:
 
+
 get_ipython().magic(u'config InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
@@ -61,12 +62,14 @@ import Sp_parameters as Sp
 
 # In[2]:
 
+
 # set the basic directory path
 fp = 'C:/Users/sleblan2/Research/NAAMES/starzen/'
 fp_plot = 'C:/Users/sleblan2/Research/NAAMES/plot/'
 
 
 # In[3]:
+
 
 vv = 'v1'
 
@@ -75,16 +78,19 @@ vv = 'v1'
 
 # In[4]:
 
+
 dds = ['20151104','20151109','20151112','20151114','20151117','20151118','20151123']
 
 
 # In[5]:
+
 
 rts = []
 sps = []
 
 
 # In[6]:
+
 
 for daystr in dds:
     print daystr
@@ -99,10 +105,12 @@ for daystr in dds:
 
 # In[7]:
 
+
 rt.keys()
 
 
 # In[8]:
+
 
 plt.figure()
 plt.plot(rt['utc'],rt['tau'])
@@ -110,10 +118,12 @@ plt.plot(rt['utc'],rt['tau'])
 
 # In[14]:
 
+
 rt = rts[9]
 
 
 # In[15]:
+
 
 plt.figure()
 plt.plot(rts[9]['utc'],rts[9]['tau'],'.')
@@ -122,26 +132,31 @@ plt.plot(rts[9]['utc'],rts[9]['utc'],'r+')
 
 # In[16]:
 
+
 plt.figure()
 plt.plot(rts[9]['tau'],rts[9]['ref'],'.')
 
 
 # In[12]:
 
+
 igood = rts[9]['tau']>0
 
 
 # In[13]:
+
 
 igood[0:10]
 
 
 # In[14]:
 
+
 sp = sps[9]
 
 
 # In[15]:
+
 
 i=68
 i_vis = [1061,1062,1064]
@@ -155,10 +170,12 @@ plt.plot(sp.wvl[i_nir],sp.norm[i,i_nir],'g+')
 
 # In[16]:
 
+
 np.nanmean(sp.norm[i,iw])
 
 
 # In[17]:
+
 
 np.nanmean(sp.norm[i,ii])
 
@@ -166,6 +183,7 @@ np.nanmean(sp.norm[i,ii])
 # ## Plot some of the sza for each day to ensure good fitting of lut
 
 # In[70]:
+
 
 plt.figure()
 plt.plot(sps[7].utc,sps[7].sza,'x-')
@@ -177,11 +195,13 @@ plt.plot(sps[7].utc,sps[7].sza,'x-')
 
 # In[9]:
 
+
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
 # In[10]:
+
 
 for i,daystr in enumerate(dds):
     nvis = np.nanmean(sps[i].norm[:,i_vis],axis=1)
@@ -195,10 +215,12 @@ for i,daystr in enumerate(dds):
 
 # In[28]:
 
+
 fl_alt = rt['alt']<2500.0
 
 
 # In[29]:
+
 
 for i,daystr in enumerate(dds):
     rts[i]['fl_alt'] = rts[i]['alt'][:,0]<2500.0
@@ -209,10 +231,12 @@ for i,daystr in enumerate(dds):
 
 # In[33]:
 
+
 from write_utils import nearest_neighbor
 
 
 # In[34]:
+
 
 for i,daystr in enumerate(dds):
     try:
@@ -230,6 +254,7 @@ for i,daystr in enumerate(dds):
 
 # In[30]:
 
+
 for i,daystr in enumerate(dds):
     rts[i]['fl_ki'] = rts[i]['ki']<1.5
     print daystr,rts[i]['utc'].shape,rts[i]['utc'][rts[i]['fl_ki']].shape,        float(rts[i]['utc'][rts[i]['fl_ki']].shape[0])/ float(rts[i]['utc'].shape[0])*100.0
@@ -238,6 +263,7 @@ for i,daystr in enumerate(dds):
 # ## Combine the filters
 
 # In[31]:
+
 
 tot=0
 tot_fl=0
@@ -250,6 +276,7 @@ for i,daystr in enumerate(dds):
 
 # In[32]:
 
+
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 
@@ -257,10 +284,12 @@ print tot, tot_fl, float(tot_fl)/float(tot)*100.0
 
 # In[26]:
 
+
 from Sp_parameters import smooth
 
 
 # In[33]:
+
 
 for i,daystr in enumerate(dds):
     plt.figure()
@@ -287,6 +316,7 @@ for i,daystr in enumerate(dds):
 
 # In[34]:
 
+
 for i,daystr in enumerate(dds):
     try:
         rts[i]['tau_fl'] = smooth(rts[i]['tau'][rts[i]['fl']],6)
@@ -303,6 +333,7 @@ for i,daystr in enumerate(dds):
 
 # In[35]:
 
+
 rt.keys()
 
 
@@ -310,10 +341,12 @@ rt.keys()
 
 # In[36]:
 
+
 import write_utils as wu
 
 
 # In[37]:
+
 
 hdict = {'PI':'Jens Redemann',
      'Institution':'NASA Ames Research Center',
@@ -338,6 +371,7 @@ order = ['LAT','LON','COD','REF']
 
 # In[39]:
 
+
 for i,daystr in enumerate(dds):
     d_dict = {'Start_UTC':{'data':rts[i]['utc'][rts[i]['fl']]*3600.0,'unit':'seconds from midnight UTC','long_description':'time keeping'},
               'utc':{'data':rts[i]['utc'][rts[i]['fl']],'unit':'seconds from midnight UTC','long_description':'time keeping'},
@@ -358,15 +392,18 @@ for i,daystr in enumerate(dds):
 
 # In[40]:
 
+
 import hdf5storage as hs
 
 
 # In[41]:
 
+
 rtss = {str(i):rr for i,rr in enumerate(rts)}
 
 
 # In[42]:
+
 
 def dict_keys_to_unicode(d):
     out = dict()
@@ -386,6 +423,7 @@ for n in rtss.keys():
 
 # In[45]:
 
+
 hs.savemat(fp+'..//zen_ict/{}_all_retrieved.mat'.format(vv),rtss)
 
 
@@ -393,25 +431,30 @@ hs.savemat(fp+'..//zen_ict/{}_all_retrieved.mat'.format(vv),rtss)
 
 # In[7]:
 
+
 rtss = hs.loadmat(fp+'..//zen_ict/{}_all_retrieved.mat'.format(vv))
 
 
 # In[13]:
+
 
 rk = rtss.keys()
 
 
 # In[14]:
 
+
 rk.sort()
 
 
 # In[15]:
 
+
 rk
 
 
 # In[16]:
+
 
 if not rts:
     rts = []
@@ -425,10 +468,12 @@ if not rts:
 
 # In[17]:
 
+
 from load_utils import load_ict
 
 
 # In[18]:
+
 
 vv = 'R0'
 out_RA = []
@@ -445,25 +490,30 @@ for d in dds:
 
 # In[19]:
 
+
 out_head_RA[0]
 
 
 # In[20]:
+
 
 nm = out_RA[0].dtype.names
 
 
 # In[21]:
 
+
 nm
 
 
 # In[22]:
 
+
 ax[0].get_xticks()
 
 
 # In[83]:
+
 
 xt = ax[0].get_xticks()
 xl = []
@@ -473,6 +523,7 @@ for x in xt:
 
 
 # In[52]:
+
 
 for i,d in enumerate(dds):
     fig,ax = plt.subplots(2,sharex=True,figsize=(9,5))
@@ -528,6 +579,7 @@ for i,d in enumerate(dds):
 
 # In[23]:
 
+
 ar = {}
 for n in rts[0].keys():
     ar[n] = np.array([])
@@ -535,10 +587,12 @@ for n in rts[0].keys():
 
 # In[24]:
 
+
 ar['days'] = np.array([])
 
 
 # In[25]:
+
 
 for i,d in enumerate(dds):
     ar['days'] = np.append(ar['days'],np.zeros_like(rts[i]['utc'])+i)
@@ -550,10 +604,12 @@ for i,d in enumerate(dds):
 
 # In[56]:
 
+
 import hdf5storage as hs
 
 
 # In[57]:
+
 
 hs.savemat(fp+'..//zen_ict/{}_all_cld_ict.mat'.format(vv),ar)
 
@@ -561,6 +617,7 @@ hs.savemat(fp+'..//zen_ict/{}_all_cld_ict.mat'.format(vv),ar)
 # ## Optionally load the all ict file
 
 # In[26]:
+
 
 if not ar:
     ar = hs.loadmat(fp+'..//zen_ict/v3/{}_all_cld_ict.mat'.format(vv))
@@ -570,20 +627,24 @@ if not ar:
 
 # In[27]:
 
+
 import plotting_utils as pu
 
 
 # In[28]:
+
 
 from map_interactive import build_basemap
 
 
 # In[29]:
 
+
 rts[i]['tau_fl']
 
 
 # In[30]:
+
 
 for i,daystr in enumerate(dds):
     print rts[i]['lat'][rts[i]['fl']][:,0].shape,rts[i]['lon'][rts[i]['fl']][:,0].shape,rts[i]['tau_fl'].shape
@@ -591,11 +652,13 @@ for i,daystr in enumerate(dds):
 
 # In[31]:
 
+
 print rts[i]['tau_fl'].shape
 print rts[i]['tau'].shape
 
 
 # In[32]:
+
 
 print rts[i]['lon'][:,0].shape
 print rts[i]['lon'][:,0].shape
@@ -603,10 +666,12 @@ print rts[i]['lon'][:,0].shape
 
 # In[36]:
 
+
 import scipy.stats as ss
 
 
 # In[62]:
+
 
 lons,lats,taus,refs,fls = [],[],[],[],[]
 for i,d in enumerate(dds):
@@ -620,32 +685,38 @@ lons,lats,taus,refs,fls = np.hstack(lons),np.hstack(lats),np.hstack(taus),np.hst
 
 # In[150]:
 
+
 taufl = ss.binned_statistic_2d( lons[fls],lats[fls],taus[fls], statistic='mean', bins=(25,15),range=[[-55,-35],[40,55]])
 reffl = ss.binned_statistic_2d( lons[fls],lats[fls],refs[fls], statistic='mean', bins=(25,15),range=[[-55,-35],[40,55]])
 
 
 # In[154]:
 
+
 taufl.statistic
 
 
 # In[152]:
+
 
 taufl.x_edge
 
 
 # In[153]:
 
+
 taufl.y_edge
 
 
 # In[135]:
+
 
 plt.figure()
 plt.scatter(lons[fls],lats[fls],taus[fls])
 
 
 # In[129]:
+
 
 plt.figure()
 plt.plot(lats[fls],taus[fls],'.')
@@ -655,30 +726,36 @@ plt.plot(lons[fls],taus[fls],'.g')
 
 # In[156]:
 
+
 taufl.statistic.shape
 
 
 # In[163]:
+
 
 taufl.x_edge
 
 
 # In[164]:
 
+
 taufl.y_edge
 
 
 # In[158]:
+
 
 taufl.x_edge.shape,taufl.y_edge.shape
 
 
 # In[167]:
 
+
 help(m.pcolor)
 
 
 # In[166]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -693,10 +770,12 @@ cb.set_label('COD')
 
 # In[132]:
 
+
 reffl.statistic
 
 
 # In[122]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -710,6 +789,7 @@ plt.savefig(fp+'../plot/NAAMES_map_ref_stasts.png',dpi=600,transparent=True)
 
 
 # In[91]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -730,6 +810,7 @@ cb.set_label('COD')
 
 # In[88]:
 
+
 fig = plt.figure()
 ax = plt.subplot(111)
 m = build_basemap(lower_left=[-55,35],upper_right=[-30,60],ax=ax,larger=False)
@@ -746,6 +827,7 @@ cb.set_label('COD')
 
 
 # In[124]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -764,6 +846,7 @@ cb.set_label('r$_{{eff}}$ [$\\mu$m]')
 
 
 # In[74]:
+
 
 fig = plt.figure()
 ax = plt.subplot(111)
@@ -784,6 +867,7 @@ plt.savefig(fp+'..//zen_ict/REF_map.png',transparent=True,dpi=600)
 
 # In[75]:
 
+
 plt.figure()
 plt.plot(ar['lat_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lat_fl'],ar['tau_fl'],bins=40,normed=True)
@@ -797,6 +881,7 @@ plt.savefig(fp+'..//zen_ict/COD_hist_lat.png',transparent=True,dpi=600)
 
 # In[56]:
 
+
 plt.figure()
 plt.plot(ar['lon_fl'],ar['tau_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lon_fl'],ar['tau_fl'],bins=40,normed=True)
@@ -809,6 +894,7 @@ plt.savefig(fp+'..//zen_ict/v3/COD_hist_lon.png',transparent=True,dpi=600)
 
 
 # In[57]:
+
 
 plt.figure()
 plt.plot(ar['lon_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
@@ -824,6 +910,7 @@ plt.savefig(fp+'..//zen_ict/v3/ref_hist_lon.png',transparent=True,dpi=600)
 
 # In[58]:
 
+
 plt.figure()
 plt.plot(ar['lat_fl'],ar['ref_fl'],'.',color='grey',alpha=0.1)
 plt.hist2d(ar['lat_fl'],ar['ref_fl'],bins=40,normed=True,cmap=plt.cm.gist_earth)
@@ -837,6 +924,7 @@ plt.savefig(fp+'..//zen_ict/v3/ref_hist_lat.png',transparent=True,dpi=600)
 
 
 # In[168]:
+
 
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=True,label='filtered')
@@ -852,6 +940,7 @@ plt.savefig(fp+'..//zen_ict/cod_hist.png',transparent=True,dpi=600)
 
 # In[99]:
 
+
 fig = plt.figure()
 plt.hist(ar['tau_fl'],bins=30,edgecolor='None',color='g',alpha=0.7,normed=False,label='filtered')
 plt.hist(ar['tau'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,70),label='All points')
@@ -863,15 +952,18 @@ plt.savefig(fp+'..//zen_ict/NAAMES_cod_hist_all.png',transparent=True,dpi=600)
 
 # In[116]:
 
+
 np.nanmean(ar['tau_fl'])
 
 
 # In[117]:
 
+
 np.nanmean(ar['ref_fl'])
 
 
 # In[96]:
+
 
 fig = plt.figure()
 plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=True,label='filtered')
@@ -887,6 +979,7 @@ plt.savefig(fp+'..//zen_ict/NAAMES_ref_hist.png',transparent=True,dpi=600)
 
 # In[98]:
 
+
 fig = plt.figure()
 plt.hist(ar['ref_fl'],bins=30,edgecolor='None',color='grey',alpha=0.7,normed=False,label='filtered')
 plt.hist(ar['ref'],bins=30,edgecolor='None',color='b',alpha=0.1,normed=False,range=(0,30),label='all points')
@@ -897,6 +990,7 @@ plt.savefig(fp+'..//zen_ict/NAAMES_ref_hist_all.png',transparent=True,dpi=600)
 
 
 # In[103]:
+
 
 fig,ax = plt.subplots(2,1)
 ax = ax.ravel()
@@ -922,6 +1016,7 @@ plt.savefig(fp+'..//zen_ict/NAAMES_ref_cod_hist.png',transparent=True,dpi=600)
 
 
 # In[177]:
+
 
 fig,ax = plt.subplots(2,1,figsize=(7,6))
 ax = ax.ravel()
@@ -951,6 +1046,7 @@ plt.savefig(fp+'..//plot/NAAMES_ref_cod_hist_x.png',transparent=True,dpi=600)
 
 
 # In[ ]:
+
 
 
 
