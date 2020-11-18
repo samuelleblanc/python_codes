@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[92]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -26,13 +26,13 @@ from path_utils import getpath
 from plotting_utils import make_boxplot
 
 
-# In[93]:
+# In[2]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[94]:
+# In[3]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
@@ -41,7 +41,7 @@ fp
 
 # # load the files
 
-# In[15]:
+# In[4]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -54,19 +54,19 @@ days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160
 days = ['20160924']
 
 
-# In[107]:
+# In[5]:
 
 
 vv = 'R3'
 
 
-# In[108]:
+# In[6]:
 
 
 vi = 'v8'
 
 
-# In[109]:
+# In[7]:
 
 
 outaod_RA = []
@@ -129,7 +129,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[21]:
+# In[8]:
 
 
 outaod_head_RA[4]
@@ -143,26 +143,26 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[99]:
+# In[9]:
 
 
 nm = outaod_RA[1].dtype.names
 
 
-# In[100]:
+# In[10]:
 
 
 nm
 
 
-# In[101]:
+# In[11]:
 
 
 wl = nm[10:-1]
 wl = wl[0:24]
 
 
-# In[102]:
+# In[12]:
 
 
 for a in wl:
@@ -453,12 +453,6 @@ for i,d in enumerate(days):
 
 # ## Special case plotting
 
-# In[44]:
-
-
-outaod_RA
-
-
 # In[33]:
 
 
@@ -613,6 +607,43 @@ for i,d in enumerate(days):
 
 # ## Plot the acaod flag
 
+# In[15]:
+
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(1,sharex=True,figsize=(11,5))
+    ax.set_title('ACAOD profile {} for flight {}'.format(vv,d))
+    qa = [outaod_RA[i]['qual_flag']==0]
+    v = ax.scatter(outaod_RA[i]['Start_UTC'][qa],outaod_RA[i]['GPS_Alt'][qa],20,
+                   c=outaod_RA[i]['AOD0501'][qa],marker='.',edgecolor='None',vmin=0.0,vmax=0.8)
+    try:
+        qaf = [(outaod_RA[i]['qual_flag']==0) & (outaod_RA[i]['flag_acaod']==1)]
+        print len(qaf)
+        v = ax.scatter(outaod_RA[i]['Start_UTC'][qaf],outaod_RA[i]['GPS_Alt'][qaf],150,
+                   c=outaod_RA[i]['AOD0501'][qaf],marker='*',edgecolor='None',vmin=0.0,vmax=0.8)
+    except:
+        pass
+    ax.set_ylabel('Altitude [m]')
+    ax.set_ylim(0,7000)
+    #ax.set_xlim(-23.5,-9.5)
+    ax.axhline(0,color='k')
+    ax.set_xlabel('UTC [H]')
+       
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.95, box.height])
+    
+    cbaxes = fig.add_axes([0.9, 0.1, 0.02, 0.6]) 
+    cbar =  plt.colorbar(v,extend='both',cax=cbaxes)
+    cbar.set_label('AOD 501 nm')
+    
+    sizes = [20,150]
+    shape = ['.','*']
+    labels = ['all AOD','ACAOD']
+    points = [ax.scatter([], [], s=s, c='grey',marker=shape[iz],edgecolor='None') for iz,s in enumerate(sizes)]
+    plt.legend(points, labels, scatterpoints=1,frameon=False,loc='upper left',bbox_to_anchor=(-1.15,1.25))
+    #plt.savefig(fp+'aod_ict_2016/{vv}/{vv}_{}_time_alt_acaod.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
+
+
 # In[220]:
 
 
@@ -634,7 +665,7 @@ for i,d in enumerate(days):
     #ax.set_xlim(-23.5,-9.5)
     ax.axhline(0,color='k')
     ax.set_xlabel('Latitude [$^\\circ$]')
-   
+       
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.95, box.height])
     
