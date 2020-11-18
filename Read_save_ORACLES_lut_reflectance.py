@@ -43,7 +43,7 @@
 
 # # Prepare the python environment
 
-# In[6]:
+# In[1]:
 
 
 import numpy as np
@@ -54,7 +54,7 @@ from path_utils import getpath
 from tqdm.notebook import tqdm 
 
 
-# In[3]:
+# In[2]:
 
 
 fp = getpath('ORACLES')
@@ -76,13 +76,13 @@ else:
 
 # # Setup the variables used for lut
 
+# In[3]:
+
+
+vv = 'v7_irr'
+
+
 # In[4]:
-
-
-vv = 'v6_irr'
-
-
-# In[10]:
 
 
 # try to read from the saved version file
@@ -118,19 +118,19 @@ except ValueError: # not a json file try old way
         zout = [0.2,1.5,100.0]    
 
 
-# In[12]:
+# In[8]:
 
 
 fmt = 'lut_irr_sza{sza:04.1f}_tau{tau:06.2f}_ref{ref:04.1f}_{phase}_w{iwvl:1d}.dat'
 
 
-# In[8]:
+# In[9]:
 
 
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 
-# In[13]:
+# In[11]:
 
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
@@ -139,27 +139,21 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   split_wvl=True,numrad=0)
 
 
-# In[14]:
+# In[12]:
 
 
 if use_json:
     dat['lut_details'] = d
 
 
-# In[15]:
+# In[13]:
 
 
 print 'Saving matlab file'
 
 
-# In[16]:
+# In[14]:
 
 
 hs.savemat(fp+'{}_ORACLES_lut.mat'.format(vv),dat)
-
-
-# In[ ]:
-
-
-
 
