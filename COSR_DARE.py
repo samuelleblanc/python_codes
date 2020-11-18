@@ -85,16 +85,16 @@ vv = 'v3b'
 fp =getpath('COSR')
 
 
-# In[285]:
+# In[6]:
 
 
 day = '20180609'
-day = '20180618'
-day = '20180624'
-day = '20180625'
+#day = '20180618'
+#day = '20180624'
+#day = '20180625'
 
 
-# In[286]:
+# In[7]:
 
 
 #get the paths
@@ -1796,6 +1796,12 @@ print 'saving file to: '+fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv
 hs.savemat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv=vv),out)
 
 
+# In[12]:
+
+
+out = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d=day,vv=vv))
+
+
 # # Now plot out the DARE for this flight
 
 # In[263]:
@@ -2173,7 +2179,7 @@ out4 = hs.loadmat(fp+'{name}_DARE_{d}_{vv}.mat'.format(name=name,d='20180625',vv
 
 # ## Get the time tables 
 
-# In[11]:
+# In[13]:
 
 
 def time_utc(x):
@@ -2182,7 +2188,7 @@ def time_utc(x):
 
 # ### 20180609
 
-# In[12]:
+# In[14]:
 
 
 flttable1 = pd.read_excel(fp+'flt_table/fltable_{}.xlsx'.format('20180609'))
@@ -2191,14 +2197,36 @@ totime1 = flttable1['ToTime'][flttable1['FlightType']=='in plume']
 plumeid1 = flttable1['PlumeId'][(flttable1['PlumeId']=='A') | (flttable1['PlumeId']=='B')].to_numpy()
 
 
-# In[13]:
+# In[15]:
 
 
 from_utc1 = time_utc(fromtime1.to_numpy())
 to_utc1 = time_utc(totime1.to_numpy())
 
 
-# In[14]:
+# In[23]:
+
+
+from_utc1
+
+
+# In[17]:
+
+
+out1 = out
+
+
+# In[71]:
+
+
+# Remove bad data from neph scattering before 16:25
+ibad1 = (out1['utc']<16.4) | (out1['utc']>17.6)
+out1['dare_avg'][ibad1,:] = np.nan
+out1['aod'][ibad1,:] = np.nan
+out1['ssa'][ibad1,:] = np.nan
+
+
+# In[72]:
 
 
 ipl1 = []
@@ -2235,25 +2263,25 @@ for ii, fo in enumerate(from_utc1):
     ssa_out1 = np.append(ssa_out1,out1['ssa'][~pl1,2,3])
 
 
-# In[15]:
+# In[73]:
 
 
 out1.keys()
 
 
-# In[16]:
+# In[74]:
 
 
 np.nanmean(aod_pl1a),np.nanmean(aod_pl1b),np.nanmean(aod_out1)
 
 
-# In[17]:
+# In[75]:
 
 
 np.nanmean(ssa_pl1a),np.nanmean(ssa_pl1b),np.nanmean(ssa_out1)
 
 
-# In[18]:
+# In[69]:
 
 
 ppl1 = np.array(ipl1).flatten()
@@ -2290,7 +2318,7 @@ for ii, fo in enumerate(from_utc1):
 insitu['extCalc500nm'] = np.array(insitu['extCalc500nm'])
 
 
-# In[20]:
+# In[76]:
 
 
 fig = plt.figure()
@@ -2313,19 +2341,13 @@ for ipp in ipl1:
 ax3.set_ylabel('SSA')
 
 
-# In[ ]:
-
-
-
-
-
-# In[21]:
+# In[38]:
 
 
 out1['ext'].shape
 
 
-# In[22]:
+# In[77]:
 
 
 avgs1 = {'bmea':np.nanmean(dare_out1),'bmed':np.nanmedian(dare_out1),'bstd':np.nanstd(dare_out1),
@@ -2333,7 +2355,25 @@ avgs1 = {'bmea':np.nanmean(dare_out1),'bmed':np.nanmedian(dare_out1),'bstd':np.n
          'pbmea':np.nanmean(dare_pl1b),'pbmed':np.nanmedian(dare_pl1b),'pbstd':np.nanstd(dare_pl1b)}
 
 
-# In[438]:
+# In[78]:
+
+
+np.nanmin(dare_pl1a),np.nanmax(dare_pl1a)
+
+
+# In[79]:
+
+
+np.nanmin(dare_pl1b),np.nanmax(dare_pl1b)
+
+
+# In[80]:
+
+
+np.nanmin(dare_out1),np.nanmax(dare_out1)
+
+
+# In[81]:
 
 
 plt.figure(figsize=(7,3))
@@ -2341,7 +2381,7 @@ plt.hist([dare_pl1a,dare_pl1b,dare_out1],color=['violet','silver','lightgreen'],
          label=['In plume A, {pamea:2.1f} $\\pm$ {pastd:2.1f} W/m$^2$'.format(**avgs1),
                 'In plume B, {pbmea:2.1f} $\\pm$ {pbstd:2.1f} W/m$^2$'.format(**avgs1),
                 'Out of plume, {bmea:2.1f} $\\pm$ {bstd:2.1f} W/m$^2$'.format(**avgs1)],
-         normed=True,bins=30)
+         normed=True,bins=30,range=[-90,0])
 
 plt.legend(frameon=False)
 plt.xlabel('DARE [W/m$^2$]')
@@ -2351,7 +2391,7 @@ plt.tight_layout()
 plt.savefig(fp+'plots/DARE_hist_surface_background_inplume_{}_{}.png'.format(day,vv),dpi=600,transparent=True)
 
 
-# In[23]:
+# In[82]:
 
 
 avgs1_toa = {'bmea':np.nanmean(dare_out1_toa),'bmed':np.nanmedian(dare_out1_toa),'bstd':np.nanstd(dare_out1_toa),
@@ -2359,7 +2399,16 @@ avgs1_toa = {'bmea':np.nanmean(dare_out1_toa),'bmed':np.nanmedian(dare_out1_toa)
          'pbmea':np.nanmean(dare_pl1b_toa),'pbmed':np.nanmedian(dare_pl1b_toa),'pbstd':np.nanstd(dare_pl1b_toa)}
 
 
-# In[439]:
+# In[83]:
+
+
+avgs1_toa_rg = {'bmin':np.nanmin(dare_out1_toa),'bmax':np.nanmax(dare_out1_toa),
+         'pamin':np.nanmin(dare_pl1a_toa),'pamax':np.nanmax(dare_pl1a_toa),
+         'pbmin':np.nanmin(dare_pl1b_toa),'pbmax':np.nanmax(dare_pl1b_toa)}
+avgs1_toa_rg
+
+
+# In[84]:
 
 
 plt.figure(figsize=(7,3))
@@ -2367,7 +2416,7 @@ plt.hist([dare_pl1a_toa,dare_pl1b_toa,dare_out1_toa],color=['violet','silver','l
          label=['In plume A, {pamea:2.1f} $\\pm$ {pastd:2.1f} W/m$^2$'.format(**avgs1_toa),
                 'In plume B, {pbmea:2.1f} $\\pm$ {pbstd:2.1f} W/m$^2$'.format(**avgs1_toa),
                 'Out of plume, {bmea:2.1f} $\\pm$ {bstd:2.1f} W/m$^2$'.format(**avgs1_toa)],
-         normed=True,bins=30)
+         normed=True,bins=30,range=[-50,0])
 
 plt.legend(frameon=False)
 plt.xlabel('DARE [W/m$^2$]')
@@ -2383,7 +2432,7 @@ plt.savefig(fp+'plots/DARE_hist_TOA_background_inplume_{}_{}.png'.format(day,vv)
 np.nanmean(dare_pl1a_toa[dare_pl1a_toa>(-15)]), np.nanmean(dare_pl1a_toa[dare_pl1a_toa<(-15)])
 
 
-# In[27]:
+# In[85]:
 
 
 fig = plt.figure()
@@ -2448,6 +2497,29 @@ ax4.plot(out1['utc'],out1['asy'][:,2,3],'.k',label='all')
 for ipp in ipl1:
     ax4.plot(out1['utc'][ipp],out1['asy'][ipp,2,3],'o')
 ax4.set_ylabel('ASY')
+
+
+# #### Paired T-test to see if differences in plumes vs background
+
+# In[53]:
+
+
+from scipy import stats
+
+
+# In[86]:
+
+
+#[dare_pl1a_toa,dare_pl1b_toa,dare_out1_toa]
+tval,pval = stats.ttest_ind(dare_pl1b_toa,dare_out1_toa,nan_policy='omit')
+tval,pval
+
+
+# In[87]:
+
+
+tval,pval = stats.ttest_ind(dare_pl1a_toa,dare_out1_toa,nan_policy='omit',equal_var=False)
+tval,pval
 
 
 # #### Estimate the uncertainty in DARE
@@ -2910,6 +2982,46 @@ np.nanmedian(dare_out1),np.nanmedian(dare_out2),np.nanmedian(dare_out3),np.nanme
 
 
 np.nanstd(dare_out1),np.nanstd(dare_out2),np.nanstd(dare_out3),np.nanstd(dare_out4)
+
+
+# In[ ]:
+
+
+
+
+
+# # Get the p-value for the delta tau vs. distance of AERONET vs 4STAR
+
+# In[95]:
+
+
+import plotting_utils as pu
+
+
+# In[88]:
+
+
+s2aero = pd.read_excel(fp+'starAero.xlsx'.format('20180609'))
+
+
+# In[89]:
+
+
+s2aero.keys()
+
+
+# In[112]:
+
+
+plt.figure()
+plt.plot(s2aero['distKM'],s2aero['deltaaodfine'],'.',label='')
+p,perr = pu.plot_lin(s2aero['distKM'],s2aero['deltaaodfine'],y_err=s2aero['deltaaodfine']*0.0+0.03,labels=True,lblfmt='4.5f')
+plt.legend()
+p,perr
+plt.xlabel('Distance from AERONET [km]')
+plt.ylabel('$\\tau_{diff}$')
+slope, intercept, r_value, p_value, std_err = stats.linregress(s2aero['distKM'],s2aero['deltaaodfine'])
+p_value
 
 
 # In[ ]:
