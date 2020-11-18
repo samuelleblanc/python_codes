@@ -42,7 +42,7 @@
 # # Prepare the python environment
 # 
 
-# In[2]:
+# In[1]:
 
 
 import numpy as np
@@ -51,25 +51,25 @@ import os
 import matplotlib.pyplot as plt
 
 
-# In[3]:
+# In[2]:
 
 
 import hdf5storage as hs
 
 
-# In[4]:
+# In[3]:
 
 
 import Sp_parameters as Sp
 
 
-# In[5]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[6]:
+# In[5]:
 
 
 import plotting_utils as pu
@@ -80,12 +80,14 @@ import plotting_utils as pu
 
 from load_utils import mat2py_time, toutc, load_ict
 from Sp_parameters import smooth
+from path_utils import getpath
 
 
 # In[8]:
 
 
-fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
+#fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
+fp = getpath('KORUS')
 
 
 # In[9]:
@@ -622,26 +624,26 @@ np.gradient(-1.0*np.log(polyval(c,[499,500,501])),a)
 
 # # Load the cloud files
 
-# In[72]:
+# In[26]:
 
 
 fp
 
 
-# In[73]:
+# In[27]:
 
 
 fpdat = fp+'data_zen//'
 
 
-# In[74]:
+# In[42]:
 
 
 dds = ['20160501','20160504','20160505','20160510','20160511','20160514',
        '20160515','20160519','20160521','20160524','20160526','20160602','20160604','20160609']
 
 
-# In[76]:
+# In[29]:
 
 
 dds = ['20160502']
@@ -649,14 +651,14 @@ dds = ['20160502']
 
 # ## Load the retrieval results and the spectra
 
-# In[77]:
+# In[43]:
 
 
 rts = []
 sps = []
 
 
-# In[79]:
+# In[44]:
 
 
 for daystr in dds:
@@ -672,14 +674,14 @@ for daystr in dds:
 
 # ### Filter where vis and nir don't match
 
-# In[80]:
+# In[45]:
 
 
 i_vis = [1061,1062,1064]
 i_nir = [1060,1063]
 
 
-# In[81]:
+# In[46]:
 
 
 for i,daystr in enumerate(dds):
@@ -692,19 +694,19 @@ for i,daystr in enumerate(dds):
 
 # ### Now filter out the times which were at too low altitude
 
-# In[331]:
+# In[47]:
 
 
 zalt = 3000.0
 
 
-# In[332]:
+# In[48]:
 
 
 fl_alt = rt['alt']>zalt
 
 
-# In[333]:
+# In[49]:
 
 
 for i,daystr in enumerate(dds):
@@ -714,7 +716,7 @@ for i,daystr in enumerate(dds):
 
 # ### Filter for high ki squared residuals
 
-# In[334]:
+# In[50]:
 
 
 for i,daystr in enumerate(dds):
@@ -724,7 +726,7 @@ for i,daystr in enumerate(dds):
 
 # ### Combine the filters
 
-# In[335]:
+# In[51]:
 
 
 tot=0
@@ -736,7 +738,7 @@ for i,daystr in enumerate(dds):
     tot_fl = tot_fl+len(rts[i]['utc'][rts[i]['fl']])
 
 
-# In[336]:
+# In[52]:
 
 
 print tot, tot_fl, float(tot_fl)/float(tot)*100.0
@@ -772,7 +774,7 @@ for i,daystr in enumerate(dds):
     ax1.set_title(daystr)
 
 
-# In[341]:
+# In[55]:
 
 
 for i,daystr in enumerate(dds):
@@ -886,13 +888,19 @@ hs.savemat(fp+'zen_ict/v2/{}_all_retrieved.mat'.format(vr),rtss)
 
 # ## Read in the filtered cloud retrievals
 
-# In[95]:
+# In[32]:
 
 
 from load_utils import load_ict
 
 
-# In[96]:
+# In[34]:
+
+
+vr = 'RA'
+
+
+# In[35]:
 
 
 out_RA = []
@@ -907,7 +915,7 @@ for d in dds:
         print 'problem with', d
 
 
-# In[97]:
+# In[36]:
 
 
 out_head_RA[0]
@@ -915,7 +923,7 @@ out_head_RA[0]
 
 # ## Combine to single array
 
-# In[338]:
+# In[58]:
 
 
 cr = {}
@@ -923,13 +931,13 @@ for n in rts[0].keys():
     cr[n] = np.array([])
 
 
-# In[339]:
+# In[59]:
 
 
 cr['days'] = np.array([])
 
 
-# In[340]:
+# In[60]:
 
 
 for i,d in enumerate(dds):
@@ -1118,21 +1126,15 @@ print 'AVERAGE COD', np.nanmean(cr['tau_fl']),np.nanmedian(cr['tau_fl'])
 print 'AVERAGE REF', np.nanmean(cr['ref_fl']),np.nanmedian(cr['ref_fl']),
 
 
-# In[ ]:
-
-
-
-
-
 # # Combine Aerosol and Cloud properties into a single figure
 
-# In[302]:
+# In[67]:
 
 
-fig=plt.figure()
+fig=plt.figure(figsize=(3,2.5))
 plt.hist(cr['tau_fl'],bins=25,range=[0,5.0],edgecolor='None',color='r',alpha=0.5,normed=True,label='Cirrus')
 plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=[0,5.0],normed=True,edgecolor='None',alpha=0.5,
-         label='All AOD @ 501 nm')
+         label='All AOD @ 501 nm',color='tab:green')
 plt.hist(arc['AOD0501'][ar['fl_0.5']],bins=25,range=[0,5.0],normed=True,edgecolor='None',alpha=0.5,
          label='AOD @ 501 nm below 500 m')
 
@@ -1145,14 +1147,48 @@ left, bottom, width, height = [0.63, 0.32, 0.35, 0.4]
 ax2 = fig.add_axes([left, bottom, width, height])
 ax2.hist(cr['tau_fl'],bins=60,edgecolor='None',color='r',alpha=0.5,normed=True,label='Cirrus')
 ax2.hist(arc['AOD0501'][ar['fl']],bins=5,range=[0,2.0],normed=True,edgecolor='None',alpha=0.5,
-         label='All AOD @ 501 nm')
+         label='All AOD @ 501 nm',color='tab:green')
 ax2.hist(arc['AOD0501'][ar['fl_0.5']],bins=5,range=[0,2.0],normed=True,edgecolor='None',alpha=0.5,
          label='AOD @ 501 nm below 500 m')
 ax2.set_ylim(0,0.4)
 #plt.legend(frameon=False)
 ax2.set_xlabel('Optical Depth')
 #plt.ylabel('Frequency')
-plt.savefig(fp+'zen_ict//v3//KORUS_AOD_COD.png',dpi=600,transparent=True)
+plt.tight_layout()
+#plt.savefig(fp+'zen_ict//v3//KORUS_AOD_COD.png',dpi=600,transparent=True)
+
+
+# In[111]:
+
+
+fig=plt.figure(figsize=(2.5,2))
+plt.hist(cr['tau_fl']-0.2,bins=20,range=[0,10.0],edgecolor='None',color='r',alpha=0.5,normed=True,label='Cirrus')
+#plt.hist(arc['AOD0501'][ar['fl']],bins=25,range=[0,5.0],normed=True,edgecolor='None',alpha=0.5,
+#         label='All AOD',color='tab:green')
+plt.hist(arc['AOD0501'][ar['fl_1.0']],bins=25,range=[0,5.0],normed=True,edgecolor='None',alpha=0.5,
+         label='AOD')
+
+plt.legend(frameon=False)
+plt.xlabel('Optical Depth')
+plt.ylabel('Frequency')
+plt.xscale('log')
+plt.xlim(0,10)
+plt.ylim(0,2.0)
+plt.xticks([0.1,0.2,0.5,1.0,2.0,4.0,10.0],['0.1','0.2','0.5','1','2','4','10'])
+
+#left, bottom, width, height = [0.63, 0.32, 0.35, 0.4]
+#ax2 = fig.add_axes([left, bottom, width, height])
+#ax2.hist(cr['tau_fl'],bins=60,edgecolor='None',color='r',alpha=0.5,normed=True,label='Cirrus')
+#ax2.hist(arc['AOD0501'][ar['fl']],bins=5,range=[0,2.0],normed=True,edgecolor='None',alpha=0.5,
+#         label='All AOD @ 501 nm',color='tab:green')
+#ax2.hist(arc['AOD0501'][ar['fl_0.5']],bins=5,range=[0,2.0],normed=True,edgecolor='None',alpha=0.5,
+#         label='AOD @ 501 nm below 500 m')
+#ax2.set_ylim(0,0.4)
+#plt.legend(frameon=False)
+#ax2.set_xlabel('Optical Depth')
+#plt.ylabel('Frequency')
+plt.tight_layout()
+plt.savefig(fp+'zen_ict/v3/KORUS_AOD_COD_small.png',dpi=600,transparent=True)
 
 
 # In[287]:

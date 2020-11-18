@@ -21,6 +21,7 @@ import map_utils as mu
 import write_utils as wu
 from scipy import interpolate
 import math
+import sys
 
 from linfit import linfit
 import Sun_utils as su
@@ -43,7 +44,7 @@ ar['fl_QA']
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
-fl_ci = (ar['qual_flag_flag']==1.) & (ar['AOD0501']<1.0)
+fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 fl_ci.sum()
 
@@ -134,8 +135,6 @@ len(ig4)
 
 ar['doys']%1.0
 
-ar.keys()
-
 goci[0].keys()
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[]}
@@ -164,9 +163,6 @@ for k in goci2ar.keys():
     goci2ar[k] = np.array(goci2ar[k])
 
 igoci
-
-if len(igoci)<1:
-    print 'k'
 
 len(goci2ar['aod'])
 
@@ -207,6 +203,8 @@ for m in ml:
     merra.append(mtmp)
 
 len(merra),len(ml)
+
+mdict.keys()
 
 mdict['AODINC']
 
@@ -267,6 +265,81 @@ plt.figure()
 plt.plot(merra2ar['doys'],merra2ar['aod'],'.')
 plt.plot(ar['doys'],ar['AOD0501'],'.')
 
+ml = os.listdir(fp+'data_other/MERRA2/aer')
+
+ml = [ m for m in ml if m.endswith('nc4')] 
+ml.sort()
+
+mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+ml[0])
+
+merra = []
+for m in ml:
+    print 'Loading file: {}'.format(m)
+    mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+m,
+                                   values=(('lat',50),('lon',51),('time',52),('TOTEXTTAU',48),('TOTSCATAU',49),('TOTANGSTR',47)),
+                                   verbose=False)
+    merra.append(mtmp)
+
+len(merra),len(ml)
+
+mdict.keys()
+
+mdict['TOTANGSTR']
+
+mdict['TOTEXTTAU']
+
+merra[0]['time']/60.0/24.0
+
+merra[0]['time']
+
+delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
+
+merra_doy = [datetime(int(l[-12:-8]),int(l[-8:-6]),int(l[-6:-4])).timetuple().tm_yday for l in ml]
+
+for m in merra:
+    m['aod'] = m['TOTEXTTAU']
+    m['ae'] = m['TOTANGSTR']
+
+im4 = Sp.find_closest(np.array(merra_doy),(ar['doys']+delta_time).astype(int))
+
+np.unique(im4)
+
+nmerra = len(merra)
+nlat = len(merra[0]['lat'])
+nlon = len(merra[0]['lon'])
+ntime = len(merra[0]['time'])
+
+merra2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'ae':[],'ind':[]}
+for ii in np.unique(im4):
+    print ii
+    imeas = np.where(im4==ii)[0]
+    itime = Sp.find_closest(merra[ii]['time']/60.0/24.0+merra_doy[ii],ar['doys'][imeas])
+    ilat = Sp.find_closest(merra[0]['lat'],ar['Latitude'][imeas])
+    ilon = Sp.find_closest(merra[0]['lon'],ar['Longitude'][imeas])
+    
+    if len(imeas)<1:
+        merra2ar['lat'] = np.append(merra2ar['lat'],ar['Latitude'][imeas])
+        merra2ar['lon'] = np.append(merra2ar['lon'],ar['Longitude'][imeas])
+        merra2ar['aod'] = np.append(merra2ar['aod'],ar['Latitude'][imeas]+np.nan)
+        merra2ar['ae'] = np.append(merra2ar['ae'],ar['Latitude'][imeas]+np.nan)
+        merra2ar['doys'] = np.append(merra2ar['doys'],ar['doys'][imeas])
+        merra2ar['ind'] = np.append(merra2ar['ind'],ar['doys'][imeas].astype(int)*0) #pixel index
+    else:
+        merra2ar['lat'] = np.append(merra2ar['lat'],merra[ii]['lat'][ilat])
+        merra2ar['lon'] = np.append(merra2ar['lon'],merra[ii]['lon'][ilon])
+        merra2ar['aod'] = np.append(merra2ar['aod'],merra[ii]['aod'][itime,ilat,ilon])
+        merra2ar['ae'] = np.append(merra2ar['ae'],merra[ii]['ae'][itime,ilat,ilon])
+        merra2ar['doys'] = np.append(merra2ar['doys'],merra[ii]['time'][itime]/60.0/24.0+merra_doy[ii])
+        merra2ar['ind'] = np.append(merra2ar['ind'],
+                                    np.ravel_multi_index((imeas*0+ii,itime,ilat,ilon),(nmerra,ntime,nlat,nlon)).astype(int))
+
+for k in merra2ar.keys():
+    merra2ar[k] = np.array(merra2ar[k])
+
+plt.figure()
+plt.plot(merra2ar['doys'],merra2ar['aod'],'.')
+plt.plot(ar['doys'],ar['AOD0501'],'.')
+
 lrgl = os.listdir(fp+'data_other/LARGE')
 
 lrgl.sort()
@@ -322,21 +395,152 @@ fpd = fp+'data_other/MOD021KM.A2016140.0140.061.2017326011557.hdf'
 
 fpd
 
-mod,mod_dict = lu.load_hdf(fpd,values=(('refsb',0),('urefsb',1),('emis',2),('uemis',3),('refsb25',4),('refsw',7),
-                                       ('lat',19),('lon',20)))
+mod,mod_dict = lu.load_hdf(fpd,values=(('refsb',0),('urefsb',1),('emis',2),('uemis',3),('refsb25',4),('refsw',7)))
 
-mod_dict['lat'].keys()
+mod1,mod1_dict = lu.load_hdf(fp+'data_other/MOD02QKM.A2016140.0140.061.2017326011557.hdf',values=(('lat',2),('lon',3)))
+
+moda,moda_dict = lu.load_hdf(fp+'data_other/MOD04_L2.A2016140.0140.061.2017326145822.hdf',values=(('aod',135),('lat',71),('lon',70)))
+
+moda_dict['aod']
+
+modc,modc_dict = lu.load_hdf(fp+'data_other/MOD06_L2.A2016140.0140.061.2017326153640.hdf',values=(('cod',72),('cir',106)))
+
+mod1_dict['lat'].keys()
+
+refl_off = 316.9721985
+refl_scal5 = 2.380933438e-06
+refl_scal10 = 3.092909765e-06
+refl_scal2 = 4.241572969e-05
+
+ref660 = (mod['refsb'][5,:,:]+refl_off)*refl_scal5
+ref860 = (mod['refsb'][10,:,:]+refl_off)*refl_scal10
+ref1240 = (mod['refsw'][2,:,:])*refl_scal2
+
+mod['refsw'].shape
+
+mod_dict['refsb']['band_names']
+
+def make_map1(ax=plt.gca()):
+    m = Basemap(projection='stere',lon_0=128,lat_0=36.0,
+            llcrnrlon=125.0, llcrnrlat=33.0,
+            urcrnrlon=130.0, urcrnrlat=38,resolution='h',ax=ax)
+    m.drawcoastlines()
+    #m.fillcontinents(color='#AAAAAA')
+    m.drawstates()
+    m.drawcountries()
+    m.drawmeridians(np.linspace(123,133,11),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(31,39,17),labels=[1,0,0,0])
+    return m
+
+
+fig,ax = plt.subplots(1,3)
+m1 = make_map1(ax[2])
+m1.pcolor(mod1['lon'],mod1['lat'],mod['refsw'][2,:,:],latlon=True)
+ax[2].set_title('1240 nm')
+
+
+m2 = make_map1(ax[0])
+m2.pcolor(mod1['lon'],mod1['lat'],mod['refsb'][5,:,:],latlon=True)
+ax[0].set_title('660 nm')
+
+m3 = make_map1(ax[1])
+m3.pcolor(mod1['lon'],mod1['lat'],mod['refsb'][10,:,:],latlon=True)
+ax[1].set_title('860 nm')
 
 fig,ax = plt.subplots(1,1)
-m = make_map(ax)
-m.plot(ar['Longitude'],ar['Latitude'],'.',markersize=0.2,color='tab:blue',latlon=True)
-m.plot(ar['Longitude'][fl][f_level],ar['Latitude'][fl][f_level],'.',markersize=0.5,color='tab:red',latlon=True)
-#m.plot(s['Lon'][it],s['Lat'][it],'r+',latlon=True)
-plt.savefig(fp+'plot/KORUS_map_QA.png',dpi=600,transparent=True)
+m0 = make_map1(ax)
+mta = m0.pcolor(moda['lon'],moda['lat'],moda['aod'],latlon=True,cmap=plt.cm.YlOrRd,vmin=0,vmax=0.8)
+mtc = m0.pcolor(mod1['lon'],mod1['lat'],modc['cod'],latlon=True,cmap=plt.cm.gist_earth,vmin=0,vmax=20.0)
+
+
+
+cbxr = plt.gcf().add_axes([0.83, 0.2, 0.02, 0.6])
+cbxe = plt.gcf().add_axes([0.80, 0.2, 0.02, 0.6])
+#cbg.set_ticks([0,6,12,16,18,20])
+#cbb.set_ticks([0,6,12,16,18,20]),cbb.set_ticklabels(['','','','',''])
+cbxe.xaxis.set_ticks_position('top')#,cbaxesbl.yaxis.set_ticks_position('left')
+#cbaxesgr.text(-6.0,0.5,'Days sampled',rotation=90,verticalalignment='center')
+
+bxr = plt.colorbar(mta,label='AOD',cax=cbxr,orientation='vertical',shrink=0.5)
+bxe = plt.colorbar(mtc,cax=cbxe,orientation='vertical',shrink=0.5)
+cbxe.yaxis.set_ticks_position('left')
+#cbxe.set_label(' ')
+cbxe.text(-4.0,0.5,'COD',rotation=90,verticalalignment='center')
+plt.savefig(fp+'plot/KORUS_MODIS_AOD_COD_20160519.png',dpi=600,transparent=True)
+
+fig,ax = plt.subplots(1,4)
+m0 = make_map1(ax[0])
+mta = m0.pcolor(moda['lon'],moda['lat'],moda['aod'],latlon=True,cmap=plt.cm.plasma)
+mtc = m0.pcolor(mod1['lon'],mod1['lat'],modc['cod'],latlon=True,cmap=plt.cm.gist_earth)
+
+m1 = make_map1(ax[3])
+mp = m1.pcolor(mod1['lon'],mod1['lat'],ref1240,latlon=True,vmin=0,vmax=0.5)
+ax[2].set_title('1240 nm')
+
+m2 = make_map1(ax[1])
+m2.pcolor(mod1['lon'],mod1['lat'],ref660,latlon=True,vmin=0,vmax=0.5)
+ax[0].set_title('660 nm')
+
+m3 = make_map1(ax[2])
+m3.pcolor(mod1['lon'],mod1['lat'],ref860,latlon=True,vmin=0,vmax=0.5)
+ax[1].set_title('860 nm')
+plt.colorbar(mp,label='Reflectance',ax=ax[1:],shrink=0.6,location='bottom')
+#plt.tight_layout()
+#plt.savefig(fp+'plot/KORUS_MODIS_660_860_1240_reflect_20160519.png',dpi=600,transparent=True)
 
 fig,ax = plt.subplots(1,1)
-m = make_map(ax)
+m2 = make_map1(ax)
+mp = m2.pcolor(mod1['lon'],mod1['lat'],ref660/ref860,latlon=True,vmin=0,vmax=4)
+ax.set_title('660 nm / 860 nm')
+plt.colorbar(mp)#label='Radiance ratio 660 nm / 860 nm')
 
+
+#m3 = make_map1(ax[1])
+#m3.pcolor(mod1['lon'],mod1['lat'],mod['refsb'][10,:,:],latlon=True)
+#ax[1].set_title('860 nm')
+
+ref660/ref860
+
+mod['refsb'][5,:,:]/mod['refsb'][10,:,:]
+
+oco, oco_dict = lu.load_hdf(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5')
+
+lu.load_hdf_h5py(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5')
+
+import h5py
+
+foco = h5py.File(fp+'data_other/acos_L2s_160511_06_B9200_PolB_190817214259.h5','r')
+
+ko = foco.keys()
+
+for k in ko:
+    jk = foco[k].keys()
+    print [(k,i) for i in jk if 'lat' in i]
+    
+
+foco['AlbedoResults'].keys()
+
+foco['Shapes'].keys()
+
+foco['Shapes']['InputPtr_Array'].attrs.items()
+
+ra = foco['Shapes']['Retrieval_Array']
+
+ra.attrs.items()
+
+foco['AlbedoResults']['albedo_o2_fph'].attrs.items()
+
+aoo = foco['AlbedoResults']['albedo_o2_fph']
+
+aoo.value.shape
+
+foco['SoundingGeometry']['sounding_latitude'].value
+
+foco['RetrievalResults']['retrieved_o2_column'].value
+
+plt.figure()
+plt.scatter(foco['SoundingGeometry']['sounding_longitude'].value,
+          foco['SoundingGeometry']['sounding_latitude'].value,c=foco['AlbedoResults']['albedo_o2_fph'].value)
 
 fl1 = ar['days']==ar['days'][0]
 
@@ -431,6 +635,34 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
         
     return d
 
+np.unique(ar['days'])
+
+np.where(np.diff(vals['doys'][f_level],1)>0.5)
+
+def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=True):
+    'Function to seperate continuous segments (within a distance in doys of tsep) based on a prior index (default for 5 seconds in doy)'
+    disc_flacaod_long = np.where(np.diff(doys[index],1)>tsep)[0]
+    
+    discontinuity_istart_long =  index[np.append(0,disc_flacaod_long[:-1]+1)]
+    discontinuity_iend_long =  index[disc_flacaod_long]
+    
+    kv = vals_dict.keys()
+    d = {k:[] for k in kv}
+    for i,start in enumerate(discontinuity_istart_long): # loop through discontinuities 
+        if discontinuity_iend_long[i]-start < 2: continue
+        for k in kv: # loop through keys
+            try:
+                d[k].append(vals_dict[k][start:discontinuity_iend_long[i]])
+            except:
+                print start, discontinuity_iend_long[i]
+                continue
+                #d[k].append([np.nan])
+    
+    for k in kv:
+        d[k] = np.array(d[k])
+        
+    return d
+
 ar['days']
 
 angs[angs>5.0] = np.nan
@@ -441,18 +673,59 @@ vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][f
         'aod0500':ar['AOD0501'][fl],'aod1040':ar['AOD1040'][fl],'AE':angs[fl],'doys':ar['doys'][fl],
         'aod_fine':fmf['tauf'][fl],'aod_coarse':fmf['tauc'][fl],'fmf':fmf['eta'][fl],
         'GOCI_AOD':goci2ar['aod'][fl],'GOCI_AE':goci2ar['AE'][fl],'GOCI_fmf':goci2ar['fmf'][fl],
-        'MERRA_AOD':merra2ar['aod'][fl], 
-        'situ_ext':lg2ar['ext_532'],'situ_ssa':lg2ar['SSA_550'],'situ_ae':lg2ar['AE']}
+        'MERRA_AOD':merra2ar['aod'][fl], 'MERRA_AE':merra2ar['ae'][fl],
+        'situ_ext':lg2ar['ext_532'][fl],'situ_ssa':lg2ar['SSA_550'][fl],'situ_ae':lg2ar['AE'][fl]}
 
 dvals = get_segments(f_level,vals,nsep=100)
 
+dvalst = get_segments_by_time(f_level,vals['doys'],vals,tsep=200.0/24.0/60.0/60.0)
+
 dvals.keys()
 
-for n in dvals['utc']:
+len(dvals['AE']),len(dvalst['AE'])
+
+dvals['doys'][0]
+
+dvalst['doys'][0]
+
+dvalst['doys'][1]
+
+dvals['len_minutes'] = []
+dvals['len_doys'] = []
+for i,n in enumerate(dvals['utc']):
     try:
-        print (n[-1]-n[0])*60.0
+        len_min = (n[-1]-n[0])*60.0
+        if len_min < 0.0: 
+            len_min = (n[-1]-(n[0]-24.0))*60.0
+        print i,len_min
+        dvals['len_minutes'].append(len_min)
+        dvals['len_doys'].append(dvals['doys'][i][-1]-dvals['doys'][i][0])
     except:
         print np.nan
+        dvals['len_minutes'].append(np.nan)
+        dvals['len_doys'].append(np.nan)
+
+dvalst['len_minutes'] = []
+dvalst['len_doys'] = []
+for i,n in enumerate(dvalst['utc']):
+    try:
+        len_min = (n[-1]-n[0])*60.0
+        print i,len_min
+        dvalst['len_minutes'].append(len_min)
+        dvalst['len_doys'].append(dvalst['doys'][i][-1]-dvalst['doys'][i][0])
+    except:
+        print np.nan
+        dvalst['len_minutes'].append(np.nan)
+        dvalst['len_doys'].append(np.nan)
+
+plt.figure()
+plt.hist([dvals['len_doys'],dvalst['len_doys']],bins=50,label=['number based','time based'])
+plt.legend()
+plt.yscale('log')
+plt.ylabel('Number of segments')
+plt.xlabel('Fractional day length of segment')
+
+dvals = dvalst # set the default to use the time seperated segments
 
 def discrete_matshow(data,cmapname='RdBu'):
     ' plotting function for a discrete colormap'
@@ -519,7 +792,15 @@ def get_distances(seg_dict):
 
 ddv = get_distances(dvals)
 
-dvals['cumdist']
+dvals['cumdist'][0:2]
+
+len(dvals['cumdist'])
+
+fp
+
+hs.savemat(fp+'KORUS_autocorr_dvals.mat',dvals)
+
+dvals = hs.loadmat(fp+'KORUS_autocorr_dvals.mat')
 
 # for met times
 dt1 = ['20160501','20160516']
@@ -583,14 +864,6 @@ if False:
 
 len(cr)
 
-plt.figure()
-for corr in cr:
-   # plt.plot(corr_ks,corr['AE']**2.0,'x-')
-    plt.plot(corr_ks,corr['aod1040']**2.0,'s-')
-    plt.plot(corr_ks,corr['aod0500']**2.0,'v-')
-plt.xscale('log')
-plt.ylim(0,1)
-
 min_num = 100 # minimum number of points to be considered valid
 
 types = ['all','t1','t2','t3','t4','z1','z2','z3']
@@ -599,8 +872,11 @@ corr_ks =[0.08,0.1,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,7.5,10.0,12.5,15.0,20.0,
           25.0,30.0,35.0,40.0,50.0,60.0,75.0,100.0,150.0,200.0] 
 corr_ks =[0.08,0.1,0.25,0.5,1.0,1.5,3.0,5.0,10.0,15.0,
           35.0,65.0,100.0,150.0,200.0] 
-corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'situ_ext':[],'situ_ae':[]} for i,k in enumerate(corr_ks)],
-             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'situ_ext':[],'situ_ae':[]} for i,k in enumerate(corr_ks)]] \
+corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'MERRA_AE':[],'situ_ext':[],'situ_ae':[],'situ_ssa':[]} for i,k in enumerate(corr_ks)],
+             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'MERRA_AE':[],'situ_ext':[],'situ_ae':[],'situ_ssa':[]} for i,k in enumerate(corr_ks)]] \
+            for j in types] 
+corr_alln = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'MERRA_AE':[],'situ_ext':[],'situ_ae':[],'situ_ssa':[]} for i,k in enumerate(corr_ks)],
+             [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[],'fmf':[],'GOCI_AOD':[],'GOCI_AE':[],'GOCI_fmf':[],'MERRA_AOD':[],'MERRA_AE':[],'situ_ext':[],'situ_ae':[],'situ_ssa':[]} for i,k in enumerate(corr_ks)]] \
             for j in types] 
 #corr_all = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
 #corr_t1 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
@@ -612,66 +888,124 @@ corr_all = [[[{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse
 #corr_z3 = [{'k':k,'aod1040':[],'aod0500':[],'AE':[],'aod_fine':[],'aod_coarse':[]} for i,k in enumerate(corr_ks)]
 corr_vals = corr_all[0][0][0].keys()
 corr_vals.remove('k')
+corr_valsn = corr_alln[0][0][0].keys()
+corr_valsn.remove('k')
 
-corr_all[0][0][0]
+corr_all[0][0][0],corr_all[0][0][0]
 
 np.array(corr_all).shape #type, [minusk,plusk], distance
 
-dv = 0.30 #30% leeway in values
-for ik, k in enumerate(corr_ks):
-    for i,cd in enumerate(dvals['cumdist']):
-        if k>np.nanmax(cd):
+len(dvals['cumdist'])
+
+dv = 0.05
+for i,cd in enumerate(dvals['cumdist']):
+    mat_dist = np.array([abs(cd-d) for d in cd])
+    sys.stdout.write( '*{}*'.format(i))
+    for ik,k in enumerate(corr_ks):
+        #sys.stdout.write("{} ".format(ik))
+        iimg,iipg = np.where((mat_dist>(k*(1.0-dv)))&(mat_dist<(k*(1.0+dv))))
+        if len(iimg)==0:
             continue
-        if ik==0:
-            ipk = 1
-            imk = len(cd)-2
-            iip = range(1,len(cd)-1)
-            iipg = iip
-            iimg = range(0,imk)
-        else:
-            ipk = np.argmin(abs(cd-k)) #ipk:
-            imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
-            if imk<2:
-                continue
-            iip = Sp.find_closest(cd,cd[0:imk]+k)
-            iip_good = (abs(cd[iip]-cd[0:imk])<k*(1.0+dv)) & (abs(cd[iip]-cd[0:imk])>k*(1.0-dv))
-            if not any(iip_good):
-                continue
-            iipg = iip[iip_good]
-            iimg = np.arange(0,imk)[iip_good]
         N = len(cd)
         for val in corr_vals:
             #all
-            corr_all[0][0][ik][val] = np.append(corr_all[0][0][ik][val],dvals[val][i][iimg])
-            corr_all[0][1][ik][val] = np.append(corr_all[0][1][ik][val],dvals[val][i][iipg])
+            corr_alln[0][0][ik][val].append(dvals[val][i][iimg])
+            corr_alln[0][1][ik][val].append(dvals[val][i][iipg])
             #type 1
             if (dvals['doys'][i][0]> t1[0]) & (dvals['doys'][i][0]< t1[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
-                corr_all[1][0][ik][val] = np.append(corr_all[1][0][ik][val],dvals[val][i][iimg])
-                corr_all[1][1][ik][val] = np.append(corr_all[1][1][ik][val],dvals[val][i][iipg])
+                corr_alln[1][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[1][1][ik][val].append(dvals[val][i][iipg])
             #type 2
             if (dvals['doys'][i][0]> t2[0]) & (dvals['doys'][i][0]< t2[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
-                corr_all[2][0][ik][val] = np.append(corr_all[2][0][ik][val],dvals[val][i][iimg])
-                corr_all[2][1][ik][val] = np.append(corr_all[2][1][ik][val],dvals[val][i][iipg])
+                corr_alln[2][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[2][1][ik][val].append(dvals[val][i][iipg])
             #type 3
             if (dvals['doys'][i][0]> t3[0]) & (dvals['doys'][i][0]< t3[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
-                corr_all[3][0][ik][val] = np.append(corr_all[3][0][ik][val],dvals[val][i][iimg])
-                corr_all[3][1][ik][val] = np.append(corr_all[3][1][ik][val],dvals[val][i][iipg])
+                corr_alln[3][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[3][1][ik][val].append(dvals[val][i][iipg])
             #type 4
             if (dvals['doys'][i][0]> t4[0]) & (dvals['doys'][i][0]< t4[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
-                corr_all[4][0][ik][val] = np.append(corr_all[4][0][ik][val],dvals[val][i][iimg])
-                corr_all[4][1][ik][val] = np.append(corr_all[4][1][ik][val],dvals[val][i][iipg])
+                corr_alln[4][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[4][1][ik][val].append(dvals[val][i][iipg])
             #type 5
             if (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z1[1]):
-                corr_all[5][0][ik][val] = np.append(corr_all[5][0][ik][val],dvals[val][i][iimg])
-                corr_all[5][1][ik][val] = np.append(corr_all[5][1][ik][val],dvals[val][i][iipg])
+                corr_alln[5][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[5][1][ik][val].append(dvals[val][i][iipg])
             #type 6
             if (dvals['alt'][i][0]> z2[0]) & (dvals['alt'][i][0]< z2[1]):
-                corr_all[6][0][ik][val] = np.append(corr_all[6][0][ik][val],dvals[val][i][iimg])
-                corr_all[6][1][ik][val] = np.append(corr_all[6][1][ik][val],dvals[val][i][iipg])
+                corr_alln[6][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[6][1][ik][val].append(dvals[val][i][iipg])
             #type 7
             if (dvals['alt'][i][0]> z3[0]) & (dvals['alt'][i][0]< z3[1]):
-                corr_all[7][0][ik][val] = np.append(corr_all[7][0][ik][val],dvals[val][i][iimg])
-                corr_all[7][1][ik][val] = np.append(corr_all[7][1][ik][val],dvals[val][i][iipg])
+                corr_alln[7][0][ik][val].append(dvals[val][i][iimg])
+                corr_alln[7][1][ik][val].append(dvals[val][i][iipg])
+
+if False:
+    dv = 0.15 #30% leeway in values
+    for ik, k in enumerate(corr_ks):
+        for i,cd in enumerate(dvals['cumdist']):
+            if k>np.nanmax(cd):
+                continue
+            if ik==0:
+                ipk = 1
+                imk = len(cd)-2
+                iip = range(1,len(cd)-1)
+                iipg = iip
+                iimg = range(0,imk)
+            else:
+                ipk = np.argmin(abs(cd-k)) #ipk:
+                imk = np.argmin(abs(cd-(cd[-1]-k))) #0:imk
+                if imk<2:
+                    continue
+                iip = Sp.find_closest(cd,cd[0:imk]+k)
+                iip_good = (abs(cd[iip]-cd[0:imk])<k*(1.0+dv)) & (abs(cd[iip]-cd[0:imk])>k*(1.0-dv))
+                if not any(iip_good):
+                    continue
+                iipg = iip[iip_good]
+                iimg = np.arange(0,imk)[iip_good]
+            N = len(cd)
+            for val in corr_vals:
+                #all
+                corr_all[0][0][ik][val] = np.append(corr_all[0][0][ik][val],dvals[val][i][iimg])
+                corr_all[0][1][ik][val] = np.append(corr_all[0][1][ik][val],dvals[val][i][iipg])
+                #type 1
+                if (dvals['doys'][i][0]> t1[0]) & (dvals['doys'][i][0]< t1[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
+                    corr_all[1][0][ik][val] = np.append(corr_all[1][0][ik][val],dvals[val][i][iimg])
+                    corr_all[1][1][ik][val] = np.append(corr_all[1][1][ik][val],dvals[val][i][iipg])
+                #type 2
+                if (dvals['doys'][i][0]> t2[0]) & (dvals['doys'][i][0]< t2[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
+                    corr_all[2][0][ik][val] = np.append(corr_all[2][0][ik][val],dvals[val][i][iimg])
+                    corr_all[2][1][ik][val] = np.append(corr_all[2][1][ik][val],dvals[val][i][iipg])
+                #type 3
+                if (dvals['doys'][i][0]> t3[0]) & (dvals['doys'][i][0]< t3[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
+                    corr_all[3][0][ik][val] = np.append(corr_all[3][0][ik][val],dvals[val][i][iimg])
+                    corr_all[3][1][ik][val] = np.append(corr_all[3][1][ik][val],dvals[val][i][iipg])
+                #type 4
+                if (dvals['doys'][i][0]> t4[0]) & (dvals['doys'][i][0]< t4[1]) & (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z2[1]):
+                    corr_all[4][0][ik][val] = np.append(corr_all[4][0][ik][val],dvals[val][i][iimg])
+                    corr_all[4][1][ik][val] = np.append(corr_all[4][1][ik][val],dvals[val][i][iipg])
+                #type 5
+                if (dvals['alt'][i][0]> z1[0]) & (dvals['alt'][i][0]< z1[1]):
+                    corr_all[5][0][ik][val] = np.append(corr_all[5][0][ik][val],dvals[val][i][iimg])
+                    corr_all[5][1][ik][val] = np.append(corr_all[5][1][ik][val],dvals[val][i][iipg])
+                #type 6
+                if (dvals['alt'][i][0]> z2[0]) & (dvals['alt'][i][0]< z2[1]):
+                    corr_all[6][0][ik][val] = np.append(corr_all[6][0][ik][val],dvals[val][i][iimg])
+                    corr_all[6][1][ik][val] = np.append(corr_all[6][1][ik][val],dvals[val][i][iipg])
+                #type 7
+                if (dvals['alt'][i][0]> z3[0]) & (dvals['alt'][i][0]< z3[1]):
+                    corr_all[7][0][ik][val] = np.append(corr_all[7][0][ik][val],dvals[val][i][iimg])
+                    corr_all[7][1][ik][val] = np.append(corr_all[7][1][ik][val],dvals[val][i][iipg])
+
+len(corr_alln[0][0][0]['AE'])
+
+corr_all[0][0][0]['AE'] = np.hstack(corr_alln[0][0][0]['AE'])
+
+for j,jt in enumerate(types):
+    corr_all[j][1][0]['AE'] = np.hstack(corr_alln[j][1][0]['AE'])
+    print corr_all[j][1][0]['AE'].shape
+
+len(corr_all)
 
 autocorr = {}
 autocorr_len = {}
@@ -679,9 +1013,12 @@ autocorr_len = {}
 for val in corr_vals:
     autocorr[val] = np.zeros((len(types),len(corr_ks)))+np.nan
     autocorr_len[val] = np.zeros((len(types),len(corr_ks)))
-    
+    print val
     for ik,k in enumerate(corr_ks):
+        sys.stdout.write("{} ".format(ik))
         for j,jt in enumerate(types):
+            corr_all[j][0][ik][val] = np.hstack(corr_alln[j][0][ik][val])
+            corr_all[j][1][ik][val] = np.hstack(corr_alln[j][1][ik][val])
             if False: #val is 'AE':
                 igd = np.where(corr_all[2][1][3]['AE']<5.0)[0] #np.isfinite(corr_all[j][0][ik][val])
                 mmk = np.nanmean(corr_all[j][0][ik][val][igd])
@@ -702,6 +1039,12 @@ for val in corr_vals:
                 autocorr_len[val][j,ik] = len(corr_all[j][0][ik][val])
                 if autocorr_len[val][j,ik]<min_num:
                     autocorr[val][j,ik] = np.nan
+
+np.hstack(corr_all[j+1][0][ik][val])
+
+np.concatenate(corr_all[j+1][0][ik][val])
+
+
 
 autocorr['aod0500'].shape
 
@@ -727,6 +1070,8 @@ def rand_autocor(plus_dist,minus_dist,min_num=100,subsamp_ratio=0.5):
     'fx_autocor, but called with random subsampling at a ratio defined by subsamp_ratio [0-1]'
     irand = np.random.randint(len(plus_dist),size=int(subsamp_ratio*len(plus_dist)))
     return fx_autocor(plus_dist[irand],minus_dist[irand],min_num=min_num)
+
+j,ik,val
 
 len(corr_all[j][0][ik][val])
 
@@ -756,11 +1101,13 @@ for val in corr_vals:
 autocorr_min = {}
 autocorr_max = {}
 autocorr_d = {}
+autocorr_mean = {}
 
 for val in corr_vals:
     autocorr_min[val] = np.zeros((len(types),len(corr_ks)))+np.nan
     autocorr_max[val] = np.zeros((len(types),len(corr_ks)))+np.nan
     autocorr_d[val] = np.zeros((len(types),len(corr_ks)))+np.nan
+    autocorr_mean[val] = np.zeros((len(types),len(corr_ks)))+np.nan
     
     for ik,k in enumerate(corr_ks):
         for j,jt in enumerate(types):
@@ -769,6 +1116,7 @@ for val in corr_vals:
             autocorr_min[val][j,ik] = np.nanmin(autocorrs[val][j,ik,:])
             autocorr_max[val][j,ik] = np.nanmax(autocorrs[val][j,ik,:])
             autocorr_d[val][j,ik] = autocorr_max[val][j,ik] - autocorr_min[val][j,ik]
+            autocorr_mean[val][j,ik] = np.nanmean(autocorrs[val][j,ik,:])
 
 def autocorr(x, t=1):
     return np.corrcoef(np.array([x[:-t], x[t:]]))
@@ -967,8 +1315,6 @@ SR_AE_corr_loc = [0.975,0.956,0.919,0.831,0.747,0.519,0.366]
 35,10728129935923; 0,9193744864787629
 
 note = [['a)','b)'],['c)','d)'],['e)','f)'],['g)','h)'],['i)','j)']]
-
-reload(pu)
 
 fig, ax = plt.subplots(5,3,figsize=(12,9))
 for i,k in enumerate(key_list):
@@ -1629,7 +1975,121 @@ for i,k in enumerate(key_list3):
 plt.subplots_adjust(left=None, bottom=0.15, right=None, top=None,
                 wspace=None, hspace=None)
         
-plt.savefig(fp+'plot/KORUS_Autocorr_dif_rel_subset_with_SR2011_GOCI_MERRA.png',dpi=600,transparent=True)
+#plt.savefig(fp+'plot/KORUS_Autocorr_dif_rel_subset_with_SR2011_GOCI_MERRA.png',dpi=600,transparent=True)
+
+autocorr.keys()
+
+plt.figure(figsize=(6,6))
+j = 5
+jj = 2
+plt.plot(corr_ks[jj:],autocorr['situ_ae'][j,jj:]/autocorr['situ_ae'][j,jj],label='Point/In situ AE',color='tab:blue',ls='--')
+plt.plot(corr_ks[jj:],autocorr['AE'][j,jj:]/autocorr['AE'][j,jj],label='Column/4STAR AE',color='k',ls='--')
+plt.plot(corr_ks[jj:],autocorr['GOCI_AE'][j,jj:]/autocorr['GOCI_AE'][j,jj],label='Column/GOCI AE',color='tab:red',ls='--')
+plt.plot(corr_ks[jj:],autocorr['MERRA_AE'][j,jj:]/autocorr['MERRA_AE'][j,jj],label='Column/MERRA AE',color='tab:purple',ls='--')
+
+plt.plot(corr_ks[jj:],autocorr['situ_ssa'][j,jj:]/autocorr['situ_ssa'][j,jj],label='Point/In situ SSA',color='tab:orange',ls=':')
+plt.plot(corr_ks[jj:],autocorr['situ_ext'][j,jj:]/autocorr['situ_ext'][j,jj],label='Point/In situ Ext.',color='tab:blue',ls='-')
+
+plt.plot(corr_ks[jj:],autocorr['aod0500'][j,jj:]/autocorr['aod0500'][j,jj],label='Column/4STAR AOD',color='k')
+plt.plot(corr_ks[jj:],autocorr['GOCI_AOD'][j,jj:]/autocorr['GOCI_AOD'][j,jj],label='Column/GOCI AOD',color='tab:red')
+plt.plot(corr_ks[jj:],autocorr['MERRA_AOD'][j,jj:]/autocorr['MERRA_AOD'][j,jj],label='Column/MERRA AOD',color='tab:purple')
+
+
+ax = plt.gca()
+
+ax.errorbar(corr_ks[jj:],autocorr['situ_ssa'][j,jj:]/autocorr['situ_ssa'][j,jj],
+                 yerr=autocorr_d['situ_ssa'][j,jj:]/autocorr['situ_ssa'][j,jj],color='tab:orange',ls=':',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['situ_ae'][j,jj:]/autocorr['situ_ae'][j,jj],
+                 yerr=autocorr_d['situ_ae'][j,jj:]/autocorr['situ_ae'][j,jj],color='tab:blue',ls='--',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['situ_ext'][j,jj:]/autocorr['situ_ext'][j,jj],
+                 yerr=autocorr_d['situ_ext'][j,jj:]/autocorr['situ_ext'][j,jj],color='tab:blue',ls='--',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['AE'][j,jj:]/autocorr['AE'][j,jj],
+                 yerr=autocorr_d['AE'][j,jj:]/autocorr['AE'][j,jj],color='k',ls='--',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['GOCI_AE'][j,jj:]/autocorr['GOCI_AE'][j,jj],
+                 yerr=autocorr_d['GOCI_AE'][j,jj:]/autocorr['GOCI_AE'][j,jj],color='tab:red',ls='--',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['MERRA_AE'][j,jj:]/autocorr['MERRA_AE'][j,jj],
+                 yerr=autocorr_d['MERRA_AE'][j,jj:]/autocorr['MERRA_AE'][j,jj],color='tab:purple',ls='--',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['aod0500'][j,jj:]/autocorr['aod0500'][j,jj],
+                 yerr=autocorr_d['aod0500'][j,jj:]/autocorr['aod0500'][j,jj],color='k',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['GOCI_AOD'][j,jj:]/autocorr['GOCI_AOD'][j,jj],
+                 yerr=autocorr_d['GOCI_AOD'][j,jj:]/autocorr['GOCI_AOD'][j,jj],color='tab:red',
+                 alpha=0.6,capsize=0)
+ax.errorbar(corr_ks[jj:],autocorr['MERRA_AOD'][j,jj:]/autocorr['MERRA_AOD'][j,jj],
+                 yerr=autocorr_d['MERRA_AOD'][j,jj:]/autocorr['MERRA_AOD'][j,jj],color='tab:purple',
+                 alpha=0.6,capsize=0)
+
+ax.set_ylim(0,1)
+ax.set_yticks([0,0.25,0.5,0.75,1.0])
+ax.set_xscale('linear')
+ax.grid()
+plt.legend(frameon=True,ncol=2,loc=(0,1.04))
+ax.set_xlabel('Distance [km]')
+ax.set_ylabel('Autocorrelation')
+plt.subplots_adjust(top=0.7)
+#plt.savefig(fp+'plot/KORUS_Autocorr_intrisic_vs_extrinsic.png',dpi=600,transparent=True)
+
+plt.figure(figsize=(6,6))
+j = 0
+jj = 1
+plt.plot(corr_ks[jj:],autocorr_mean['situ_ae'][j,jj:]/autocorr_mean['situ_ae'][j,jj],label='Point/In situ AE',color='tab:blue',ls='--')
+plt.plot(corr_ks[jj:],autocorr_mean['AE'][j,jj:]/autocorr_mean['AE'][j,jj],label='Column/4STAR AE',color='k',ls='--')
+plt.plot(corr_ks[jj:],autocorr_mean['GOCI_AE'][j,jj:]/autocorr_mean['GOCI_AE'][j,jj],label='Column/GOCI AE',color='tab:red',ls='--')
+plt.plot(corr_ks[jj:],autocorr_mean['MERRA_AE'][j,jj:]/autocorr_mean['MERRA_AE'][j,jj],label='Column/MERRA AE',color='tab:purple',ls='--')
+
+plt.plot(corr_ks[jj:],autocorr_mean['situ_ssa'][j,jj:]/autocorr_mean['situ_ssa'][j,jj],label='Point/In situ SSA',color='tab:orange',ls=':')
+plt.plot(corr_ks[jj:],autocorr_mean['situ_ext'][j,jj:]/autocorr_mean['situ_ext'][j,jj],label='Point/In situ Ext.',color='tab:blue',ls='-')
+
+plt.plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:]/autocorr_mean['aod0500'][j,jj],label='Column/4STAR AOD',color='k')
+plt.plot(corr_ks[jj:],autocorr_mean['GOCI_AOD'][j,jj:]/autocorr_mean['GOCI_AOD'][j,jj],label='Column/GOCI AOD',color='tab:red')
+plt.plot(corr_ks[jj:],autocorr_mean['MERRA_AOD'][j,jj:]/autocorr_mean['MERRA_AOD'][j,jj],label='Column/MERRA AOD',color='tab:purple')
+
+
+ax = plt.gca()
+if False:
+    ax.errorbar(corr_ks[jj:],autocorr['situ_ssa'][j,jj:]/autocorr['situ_ssa'][j,jj],
+                     yerr=autocorr_d['situ_ssa'][j,jj:]/autocorr['situ_ssa'][j,jj],color='tab:orange',ls=':',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['situ_ae'][j,jj:]/autocorr['situ_ae'][j,jj],
+                     yerr=autocorr_d['situ_ae'][j,jj:]/autocorr['situ_ae'][j,jj],color='tab:blue',ls='--',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['situ_ext'][j,jj:]/autocorr['situ_ext'][j,jj],
+                     yerr=autocorr_d['situ_ext'][j,jj:]/autocorr['situ_ext'][j,jj],color='tab:blue',ls='--',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['AE'][j,jj:]/autocorr['AE'][j,jj],
+                     yerr=autocorr_d['AE'][j,jj:]/autocorr['AE'][j,jj],color='k',ls='--',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['GOCI_AE'][j,jj:]/autocorr['GOCI_AE'][j,jj],
+                     yerr=autocorr_d['GOCI_AE'][j,jj:]/autocorr['GOCI_AE'][j,jj],color='tab:red',ls='--',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['MERRA_AE'][j,jj:]/autocorr['MERRA_AE'][j,jj],
+                     yerr=autocorr_d['MERRA_AE'][j,jj:]/autocorr['MERRA_AE'][j,jj],color='tab:purple',ls='--',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['aod0500'][j,jj:]/autocorr['aod0500'][j,jj],
+                     yerr=autocorr_d['aod0500'][j,jj:]/autocorr['aod0500'][j,jj],color='k',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['GOCI_AOD'][j,jj:]/autocorr['GOCI_AOD'][j,jj],
+                     yerr=autocorr_d['GOCI_AOD'][j,jj:]/autocorr['GOCI_AOD'][j,jj],color='tab:red',
+                     alpha=0.6,capsize=0)
+    ax.errorbar(corr_ks[jj:],autocorr['MERRA_AOD'][j,jj:]/autocorr['MERRA_AOD'][j,jj],
+                     yerr=autocorr_d['MERRA_AOD'][j,jj:]/autocorr['MERRA_AOD'][j,jj],color='tab:purple',
+                     alpha=0.6,capsize=0)
+
+ax.set_ylim(0,1)
+ax.set_yticks([0,0.25,0.5,0.75,1.0])
+ax.set_xscale('linear')
+ax.grid()
+plt.legend(frameon=True,ncol=2,loc=(0,1.04))
+ax.set_xlabel('Distance [km]')
+ax.set_ylabel('Autocorrelation')
+plt.subplots_adjust(top=0.7)
+#plt.savefig(fp+'plot/KORUS_Autocorr_intrisic_vs_extrinsic.png',dpi=600,transparent=True)
 
 plt.figure()
 plt.hist([ar['GPS_Alt'],ar['GPS_Alt'][fl]],label=['All data','QA data'],bins=50)
@@ -1717,6 +2177,27 @@ plt.xlabel('4STAR AE averaged within GOCI pixel')
 plt.ylabel('GOCI AE')
 plt.title('Average AE below 0.5 km')
 
+fig,ax = plt.subplots(1,2,figsize=(10,5))
+ax[0].hist(aod_star-aod_goci,bins=50,normed=True)
+ax[0].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[0].axvline(np.nanmean(aod_star-aod_goci),ls='-',color='darkblue',alpha=0.6,lw=3,
+            label='mean={:2.2f}'.format(np.nanmean(aod_star-aod_goci)))
+ax[0].axvline(np.nanmedian(aod_star-aod_goci),ls='--',color='darkblue',alpha=0.6,lw=3,
+            label='median={:2.2f}'.format(np.nanmedian(aod_star-aod_goci)))
+ax[0].legend()
+flae = np.isfinite(ae_star) & np.isfinite(ae_goci)
+ax[1].hist(ae_star[flae]-ae_goci[flae],bins=50,normed=True)
+ax[1].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[1].axvline(np.nanmean(ae_star[flae]-ae_goci[flae]),ls='-',color='darkblue',alpha=0.6,lw=3,
+            label='mean={:2.2f}'.format(np.nanmean(ae_star[flae]-ae_goci[flae])))
+ax[1].axvline(np.nanmedian(ae_star[flae]-ae_goci[flae]),ls='--',color='darkblue',alpha=0.6,lw=3,
+            label='median={:2.2f}'.format(np.nanmedian(ae_star[flae]-ae_goci[flae])))
+ax[1].legend()
+ax[0].set_xlabel('AOD difference (4STAR-GOCI)')
+ax[0].set_ylabel('Normalized counts')
+ax[1].set_xlabel('AE difference (4STAR-GOCI)')
+plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE.png',dpi=600,transparent=True)
+
 plt.figure()
 fla = ar['fl_QA'] & (ar['GPS_Alt']<500.0)
 flan = ar['fl_QA'] & (ar['GPS_Alt']<500.0) & np.isfinite(ar['AOD0501']) & np.isfinite(merra2ar['aod'])
@@ -1725,23 +2206,30 @@ plt.plot(ar['AOD0501'][fla],merra2ar['aod'][fla],'.',label='R$^2$ = {:1.3f}'.for
 plt.xlim(0,1.5)
 plt.ylim(0,1.5)
 plt.xlabel('4STAR AOD$_{{500}}$')
-plt.ylabel('MERRA2 AOD-ANA')
+plt.ylabel('MERRA2 AOD')
 plt.plot([0,1.5],[0,1.5],'--k',label='1:1')
 pu.plot_lin(ar['AOD0501'][fla],merra2ar['aod'][fla],x_err=ar['UNCAOD0501'][fla],labels=True,shaded_ci=True,ci=95)
 
 plt.legend()
 plt.title('All 4STAR samples below 0.5km with nearby MERRA2 AOD')
 
+merra2ar.keys()
+
 nsub = len(np.unique(merra2ar['ind'][flan]))
 aod_star_m = np.zeros((nsub))
 aod_merra = np.zeros((nsub))
 aod_star_m_std = np.zeros((nsub))
+ae_star_m = np.zeros((nsub))
+ae_merra = np.zeros((nsub))
+ae_star_m_std = np.zeros((nsub))
 for j,la in enumerate(np.unique(merra2ar['ind'][flan])):
     ipixel = np.where(merra2ar['ind'][flan]==la)[0]
     aod_merra[j] = np.mean(merra2ar['aod'][flan][ipixel])
     aod_star_m[j] = np.mean(ar['AOD0501'][flan][ipixel])
     aod_star_m_std[j] = np.std(ar['AOD0501'][flan][ipixel])
-    
+    ae_merra[j] = np.mean(merra2ar['ae'][flan][ipixel])
+    ae_star_m[j] = np.mean(angs[flan][ipixel])
+    ae_star_m_std[j] = np.std(angs[flan][ipixel])
 
 plt.figure(figsize=(7,6))
 flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
@@ -1754,21 +2242,102 @@ plt.legend()
 plt.ylim(0.0,1.5)
 plt.xlim(0.0,1.5)
 plt.xlabel('4STAR AOD averaged within MERRA pixel')
-plt.ylabel('MERRA2 AODANA+AODINC')
+plt.ylabel('MERRA2 AOD')
 plt.title('Average AOD below 0.5 km during KORUS-AQ (May-June 2016)')
 plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD.png',dpi=600,transparent=True)
 
+plt.figure(figsize=(7,6))
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+rbinae = np.corrcoef(ae_star_m[flae],ae_merra[flae])[0,1]**2.0
+plt.plot(ae_star_m,ae_merra,'.',label='R$^2$ = {:1.3f}'.format(rbinae))
+plt.errorbar(ae_star_m,ae_merra,xerr=ae_star_m_std,color='b',marker='.',ls='None',elinewidth=0.4,label='std dev')
+plt.plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(ae_star_m,ae_merra,labels=True,shaded_ci=True,ci=95)
+plt.legend()
+plt.ylim(0.2,2.0)
+plt.xlim(0.2,2.0)
+plt.xlabel('4STAR AE averaged within MERRA pixel')
+plt.ylabel('MERRA2 AE')
+plt.title('Average AE below 0.5 km during KORUS-AQ (May-June 2016)')
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_Ae.png',dpi=600,transparent=True)
+
+fig,ax = plt.subplots(1,2,figsize=(10,5))
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
+rbinae = np.corrcoef(aod_star_m[flae],aod_merra[flae])[0,1]**2.0
+ax[0].plot(aod_star_m,aod_merra,'.',label='R$^2$ = {:1.3f}'.format(rbinae))
+ax[0].errorbar(aod_star_m,aod_merra,xerr=aod_star_m_std,color='b',marker='.',ls='None',elinewidth=0.4,label='std dev')
+ax[0].plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(aod_star_m,aod_merra,labels=True,shaded_ci=True,ci=95,ax=ax[0])
+ax[0].legend()
+ax[0].set_ylim(0.0,1.5)
+ax[0].set_xlim(0.0,1.5)
+ax[0].set_xlabel('4STAR AOD averaged within MERRA pixel')
+ax[0].set_ylabel('MERRA2 AOD')
+fig.suptitle('Average aerosol below 0.5 km during KORUS-AQ (May-June 2016)')
+
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+rbinae = np.corrcoef(ae_star_m[flae],ae_merra[flae])[0,1]**2.0
+ax[1].plot(ae_star_m,ae_merra,'.',label='R$^2$ = {:1.3f}'.format(rbinae))
+ax[1].errorbar(ae_star_m,ae_merra,xerr=ae_star_m_std,color='b',marker='.',ls='None',elinewidth=0.4,label='std dev')
+ax[1].plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(ae_star_m,ae_merra,labels=True,shaded_ci=True,ci=95,ax=ax[1])
+ax[1].legend()
+ax[1].set_ylim(0.2,2.0)
+ax[1].set_xlim(0.2,2.0)
+ax[1].set_xlabel('4STAR AE averaged within MERRA pixel')
+ax[1].set_ylabel('MERRA2 AE')
+
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD_AE_splitplot.png',dpi=600,transparent=True)
+
 plt.figure()
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
 plt.hist(aod_star_m[flae]-aod_merra[flae],bins=50,normed=True)
-plt.axvline(0,ls='--',color='k',alpha=0.6)
+plt.axvline(0,ls='-',color='k',alpha=1,lw=0.5)
 plt.axvline(np.nanmean(aod_star_m[flae]-aod_merra[flae]),ls='-',color='darkblue',alpha=0.6,
-            label='mean={:2.2f}'.format(np.nanmean(aod_star_m[flae]-aod_merra[flae])))
+            label='mean={:2.2f}'.format(np.nanmean(aod_star_m[flae]-aod_merra[flae])),lw=3)
 plt.axvline(np.nanmedian(aod_star_m[flae]-aod_merra[flae]),ls='--',color='darkblue',alpha=0.6,
-            label='median={:2.2f}'.format(np.nanmedian(aod_star_m[flae]-aod_merra[flae])))
+            label='median={:2.2f}'.format(np.nanmedian(aod_star_m[flae]-aod_merra[flae])),lw=3)
 plt.legend()
 plt.xlabel('AOD difference (4STAR-MERRA2)')
 plt.ylabel('Normalized counts')
 plt.savefig(fp+'plot/KORUS_hist_diff_MERRA2_vs_4STAR_AOD.png',dpi=600,transparent=True)
+
+plt.figure()
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+plt.hist(ae_star_m[flae]-ae_merra[flae],bins=50,normed=True)
+plt.axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+plt.axvline(np.nanmean(ae_star_m[flae]-ae_merra[flae]),ls='-',color='darkblue',alpha=0.6,lw=3,
+            label='mean={:2.2f}'.format(np.nanmean(ae_star_m[flae]-ae_merra[flae])))
+plt.axvline(np.nanmedian(ae_star_m[flae]-ae_merra[flae]),ls='--',color='darkblue',alpha=0.6,lw=3,
+            label='median={:2.2f}'.format(np.nanmedian(ae_star_m[flae]-ae_merra[flae])))
+plt.legend()
+plt.xlabel('AE difference (4STAR-MERRA2)')
+plt.ylabel('Normalized counts')
+plt.savefig(fp+'plot/KORUS_hist_diff_MERRA2_vs_4STAR_AE.png',dpi=600,transparent=True)
+
+fig,ax = plt.subplots(1,2,figsize=(10,5))
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
+ax[0].hist(aod_star_m[flae]-aod_merra[flae],bins=50,normed=True)
+ax[0].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[0].axvline(np.nanmean(aod_star_m[flae]-aod_merra[flae]),ls='-',color='darkblue',alpha=0.6,
+            label='mean={:2.2f}'.format(np.nanmean(aod_star_m[flae]-aod_merra[flae])),lw=3)
+ax[0].axvline(np.nanmedian(aod_star_m[flae]-aod_merra[flae]),ls='--',color='darkblue',alpha=0.6,
+            label='median={:2.2f}'.format(np.nanmedian(aod_star_m[flae]-aod_merra[flae])),lw=3)
+ax[0].legend()
+ax[0].set_xlabel('AOD difference (4STAR-MERRA2)')
+ax[0].set_ylabel('Normalized counts')
+
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+ax[1].hist(ae_star_m[flae]-ae_merra[flae],bins=50,normed=True)
+ax[1].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[1].axvline(np.nanmean(ae_star_m[flae]-ae_merra[flae]),ls='-',color='darkblue',alpha=0.6,lw=3,
+            label='mean={:2.2f}'.format(np.nanmean(ae_star_m[flae]-ae_merra[flae])))
+ax[1].axvline(np.nanmedian(ae_star_m[flae]-ae_merra[flae]),ls='--',color='darkblue',alpha=0.6,lw=3,
+            label='median={:2.2f}'.format(np.nanmedian(ae_star_m[flae]-ae_merra[flae])))
+ax[1].legend()
+ax[1].set_xlabel('AE difference (4STAR-MERRA2)')
+ax[1].set_ylabel('Normalized counts')
+plt.savefig(fp+'plot/KORUS_hist_diff_MERRA2_vs_4STAR_AOD_AE_2plt.png',dpi=600,transparent=True)
 
 nwl,nm
 
@@ -2271,9 +2840,10 @@ def make_map(ax=plt.gca()):
 
 fig,ax = plt.subplots(1,1)
 m = make_map(ax)
-m.plot(ar['Longitude'],ar['Latitude'],'.',markersize=0.2,color='tab:blue',latlon=True)
-m.plot(ar['Longitude'][fl][f_level],ar['Latitude'][fl][f_level],'.',markersize=0.5,color='tab:red',latlon=True)
+m.plot(ar['Longitude'],ar['Latitude'],'.',markersize=0.2,color='tab:blue',latlon=True,label='All data')
+m.plot(ar['Longitude'][fl][f_level],ar['Latitude'][fl][f_level],'.',markersize=0.5,color='tab:red',latlon=True,label='level legs')
 #m.plot(s['Lon'][it],s['Lat'][it],'r+',latlon=True)
+plt.legend(markerscale=20)
 plt.savefig(fp+'plot/KORUS_map_QA.png',dpi=600,transparent=True)
 
 ar['fl_QA_met1'] = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1])
@@ -2345,7 +2915,7 @@ plt.xlim(350,1700)
 plt.ylim([0.01,2.0])
 
 pu.make_boxplot(arsn[fls['fl']],wvsn[fls['fl']],wvl_bins,wvl,y=1,alpha=0.5,label='All points',
-                fliers_off=True,color='tab:blue')
+                fliers_off=True,color='k')
 pu.make_boxplot(arsn[fls['fl_QA_met1']],wvsn[fls['fl_QA_met1']],wvl_bins,wvl+2,y=1,alpha=0.5,label='Dynamic',
                 fliers_off=True,color='tab:orange')
 pu.make_boxplot(arsn[fls['fl_QA_met2']],wvsn[fls['fl_QA_met2']],wvl_bins,wvl+4,y=1,alpha=0.5,label='Stagnation',
