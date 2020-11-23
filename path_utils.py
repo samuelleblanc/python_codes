@@ -272,3 +272,43 @@ def namepath(name,path,verbose=False):
     
     return p
 
+
+# In[1]:
+
+
+def isjupyter():
+    """
+    Purpose:  
+        Identify if the currently running python script is a jupyter run or now
+
+    Input:
+        None
+
+    Output:
+        True, or False, answer is Jupyter?
+
+    Keywords:
+        None
+
+    Dependencies:
+        None
+
+    Needed Files:
+        None
+
+    Modification History:
+        Written: Samuel LeBlanc, Santa Cruz, 2020-11-20
+        Modified: 
+    
+    """
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
