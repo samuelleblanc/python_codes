@@ -68,7 +68,7 @@ def bearing(pos1,pos2):
 # In[2]:
 
 
-def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
+def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None,verbose=False):
     """ Run to get indices in the measurement space of all the closest mod points. Assuming earth geometry."""
     from map_utils import spherical_dist
     from Sp_parameters import startprogress, progress, endprogress
@@ -84,12 +84,12 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None):
                             np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
     wimodis = np.where(imodis)
     if not wimodis[0].any():
-        print '** No points found within range +/- 0.02 in lat and lon, Extending range to +/- 0.2 **'
+        if verbose: print '** No points found within range +/- 0.02 in lat and lon, Extending range to +/- 0.2 **'
         imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.2 , mod_lon<max(meas_lon[meas_good])+0.2),
                                 np.logical_and(mod_lat>min(meas_lat[meas_good])-0.2 , mod_lat<max(meas_lat[meas_good])+0.2))
         wimodis = np.where(imodis)
         if not wimodis[0].any():
-            print '** No points found in extended range, returning null **'
+            if verbose: print '** No points found in extended range, returning null **'
             return []
     N1 = mod_lon[imodis].size
     modis_grid = np.hstack([mod_lon[imodis].reshape((N1,1)),mod_lat[imodis].reshape((N1,1))])
