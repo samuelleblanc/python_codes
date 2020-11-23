@@ -186,19 +186,36 @@ def load_ict(fname,return_header=False,make_nan=True):
         return data
 
 
-# In[ ]:
+# In[3]:
 
 
-def modis_qa(qa_array):
+def modis_qa_MOD06(qa_array):
     """
-    modis qa data parser.
-    input of qa numpy array
-    output structure of qa arrays
+    modis qa data parser for Cloud properties.
+    input of qa numpy array from MODIS MOD06/MYD06 hdf files
+    output qa numpy boolwan array (True is high QA)
+        Set for useful COD and REF
+        Set for 2nd highest (not highest) confidence level
     """
-    bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
+    #bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
+    from load_utils import bits_stripping
     
+    # for clouds
+    qa_cod_useful = bits_stripping(0,1,qa_array[:,:,4])
+    qa_cod_conf = bits_stripping(1,2,qa_array[:,:,4])
+    qa_ref_useful = bits_stripping(3,1,qa_array[:,:,4])
+    qa_ref_conf = bits_stripping(4,2,qa_array[:,:,4])
+    qa = (qa_cod_useful>0) & (qa_cod_conf>1) & (qa_ref_useful>0) & (qa_ref_conf>1) 
+    return qa
     
-    
+
+
+# In[4]:
+
+
+def bits_stripping(bit_start,bit_count,value):
+	bitmask=pow(2,bit_start+bit_count)-1
+	return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
 
 
 # In[ ]:
