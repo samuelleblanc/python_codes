@@ -548,17 +548,19 @@ iaes = np.array([it for it,ta in enumerate(ar['time_ae'][fla]) if any(abs(ta - a
 len(iaes)
 
 
-# In[98]:
+# In[100]:
 
 
 nval = len(ar['Start_UTC'][fla])
-mod = {'time':np.zeros((nval))+np.nan,'cod':np.zeros((nval))+np.nan,
+mod = {'time':np.zeros((nval))+np.nan,'lat':np.zeros((nval))+np.nan,'lon':np.zeros((nval))+np.nan,
+       'cod':np.zeros((nval))+np.nan,
        'ref':np.zeros((nval))+np.nan,'qa':np.zeros((nval))-1,'mask':np.zeros((nval))-1}
-myd = {'time':np.zeros((nval))+np.nan,'cod':np.zeros((nval))+np.nan,
+myd = {'time':np.zeros((nval))+np.nan,'lat':np.zeros((nval))+np.nan,'lon':np.zeros((nval))+np.nan,
+       'cod':np.zeros((nval))+np.nan,
        'ref':np.zeros((nval))+np.nan,'qa':np.zeros((nval))-1,'mask':np.zeros((nval))-1}
 
 
-# In[ ]:
+# In[101]:
 
 
 dos = np.unique(ar['doy'][fla][iaes])
@@ -575,6 +577,9 @@ for ddd in dos:
             mod['cod'][iaes[idd]] = cs[:,0]
             mod['ref'][iaes[idd]] = cs[:,1]
             mod['time'][iaes[idd]] = geoso[ad]['time'][igo]
+            mod['lat'][iaes[idd]] = ar['Latitude'][fla][iaes][idd]
+            mod['lon'][iaes[idd]] = ar['Longitude'][fla][iaes][idd]
+            
     for igy,gy in enumerate(geosy[ad]['fh']):
         ind = mu.map_ind(geosy[ad]['lat'][igy,:,:],geosy[ad]['lon'][igy,:,:],
                          ar['Latitude'][fla][iaes][idd],ar['Longitude'][fla][iaes][idd])
@@ -584,9 +589,11 @@ for ddd in dos:
             myd['cod'][iaes[idd]] = cs[:,0]
             myd['ref'][iaes[idd]] = cs[:,1]
             myd['time'][iaes[idd]] = geosy[ad]['time'][igy]
+            myd['lat'][iaes[idd]] = ar['Latitude'][fla][iaes][idd]
+            myd['lon'][iaes[idd]] = ar['Longitude'][fla][iaes][idd]
 
 
-# In[267]:
+# In[102]:
 
 
 sio.savemat(fp+'data_other/MODIS/MODIS_ORACLES2016_match.mat',{'mod':mod,'myd':myd})
@@ -618,13 +625,13 @@ plt.plot(myd['cod'])
 # Do the same for ref 
 # 
 
-# In[ ]:
+# In[103]:
 
 
 from scipy.interpolate import interp1d
 
 
-# In[379]:
+# In[104]:
 
 
 def fit_sine(f1,f2,t1,t2):
@@ -635,7 +642,7 @@ def fit_sine(f1,f2,t1,t2):
     return A,B
 
 
-# In[387]:
+# In[105]:
 
 
 def get_sines(A,B,f0,t0,utcs=np.arange(0,24.0,0.5),val_range=[0,100]):
@@ -655,7 +662,7 @@ def get_sines(A,B,f0,t0,utcs=np.arange(0,24.0,0.5),val_range=[0,100]):
 
 # Prep for sine fitting (fill out missing values with interp)
 
-# In[380]:
+# In[106]:
 
 
 mod_cod = np.arange(0,len(mod['time'][iaes]))
@@ -666,7 +673,7 @@ mod['codb'] = fmodcod(mod_cod)
 myd['codb'] = fmydcod(myd_cod)
 
 
-# In[381]:
+# In[107]:
 
 
 mod_ref = np.arange(0,len(mod['time'][iaes]))
@@ -677,11 +684,29 @@ mod['refb'] = fmodref(mod_ref)
 myd['refb'] = fmydref(myd_ref)
 
 
-# In[382]:
+# In[108]:
 
 
 A_cod,B_cod = fit_sine(mod['codb'],myd['codb'],mod['time'][iaes],myd['time'][iaes])
 A_ref,B_ref = fit_sine(mod['refb'],myd['refb'],mod['time'][iaes],myd['time'][iaes])
+
+
+# In[113]:
+
+
+diurn = {'A_cod':A_cod,'B_cod':B_cod,'A_ref':A_ref,'B_ref':B_ref,'utcs':np.arange(0,24,0.5),'iaes':iaes}
+
+
+# In[114]:
+
+
+sio.savemat(fp+'data_other/MODIS/MODIS_ORACLES2016_match.mat',{'mod':mod,'myd':myd,'diurn':diurn})
+
+
+# In[112]:
+
+
+len(A_cod),len(mod['lat']),len(iaes)
 
 
 # In[396]:

@@ -806,7 +806,7 @@ plt.figure()
 plt.hist(sa['dare_p'][0,:],range=[-75,150],bins=50,label='Parameterisation, PX(Reflec.,AOD,SSA)',alpha=0.6,normed=True)
 
 
-# In[110]:
+# In[397]:
 
 
 plt.figure(figsize=(5,3))
@@ -1495,7 +1495,7 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_boxplot_NS_lat_withcl_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[394]:
+# In[421]:
 
 
 plt.figure(figsize=(3.55,4))
@@ -1588,7 +1588,7 @@ s.keys()
 s['wvl']
 
 
-# In[383]:
+# In[408]:
 
 
 bins_ns_aod,bins_ns_aodn = [],[]
@@ -1613,9 +1613,10 @@ for i,b in enumerate(boxes_ns):
     ie = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) &           (s['lat'][igood]<=b[3]) & (np.isfinite(s['ref'][igood]))
     bins_ns_ref.append(s['ref'][igood][ie])
     bins_ns_refn.append(len(s['ref'][igood][ie]))
-    iaf = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) &           (s['lat'][igood]<=b[3]) & (np.isfinite(s['ref'][igood]))
-    bins_ns_ref.append(s['ref'][igood][iaf])
-    bins_ns_refn.append(len(s['ref'][igood][iaf]))
+    #iaf = (s['lon'][igood]>= b[0]) & (s['lon'][igood]<=b[1]) &(s['lat'][igood]>=b[2]) & \
+    #      (s['lat'][igood]<=b[3]) & (np.isfinite(s['ref'][igood]))
+    #bins_ns_ref.append(s['ref'][igood][iaf])
+    #bins_ns_refn.append(len(s['ref'][igood][iaf]))
 
 
 # In[384]:
@@ -1650,7 +1651,7 @@ plt.tight_layout()
 #plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_boxplot_NS_lat.png',dpi=600,transparent=True)
 
 
-# In[395]:
+# In[418]:
 
 
 #plt.figure(figsize=(4,4))
@@ -1663,8 +1664,8 @@ ax.set_ylabel('Latitude [$^{{\\circ}}$S]')
 ax.set_xlim(0,0.8)
 color_boxes(bp,'red')
 
-dare_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
-ax.plot(dare_means[:,0],dare_means[:,1],'-',color='red',alpha=0.6,label='Means')
+aod_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
+ax.plot(aod_means[:,0],aod_means[:,1],'-',color='red',alpha=0.6,label='Means')
 
 #ax[0].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0],bp['fliers'][0]],
 #           ['Mean','Median','25% - 75%','min-max','outliers'],
@@ -1695,13 +1696,36 @@ bp = plt.boxplot(bins_ns_cod,positions=ns_ct[:,1],vert=False,showfliers=True,wid
 plt.xlabel('COD')
 
 
-# In[340]:
+# In[409]:
 
 
 plt.figure(figsize=(4,4))
 #plt.plot(s['dare'][igood,2],s['lat'][igood],'.',alpha=0.05)
 bp = plt.boxplot(bins_ns_ref,positions=ns_ct[:,1],vert=False,showfliers=True,widths=1,showmeans=True,patch_artist=True)
 plt.xlabel('REF')
+
+
+# In[417]:
+
+
+plt.figure(figsize=(3.2,4))
+#plt.plot(s['dare'][igood,2],s['lat'][igood],'.',alpha=0.05)
+bp = plt.boxplot(bins_ns_ref,positions=ns_ct[:,1],vert=False,showfliers=True,widths=1,showmeans=True,patch_artist=True)
+color_boxes(bp,'green')
+
+ref_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
+plt.plot(ref_means[:,0],ref_means[:,1],'-',color='green',alpha=0.6)
+
+plt.legend([bp['boxes'][0]],['R$_{{eff}}$'],frameon=False,loc=4)
+
+plt.xlabel('R$_{{eff}}$ [$\mu$m]')
+plt.savefig(fp+'plot_DARE/ORACLES_2016_REF_box_lat_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[402]:
+
+
+len(bins_ns_ref),len(ns_ct[:,1])
 
 
 # In[338]:
@@ -1722,7 +1746,7 @@ bp = plt.boxplot(bins_ns_asy,positions=ns_ct[:,1],vert=False,showfliers=True,wid
 plt.xlabel('ASY')
 
 
-# In[396]:
+# In[420]:
 
 
 fig,ax = plt.subplots(1,1,figsize=(3.6,4))
@@ -1734,8 +1758,8 @@ ax.set_ylabel('Latitude [$^{{\\circ}}$S]')
 #ax.set_xlim(0,0.8)
 color_boxes(bp,'blue')
 
-dare_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
-ax.plot(dare_means[:,0],dare_means[:,1],'-',color='blue',alpha=0.6,label='Means')
+ssa_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bp['means']])
+ax.plot(ssa_means[:,0],ssa_means[:,1],'-',color='blue',alpha=0.6,label='Means')
 
 #ax[0].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0],bp['fliers'][0]],
 #           ['Mean','Median','25% - 75%','min-max','outliers'],
@@ -1748,13 +1772,47 @@ bc = ax1.boxplot(bins_ns_asy,positions=ns_ct[:,1],vert=False,showfliers=True,wid
 ax1.set_xlabel('ASY',color='y')
 color_boxes(bc,'y')
 #ax1.set_xlim(0,50)
-cod_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bc['means']])
-ax1.plot(cod_means[:,0],cod_means[:,1],'-',color='y',alpha=0.6,label='Means')
+asy_means = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bc['means']])
+ax1.plot(asy_means[:,0],asy_means[:,1],'-',color='y',alpha=0.6,label='Means')
 ax1.tick_params(axis='x', labelcolor='y')
 ax1.legend([bc['boxes'][0],bp['boxes'][0]],['ASY','SSA'],frameon=False,loc=4)
 
 plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES_2016_SSA_ASY_double_box_NS_lat_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[423]:
+
+
+dare_means.shape
+
+
+# In[427]:
+
+
+print 'AOD',np.corrcoef(dare_means[:,0],aod_means[:,0])[0,1]**2
+print 'COD',np.corrcoef(dare_means[:,0],cod_means[:,0])[0,1]**2
+print 'ssa',np.corrcoef(dare_means[:,0],ssa_means[:,0])[0,1]**2
+print 'asy',np.corrcoef(dare_means[:,0],asy_means[:,0])[0,1]**2
+print 'ref',np.corrcoef(dare_means[:,0],ref_means[:,0])[0,1]**2
+
+
+# In[426]:
+
+
+plt.figure()
+plt.plot(dare_means[:,0],aod_means[:,0],'.')
+print 'AOD',np.corrcoef(dare_means[:,0],aod_means[:,0])[0,1]**2
+plt.figure()
+plt.plot(dare_means[:,0],cod_means[:,0],'.')
+plt.figure()
+plt.plot(dare_means[:,0],ssa_means[:,0],'.')
+plt.figure()
+plt.plot(dare_means[:,0],asy_means[:,0],'.')
+plt.figure()
+plt.plot(dare_means[:,0],ref_means[:,0],'.')
+
+
 
 
 # ## Cloud optical depth and ref diurnal variations
