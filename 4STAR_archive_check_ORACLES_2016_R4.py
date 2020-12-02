@@ -4,11 +4,11 @@
 # # Intro
 # Simple Program to load and check the 4STAR archive files.
 # 
-# For R3 of ORACLES 2016, AOD
+# For R4 of ORACLES 2016, AOD
 
 # # Load the defaults and imports
 
-# In[2]:
+# In[1]:
 
 
 #%config InlineBackend.rc = {}
@@ -26,13 +26,13 @@ from path_utils import getpath
 from plotting_utils import make_boxplot
 
 
-# In[3]:
+# In[2]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[3]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
@@ -41,32 +41,26 @@ fp
 
 # # load the files
 
-# In[5]:
+# In[4]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[106]:
-
-
-days = ['20160924']
-
-
-# In[6]:
+# In[5]:
 
 
 vv = 'R4'
 
 
-# In[7]:
+# In[6]:
 
 
 vi = 'v9'
 
 
-# In[8]:
+# In[7]:
 
 
 outaod_RA = []
@@ -92,13 +86,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[9]:
+# In[8]:
 
 
 len(outaod_RA)
 
 
-# In[10]:
+# In[9]:
 
 
 len(days)
@@ -129,7 +123,7 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[11]:
+# In[10]:
 
 
 outaod_head_RA[4]
@@ -143,26 +137,26 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[12]:
+# In[11]:
 
 
 nm = outaod_RA[1].dtype.names
 
 
-# In[13]:
+# In[12]:
 
 
 nm
 
 
-# In[14]:
+# In[13]:
 
 
 wl = nm[11:-1]
 wl = wl[0:24]
 
 
-# In[15]:
+# In[14]:
 
 
 for a in wl:
@@ -171,7 +165,7 @@ for a in wl:
 
 # ## Load previous revision of files
 
-# In[26]:
+# In[15]:
 
 
 outaod_R3 = []
@@ -192,7 +186,7 @@ for i,d in enumerate(days):
 
 # # Plot the files
 
-# In[22]:
+# In[16]:
 
 
 for i,d in enumerate(days):
@@ -224,6 +218,29 @@ for i,d in enumerate(days):
     axy.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax[1].set_xlabel('UTC [h]')
     plt.savefig(fp+'aod_ict/{vi}/{vv}/{vv}_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
+
+
+# In[17]:
+
+
+days[11]
+
+
+# In[18]:
+
+
+nm
+
+
+# In[19]:
+
+
+for i,d in enumerate(days):
+    plt.figure()
+    plt.plot(outaod_RA[i]['Start_UTC'],outaod_RA[i]['AOD_polycoef_a2'])
+    #plt.plot(outaod_RA[i]['Start_UTC'],outaod_RA[i]['AOD_polycoef_a1'])
+    #plt.plot(outaod_RA[i]['Start_UTC'],outaod_RA[i]['AOD_polycoef_a0'])
+    plt.title(d)
 
 
 # ## Plot the high altitude subset of the data for calibration
@@ -422,6 +439,30 @@ outaod_RA[i][unc][ii]
 
 
 nm[4]
+
+
+# ### Plot the difference between R3 and R4 AOD
+
+# In[22]:
+
+
+for i,d in enumerate(days):
+    fig,ax = plt.subplots(1,sharex=True,figsize=(7,5))
+    ax.set_title('AOD difference between R3 and R4 for flight {}'.format(d))
+    qa = [outaod_RA[i]['qual_flag']==0]
+    ax.plot(outaod_RA[i]['Start_UTC'][qa],outaod_RA[i]['AOD0501'][qa]-outaod_R3[i]['AOD0501'][qa])
+    
+    ax.set_ylabel('Delta AOD at 501 nm')
+    #ax.set_ylim(-0.1,0.1)
+    #ax.set_xlim(-23.5,-9.5)
+    #ax.axhline(0,color='k')
+    ax.set_xlabel('UTC [H]')
+       
+    #box = ax.get_position()
+    #ax.set_position([box.x0, box.y0, box.width * 0.95, box.height])
+    
+    #plt.legend(points, labels, scatterpoints=1,frameon=False,loc='upper left',bbox_to_anchor=(-1.15,1.5))
+    #plt.savefig(fp+'aod_ict/{vv}/{vv}_{}_time_delta_aod_R4vsR3.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
 # ## Plot spectral aod figures for high altitude
