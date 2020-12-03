@@ -160,3 +160,45 @@ def plot_aero(m,aero,no_colorbar=True,a_max = 1.5):
             pass
     u = [bb,cbar]
     return u
+
+def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None):
+    """ 
+    Purpose:
+       function to dowload the aeronet file for a particular site and particular day, in the same v2 format for lev15 AOD
+    Inputs:
+       date: (optional, defaults to today) day for aeronet data in datetime 
+       site: (defaults to NASA_Ames) the name of the AERONET site to download - must be known.
+       path: (defaults to current working directory) path of the file to be saved at
+    Outputs:
+       fname: full file name of the one day of AOD lev15 AOD data.
+    Dependencies:
+       urllib
+       BeautifulSoup
+       datetime
+       os
+    Example:
+       ...
+    History:
+       Written: Samuel LeBlanc, 2020-12-03, Santa Cruz, CA
+       Modified: 
+    """
+    from urllib import urlopen
+    from BeautifulSoup import BeautifulSoup
+    from datetime import datetime
+    import os
+    
+    if not date: date = datetime.now()
+    if not path: path = os.cwd()
+        
+    url = "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_v2?site={site}&"+\
+          "year={t.year}&month={t.month}&day={t.day}&year2={t.year}&month2={t.month}&day2={t.day}&"+\
+          "AOD15=1&AVG=10&if_no_html=1"
+    htm = urlopen(url.format(site=site,t=date))
+    html = htm.read()
+    soup = BeautifulSoup(html)
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title','h2'])]
+    
+    fname = path+'{t:%y%m%d}_{t:%y%m%d}_{site}.lev15'.format(t=date,site=site)
+    with open(fname,'w') as f:
+        f.write(soup.text.lstrip().replace('\n\n','\n'))
+    return fname
