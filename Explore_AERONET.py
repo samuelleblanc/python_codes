@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -290,6 +290,12 @@ d['dt'] = [datetime(2017,1,1)+timedelta(jd-1) for jd in list(d['Julian_Day'])]
 plt.figure()
 plt.plot(d['dt'],d['AOT_500'],'.')
 plt.grid()
+
+
+# In[ ]:
+
+
+
 
 
 # ## Load 2018 Misamfu
@@ -768,6 +774,12 @@ new_asy = [ 0.75  ,  0.71,  0.69,  0.645,  0.58,
          0.427843  ,  0.377843  ]
 
 
+# In[ ]:
+
+
+
+
+
 # In[87]:
 
 
@@ -924,4 +936,10 @@ help(dump)
 
 
 dump(n,'/mnt/c/Users/sleblanc/Research/ORACLES/aero_file_v4.txt')
+
+
+# In[ ]:
+
+
+
 
