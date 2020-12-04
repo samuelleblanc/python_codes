@@ -183,7 +183,7 @@ def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None):
        Modified: 
     """
     from urllib import urlopen
-    from BeautifulSoup import BeautifulSoup
+    from bs4 import BeautifulSoup
     from datetime import datetime
     import os
     
@@ -195,10 +195,10 @@ def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None):
           "AOD15=1&AVG=10&if_no_html=1"
     htm = urlopen(url.format(site=site,t=date))
     html = htm.read()
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html,features="lxml")
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title','h2'])]
     
-    fname = path+'{t:%y%m%d}_{t:%y%m%d}_{site}.lev15'.format(t=date,site=site)
+    fname = os.path.join(path,'{t:%y%m%d}_{t:%y%m%d}_{site}.lev15'.format(t=date,site=site))
     with open(fname,'w') as f:
         f.write(soup.text.lstrip().replace('\n\n','\n'))
     return fname

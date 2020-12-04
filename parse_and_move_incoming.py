@@ -32,7 +32,8 @@
 # Modification History:
 # 
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2020-11-06
-#     Modified:
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2020-12-02
+#              - added support for files without a date in the name, using either the directories' date, or the file's date.
 # 
 
 # # Set up the background functions
@@ -40,8 +41,15 @@
 # In[1]:
 
 
-def get_date_and_string(p):
+from __future__ import print_function
+
+
+# In[2]:
+
+
+def get_date_and_string(p,dirdate=None):
     'p: posix path to extract the date and the string'
+    fdate = dirdate
     fd = [dtemp for dtemp in find_dates(p.stem,source=True)]
     if fd:
         fdate,f_datestr = fd[0]
@@ -60,11 +68,14 @@ def get_date_and_string(p):
             if p.suffix in ['.lev10','.lev15','.lev20']: # special for AERONET
                 f_datestr = re.search("(\d{2}?\d{2}?\d{2})",p.stem).group()
                 fdate = dateutil.parser.parse(f_datestr,yearfirst=True)
-    return fdate,f_datestr
     
+    if not fdate: fdate = datetime.fromtimestamp(p.stat().st_ctime)
+    if not locals().get('f_datestr'): f_datestr = fdate.strftime('%Y%m%d')
+        
+    return fdate,f_datestr
 
 
-# In[2]:
+# In[3]:
 
 
 def pull_labels(p,datestr,filters={},dirlabel_in=None):
@@ -102,7 +113,7 @@ def pull_labels(p,datestr,filters={},dirlabel_in=None):
     return dirlabel,label,instname
 
 
-# In[3]:
+# In[4]:
 
 
 def get_season(now):
@@ -121,22 +132,26 @@ def get_season(now):
                 if start <= now <= end)
 
 
-# In[4]:
+# In[5]:
 
 
 class filetypes:
     'Class to identify the filetype, labels, dates, instrumentname, suffixes, input is string indicating full file path'
-    def __init__(self,f,dirlabel=None,filters={}):
+    def __init__(self,f,dirlabel=None,dirdate=None,filters={}):
         p = Path(f)
-        self.fdate,self.f_datestr = get_date_and_string(p)
+        self.fdate,self.f_datestr = get_date_and_string(p,dirdate=dirdate)
         self.dirlabel,self.label,self.instname = pull_labels(p,self.f_datestr,filters=filters,dirlabel_in=dirlabel)
         self.p = p
         if not self.dirlabel:
             self.dirlabel = dirlabel
-        self.daystr = self.fdate.strftime('%Y%m%d')
+        if not dirdate:
+            self.dirdate = self.fdate
+        else:
+            self.dirdate = dirdate
+        self.daystr = self.dirdate.strftime('%Y%m%d')
         
     def _print(self):
-        print self.instname, self.dirlabel, self.label, self.fdate, self.f_datestr, self.p.stem
+        print(self.instname, self.dirlabel, self.label, self.fdate, self.f_datestr, self.p.stem)
     
     def __getitem__(self,i):
         'Method to call only the variables in the class like a dict'
@@ -147,10 +162,10 @@ class filetypes:
         return self.__dict__.keys()
 
 
-# In[20]:
+# In[6]:
 
 
-def get_newfilepath(f,filters={},debug=False):
+def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0):
     'function to build the end file path, input of filetype class f, outputs updated file class f'
     # determine the campaign
     campaign = 'rooftop'
@@ -176,40 +191,42 @@ def get_newfilepath(f,filters={},debug=False):
         f.year = f.fdate.year
         f.campaign = os.path.join('rooftop','{season}_{year}'.format(**f))
     
-    if debug: print str(f.p)
-    if debug: print 'Campaign found to be:', campaign
+    if debug: print(str(f.p))
+    if debug: print('Campaign found to be:', campaign)
     
     folders_match_filetype = [ni for ni in filters['directories']                              if (f.p.suffix.lower() in filters['directories'][ni]['filetypes'])]
     folders_match_label = [j for j in folders_match_filetype if                        any([lbl in f.label.lower() for lbl in filters['directories'][j]['label']]) &                        (not any([lbl in f.label.lower() for lbl in filters['directories'][j].get('not_label',[])]))]
-    if debug: print 'folders_match_filetype:',folders_match_filetype
-    if debug: print 'folders_match_label',folders_match_label
+    if debug: print('folders_match_filetype:',folders_match_filetype)
+    if debug: print('folders_match_label',folders_match_label)
     if len(folders_match_label) == 0:
         folders_match_label = [j for j in folders_match_filetype if                                (not filters['directories'][j]['label'])]
         if len(folders_match_label) == 0:
-            if verbose: print '*** Match move directory not found for file {p.stem}, using base path ***'.format(**f)
+            if verbose: print('*** Match move directory not found for file {p.stem}, using base path ***'.format(**f))
             folders_match_label = ['']
 
-    f.newpath = Path(root_folder).joinpath('{campaign}'.format(**f),folders_match_label[0],                                 filters['directories'].get(folders_match_label[0],{}).get('folder_name','').format(**f))    
+    f.newpath = Path(root_folder).joinpath('{campaign}'.format(**f),folders_match_label[0],                                 filters['directories'].get(folders_match_label[0],{}).get('folder_name','').format(**f))   
     f.newfile = f.newpath.joinpath(f.p.name)
     
-    if debug: print 'newpath:',str(f.newpath),' newfile:',str(f.newfile)
+    if debug: print( 'newpath:',str(f.newpath),' newfile:',str(f.newfile))
         
     #check if destination file already exists:
-    if f.newfile.exists():
+    if f.newfile.exists() & (not fake_file):
         if filecmp.cmp(str(f.newfile),str(f.p),shallow=True):
             if filecmp.cmp(str(f.newfile),str(f.p),shallow=False):
                 # they are the same and don't do anything
-                if verbose: print '{prefix}Exact same file already exists at: {newfile}, removing incoming file'.format(**f)
+                if verbose: 
+                    print( '{prefix}Exact same file already exists at: {newfile}, removing incoming file'.format(**f))
                 if not dry_run: os.remove(str(f.p))
-                return None
-        if verbose: print '{prefix}Different file with same name ({p.name}) exists'.format(**f)
+                nexact = nexact+1
+                return None,nexact
+        if verbose: print( '{prefix}Different file with same name ({p.name}) exists'.format(**f))
         f.newpath = f.newpath.joinpath('Uploaded_on_{}'.format(date.today().strftime('%Y%m%d')))
         f.newfile = f.newpath.joinpath(f.p.name)
         
-    return folders_match_label
+    return folders_match_label,nexact
 
 
-# In[6]:
+# In[7]:
 
 
 def get_filters_from_json(in_directory):
@@ -245,42 +262,111 @@ def get_filters_from_json(in_directory):
     return filters
 
 
-# In[7]:
+# In[8]:
 
 
-def recurse_through_dir(indir,dirlabel=None,verbose=False,filters={}):
+def recurse_through_dir(indir,dirlabel=None,dirdate=None,verbose=False,filters={}):
     fl = os.listdir(indir)
     fl_array = []
     dirs = {}
     for f in fl:
         if f.startswith('.'): continue #ignore hidden files
-        fl_array.append(filetypes(indir+'/'+f,dirlabel=dirlabel,filters=filters))
+        if verbose: print(f+' -> ',end='')
+        fl_array.append(filetypes(indir+'/'+f,dirlabel=dirlabel,filters=filters,dirdate=dirdate))
         if verbose: fl_array[-1]._print()
         if fl_array[-1].p.is_dir():
             dirs[f] = fl_array[-1].dirlabel
-            fla = recurse_through_dir(indir+'/'+f,dirlabel=dirs[f],verbose=verbose,filters=filters)
+            fla = recurse_through_dir(indir+'/'+f,dirlabel=dirs[f],verbose=verbose,
+                                      filters=filters,dirdate=fl_array[-1].fdate)
             fl_array.extend(fla)
     return fl_array
-
-
-# # Prepare the command line argument parser
-
-# In[8]:
-
-
-import argparse
 
 
 # In[9]:
 
 
-long_description = """    Run the incoming file parser and moves the files to the desired sunsat locations
-    The File locations and folders are defined by the json file: .filters.json
-    Please update the date ranges within that file for any new field mission, if not then assumes rooftop measurements for the season_year
-    Can run a call to matlab for any incoming 4STAR raw data"""
+def make_temp_mfile(mfilepath,filelist,starmat,starsun,quicklooks,fig_path,aero_path,gas_path,sun_path,incoming_path):
+    'Print the matlab commands to a temp m file'
+    
+    command_setpath = ["setnamedpath('starimg','{fig_path}');".format(fig_path=fig_path),
+                       "setnamedpath('starsun','{sun_path}');".format(sun_path=sun_path),
+                       "setnamedpath('aeronet','{aero_path}');".format(aero_path=aero_path),
+                       "setnamedpath('gas_summary','{gas_path}');".format(gas_path=gas_path)]
+    command = "allstarmat({{{filelist}}},'{starmat}')".format(filelist=filelist,starmat=starmat)
+    command2 = "starsun('{starmat}','{starsun}')".format(starmat=starmat,starsun=starsun)
+    command3 = "Quicklooks_4STAR('{starsun}','{starmat}','{quicklooks}')".format(starmat=starmat,
+                                   starsun=starsun,quicklooks=quicklooks)
+    
+    commands = command_setpath
+    commands.append(command)
+    commands.append(command2)
+    commands.append("pa = getnamedpath('starmat');")
+    commands.append("setnamedpath('starmat','{incoming_path}');".format(incoming_path=incoming_path))
+    commands.append(command3)
+    commands.append("setnamedpath('starmat',pa);")
+    
+    with open(mfilepath,'w') as f:
+        f.write('% Temp matlab script created on : '+str(datetime.now())+' \n')
+        for cm_line in commands:
+            f.write(cm_line+' \n')
+        f.write('exit;\n')
+    return mfilepath
 
 
 # In[10]:
+
+
+def move_files(fl_arr,filters,verbose=False,dry_run=False):
+    'Function to go through and move the files, create folders if necessary, and check if there are any new raw data'
+    data_raw_found = False
+    data_raw_files = {}
+    nexact, nmoved, ncreated, ndataraw = 0,0,0,0
+    for f in fl_arr:
+        # determine the end path of the file
+        if f.p.is_dir(): continue # do nothing for directories
+        f.prefix = '*DRY RUN*: ' if dry_run else ''
+
+        folders_match_label,nexact = get_newfilepath(f,filters=filters,debug=False,nexact=nexact)
+        if not folders_match_label: continue
+
+        if 'data_raw' in folders_match_label:
+            data_raw_found = True
+
+        # now move the files
+        if not f.newpath.exists() & verbose: print( '{prefix}+Creating new path: {newpath}'.format(**f) )
+        if not dry_run: 
+            if not f.newpath.exists(): ncreated = ncreated+1
+            f.newpath.mkdir(parents=True,exist_ok=True)
+        if verbose: print( '{prefix}~Moving file from {p}\n   to new path: {newfile}'.format(**f) )
+        if not dry_run: 
+            nmoved = nmoved+1
+            f.p.rename(f.newfile)
+        if 'data_raw' in folders_match_label: 
+            data_raw_files['{instname}_{daystr}'.format(**f)] =                          data_raw_files.get('{instname}_{daystr}'.format(**f),[])
+            data_raw_files['{instname}_{daystr}'.format(**f)].append(str(f.newfile))
+            ndataraw = ndataraw+1
+    return data_raw_found, data_raw_files, nexact, nmoved, ncreated, ndataraw
+
+
+# # Prepare the command line argument parser
+
+# In[11]:
+
+
+import argparse
+
+
+# In[12]:
+
+
+long_description = """    Run the incoming file parser and moves the files to the desired sunsat locations
+    The File locations and folders are defined by the json file: .filters.json
+    Please update the date ranges within that file for any new field mission, 
+        if not then assumes rooftop measurements for the season_year
+    Can run a call to matlab for any incoming 4STAR raw data"""
+
+
+# In[13]:
 
 
 parser = argparse.ArgumentParser(description=long_description)
@@ -298,7 +384,7 @@ parser.add_argument('-m','--run_matlab',help='if set, will run the matlab calls 
                     action='store_true')
 
 
-# In[11]:
+# In[14]:
 
 
 in_ = vars(parser.parse_known_args()[0])
@@ -306,7 +392,7 @@ in_ = vars(parser.parse_known_args()[0])
 
 # # Load the modules and get the defaults
 
-# In[12]:
+# In[15]:
 
 
 import os, zipfile
@@ -318,16 +404,18 @@ from datetime import date, datetime
 import json
 import filecmp
 import subprocess
+import threading
+from aeronet import get_AERONET_file_v2
 
 
-# In[13]:
+# In[16]:
 
 
 in_directory = in_.get('in_dir','/data/sunsat/_incoming_gdrive/')
 root_folder = in_.get('root_dir','/data/sunsat/')
 
 
-# In[14]:
+# In[17]:
 
 
 verbose = not in_.get('quiet',False)
@@ -335,13 +423,13 @@ dry_run = in_.get('dry_run',True)
 run_matlab = in_.get('run_matlab',False)
 
 
-# In[15]:
+# In[18]:
 
 
-if verbose: print in_
+if verbose: print( in_)
 
 
-# In[16]:
+# In[19]:
 
 
 # Go through and unzip any folder
@@ -350,114 +438,125 @@ for item in os.listdir(in_directory): # loop through items in dir
     if item.lower().endswith('.zip'): # check for ".zip" extension
         file_name = Path(in_directory+item) # get full path of files
         zip_ref = zipfile.ZipFile(str(file_name)) # create zipfile object
-        if verbose: print '{prefix}found zip file: {file_name}, extracting here.'.format(prefix=prefix,file_name=file_name)
+        if verbose: 
+            print( '{prefix}found zip file: {file_name}, extracting here.'.format(prefix=prefix,file_name=file_name))
         if not dry_run: zip_ref.extractall(in_directory) # extract file to dir
         zip_ref.close() # close file
         if not dry_run: os.remove(str(file_name)) # delete zipped file
 
 
-# In[23]:
+# In[21]:
 
 
 filters = get_filters_from_json(in_directory)
 fl_arr = recurse_through_dir(in_directory,verbose=verbose,filters=filters)
 
 
-# In[24]:
+# In[22]:
 
 
-data_raw_found = False
-data_raw_files = {}
-for f in fl_arr:
-    # determine the end path of the file
-    if f.p.is_dir(): continue # do nothing for directories
-    f.prefix = '*DRY RUN*: ' if dry_run else ''
-    
-    folders_match_label = get_newfilepath(f,filters=filters,debug=False)
-    if not folders_match_label: continue
-        
-    if 'data_raw' in folders_match_label:
-        data_raw_found = True
-
-    # now move the files
-    if not f.newpath.exists() & verbose: print '{prefix}+Creating new path: {newpath}'.format(**f) 
-    if not dry_run: f.newpath.mkdir(parents=True,exist_ok=True)
-    if verbose: print '{prefix}~Moving file from {p}\n   to new path: {newfile}'.format(**f) 
-    if not dry_run: f.p.rename(f.newfile)
-    if 'data_raw' in folders_match_label: 
-        data_raw_files['{instname}_{daystr}'.format(**f)] =                      data_raw_files.get('{instname}_{daystr}'.format(**f),[])
-        data_raw_files['{instname}_{daystr}'.format(**f)].append(str(f.newfile))
+data_raw_found, data_raw_files, nexact, nmoved, ncreated, ndataraw =                move_files(fl_arr,filters,verbose=verbose,dry_run=dry_run)
 
 
-# In[42]:
+# In[65]:
+
+
+# check if there are raw data files, and if so, get the aeronet
+if data_raw_found:
+    daystrss = []
+    for k in data_raw_files.keys():
+        instname,daystr0 = k.split('_')
+        fa_tmp = filetypes('{daystr}_AERONET_NASA_Ames.lev15'.format(instname=instname,daystr=daystr0))
+        fmla_tmp = get_newfilepath(fa_tmp,filters=filters,fake_file=True)
+        if not daystr in daystrss:
+            daystrss.append(daystr0)
+            if fa_tmp.campaign.find('rooftop') >= 0:
+                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath))
+                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+
+
+# In[66]:
 
 
 # clean up folders after move
 for dirpath, dirnames, filenames in os.walk(in_directory,topdown=False):
     if not dirpath in in_directory:
         try: 
-            if verbose: print '{pre}-removing :{path}'.format(pre=prefix,path=dirpath)
+            if verbose: print( '{pre}-removing :{path}'.format(pre=prefix,path=dirpath))
             if not dry_run:
                 os.rmdir(dirpath) 
         except: 
             pass
 
 
-# In[44]:
+# In[75]:
 
 
+nmats = 0
 if run_matlab:
     prefix = '*DRY RUN*: ' if dry_run else ''
     for dr,drs in data_raw_files.items():
         # get the position of the new star.mat and starsun.mat files
         f = filetypes('{}star.mat'.format(dr),filters=filters)
-        fml = get_newfilepath(f,filters=filters)
+        fml = get_newfilepath(f,filters=filters,fake_file=True)
         if not dry_run: f.newpath.mkdir(parents=True,exist_ok=True)
         fs = filetypes('{}starsun.mat'.format(dr),filters=filters)
-        fmls = get_newfilepath(fs,filters=filters)
+        fmls = get_newfilepath(fs,filters=filters,fake_file=True)
         if not dry_run: fs.newpath.mkdir(parents=True,exist_ok=True)
             
         # make the position of the new quicklook file
         instname,daystr = dr.split('_')
-        fq = filetypes('{daystr}_{instname}_Quicklooks.ppt'.format(instname=instname,daystr=daystr))
-        fmlq = get_newfilepath(fq,filters=filters)
+        fq = filetypes('{daystr}_{instname}_Quicklooks.pptx'.format(instname=instname,daystr=daystr))
+        fmlq = get_newfilepath(fq,filters=filters,fake_file=True)
+        if not dry_run: fq.newpath.mkdir(parents=True,exist_ok=True)
         
         # make the position of the new figure files
-        ff = filetypes('{daystr}_{instname}_plots.fig'.format(instname=instname,daystr=daystr))
-        fmlf = get_newfilepath(ff,filters=filters)
+        ff = filetypes('{daystr}_{instname}_plots.png'.format(instname=instname,daystr=daystr))
+        fmlf = get_newfilepath(ff,filters=filters,fake_file=True)
+        if not dry_run: ff.newpath.parent.mkdir(parents=True,exist_ok=True)
         
         # make the position of the aeronet files
         fa = filetypes('{daystr}_AERONET_NASA_Ames.lev15'.format(instname=instname,daystr=daystr))
-        fmla = get_newfilepath(fa,filters=filters)
+        fmla = get_newfilepath(fa,filters=filters,fake_file=True)
+        if not dry_run: fa.newpath.mkdir(parents=True,exist_ok=True)
         
         # make the position of the gas_summary files
         fg = filetypes('{instname}_{daystr}_gas_summary.mat'.format(instname=instname,daystr=daystr))
-        fmlg = get_newfilepath(fg,filters=filters)
+        fmlg = get_newfilepath(fg,filters=filters,fake_file=True)
+        if not dry_run: fg.newpath.mkdir(parents=True,exist_ok=True)
         
         # make a string of the raw files    
         filelist = "'"+"';'".join(drs)+"'"
         if not f.instname in ['4STAR','4STARB']: # only for 4STARs for now.
             continue
-        command_setpath = "setnamedpath('starimg','{fig_path}');setnamedpath('starsun','{aero_path}');setnamedpath('gas_summary','{gas_path}')".                           format(fig_path=str(f.newpath)+'/',aero_path=str(fa.newpath)+'/',gas_path=str(fg.newpath)+'/')
-        command = "allstarmat({{{filelist}}},'{starmat}')".format(filelist=filelist,starmat=str(f.newfile))
-        command2 = "starsun('{starmat}','{starsun}')".format(starmat=f.newfile,starsun=fs.newfile)
-        command3 = "Quicklooks_4STAR('{starsun}','{starmat}','{quicklooks}')".format(starmat=str(f.newfile),
-                                       starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name))
+            
+        mfile = make_temp_mfile(in_directory+'temp.m',filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
+
         if verbose: 
-            print ' '.join(['{}matlab'.format(prefix),'-nodisplay','-r','"{};{};{};{};exit;"'.                            format(command_setpath,command,command2,command3)])
+            print( ' '.join(['{}matlab'.format(prefix),'-nodisplay','-batch',"{}".format(Path(mfile).stem)]))
         if not dry_run:
-            process = subprocess.Popen(['matlab','-nodisplay','-r','"{};{};{};{};exit;"'.                                        format(command_setpath,command,command2,command3)],
-                                       shell=True,
-                                       stdout=subprocess.PIPE, 
-                                       stderr=subprocess.PIPE)
-            while process.returncode is None:
+            pmfile = Path(mfile)
+            os.chdir(str(pmfile.parent))
+            process = subprocess.Popen(['matlab','-nodisplay','-batch',"{}".format(pmfile.stem)],
+                                       shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+
+            while True:
                 # handle output by direct access to stdout and stderr
-                for line in process.stdout:
-                    if verbose: print line
-                for liner in process.stderr:
-                    if verbose: print liner
-                # set returncode if the process has exited
-                process.poll()
-            #stdout, stderr = process.communicate()
-            #if verbose: print stdout, stderr
+                output = process.stdout.readline()
+                if process.poll() is not None:
+                    break
+                if output:
+                    if verbose: print(output.strip())
+            rc = process.poll()
+            if verbose: print(rc)
+            nmats = nmats + 1
+                
+            if rc==0:
+                os.remove(mfile)
+
+
+# In[140]:
+
+
+print(datetime.now().strftime("%c")+' :Python moved {nmoved} files, Created {ncreated} folders, found {ndataraw} files, and generated {nmats} starmats/suns'      .format(nmoved=nmoved,ncreated=ncreated,ndataraw=ndataraw,nmats=nmats))
 
