@@ -109,19 +109,19 @@ fp_librad = getpath('libradtranb')+'data/'
 
 # ## Load the 4STAR AOD
 
-# In[287]:
+# In[22]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 
 
-# In[ ]:
+# In[23]:
 
 
 s.keys()
 
 
-# In[288]:
+# In[24]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -129,13 +129,13 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 
 # ### Load the flag files
 
-# In[20]:
+# In[25]:
 
 
 fmat = getpath('4STAR_data')
 
 
-# In[289]:
+# In[26]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -145,25 +145,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[290]:
+# In[27]:
 
 
 sf.keys()
 
 
-# In[291]:
+# In[28]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[292]:
+# In[29]:
 
 
 flag.shape
 
 
-# In[293]:
+# In[30]:
 
 
 sum(flag)
@@ -219,13 +219,13 @@ plt.xlim(0.25,5)
 
 # ### Alternative build of tau aero polynomials for AOD
 
-# In[294]:
+# In[38]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[295]:
+# In[37]:
 
 
 sai = s['aerosolcols'][0,:].astype(int)
@@ -244,13 +244,13 @@ plt.plot(s['tau_aero'][:,400],'.')
 i=13884
 
 
-# In[297]:
+# In[35]:
 
 
 s['tau_aero'].shape
 
 
-# In[299]:
+# In[36]:
 
 
 s['w'].shape
@@ -266,7 +266,7 @@ plt.plot(s['w'][0,sai],s['tau_aero'][i,sai],'.')
 plt.ylim(0,0.5)
 
 
-# In[301]:
+# In[31]:
 
 
 np.where(flag)[0]
@@ -300,7 +300,7 @@ plt.gca().set_position([box.x0, box.y0, box.width * 0.96, box.height])
 plt.savefig(fp+'plots/Good_AOD_spectra_examples_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[777]:
+# In[32]:
 
 
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
@@ -339,7 +339,7 @@ plt.gca().set_position([box.x0, box.y0, box.width * 0.96, box.height])
 plt.savefig(fp+'plots/Good_AOD_spectra_examples_zoomed_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[ ]:
+# In[33]:
 
 
 s['w'][0,saii]
@@ -354,7 +354,7 @@ plt.plot(s['w'][0,saii],s['tau_aero'][i,saii],'.')
 plt.ylim(0,0.5)
 
 
-# In[303]:
+# In[34]:
 
 
 saii = sai[((s['w'][0,sai]>0.364) & (s['w'][0,sai]<0.370)) | ((s['w'][0,sai]>0.435) & (s['w'][0,sai]<1.566)) | 
@@ -2501,7 +2501,7 @@ ax4.set_ylabel('ASY')
 
 # #### Paired T-test to see if differences in plumes vs background
 
-# In[53]:
+# In[176]:
 
 
 from scipy import stats
@@ -2992,30 +2992,32 @@ np.nanstd(dare_out1),np.nanstd(dare_out2),np.nanstd(dare_out3),np.nanstd(dare_ou
 
 # # Get the p-value for the delta tau vs. distance of AERONET vs 4STAR
 
-# In[95]:
+# In[177]:
 
 
 import plotting_utils as pu
+from scipy import stats
 
 
-# In[88]:
+# In[9]:
 
 
 s2aero = pd.read_excel(fp+'starAero.xlsx'.format('20180609'))
 
 
-# In[89]:
+# In[10]:
 
 
 s2aero.keys()
 
 
-# In[112]:
+# In[14]:
 
 
 plt.figure()
 plt.plot(s2aero['distKM'],s2aero['deltaaodfine'],'.',label='')
 p,perr = pu.plot_lin(s2aero['distKM'],s2aero['deltaaodfine'],y_err=s2aero['deltaaodfine']*0.0+0.03,labels=True,lblfmt='4.5f')
+plt.axhline(0,ls='--')
 plt.legend()
 p,perr
 plt.xlabel('Distance from AERONET [km]')
@@ -3024,8 +3026,138 @@ slope, intercept, r_value, p_value, std_err = stats.linregress(s2aero['distKM'],
 p_value
 
 
-# In[ ]:
+# ## Subset for different days
+
+# In[168]:
 
 
+s2aero['day'] = s2aero['Time'].dt.date
 
+
+# In[169]:
+
+
+ds = s2aero['day'].unique()
+
+
+# In[170]:
+
+
+d = ds[0]
+
+
+# In[173]:
+
+
+print '{}'.format(d)
+
+
+# In[209]:
+
+
+plt.figure(figsize=(8,4))
+for d in s2aero['day'].unique():
+    iid = (s2aero['day']==d)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(s2aero['distKM'][iid],s2aero['deltaaodfine'][iid])
+    pl = plt.plot(s2aero['distKM'][iid],s2aero['deltaaodfine'][iid],'.',label='{},   p={:1.4f}'.format(d,p_value))
+    p,perr = pu.plot_lin(s2aero['distKM'][iid],s2aero['deltaaodfine'][iid],y_err=s2aero['deltaaodfine']*0.0+0.03,
+                         labels=True,lblfmt='4.5f',color=pl[0].get_c())
+    
+    
+    p,perr
+    plt.xlabel('Distance from AERONET [km]')
+    plt.ylabel('$\\tau_{diff}$')
+    
+    print d, p_value
+plt.axhline(0,ls='--',color='k')
+slope, intercept, r_value, p_value, std_err = stats.linregress(s2aero['distKM'],s2aero['deltaaodfine'])
+plt.plot(s2aero['distKM'],s2aero['deltaaodfine'],'.',label='All data,  p={:1.4f}'.format(p_value),zorder=-10,color='grey')
+p,perr = pu.plot_lin(s2aero['distKM'],s2aero['deltaaodfine'],y_err=s2aero['deltaaodfine']*0.0+0.03,
+                     labels=True,lblfmt='4.3f',color='grey',shaded_ci=False)
+
+plt.legend(bbox_to_anchor=[1.05,0.99])
+plt.tight_layout()
+plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.png',dpi=600,transparent=True)
+
+
+# # Add MODIS AOD plots
+
+# In[65]:
+
+
+from mpl_toolkits.basemap import Basemap
+import georaster
+
+
+# In[17]:
+
+
+mod,modh = lu.load_hdf(fp+'data_other/MOD04_3K.A2018160.1855.061.2018161080147.hdf',values=(('lat',52),('lon',51),('aod',10)))
+
+
+# In[112]:
+
+
+modh['aod']
+
+
+# In[62]:
+
+
+def make_map1(ax=plt.gca()):
+    m = Basemap(projection='stere',lon_0=-111.0,lat_0=57.6,
+            llcrnrlon=-113.1, llcrnrlat=56.6,
+            urcrnrlon=-109.1, urcrnrlat=58.6,resolution='h',ax=ax)
+    #m.drawcoastlines()
+    #m.fillcontinents(color='#AAAAAA')
+    m.drawstates()
+    m.drawcountries()
+    m.drawmeridians(np.linspace(-109,-113.2,7),labels=[0,0,0,1])
+    m.drawparallels(np.linspace(56.6,58.6,11),labels=[1,0,0,0])
+    return m
+
+
+# In[54]:
+
+
+plt.figure()
+plt.scatter(mod['lon'],mod['lat'],50,mod['aod'],marker='s')
+plt.colorbar()
+
+
+# In[67]:
+
+
+import rasterio
+from rasterio.plot import show
+
+
+# In[68]:
+
+
+src = rasterio.open(fp+'data_other/snapshot-2018-06-09T00_00_00Z.tiff')
+
+
+# In[136]:
+
+
+fla = np.where(flag & (s['Alt'][:,0]<1500.0))
+
+
+# In[143]:
+
+
+plt.figure()
+show(src.read(),transform=src.transform)
+plt.xlim(-113.1,-109.8)
+plt.ylim(56.3,58.3)
+plt.pcolor(mod['lon'],mod['lat'],mod['aod'],vmin=0,vmax=0.5,cmap='plasma',label='MODIS DT TERRA')
+plt.colorbar(label='AOD',extend='max',shrink=0.68,pad=0.03)
+plt.plot(s['Lon'],s['Lat'],'-',color='k',markersize=0.2,label='flight path')
+plt.scatter(s['Lon'][fla,0],s['Lat'][fla,0],50,s['tau_aero'][fla,406],marker='o',
+            cmap='plasma',vmin=0,vmax=0.5,zorder=10,label='4STAR',lw=0.1,edgecolor='k',alpha=0.2)
+plt.legend()
+plt.xlabel('Longitude [$^{{\circ}}$]')
+plt.ylabel('Latitude [$^{{\circ}}$]')
+plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor.png',dpi=600,transparent=True)
 
