@@ -36,7 +36,8 @@
 # Modification History:
 # 
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2020-10-28
-#     Modified:
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-01-15
+#               Added new test for dark drift.
 # 
 
 # # Notes
@@ -169,9 +170,26 @@
 # 
 # Conrad Esch
 
+# ## Test 2021-01-14
+# 
+# 
+# I got a 2 hour drift/noise test done today. I managed to hook up the TEC drivers so the NIR photodies were cooled. This test was done with the Daburn/Polytron AC-DC power supply.
+# 
+# I biased the amplifiers prior to the test and every channel should have started with negative voltages across the 3 gains.
+# 
+# The blocks did heat up during the test, especially the VIS block which the TEC drivers were dumping their heat into. I had a hard time measuring the block temperature but It seemed warm to the touch at the end of the test. The board temperatures produced better results with the thermal temperature sensor. Sections of the board rose to a maximum of 96 degrees fahrenheit by the end of the test.
+# 
+# Watching the test, the values definitely changed. I suspect that it is due to temperature but it's possible that light leakage played a role. Early on in the test, the NIR x100x100 values railed beyond the ADC's measurement value. They should have been already cooled down by the time I biased them so I wonder if there is a board warmup time that should be considered.
+# 
+# If you would let me know what you think of the data and how I should re conduct the tests, I would appreciate it. Maybe the next step is a lot of temperature sensors.
+# 
+# Best,
+# 
+# Conrad Esch
+
 # # Prepare python environment
 
-# In[23]:
+# In[1]:
 
 
 import numpy as np
@@ -201,7 +219,7 @@ fp = getpath(name)
 
 # # Make functions for faster analysis
 
-# In[107]:
+# In[119]:
 
 
 def reader_RADIOMETER(file_in,lat = 36.970087, lon = -122.052537, alt = 74.0):
@@ -240,12 +258,32 @@ Modification History:
     """
     import pandas as pd
     import map_utils as mu
+    from parse_and_move_incoming import get_filters_from_json, filetypes
+    from pathlib2 import Path
+    import dateutil.parser
+    from datefinder import find_dates
+    from datetime import date, datetime
+    import json, re
     
     # read in
     s = pd.read_csv(file_in,header=5)
+    
     # sanitize header names (remove spaces)
     for k in s.keys():
-        s[k.strip()] = s[k]
+        if k.strip().startswith(('CH','YY','MM','DD')):
+            s[k.strip()] = s.pop(k)
+        else:
+            s[k.strip().lower()] = s.pop(k)
+    
+    # get file metadata
+    filters = get_filters_from_json('/data/sunsat/_incoming_gdrive/')
+    ft = filetypes(file_in,dirlabel=None,dirdate=None,filters=filters)
+    s.instname = ft.instname
+    if s.instname in ['5STAR','5STARG']:
+        s.label = ft.label.replace('_RADIOMETERS','')
+    else:
+        s.label = ft.label
+    s.daystr = ft.daystr
     
     # calculate time and sun position
     s['UTC'] = pd.to_datetime(s['hh:mm:ss'],format='%H:%M:%S.%f')
@@ -256,9 +294,9 @@ Modification History:
     
     # now get the reference voltages
     s['ref5v'] = s['-5v_0_66']*3.0
-    s['ref12v_pos'] = s['12POS_0_33']*3.0
-    s['ref12v_neg'] = s['12NEG_0_33']*3.0
-    s['5vRef_TempC'] = s['5vRef_Temp']/0.0021-273.15
+    s['ref12v_pos'] = s['12pos_0_33']*3.0
+    s['ref12v_neg'] = s['12neg_0_33']*3.0
+    s['5vtef_tempC'] = s['5vref_temp']/0.0021-273.15
     
     print len(s['UTC']),len(s['ref5v'])
     
@@ -271,10 +309,11 @@ Modification History:
             icht,istaget = [int(i) for i in k.replace('CH','').split('_')]
             V[icht-1,istaget/2,:] = s[k.replace('CH','V')]
     define_long_names(s)
+    #s['daystr'] = s['YYYY'][0]+s['MM'][0]+s['DD'][0]
     return s
 
 
-# In[93]:
+# In[71]:
 
 
 def define_long_names(s):
@@ -313,11 +352,11 @@ def define_long_names(s):
         'CH9_0':'2200 nm 1x',
         'CH9_2':'2200 nm 100x',
         'CH9_4':'2200 nm 100x 100x',
-        'Spare':'Empty [V]',
-        '5vRef_Temp':'5Vref Temp, 2.1mV/DegC [V]',
-        '5vRef_TempC':'Temp of 5Vref [°C]',
-        '12POS_0_33':'1/3 of +12V rail [V/3]',
-        '12NEG_0_33':'1/3 of -12v rail [V/3]',
+        'spare':'Empty [V]',
+        '5vref_temp':'5Vref Temp, 2.1mV/DegC [V]',
+        '5vtef_tempC':'Temp of 5Vref [°C]',
+        '12pos_0_33':'1/3 of +12V rail [V/3]',
+        '12neg_0_33':'1/3 of -12v rail [V/3]',
         '-5v_0_66':'1/3 of our -5v reference signal [V/3]',
         'ref5v':'calculated -5V reference signal [V]',
         'ref12v_pos':'calculated +12V reference signal [V]',
@@ -338,7 +377,7 @@ def define_long_names(s):
         s[k].name = names.get(k,'Undefined')
 
 
-# In[177]:
+# In[122]:
 
 
 def plot_housekeeping(s):
@@ -347,17 +386,23 @@ def plot_housekeeping(s):
     import matplotlib.dates as mdates
     myFmt = mdates.DateFormatter('%H:%M:%S')
     
+    
     fig = plt.figure()
-    plt.plot(s['UTC'],s['Spare'])
-    plt.plot(s['UTC'],s['5vRef_Temp'])
+    plt.plot(s['UTC'],s['spare'])
+    plt.plot(s['UTC'],s['5vref_temp'])
     plt.plot(s['UTC'],s['ref5v'],label='(-5v_0_66)*3:\n {:02.5f}+/-{:02.5f}'.format(                                        np.nanmean(s['ref5v']),np.nanstd(s['ref5v'])))
-    plt.plot(s['UTC'],s['12POS_0_33'])
-    plt.plot(s['UTC'],s['12NEG_0_33'])
+    plt.plot(s['UTC'],s['12pos_0_33'])
+    plt.plot(s['UTC'],s['12neg_0_33'])
     plt.legend()
     plt.xlabel('UTC [Hour]')
     plt.ylabel('Voltage [V]')
     plt.gca().xaxis.set_major_formatter(myFmt)
-    
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(7))
+    try:
+        fig.gca().set_title('{f.instname} - {f.daystr} {f.label}- Raw voltages'.format(f=s))
+    except:
+        pass
+
     fig1,ax = plt.subplots(4,1,sharex=True)
     ax[2].plot(s['UTC'],s['ref5v'],'.',label='5V ref: {:6.4f} +/- {:6.4f} V'.format(np.nanmean(s['ref5v']),np.nanstd(s['ref5v'])))
     ax[2].xaxis.set_major_formatter(myFmt)
@@ -380,18 +425,23 @@ def plot_housekeeping(s):
     #ax[1].set_xlabel('UTC [Hour]')
     ax[1].set_ylabel('-12V ref \n[V]')
     
-    ax[3].plot(s['UTC'],s['5vRef_Temp']/0.0021-273.15,'.',label='-5V Temperature ref: {:6.4f} +/- {:6.4f} $^{{\circ}}$C'.format(                                    np.nanmean(s['5vRef_Temp']/0.0021-273.15),                                    np.nanstd(s['5vRef_Temp']/0.0021-273.15)))
+    ax[3].plot(s['UTC'],s['5vref_temp']/0.0021-273.15,'.',label='-5V Temperature ref: {:6.4f} +/- {:6.4f} $^{{\circ}}$C'.format(                                    np.nanmean(s['5vref_temp']/0.0021-273.15),                                    np.nanstd(s['5vref_temp']/0.0021-273.15)))
     ax[3].xaxis.set_major_formatter(myFmt)
     ax[3].grid()
     ax[3].legend()
     ax[3].set_xlabel('UTC [Hour]')
     ax[3].set_ylabel('Temperature\n[$^{{\circ}}$C]')
     fig1.tight_layout()
+    ax[3].xaxis.set_major_locator(plt.MaxNLocator(7))
+    try:
+        ax[0].set_title('{f.instname} - {f.daystr} {f.label}- Calculated input voltages'.format(f=s))
+    except:
+        pass
     
     return [fig,fig1]
 
 
-# In[119]:
+# In[123]:
 
 
 def plot_v(s,gain=0):
@@ -405,7 +455,7 @@ def plot_v(s,gain=0):
     for ut in ['V1_','V2_','V3_','V4_','V5_']:
         u = ut+ig[gain]
         ax[0].plot(s['UTC'],s[u],label=s[u].name)
-    ax[0].set_title('VIS {} Channels'.format(ig_str[gain]))
+    #ax[0].set_title('5STARG - test {} - VIS {} Channels'.format(s['daystr'],ig_str[gain]))
     ax[0].xaxis.set_major_formatter(myFmt)
     ax[0].set_xticklabels([])
     ax[0].set_ylabel('Irradiance [V] (X+5V_ref)*-1')
@@ -423,11 +473,16 @@ def plot_v(s,gain=0):
     ax[1].grid()
     ax[1].legend()
     ax[1].set_ylim(-0.5,10.5)
+    ax[1].xaxis.set_major_locator(plt.MaxNLocator(7))
+    try:
+        ax[0].set_title('{f.instname} - {f.daystr} {f.label}- VIS {} Channels'.format(ig_str[gain],f=s))
+    except:
+        pass
     
     return fig,ax
 
 
-# In[134]:
+# In[124]:
 
 
 def plot_v_expect(s,gain=0):
@@ -467,8 +522,69 @@ def plot_v_expect(s,gain=0):
     ax[1].set_ylim(-0.5,10.5)
     
     plt.tight_layout()
+    ax[1].xaxis.set_major_locator(plt.MaxNLocator(7))
+
+    try:
+        ax[0].set_title('{f.instname} - {f.daystr} {f.label}- Radiometer expected voltages'.format(f=s))
+    except:
+        pass
     
     return fig,ax
+
+
+# In[211]:
+
+
+def plot_channel_multigain(s,ch=1,ns=300):
+    'Plotting of a single wavelength (channel) over multiple gain stages. s:5STAR pd, ch: channel number, ns: smoothing window'
+    from Sp_parameters import smooth
+    myFmt = mdates.DateFormatter('%H:%M:%S')
+    fig,ax = plt.subplots(3,1,sharex=True,figsize=(7,7))
+
+    cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
+    ic = (ch-1)%5
+    
+    u,u1,u2 = 'V{}_0'.format(ch),'V{}_2'.format(ch),'V{}_4'.format(ch)
+    ax[0].plot(s['UTC'],s[u],'.',label='raw, mean={m:2.5f}, median={e:2.5f}, std={s:2.5f}'.format(
+               m=s[u].mean(),e=s[u].median(),s=s[u].std()),c=cs[ic],alpha=0.02)
+    ax[0].plot(s['UTC'],smooth(s[u],ns,old=True),'-',label='smooth n={}'.format(ns),c='k')
+    ax[0].legend()
+    ax[1].plot(s['UTC'],s[u1],'.',label='raw, mean={m:2.5f}, median={e:2.5f}, std={s:2.5f}'.format(
+               m=s[u1].mean(),e=s[u1].median(),s=s[u1].std()),c=cs[ic],alpha=0.02)
+    ax[1].plot(s['UTC'],smooth(s[u1],ns,old=True),'-',c='k')
+    ax[1].legend()
+    ax[2].plot(s['UTC'],s[u2],'.',label='raw, mean={m:2.5f}, median={e:2.5f}, std={s:2.5f}'.format(
+               m=s[u2].mean(),e=s[u2].median(),s=s[u2].std()),c=cs[ic],alpha=0.02)
+    ax[2].plot(s['UTC'],smooth(s[u2],ns,old=True),'-',c='k')
+    ax[2].legend()
+
+    ax[0].set_title('{s.instname} - {s.daystr} - {u.name}'.format(u=s[u],s=s))
+    ax[1].set_title('{u.name}'.format(u=s[u1]))
+    ax[2].set_title('{u.name}'.format(u=s[u2]))
+    ax[2].xaxis.set_major_formatter(myFmt)
+    #ax[2].set_xticklabels([])
+    ax[0].set_ylabel('Irradiance [V] (1x)')
+    ax[1].set_ylabel('Irradiance [V] (100x)')
+    ax[2].set_ylabel('Irradiance [V] (100x-100x)')
+    ax[2].set_xlabel('UTC [H]')
+    ax[0].grid()
+    ax[1].grid()
+    ax[2].grid()
+    plt.tight_layout()
+    
+    return fig, ax
+
+
+# In[224]:
+
+
+def plot_channels(s,fp,ns=300,dpi=600):
+    'Run through each channel to plot the multigains'
+    for i in xrange(9):
+        fig,ax = plot_channel_multigain(s,ch=i+1,ns=ns)
+        u = 'V{}_0'.format(i+1)
+        fig.savefig(fp+'{s.instname}_{s.daystr}_rad_{wvl}_allch.png'.format(s=s,wvl=s[u].name.split()[0]),
+                    dpi=dpi,transparent=True)
 
 
 # # Load files
@@ -640,16 +756,36 @@ s = reader_RADIOMETER(fp+'data/5STARG_20201117_001420_RADIOMETERS.dat')
 
 
 
+# ## Test 2021-01-14
+
+# In[55]:
+
+
+fp
+
+
+# In[56]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[120]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210114_125517_RADIOMETERS.dat')
+
+
 # # Plot out data
 
-# In[34]:
+# In[12]:
 
 
 import matplotlib.dates as mdates
 myFmt = mdates.DateFormatter('%H:%M:%S')
 
 
-# In[35]:
+# In[13]:
 
 
 s.keys()
@@ -710,6 +846,14 @@ for i,si in enumerate(ss):
     plt.ylabel('Voltage [V]')
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.title(Titles[i])
+
+
+# ### Test 2021-01-14
+
+# In[ ]:
+
+
+
 
 
 # ## Against reference signal
@@ -1524,6 +1668,107 @@ fig,ax = plot_v_expect(s,gain=1)
 #plt.title('5STARG radiometers 1x 2020-11-17')
 ax[1].set_ylim(-100,25)
 #fig.savefig(fp+'5STARG_20201117_rad_100x_100x_expect.png',dpi=600,transparent=True)
+
+
+# ## Plot out Test 2021-01-14
+
+# In[125]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[131]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.015,0.02)
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[136]:
+
+
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.015,0.8)
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[141]:
+
+
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(-0.5,0.5)
+ax[1].set_ylim(-0.015,10.5)
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[143]:
+
+
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-1.0,2.0)
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[145]:
+
+
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.5,1.5)
+ax[1].set_ylim(0,11.0)
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# ### Checkout the 440 nm
+
+# In[181]:
+
+
+from Sp_parameters import smooth
+myFmt = mdates.DateFormatter('%H:%M:%S')
+fig,ax = plt.subplots(3,1,sharex=True,figsize=(7,7))
+
+cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
+
+u,u1,u2 = 'V2_0','V2_2','V2_4'
+ns = 300
+ax[0].plot(s['UTC'],s[u],'.',label='raw',c=cs[iu],alpha=0.02)
+ax[0].plot(s['UTC'],smooth(s[u],ns,old=True),'-',label='smooth n={}'.format(ns),c='k')
+ax[0].legend()
+ax[1].plot(s['UTC'],s[u1],'.',label=s[u1].name,c=cs[iu],alpha=0.02)
+ax[1].plot(s['UTC'],smooth(s[u1],ns,old=True),'-',label='smooth n={}'.format(ns),c='k')
+ax[2].plot(s['UTC'],s[u2],'.',label=s[u1].name,c=cs[iu],alpha=0.02)
+ax[2].plot(s['UTC'],smooth(s[u2],ns,old=True),'-',label='smooth n={}'.format(ns),c='k')
+
+ax[0].set_title('{s.instname} - {s.daystr} - {u.name}'.format(u=s[u],s=s))
+ax[1].set_title('{u.name}'.format(u=s[u1]))
+ax[2].set_title('{u.name}'.format(u=s[u2]))
+ax[2].xaxis.set_major_formatter(myFmt)
+#ax[2].set_xticklabels([])
+ax[0].set_ylabel('Irradiance [V] (1x)')
+ax[1].set_ylabel('Irradiance [V] (100x)')
+ax[2].set_ylabel('Irradiance [V] (100x-100x)')
+ax[2].set_xlabel('UTC [H]')
+ax[0].grid()
+ax[1].grid()
+ax[2].grid()
+plt.tight_layout()
+
+fig.savefig(fp+'{s.instname}_{s.daystr}_rad_440nm_allch.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[227]:
+
+
+plot_channels(s,fp,dpi=200)
 
 
 # In[ ]:
