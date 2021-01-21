@@ -646,25 +646,38 @@ goci2ar.keys()
 goci2ar['doys'].astype(int)
 
 
-# In[142]:
+# In[159]:
 
 
-plt.figure()
-plt.plot(goci_time['doys'],goci_time['aod_mean'],'.-')
-plt.plot(gociar_time['doys'],gociar_time['aod_mean'],'.-')
-plt.plot(ar_time['doys'],ar_time['aod_mean'],'.-')
+fig, ax = plt.subplots(2,1,sharex=True)
+
+ax[0].plot(goci_time['doys'],goci_time['aod_mean'],'.-',label='GOCI regional average')
+ax[0].errorbar(goci_time['doys'],goci_time['aod_mean'],yerr=goci_time['aod_std'],marker='.',c='tab:blue',alpha=0.2)
+ax[0].plot(gociar_time['doys'],gociar_time['aod_mean'],'.-',label='GOCI flight average')
+ax[0].errorbar(gociar_time['doys'],gociar_time['aod_mean'],yerr=gociar_time['aod_std'],marker='.',c='tab:orange',alpha=0.2)
+ax[0].plot(ar_time['doys'],ar_time['aod_mean'],'.-',label='4STAR average')
+ax[0].errorbar(ar_time['doys'],ar_time['aod_mean'],yerr=ar_time['aod_std'],marker='.',c='tab:green',alpha=0.2)
+ax[1].set_xlabel('DOY')
+ax[0].set_ylabel('AOD$_{{500}}$')
+ax[0].set_title('Daily average over Korea')
+ax[0].legend()
+
+ax[1].plot(goci_time['doys'],goci_time['fmf_mean'],'.-',label='GOCI regional average')
+ax[1].errorbar(goci_time['doys'],goci_time['fmf_mean'],yerr=goci_time['fmf_std'],marker='.',c='tab:blue',alpha=0.2)
+ax[1].plot(gociar_time['doys'],gociar_time['fmf_mean'],'.-',label='GOCI flight average')
+ax[1].errorbar(gociar_time['doys'],gociar_time['fmf_mean'],yerr=gociar_time['fmf_std'],marker='.',c='tab:orange',alpha=0.2)
+ax[1].plot(ar_time['doys'],ar_time['fmf_mean'],'.-',label='4STAR average')
+ax[1].errorbar(ar_time['doys'],ar_time['fmf_mean'],yerr=ar_time['fmf_std'],marker='.',c='tab:green',alpha=0.2)
+ax[1].set_ylabel('Fine Mode Fraction')
+
+
+plt.savefig(fp+'plot/KORUS_GOCI_AOD_daily_avgs.png',dpi=600,transparent=True)
 
 
 # In[137]:
 
 
 angs.shape, fmf['eta'].shape
-
-
-# In[ ]:
-
-
-
 
 
 # ## Load MERRA2
@@ -771,7 +784,7 @@ merra[0]['time']/60.0/24.0
 (1-0.875)/2
 
 
-# ### Collocate to 4STAR
+# #### Collocate to 4STAR
 
 # In[66]:
 
@@ -872,20 +885,20 @@ plt.plot(ar['doys'],ar['AOD0501'],'.')
 # 
 # Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavg1_2d_aer_Nx: 2d,1-Hourly,Time-averaged,Single-Level,Assimilation,Aerosol Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), Accessed: 2020-09-17, 10.5067/KLICLTZ8EM9D
 
-# In[66]:
+# In[160]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2/aer')
 
 
-# In[67]:
+# In[161]:
 
 
 ml = [ m for m in ml if m.endswith('nc4')] 
 ml.sort()
 
 
-# In[68]:
+# In[162]:
 
 
 mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+ml[0])
@@ -945,7 +958,7 @@ merra[0]['time']
 delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
 
 
-# ### Collocate new version to 4STAR
+# #### Collocate new version to 4STAR
 
 # In[77]:
 
