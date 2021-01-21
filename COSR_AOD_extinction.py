@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -79,10 +79,28 @@ fp =getpath('COSR')
 
 # ## Load the starsun
 
+# In[ ]:
+
+
+
+
+
 # ## Load the flag files
+
+# In[ ]:
+
+
+
+
 
 # # Run analysis and prepare variables
 # Do some of the calculations to the data here
 
 # # Plotting
 # Present some fo the early plots here
+
+# In[ ]:
+
+
+
+

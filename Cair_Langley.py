@@ -46,7 +46,7 @@
 
 
 import matplotlib 
-matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
+#matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 get_ipython().magic(u'matplotlib notebook')
 import numpy as np
@@ -81,6 +81,12 @@ fp = 'C:\\Users\\sleblan2\\Research\\4STAR\\MLO_2016\\'
 f = fp+'20160702_MLO5\\CAST_001_160702_090020_URC.csv'
 
 
+# In[8]:
+
+
+c = {}
+
+
 # In[56]:
 
 
@@ -103,7 +109,7 @@ c['DateTimeUTC'][0]
 
 # ## Prepare the filter functions
 
-# In[57]:
+# In[4]:
 
 
 def Gamma2sigma(Gamma):
@@ -112,7 +118,7 @@ def Gamma2sigma(Gamma):
     return Gamma * np.sqrt(2) / ( np.sqrt(2 * np.log(2)) * 2 )
 
 
-# In[58]:
+# In[5]:
 
 
 def gaussian(x_center,fwhm):
@@ -124,13 +130,13 @@ def gaussian(x_center,fwhm):
     return ndg, x
 
 
-# In[59]:
+# In[6]:
 
 
 fwhm = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,15,30]
 
 
-# In[60]:
+# In[9]:
 
 
 band_f = []
