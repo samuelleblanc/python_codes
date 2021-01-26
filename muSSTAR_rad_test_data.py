@@ -38,6 +38,8 @@
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2020-10-28
 #     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-01-15
 #               Added new test for dark drift.
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-01-26
+#               Added new dark test with temp sensors.
 # 
 
 # # Notes
@@ -187,6 +189,22 @@
 # 
 # Conrad Esch
 
+# ## Test 2021-01-25
+# I got the updated drift/noise test done last night with temperature sensors.
+# 
+# In this test the temperature of the boards and blocks actually went down, probably because the ambient temperature started dropping immediately after starting the test.
+# 
+# I think that part of the issue with the previous test was that a heater vent may have been blowing a small amount of warm air toward the system.
+# 
+# The next test I'll be running is the system on battery power with the TEC drivers turned off. After that I'll run a short test with a blow dryer pointed toward the system.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 
+#  5STARG_20210125_154600_RADIOMETERS.dat
+
 # # Prepare python environment
 
 # In[1]:
@@ -219,7 +237,7 @@ fp = getpath(name)
 
 # # Make functions for faster analysis
 
-# In[119]:
+# In[27]:
 
 
 def reader_RADIOMETER(file_in,lat = 36.970087, lon = -122.052537, alt = 74.0):
@@ -258,7 +276,7 @@ Modification History:
     """
     import pandas as pd
     import map_utils as mu
-    from parse_and_move_incoming import get_filters_from_json, filetypes
+    from parse_and_move_incoming_fx import get_filters_from_json, filetypes
     from pathlib2 import Path
     import dateutil.parser
     from datefinder import find_dates
@@ -313,7 +331,7 @@ Modification History:
     return s
 
 
-# In[71]:
+# In[63]:
 
 
 def define_long_names(s):
@@ -368,7 +386,12 @@ def define_long_names(s):
         'sza':'Solar Zenith Angle [°], calculated',
         'azi':'Solar Azimuth Angle [°], calculated',
         'sf':'Solar-Earth factor due to distance between Earth and sun [unitless], calculated',
-        'dec':'Solar declination per respect to earth [°],calculated'}
+        'dec':'Solar declination per respect to earth [°],calculated',
+        'nir_block':u'NIR Block temp [°C]',
+        'nir_board':u'NIR Board temp [°C]',
+        'vis_block':u'VIS Block temp [°C]',
+        'vis_board':u'VIS Board temp [°C]',
+        'mezz':u'Mezzanine board temp [°C]'}
     for k in names.keys():
         if k.startswith('CH'):
             names[k.replace('CH','V')] = names[k]+' [V]'
@@ -377,7 +400,7 @@ def define_long_names(s):
         s[k].name = names.get(k,'Undefined')
 
 
-# In[122]:
+# In[84]:
 
 
 def plot_housekeeping(s):
@@ -431,17 +454,38 @@ def plot_housekeeping(s):
     ax[3].legend()
     ax[3].set_xlabel('UTC [Hour]')
     ax[3].set_ylabel('Temperature\n[$^{{\circ}}$C]')
-    fig1.tight_layout()
+    fig1.tight_layout(rect=[0,0,1,0.96])
     ax[3].xaxis.set_major_locator(plt.MaxNLocator(7))
     try:
         ax[0].set_title('{f.instname} - {f.daystr} {f.label}- Calculated input voltages'.format(f=s))
     except:
         pass
     
-    return [fig,fig1]
+    if 'mezz' in s.keys():
+        fig2,ax2 = plt.subplots(1,1)
+        plt.plot(s['UTC'],s['vis_block'])
+        plt.plot(s['UTC'],s['nir_block'])
+        plt.plot(s['UTC'],s['vis_board'])
+        plt.plot(s['UTC'],s['nir_board'])
+        plt.plot(s['UTC'],s['mezz'])
+        plt.grid()
+        plt.legend()
+        plt.xlabel('UTC [Hour]')
+        plt.ylabel(u'Temperature [°C]')
+        fig2.tight_layout(rect=[0,0,1,0.96])
+        ax2.xaxis.set_major_formatter(myFmt)
+        ax2.xaxis.set_major_locator(plt.MaxNLocator(7))
+        try:
+            ax2.set_title('{f.instname} - {f.daystr} {f.label}- Temperatures'.format(f=s))
+        except:
+            pass
+    else:
+        fig2 = None
+
+    return [fig,fig1,fig2]
 
 
-# In[123]:
+# In[7]:
 
 
 def plot_v(s,gain=0):
@@ -482,7 +526,7 @@ def plot_v(s,gain=0):
     return fig,ax
 
 
-# In[124]:
+# In[8]:
 
 
 def plot_v_expect(s,gain=0):
@@ -532,12 +576,13 @@ def plot_v_expect(s,gain=0):
     return fig,ax
 
 
-# In[211]:
+# In[49]:
 
 
 def plot_channel_multigain(s,ch=1,ns=300):
     'Plotting of a single wavelength (channel) over multiple gain stages. s:5STAR pd, ch: channel number, ns: smoothing window'
     from Sp_parameters import smooth
+    import matplotlib.dates as mdates
     myFmt = mdates.DateFormatter('%H:%M:%S')
     fig,ax = plt.subplots(3,1,sharex=True,figsize=(7,7))
 
@@ -575,7 +620,7 @@ def plot_channel_multigain(s,ch=1,ns=300):
     return fig, ax
 
 
-# In[224]:
+# In[50]:
 
 
 def plot_channels(s,fp,ns=300,dpi=600):
@@ -774,6 +819,32 @@ os.listdir(fp+'data/')
 
 
 s = reader_RADIOMETER(fp+'data/5STARG_20210114_125517_RADIOMETERS.dat')
+
+
+# ## Test 2021-01-25
+
+# In[11]:
+
+
+fp
+
+
+# In[12]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[64]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210125_154600_RADIOMETERS.dat')
+
+
+# In[58]:
+
+
+s.keys()
 
 
 # # Plot out data
@@ -1771,8 +1842,78 @@ fig.savefig(fp+'{s.instname}_{s.daystr}_rad_440nm_allch.png'.format(s=s),dpi=600
 plot_channels(s,fp,dpi=200)
 
 
-# In[ ]:
+# ## Plot out test 2021-01-25
+
+# In[30]:
 
 
+s.daystr
 
+
+# In[81]:
+
+
+os.makedirs(fp+'plots/{s.daystr}/'.format(s=s))
+
+
+# In[85]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[34]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.015,0.02)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[36]:
+
+
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.015,0.02)
+ax[1].set_ylim(-0.015,0.1)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[44]:
+
+
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(0.4,1.1)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[45]:
+
+
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-1.0,2.0)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[47]:
+
+
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.5,2.5)
+ax[1].set_ylim(-0.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[51]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}/'.format(s=s),dpi=200)
 
