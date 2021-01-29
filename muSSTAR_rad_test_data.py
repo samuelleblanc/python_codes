@@ -205,6 +205,78 @@
 # 
 #  5STARG_20210125_154600_RADIOMETERS.dat
 
+# ## Test 2021-01-26
+# I got another test done this morning. It is also a 2 hour drift test.
+# 
+# This is probably a very low priority test for a few reasons:
+# 
+# This test was done with the battery powered PDN Board
+# The batteries ran out of power part way through the test
+# For this test I left the NIR TEC drivers off, so the NIR cans were uncooled (as per last meeting's discussion)
+# 
+# The next thing I will do is our normal test (like the one I sent you this morning) with a hair dryer pointed at the system. It should be a much shorter test.
+# 
+# If there are any other tests you think I should run, please let me know. The system is currently set up and idle so now is a good time. Setting up and taking down the system is a bit time consuming.
+# 
+# Thank you for doing all of the analysis. I know you're busy.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+#  5STARG_20210126_103658_RADIOMETERS.dat
+#  
+#  
+#  
+# ====
+# I completed two additional tests today.
+# 
+# For Test 1, I used a hair dryer to warm the system by about 15-20 degrees.
+# 
+# For Test 2, I waved a group of incandescent lamps in front of the gershun tubes.
+# 
+# I'm guessing that I will have to redo some of these tests in terms of duration so let me know if there's any useful information in the tests.
+# 
+# Best,
+# 
+# Conrad
+# 
+# 5STARG_20210126_143946_RADIOMETERS_HeatTest.dat
+# 
+# 5STARG_20210126_154223_RADIOMETERS_IncandescentTest.dat
+# 
+
+# ## Test 2021-01-27
+# I have completed the "Speaker Wire" test. Based on what I was watching on the screen, I don't think there is any useful information in this but I thought I would send it along anyways.
+# 
+# I played tones through the speakers starting with off and then on in 30 second increments.
+# 
+# The pattern would follow this.
+# 
+# off-100-off-200-off-300-off-400-off-500-off-600-off-700-off
+# 
+# Where 100 is a 100hz. tone.
+# 
+# Best,
+# 
+# Conrad Esch
+
+# ## Test 2021-01-29
+# Another test.
+# 
+# I hooked two adc pins of the labjack into the OUTA and OUTB pins of the 1020nm NIR TEC Driver. It has an OUTA and an OUTB because it can drive the TEC in either direction to warm or cool the photodiode.
+# 
+# To do the test I had to remove some of the temperature processing. The temp sensors were still there but the data in the file is in raw voltages instead of Deg C. The conversion is "Temp = 10mv/DegC" so to get the correct temps the raw voltages need to be multiplied by 100.
+# 
+# For the TEC driver voltages, I think the most useful way to look at the data will be to take the difference, "NIR_1020_TECB-NIR_1020_TECA", of those data columns.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210128_155528_RADIOMETERS_TECDriverVoltages.dat
+# 
+
 # # Prepare python environment
 
 # In[1]:
@@ -845,6 +917,95 @@ s = reader_RADIOMETER(fp+'data/5STARG_20210125_154600_RADIOMETERS.dat')
 
 
 s.keys()
+
+
+# ## Test 2021-01-26
+
+# In[96]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[87]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210126_103658_RADIOMETERS.dat')
+
+
+# In[88]:
+
+
+s.keys()
+
+
+# In[89]:
+
+
+s.daystr
+
+
+# In[90]:
+
+
+s.label
+
+
+# In[97]:
+
+
+s2 = reader_RADIOMETER(fp+'data/5STARG_20210126_143946_RADIOMETERS_HeatTest.dat')
+s3 = reader_RADIOMETER(fp+'data/5STARG_20210126_154223_RADIOMETERS_IncandescentTest.dat')
+
+
+# In[98]:
+
+
+s2.label, s3.label
+
+
+# ## Test 2021-01-27
+
+# In[139]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[130]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210127_141658_RADIOMETERS_SpeakerWire.dat')
+
+
+# ## Test 2012-01-29
+
+# In[141]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210128_155528_RADIOMETERS_TECDriverVoltages.dat')
+
+
+# In[142]:
+
+
+s.keys()
+
+
+# In[144]:
+
+
+s['nir_block'] = s['nir_block']*100.0
+s['nir_board'] = s['nir_board']*100.0
+s['vis_block'] = s['vis_block']*100.0
+s['vis_board'] = s['vis_board']*100.0
+s['mezz'] = s['mezz']*100.0
+
+
+# In[145]:
+
+
+s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
 
 
 # # Plot out data
@@ -1916,4 +2077,302 @@ fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x_expect.pn
 
 
 plot_channels(s,fp+'plots/{s.daystr}/'.format(s=s),dpi=200)
+
+
+# ## Plot out test 2021-01-26
+
+# ### Battery test
+
+# In[91]:
+
+
+os.makedirs(fp+'plots/{s.daystr}/'.format(s=s))
+
+
+# In[92]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[94]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.025,0.01)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.025,0.025)
+ax[1].set_ylim(-0.25,0.1)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(-0.5,1.5)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-2.5,2.0)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-2.5,2.5)
+ax[1].set_ylim(-1.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[95]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}/'.format(s=s),dpi=200)
+
+
+# ### Heating test
+
+# In[99]:
+
+
+os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s2))
+
+
+# In[127]:
+
+
+fig = plot_housekeeping(s2)
+fig[0].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_Housekeeping.png'.format(s=s2),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_Housekeeping_inputV.png'.format(s=s2),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_Housekeeping_Temps.png'.format(s=s2),dpi=600,transparent=True)
+
+
+# In[128]:
+
+
+fig,ax = plot_v(s2,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.015,0.015)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_rad_1x.png'.format(s=s2),dpi=600,transparent=True)
+fig,ax = plot_v(s2,gain=1)
+ax[0].set_ylim(-0.025,0.025)
+ax[1].set_ylim(-0.0,0.55)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_rad_100x.png'.format(s=s2),dpi=600,transparent=True)
+fig,ax = plot_v(s2,gain=2)
+ax[0].set_ylim(-0.2,1.2)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_rad_100x_100x.png'.format(s=s2),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s2,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-1.0,1.5)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_rad_100x_expect.png'.format(s=s2),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s2,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.0,2.5)
+ax[1].set_ylim(-0.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_{s.label}_rad_100x_100x_expect.png'.format(s=s2),dpi=600,transparent=True)
+
+
+# In[106]:
+
+
+plot_channels(s2,fp+'plots/{s.daystr}_{s.label}/'.format(s=s2),dpi=200)
+
+
+# ### Incandescent light test
+
+# In[118]:
+
+
+s3.label = s3.label.split('_')[-1]
+
+
+# In[119]:
+
+
+os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s3))
+
+
+# In[120]:
+
+
+fig = plot_housekeeping(s3)
+fig[0].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_Housekeeping.png'.format(s=s3),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_Housekeeping_inputV.png'.format(s=s3),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_Housekeeping_Temps.png'.format(s=s3),dpi=600,transparent=True)
+
+
+# In[125]:
+
+
+fig,ax = plot_v(s3,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.02,0.2)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_1x.png'.format(s=s3),dpi=600,transparent=True)
+fig,ax = plot_v(s3,gain=1)
+ax[0].set_ylim(-0.015,2.0)
+ax[1].set_ylim(-0.0,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_100x.png'.format(s=s3),dpi=600,transparent=True)
+fig,ax = plot_v(s3,gain=2)
+ax[0].set_ylim(-0.5,10.5)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_100x_100x.png'.format(s=s3),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s3,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-0.5,1.5)
+ax[1].set_ylim(-2.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_100x_expect.png'.format(s=s3),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s3,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.5,10.5)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_100x_100x_expect.png'.format(s=s3),dpi=600,transparent=True)
+
+
+# In[126]:
+
+
+plot_channels(s3,fp+'plots/{s.daystr}_{s.label}/'.format(s=s3),dpi=200)
+
+
+# ## Plot out test 2021-01-27
+
+# In[133]:
+
+
+s.label = s.label.split('_')[-1]
+
+
+# In[134]:
+
+
+os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s))
+
+
+# In[135]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[137]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.01,0.01)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.01,0.025)
+ax[1].set_ylim(0.0,0.12)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(0.4,1.6)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-2.5,2.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-2.5,2.5)
+ax[1].set_ylim(-1.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[138]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# ## Plot out test 2021-01-29 - TEC voltages
+
+# In[146]:
+
+
+s.label = s.label.split('_')[-1]
+
+
+# In[147]:
+
+
+os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s))
+
+
+# In[148]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[165]:
+
+
+fig,ax = plt.subplots(2,1,sharex=True)
+ax[0].plot(s['UTC'],s['nir_1020_teca'],'.')
+ax[0].plot(s['UTC'],s['nir_1020_tecb'],'.')
+ax[1].plot(s['UTC'],s['nir_tec_V'],'-',label='tecb - teca',lw=0.2)
+ax[0].legend()
+ax[1].legend()
+ax[1].set_xlabel('UTC [Hour]')
+ax[0].set_ylabel('TEC Voltages [V]')
+ax[1].set_ylabel('TEC Difference [V]')
+ax[0].set_title('{s.instname} - {s.daystr} {s.label}- NIR 1020 nm TEC Voltages'.format(s=s))
+ax[1].xaxis.set_major_locator(plt.MaxNLocator(7))
+import matplotlib.dates as mdates
+myFmt = mdates.DateFormatter('%H:%M:%S')
+ax[1].xaxis.set_major_formatter(myFmt)
+ax[1].grid()
+ax[0].grid()
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_NIR_TECvoltages.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[161]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.01,0.015)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.01,0.025)
+ax[1].set_ylim(0.0,0.22)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(0.4,1.6)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-2.5,2.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-0.5,2.5)
+ax[1].set_ylim(-1.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[162]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+
 

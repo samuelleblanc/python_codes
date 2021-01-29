@@ -674,7 +674,76 @@ ax[1].set_ylabel('Fine Mode Fraction')
 plt.savefig(fp+'plot/KORUS_GOCI_AOD_daily_avgs.png',dpi=600,transparent=True)
 
 
-# In[137]:
+# In[142]:
+
+
+plt.figure()
+plt.hist([goci_time['aod_mean'],gociar_time['aod_mean'],ar_time['aod_mean']],label=['GOCI Regional','GOCI flight','4STAR'],
+         range=[0,1.5],normed=True)
+plt.legend()
+
+plt.axvline(np.nanmean(goci_time['aod_mean']),ls='-',alpha=0.5,c='tab:blue')
+plt.axvline(np.nanmedian(goci_time['aod_mean']),ls='--',alpha=0.5,c='tab:blue')
+plt.axvline(np.nanmean(gociar_time['aod_mean']),ls='-',alpha=0.5,c='tab:orange')
+plt.axvline(np.nanmedian(gociar_time['aod_mean']),ls='--',alpha=0.5,c='tab:orange')
+plt.axvline(np.nanmean(ar_time['aod_mean']),ls='-',alpha=0.5,c='tab:green')
+plt.axvline(np.nanmedian(ar_time['aod_mean']),ls='--',alpha=0.5,c='tab:green')
+plt.xlabel('AOD$_{{500}}$')
+
+
+# In[143]:
+
+
+plt.figure()
+plt.hist([goci_time['fmf_mean'],gociar_time['fmf_mean'],ar_time['fmf_mean']],label=['GOCI Regional','GOCI flight','4STAR'],
+         range=[0,1.0],normed=True)
+plt.legend()
+
+plt.axvline(np.nanmean(goci_time['fmf_mean']),ls='-',alpha=0.5,c='tab:blue')
+plt.axvline(np.nanmedian(goci_time['fmf_mean']),ls='--',alpha=0.5,c='tab:blue')
+plt.axvline(np.nanmean(gociar_time['fmf_mean']),ls='-',alpha=0.5,c='tab:orange')
+plt.axvline(np.nanmedian(gociar_time['fmf_mean']),ls='--',alpha=0.5,c='tab:orange')
+plt.axvline(np.nanmean(ar_time['fmf_mean']),ls='-',alpha=0.5,c='tab:green')
+plt.axvline(np.nanmedian(ar_time['fmf_mean']),ls='--',alpha=0.5,c='tab:green')
+plt.xlabel('Fine Mode Fraction')
+
+
+# In[147]:
+
+
+fig, ax = plt.subplots(2,1)
+ax[0].hist([goci_time['aod_mean'],gociar_time['aod_mean'],ar_time['aod_mean']],
+           label=['GOCI Regional','GOCI flight','4STAR'],range=[0,1.5],normed=True)
+
+
+ax[0].axvline(np.nanmean(goci_time['aod_mean']),ls='-',alpha=0.5,c='tab:blue')
+ax[0].axvline(np.nanmedian(goci_time['aod_mean']),ls='--',alpha=0.5,c='tab:blue')
+ax[0].axvline(np.nanmean(gociar_time['aod_mean']),ls='-',alpha=0.5,c='tab:orange')
+ax[0].axvline(np.nanmedian(gociar_time['aod_mean']),ls='--',alpha=0.5,c='tab:orange')
+ax[0].axvline(np.nanmean(ar_time['aod_mean']),ls='-',alpha=0.5,c='tab:green')
+ax[0].axvline(np.nanmedian(ar_time['aod_mean']),ls='--',alpha=0.5,c='tab:green')
+ax[0].axvline([np.nan],ls='-',alpha=0.5,c='k',label='mean')
+ax[0].axvline([np.nan],ls='--',alpha=0.5,c='k',label='median')
+ax[0].legend()
+ax[0].set_xlabel('AOD$_{{500}}$')
+
+ax[1].hist([goci_time['fmf_mean'],gociar_time['fmf_mean'],ar_time['fmf_mean']],
+           label=['GOCI Regional','GOCI flight','4STAR'],range=[0,1.0],normed=True)
+ax[1].legend()
+
+ax[1].axvline(np.nanmean(goci_time['fmf_mean']),ls='-',alpha=0.5,c='tab:blue')
+ax[1].axvline(np.nanmedian(goci_time['fmf_mean']),ls='--',alpha=0.5,c='tab:blue')
+ax[1].axvline(np.nanmean(gociar_time['fmf_mean']),ls='-',alpha=0.5,c='tab:orange')
+ax[1].axvline(np.nanmedian(gociar_time['fmf_mean']),ls='--',alpha=0.5,c='tab:orange')
+ax[1].axvline(np.nanmean(ar_time['fmf_mean']),ls='-',alpha=0.5,c='tab:green')
+ax[1].axvline(np.nanmedian(ar_time['fmf_mean']),ls='--',alpha=0.5,c='tab:green')
+ax[1].set_xlabel('Fine Mode Fraction')
+plt.tight_layout()
+
+plt.savefig(fp+'plot/KORUS_GOCI_hist_daily_avgs.png',dpi=600,transparent=True)
+
+
+# In[118]:
 
 
 angs.shape, fmf['eta'].shape
@@ -748,23 +817,38 @@ goci_time['doys'][igt]
 np.isfinite(gociar_time['std_aod_goci'])
 
 
-# In[114]:
+# In[122]:
 
 
 istd = np.isfinite(gociar_time['std_aod_goci'])
 
 plt.figure()
 plt.plot(ar_time['doys'],ar_time['delta_aod_gociar'],'x',label='4STAR - GOCI flights')
-plt.plot(ar_time['doys'],gociar_time['delta_aod_goci'],'+',label='GOCI flights - GOCI regional')
 iout = abs(gociar_time['delta_aod_goci'])>gociar_time['std_aod_goci']
-plt.plot(ar_time['doys'][iout],gociar_time['delta_aod_goci'][iout],'+',c='tab:orange',mew=2,label='Sampling not representative')
+plt.plot(ar_time['doys'][~iout],gociar_time['delta_aod_goci'][~iout],'+',label='GOCI flights - GOCI regional',mew=2)
+
+plt.plot(ar_time['doys'][iout],gociar_time['delta_aod_goci'][iout],'+',c='tab:orange',mew=0.5,label='Sampling not representative')
 plt.axhline(0,ls='--',c='grey',alpha=0.2,zorder=-10)
 plt.fill_between(ar_time['doys'][istd],0.0-gociar_time['std_aod_goci'][istd],gociar_time['std_aod_goci'][istd],
-                 color='grey',alpha=0.2,label='regional variation')
+                 color='grey',alpha=0.2,label='regional variation',lw=0.0)
 plt.legend()
 plt.xlabel('DOY')
 plt.ylabel('Difference in AOD daily averages')
 plt.savefig(fp+'plot/KORUS_GOCI_AOD_sampling_representative.png',dpi=600,transparent=True)
+
+
+# In[131]:
+
+
+plt.figure()
+plt.hist(abs(gociar_time['delta_aod_goci']),range=[0,0.4],bins=15,label='GOCI')
+plt.xlabel('Difference in AOD daily averages (regional to flight sampling)')
+
+
+# In[ ]:
+
+
+
 
 
 # ## Load MERRA2
@@ -972,26 +1056,26 @@ plt.plot(ar['doys'],ar['AOD0501'],'.')
 # 
 # Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavg1_2d_aer_Nx: 2d,1-Hourly,Time-averaged,Single-Level,Assimilation,Aerosol Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), Accessed: 2020-09-17, 10.5067/KLICLTZ8EM9D
 
-# In[163]:
+# In[150]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2/aer')
 
 
-# In[164]:
+# In[151]:
 
 
 ml = [ m for m in ml if m.endswith('nc4')] 
 ml.sort()
 
 
-# In[165]:
+# In[152]:
 
 
 mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+ml[0])
 
 
-# In[166]:
+# In[153]:
 
 
 merra = []
@@ -1003,43 +1087,43 @@ for m in ml:
     merra.append(mtmp)
 
 
-# In[167]:
+# In[161]:
 
 
 len(merra),len(ml)
 
 
-# In[168]:
+# In[155]:
 
 
 mdict.keys()
 
 
-# In[169]:
+# In[156]:
 
 
 mdict['TOTANGSTR']
 
 
-# In[170]:
+# In[157]:
 
 
 mdict['TOTEXTTAU']
 
 
-# In[171]:
+# In[158]:
 
 
 merra[0]['time']/60.0/24.0
 
 
-# In[172]:
+# In[159]:
 
 
 merra[0]['time']
 
 
-# In[173]:
+# In[162]:
 
 
 delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
@@ -1047,13 +1131,13 @@ delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
 
 # #### Collocate new version to 4STAR
 
-# In[174]:
+# In[163]:
 
 
 merra_doy = [datetime(int(l[-12:-8]),int(l[-8:-6]),int(l[-6:-4])).timetuple().tm_yday for l in ml]
 
 
-# In[175]:
+# In[164]:
 
 
 for m in merra:
@@ -1061,19 +1145,19 @@ for m in merra:
     m['ae'] = m['TOTANGSTR']
 
 
-# In[176]:
+# In[165]:
 
 
 im4 = Sp.find_closest(np.array(merra_doy),(ar['doys']+delta_time).astype(int))
 
 
-# In[177]:
+# In[166]:
 
 
 np.unique(im4)
 
 
-# In[178]:
+# In[167]:
 
 
 nmerra = len(merra)
@@ -1082,7 +1166,7 @@ nlon = len(merra[0]['lon'])
 ntime = len(merra[0]['time'])
 
 
-# In[179]:
+# In[168]:
 
 
 merra2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'ae':[],'ind':[]}
@@ -1113,7 +1197,7 @@ for k in merra2ar.keys():
     merra2ar[k] = np.array(merra2ar[k])
 
 
-# In[180]:
+# In[169]:
 
 
 plt.figure()
@@ -1123,7 +1207,7 @@ plt.plot(ar['doys'],ar['AOD0501'],'.')
 
 # ### Make daily regional averages
 
-# In[184]:
+# In[170]:
 
 
 j = 2
@@ -1131,27 +1215,27 @@ j = 2
     merra[j]['lat'].min(), merra[j]['lat'].max(),merra[j]['lon'].min(), merra[j]['lon'].max())
 
 
-# In[183]:
+# In[171]:
 
 
 lat_rg = [33.8,37.6] # from percentiles of 4STAR data
 lon_rg = [124.3,129.4]
 
 
-# In[187]:
+# In[172]:
 
 
 imerra_rg_lat = (merra[0]['lat']>lat_rg[0]) & (merra[0]['lat']<lat_rg[1])
 imerra_rg_lon = (merra[0]['lon']>lon_rg[0]) & (merra[0]['lon']<lon_rg[1])
 
 
-# In[188]:
+# In[173]:
 
 
 imerra_rg_lat.shape, imerra_rg_lon.shape
 
 
-# In[208]:
+# In[174]:
 
 
 merra_time = {}
@@ -1167,7 +1251,7 @@ merra_time['ae_std'] = np.array([np.nanstd(g['ae'][:,imerra_rg_lat,:][:,:,imerra
 merra_time['doys'] = np.array(merra_doy)+0.5
 
 
-# In[210]:
+# In[175]:
 
 
 merraar_time = {'aod_mean':[],'aod_median':[],'aod_std':[],
@@ -1215,6 +1299,41 @@ ax[1].set_ylabel('Fine Mode Fraction')
 
 
 plt.savefig(fp+'plot/KORUS_MERRA_AOD_daily_avgs.png',dpi=600,transparent=True)
+
+
+# In[177]:
+
+
+fig, ax = plt.subplots(2,1)
+ax[0].hist([merra_time['aod_mean'],merraar_time['aod_mean'],ar_time['aod_mean']],
+           label=['MERRA Regional','MERRA flight','4STAR'],range=[0,1.5],normed=True)
+
+
+ax[0].axvline(np.nanmean(merra_time['aod_mean']),ls='-',alpha=0.5,c='tab:blue')
+ax[0].axvline(np.nanmedian(merra_time['aod_mean']),ls='--',alpha=0.5,c='tab:blue')
+ax[0].axvline(np.nanmean(merraar_time['aod_mean']),ls='-',alpha=0.5,c='tab:orange')
+ax[0].axvline(np.nanmedian(merraar_time['aod_mean']),ls='--',alpha=0.5,c='tab:orange')
+ax[0].axvline(np.nanmean(ar_time['aod_mean']),ls='-',alpha=0.5,c='tab:green')
+ax[0].axvline(np.nanmedian(ar_time['aod_mean']),ls='--',alpha=0.5,c='tab:green')
+ax[0].axvline([np.nan],ls='-',alpha=0.5,c='k',label='mean')
+ax[0].axvline([np.nan],ls='--',alpha=0.5,c='k',label='median')
+ax[0].legend()
+ax[0].set_xlabel('AOD$_{{500}}$')
+
+ax[1].hist([merra_time['ae_mean'],merraar_time['ae_mean'],ar_time['ae_mean']],
+           label=['MERRA Regional','MERRA flight','4STAR'],range=[0,2.2],normed=True)
+ax[1].legend()
+
+ax[1].axvline(np.nanmean(merra_time['ae_mean']),ls='-',alpha=0.5,c='tab:blue')
+ax[1].axvline(np.nanmedian(merra_time['ae_mean']),ls='--',alpha=0.5,c='tab:blue')
+ax[1].axvline(np.nanmean(merraar_time['ae_mean']),ls='-',alpha=0.5,c='tab:orange')
+ax[1].axvline(np.nanmedian(merraar_time['ae_mean']),ls='--',alpha=0.5,c='tab:orange')
+ax[1].axvline(np.nanmean(ar_time['ae_mean']),ls='-',alpha=0.5,c='tab:green')
+ax[1].axvline(np.nanmedian(ar_time['ae_mean']),ls='--',alpha=0.5,c='tab:green')
+ax[1].set_xlabel('Angstrom Exponent')
+plt.tight_layout()
+
+plt.savefig(fp+'plot/KORUS_MERRA_hist_daily_avgs.png',dpi=600,transparent=True)
 
 
 # ## Load in situ extinction
