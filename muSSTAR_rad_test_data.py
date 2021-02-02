@@ -261,7 +261,7 @@
 # 
 # Conrad Esch
 
-# ## Test 2021-01-29
+# ## Test 2021-01-28
 # Another test.
 # 
 # I hooked two adc pins of the labjack into the OUTA and OUTB pins of the 1020nm NIR TEC Driver. It has an OUTA and an OUTB because it can drive the TEC in either direction to warm or cool the photodiode.
@@ -275,6 +275,37 @@
 # Conrad Esch
 # 
 # 5STARG_20210128_155528_RADIOMETERS_TECDriverVoltages.dat
+# 
+
+# ## Test 2021-01-29
+
+# Last friday I ran a test where I ran the system for 1 hour with the NIR detectors covered and then ran for another hour with the NIR detectors uncovered.
+# 
+# Included is the data.
+# 
+# I'm currently running a 6 hour drift test and will be digging into the spec sheets on our photodiodes looking for indicated differences between the NIR and VIS diodes.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 
+# 5STARG_20210129_163011_RADIOMETERS_CoverONOFF.dat
+# 
+
+# ## Test 2021-02-01 6 hour drift test
+
+# Got the 6 hour drift test done.
+# 
+# I think there is some very useful data in it for the NIR 100x channels.
+# 
+# It is a very large file, does this track with the file size for other systems like 4STAR?
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210201_120748_RADIOMETERS_6HOUR.dat
 # 
 
 # # Prepare python environment
@@ -309,7 +340,7 @@ fp = getpath(name)
 
 # # Make functions for faster analysis
 
-# In[27]:
+# In[97]:
 
 
 def reader_RADIOMETER(file_in,lat = 36.970087, lon = -122.052537, alt = 74.0):
@@ -388,6 +419,24 @@ Modification History:
     s['ref12v_neg'] = s['12neg_0_33']*3.0
     s['5vtef_tempC'] = s['5vref_temp']/0.0021-273.15
     
+    # run some calculations
+    if 'nir_1020_tecb' in s.keys(): s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
+    v2c = 100.0 #  "Temp = 10mv/DegC"
+    if 'nir_block' in s.keys():
+        if (min(s['nir_block']) > 0.0) & (max(s['nir_block']) < 1.0):
+            s['nir_block'] = s['nir_block']*v2c
+            s['nir_board'] = s['nir_board']*v2c
+            s['vis_block'] = s['vis_block']*v2c
+            s['vis_board'] = s['vis_board']*v2c
+            s['mezz'] = s['mezz']*v2c
+    if 'nir_block_temp' in s.keys():
+        if (min(s['nir_block_temp']) > 0.0) & (max(s['nir_block_temp']) < 1.0):
+            s['nir_block'] = s['nir_block_temp']*v2c
+            s['nir_board'] = s['nir_board_temp']*v2c
+            s['vis_block'] = s['vis_block_temp']*v2c
+            s['vis_board'] = s['vis_board_temp']*v2c
+            s['mezz'] = s['mezz']*v2c
+    
     print len(s['UTC']),len(s['ref5v'])
     
     # now run through and calculate the voltages  compared to reference voltages
@@ -403,7 +452,7 @@ Modification History:
     return s
 
 
-# In[63]:
+# In[98]:
 
 
 def define_long_names(s):
@@ -442,7 +491,7 @@ def define_long_names(s):
         'CH9_0':'2200 nm 1x',
         'CH9_2':'2200 nm 100x',
         'CH9_4':'2200 nm 100x 100x',
-        'spare':'Empty [V]',
+        'spare':'Spare - Empty [V]',
         '5vref_temp':'5Vref Temp, 2.1mV/DegC [V]',
         '5vtef_tempC':'Temp of 5Vref [°C]',
         '12pos_0_33':'1/3 of +12V rail [V/3]',
@@ -472,7 +521,7 @@ def define_long_names(s):
         s[k].name = names.get(k,'Undefined')
 
 
-# In[84]:
+# In[86]:
 
 
 def plot_housekeeping(s):
@@ -553,11 +602,30 @@ def plot_housekeeping(s):
             pass
     else:
         fig2 = None
+        
+    if 'nir_tec_V' in s.keys():
+        fig3,ax = plt.subplots(2,1,sharex=True)
+        ax[0].plot(s['UTC'],s['nir_1020_teca'],'.')
+        ax[0].plot(s['UTC'],s['nir_1020_tecb'],'.')
+        ax[1].plot(s['UTC'],s['nir_tec_V'],'-',label='tecb - teca',lw=0.2)
+        ax[0].legend()
+        ax[1].legend()
+        ax[1].set_xlabel('UTC [Hour]')
+        ax[0].set_ylabel('TEC Voltages [V]')
+        ax[1].set_ylabel('TEC Difference [V]')
+        ax[0].set_title('{s.instname} - {s.daystr} {s.label}- NIR 1020 nm TEC Voltages'.format(s=s))
+        ax[1].xaxis.set_major_locator(plt.MaxNLocator(7))
+        myFmt = mdates.DateFormatter('%H:%M:%S')
+        ax[1].xaxis.set_major_formatter(myFmt)
+        ax[1].grid()
+        ax[0].grid()
+    else:
+        fig3 = None
 
-    return [fig,fig1,fig2]
+    return [fig,fig1,fig2,fig3]
 
 
-# In[7]:
+# In[87]:
 
 
 def plot_v(s,gain=0):
@@ -598,7 +666,7 @@ def plot_v(s,gain=0):
     return fig,ax
 
 
-# In[8]:
+# In[88]:
 
 
 def plot_v_expect(s,gain=0):
@@ -648,7 +716,7 @@ def plot_v_expect(s,gain=0):
     return fig,ax
 
 
-# In[49]:
+# In[89]:
 
 
 def plot_channel_multigain(s,ch=1,ns=300):
@@ -692,7 +760,43 @@ def plot_channel_multigain(s,ch=1,ns=300):
     return fig, ax
 
 
-# In[50]:
+# In[162]:
+
+
+def plot_gains(s,ch,ns=300):
+    'Plotting the ratio between the different gain stages for one wavelength'
+    from Sp_parameters import smooth
+    import plotting_utils as pu
+
+    fig,ax = plt.subplots(1,2,figsize=(7,3))
+    cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
+    ic = (ch-1)%5
+    igood = (s['V{}_0'.format(ch)] < 10.3) & (s['V{}_2'.format(ch)] < 10.3) 
+    ax[0].plot(smooth(s['V{}_0'.format(ch)][igood],ns,old=True),s['V{}_2'.format(ch)][igood],'.',
+               alpha=0.02,label=s['V{}_0'.format(ch)].name,c=cs[ic])
+    pu.plot_lin(smooth(s['V{}_0'.format(ch)][igood],ns,old=True),s['V{}_2'.format(ch)][igood],
+                lblfmt='2.5f',ax=ax[0],color=cs[ic])
+    ax[0].legend()
+    ax[0].set_ylabel(s['V{}_2'.format(ch)].name)
+    ax[0].set_xlabel('smooth ('+s['V{}_0'.format(ch)].name+')')
+    ax[0].xaxis.set_major_locator(plt.MaxNLocator(5))
+
+    igood2 = (s['V{}_2'.format(ch)] < 10.3) & (s['V{}_4'.format(ch)] < 10.3) 
+    ax[1].plot(smooth(s['V{}_2'.format(ch)][igood2],ns,old=True),s['V{}_4'.format(ch)][igood2],'.',
+               alpha=0.02,label=s['V{}_2'.format(ch)].name,c=cs[ic])
+    pu.plot_lin(smooth(s['V{}_2'.format(ch)][igood2],ns,old=True),s['V{}_4'.format(ch)][igood2],
+                lblfmt='2.5f',ax=ax[1],color=cs[ic])
+    ax[1].legend()
+    ax[1].set_ylabel(s['V{}_4'.format(ch)].name)
+    ax[1].set_xlabel('smooth ('+s['V{}_2'.format(ch)].name+')')
+    ax[1].xaxis.set_major_locator(plt.MaxNLocator(5))
+
+    fig.tight_layout()
+    fig.suptitle('V{}'.format(ch))
+    return fig,ax
+
+
+# In[90]:
 
 
 def plot_channels(s,fp,ns=300,dpi=600):
@@ -702,6 +806,83 @@ def plot_channels(s,fp,ns=300,dpi=600):
         u = 'V{}_0'.format(i+1)
         fig.savefig(fp+'{s.instname}_{s.daystr}_rad_{wvl}_allch.png'.format(s=s,wvl=s[u].name.split()[0]),
                     dpi=dpi,transparent=True)
+
+
+# In[152]:
+
+
+def plot_all_gainratios(s,fpp,ns=300,dpi=300):
+    'Run through and plot each wavelenght and gain stage ratios'
+    for i in xrange(9):
+        fig,ax = plot_gains(s,i+1,ns=ns)
+        u = 'V{}_0'.format(i+1)
+        fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_{wvl}_gainratios.png'.format(s=s,wvl=s[u].name.split()[0]),
+                    dpi=dpi,transparent=True)
+
+
+# In[109]:
+
+
+def clean_up_and_prep_for_plots(s,fpp):
+    'to clean up the label and make the path for plotting, and other pre-plotting setups'
+    if len(s.label.split('_'))>1:
+        s.label = s.label.split('_')[-1]
+    if not os.path.isdir(fpp+'{s.daystr}_{s.label}/'.format(s=s)):
+        os.makedirs(fpp+'{s.daystr}_{s.label}/'.format(s=s))
+
+
+# In[93]:
+
+
+def plt_hskp(s,fpp,dpi=300):
+    'plot all the housekeeping files and save them'
+    fig = plot_housekeeping(s)
+    fig[0].savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=dpi,transparent=True)
+    fig[1].savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=dpi,transparent=True)
+    try:
+        fig[2].savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        pass
+    try:
+        fig[3].savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_NIR_TECvoltages.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        pass
+    #return fig
+
+
+# In[107]:
+
+
+def plt_gains(s,fpp,dpi=300):
+    'plot all the different channels seperated by the gains'
+    fig1,ax1 = plot_v(s,gain=0)
+    ax1[0].autoscale(axis='y')
+    ax1[1].autoscale(axis='y')
+    fig1.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=dpi,transparent=True)
+
+    fig2,ax2 = plot_v(s,gain=1)
+    ax2[0].autoscale(axis='y')
+    ax2[1].autoscale(axis='y')
+    fig2.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    
+    fig3,ax3 = plot_v(s,gain=2)
+    ax3[0].autoscale(axis='y')
+    ax3[1].autoscale(axis='y')
+    fig3.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    
+    fig4,ax4 = plot_v_expect(s,gain=0)
+    #plt.title('5STARG radiometers 1x 2020-11-17')
+    ax4[0].autoscale(axis='y')
+    ax4[1].autoscale(axis='y')
+    fig4.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
+    
+    fig5,ax5 = plot_v_expect(s,gain=1)
+    #plt.title('5STARG radiometers 1x 2020-11-17')
+    ax5[0].autoscale(axis='y')
+    ax5[1].autoscale(axis='y')
+    fig5.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
+    
+    #return [fig1,fig2,fig3,fig4,fig5],[ax1,ax2,ax3,ax4,ax5]
 
 
 # # Load files
@@ -978,7 +1159,7 @@ os.listdir(fp+'data/')
 s = reader_RADIOMETER(fp+'data/5STARG_20210127_141658_RADIOMETERS_SpeakerWire.dat')
 
 
-# ## Test 2012-01-29
+# ## Test 2012-01-28
 
 # In[141]:
 
@@ -1006,6 +1187,62 @@ s['mezz'] = s['mezz']*100.0
 
 
 s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
+
+
+# ## Test 2021-01-29 - on/off cover
+
+# In[11]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[13]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210129_163011_RADIOMETERS_CoverONOFF.dat')
+
+
+# In[14]:
+
+
+s.keys()
+
+
+# In[15]:
+
+
+s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
+
+
+# In[18]:
+
+
+s['nir_block'] = s['nir_block_temp']*100.0
+s['nir_board'] = s['nir_board_temp']*100.0
+s['vis_block'] = s['vis_block_temp']*100.0
+s['vis_board'] = s['vis_board_temp']*100.0
+s['mezz'] = s['mezz']*100.0
+
+
+# ## Test 2021-02-01 - 6 hour test
+
+# In[99]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[100]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210201_120748_RADIOMETERS_6HOUR.dat')
+
+
+# In[101]:
+
+
+s.keys()
 
 
 # # Plot out data
@@ -2293,7 +2530,7 @@ fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 
-# ## Plot out test 2021-01-29 - TEC voltages
+# ## Plot out test 2021-01-28 - TEC voltages
 
 # In[146]:
 
@@ -2366,6 +2603,116 @@ fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x
 
 
 # In[162]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# ## Plot out test 2021-01-29 - on/off cover
+
+# In[19]:
+
+
+s.label = s.label.split('_')[-1]
+
+
+# In[20]:
+
+
+os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s))
+
+
+# In[21]:
+
+
+fig = plot_housekeeping(s)
+fig[0].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600,transparent=True)
+fig[1].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
+fig[2].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[22]:
+
+
+fig,ax = plt.subplots(2,1,sharex=True)
+ax[0].plot(s['UTC'],s['nir_1020_teca'],'.')
+ax[0].plot(s['UTC'],s['nir_1020_tecb'],'.')
+ax[1].plot(s['UTC'],s['nir_tec_V'],'-',label='tecb - teca',lw=0.2)
+ax[0].legend()
+ax[1].legend()
+ax[1].set_xlabel('UTC [Hour]')
+ax[0].set_ylabel('TEC Voltages [V]')
+ax[1].set_ylabel('TEC Difference [V]')
+ax[0].set_title('{s.instname} - {s.daystr} {s.label}- NIR 1020 nm TEC Voltages'.format(s=s))
+ax[1].xaxis.set_major_locator(plt.MaxNLocator(7))
+import matplotlib.dates as mdates
+myFmt = mdates.DateFormatter('%H:%M:%S')
+ax[1].xaxis.set_major_formatter(myFmt)
+ax[1].grid()
+ax[0].grid()
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_NIR_TECvoltages.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[23]:
+
+
+fig,ax = plot_v(s,gain=0)
+ax[0].set_ylim(-0.015,0.015)
+ax[1].set_ylim(-0.01,0.015)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=1)
+ax[0].set_ylim(-0.01,0.025)
+ax[1].set_ylim(0.0,0.22)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v(s,gain=2)
+ax[0].set_ylim(0.4,1.6)
+ax[1].set_ylim(-1.5,10.5)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=0)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-1.2,1.2)
+ax[1].set_ylim(-2.5,2.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+fig,ax = plot_v_expect(s,gain=1)
+#plt.title('5STARG radiometers 1x 2020-11-17')
+ax[0].set_ylim(-0.5,2.5)
+ax[1].set_ylim(-1.5,11.0)
+fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
+
+
+# In[24]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# ## Plot out test 2021-02-01 - 6 hour drift
+
+# In[105]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[106]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[108]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[163]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[54]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
