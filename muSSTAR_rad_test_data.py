@@ -452,7 +452,7 @@ Modification History:
     return s
 
 
-# In[98]:
+# In[219]:
 
 
 def define_long_names(s):
@@ -512,7 +512,8 @@ def define_long_names(s):
         'nir_board':u'NIR Board temp [°C]',
         'vis_block':u'VIS Block temp [°C]',
         'vis_board':u'VIS Board temp [°C]',
-        'mezz':u'Mezzanine board temp [°C]'}
+        'mezz':u'Mezzanine board temp [°C]',
+        'nir_tec_V':'TEC difference voltage [V]'}
     for k in names.keys():
         if k.startswith('CH'):
             names[k.replace('CH','V')] = names[k]+' [V]'
@@ -796,6 +797,29 @@ def plot_gains(s,ch,ns=300):
     return fig,ax
 
 
+# In[223]:
+
+
+def plot_corr_temp(s,ig=0,tmp='nir_block'):
+    'Plot some correlation plots of the voltages vs. temp'
+    import plotting_utils as pu
+    #tmp = ['nir_block','nir_board','vis_block','vis_board','mezz'][it]
+    cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
+    fig,ax = plt.subplots(3,3,sharex=True)
+    for ia, x in enumerate(ax.ravel()):
+        goods = s['V{}_{}'.format(ia+1,ig)]<10.3
+        r = np.corrcoef(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods])[0,1]
+        x.plot(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods],'.',alpha=0.01,label='R$^2$={:1.4f}'.format(r*r),c=cs[ig])
+        pu.plot_lin(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods],ax=x,lblfmt='1.4f',color=cs[ig])
+        x.legend(frameon=False, prop={'size': 6})
+        x.set_ylabel('V{}_{}, '.format(ia+1,ig)+s['V{}_{}'.format(ia+1,ig)].name.split(' ')[0]+' [V]')
+        if (ia+1)>6: 
+            x.set_xlabel(s[tmp].name)
+    fig.suptitle('{s.instname} - {s.daystr} {s.label}- Correlation with temp'.format(s=s))
+    fig.tight_layout(rect=(0,0,1,0.97))
+    return fig
+
+
 # In[90]:
 
 
@@ -883,6 +907,18 @@ def plt_gains(s,fpp,dpi=300):
     fig5.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
     
     #return [fig1,fig2,fig3,fig4,fig5],[ax1,ax2,ax3,ax4,ax5]
+
+
+# In[216]:
+
+
+def plt_corrs(s,fpp,dpi=300):
+    'Run through the different gains and temperatures'
+    for ig in [0,2,4]:
+        for it in ['nir_block','vis_block','nir_tec_V']:
+            fig = plot_corr_temp(s,ig,it)
+            fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_corr_gain{}_temp{}.png'.format(ig,it,s=s),
+                         dpi=dpi,transparent=True)
 
 
 # # Load files
@@ -1830,7 +1866,7 @@ for i,si, in enumerate(ss):
 
 # #### 100x - 100x
 
-# In[56]:
+# In[ ]:
 
 
 for i, si in enumerate(ss):
@@ -1865,7 +1901,7 @@ for i, si in enumerate(ss):
     plt.savefig(fp+'20201104_rad_test_100x_100x_'+Titles[i]+'ref.png',dpi=600,transparent=True)
 
 
-# In[59]:
+# In[ ]:
 
 
 for i,si in enumerate(ss):
@@ -1913,7 +1949,7 @@ for i,si in enumerate(ss):
     plt.savefig(fp+'20201104_rad_test_100x_100x_ref_expect'+Titles[i]+'.png',dpi=600,transparent=True)
 
 
-# In[62]:
+# In[ ]:
 
 
 for i,si in enumerate(ss):
@@ -2234,7 +2270,7 @@ plt.tight_layout()
 fig.savefig(fp+'{s.instname}_{s.daystr}_rad_440nm_allch.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[227]:
+# In[ ]:
 
 
 plot_channels(s,fp,dpi=200)
@@ -2310,7 +2346,7 @@ ax[1].set_ylim(-0.5,11.0)
 fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[51]:
+# In[ ]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}/'.format(s=s),dpi=200)
@@ -2497,7 +2533,7 @@ fig[1].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeepi
 fig[2].savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[137]:
+# In[ ]:
 
 
 fig,ax = plot_v(s,gain=0)
@@ -2718,8 +2754,8 @@ plot_all_gainratios(s,fp+'plots/')
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 
-# In[ ]:
+# In[224]:
 
 
-
+plt_corrs(s,fp+'plots/')
 
