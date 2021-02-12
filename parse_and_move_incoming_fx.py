@@ -46,7 +46,7 @@
 
 from __future__ import print_function
 import dateutil.parser
-import re
+import re, os
 from pathlib2 import Path
 from datefinder import find_dates
 from datetime import date, datetime

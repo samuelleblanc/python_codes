@@ -41,13 +41,8 @@
 # In[2]:
 
 
+from __future__ import print_function 
 from parse_and_move_incoming_fx import get_date_and_string,      pull_labels, get_season, filetypes, get_newfilepath, get_filters_from_json,      recurse_through_dir, make_temp_mfile, move_files
-
-
-# In[1]:
-
-
-from __future__ import print_function
 
 
 # # Prepare the command line argument parser
@@ -142,7 +137,9 @@ for item in os.listdir(in_directory): # loop through items in dir
         zip_ref = zipfile.ZipFile(str(file_name)) # create zipfile object
         if verbose: 
             print( '{prefix}found zip file: {file_name}, extracting here.'.format(prefix=prefix,file_name=file_name))
-        if not dry_run: zip_ref.extractall(in_directory) # extract file to dir
+        if not dry_run: 
+            file_name.parent.joinpath(file_name.stem).mkdir(parents=True,exist_ok=True) # make a dir to extract to
+            zip_ref.extractall(str(file_name.parent.joinpath(file_name.stem))) # extract file to dir
         zip_ref.close() # close file
         if not dry_run: os.remove(str(file_name)) # delete zipped file
 
