@@ -36,15 +36,18 @@
 #   - file.rc : for consistent creation of look of matplotlib figures
 #   - 4STAR_cloud retrieval .mat files
 #   
-#  Modification History:
+# Modification History:
 #  
 #      Written: by Samuel LeBlanc, Santa Cruz, CA, 2019-12-02
+#      
 #      Modified: by Samuel LeBlanc, Santa Cruz, CA, 2020-11-18
 #              - updated for R4 ORACLES 2016 and mie 2020-11-12
+#      Modified: by Samuel LeBlanc, Santa Cruz, C, 2021-02-04
+#              - updated with delta SSA +/-0.03 for v5
 
 # # Import of modules
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -58,20 +61,20 @@ import load_utils as lu
 from write_utils import nearest_neighbor, iterate_dict_unicode
 
 
-# In[2]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[3]:
+# In[4]:
 
 
 from tqdm.notebook import tqdm 
 from datetime import datetime, timedelta
 
 
-# In[4]:
+# In[5]:
 
 
 from multiprocessing import Pool, cpu_count
@@ -81,26 +84,32 @@ import warnings
 warnings.simplefilter('ignore')
 
 
-# In[5]:
-
-
-import Run_libradtran as Rl
-
-
 # In[6]:
 
 
-name = 'ORACLES'
+from scipy.interpolate import interp1d
 
 
 # In[7]:
 
 
-vv = 'v4'
-vr = 'R4'
+import Run_libradtran as Rl
 
 
 # In[8]:
+
+
+name = 'ORACLES'
+
+
+# In[9]:
+
+
+vv = 'v5'
+vr = 'R4'
+
+
+# In[10]:
 
 
 fp = getpath(name)
@@ -115,44 +124,44 @@ fp_rtmdat = fp_rtm+'dat/'
 
 # ## Load the 4STAR AOD
 
-# In[9]:
+# In[11]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/{v}/all_aod_ict_{v}_2016.mat'.format(v=vr,vi='v9'))
 
 
-# In[10]:
+# In[12]:
 
 
 ar.keys()
 
 
-# In[11]:
+# In[13]:
 
 
 ar['AOD0501'].shape
 
 
-# In[12]:
+# In[14]:
 
 
 sza = np.arccos(1.0/ar['amass_aer'])*180.0/np.pi
 
 
-# In[13]:
+# In[15]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[14]:
+# In[16]:
 
 
 len(days)
 
 
-# In[15]:
+# In[17]:
 
 
 ar['days']
@@ -160,51 +169,51 @@ ar['days']
 
 # ## Load the retrieved Cloud properties
 
-# In[16]:
+# In[18]:
 
 
-cl = hs.loadmat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv))
-print 'loading: '+fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format(vv)
+cl = hs.loadmat(fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format('v4'))
+print 'loading: '+fp+'data_other/ssfr_2016_retrieved_COD_{}.mat'.format('v4')
 
 
-# In[17]:
+# In[19]:
 
 
 cl.keys()
 
 
-# In[18]:
+# In[20]:
 
 
 cl['tau'].shape
 
 
-# In[19]:
+# In[21]:
 
 
 dds = ['20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927']
 
 
-# In[20]:
+# In[22]:
 
 
 len(dds)
 
 
-# In[21]:
+# In[23]:
 
 
 cl['days']
 
 
-# In[22]:
+# In[24]:
 
 
 dd = np.unique(cl['days'])
 
 
-# In[23]:
+# In[25]:
 
 
 cod,ref = [],[]
@@ -219,19 +228,19 @@ for d in dd:
     ref = np.append(ref,ref_tmp)
 
 
-# In[24]:
+# In[26]:
 
 
 cod.shape
 
 
-# In[25]:
+# In[27]:
 
 
 len(dds)
 
 
-# In[26]:
+# In[28]:
 
 
 len(np.unique(ar['days']))
@@ -239,7 +248,7 @@ len(np.unique(ar['days']))
 
 # ## Load the skyscan retrievals
 
-# In[27]:
+# In[29]:
 
 
 try:
@@ -259,7 +268,7 @@ except:
     ae_dict = ae5_dict
 
 
-# In[28]:
+# In[30]:
 
 
 ke = ae.keys()
@@ -267,68 +276,68 @@ ke.sort()
 ke
 
 
-# In[29]:
+# In[31]:
 
 
 ae['AOD_meas'][0]
 
 
-# In[30]:
+# In[32]:
 
 
 ae_dict['AAOD']
 
 
-# In[31]:
+# In[33]:
 
 
 ae_dict['SSA']
 
 
-# In[32]:
+# In[34]:
 
 
 ae['SSA'].shape
 
 
-# In[33]:
+# In[35]:
 
 
 ae_dict['time']
 
 
-# In[34]:
+# In[36]:
 
 
 ae['time']/3600.0
 
 
-# In[35]:
+# In[37]:
 
 
 days = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
        '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
 
 
-# In[36]:
+# In[38]:
 
 
 ar['doy'] = np.array([datetime.strptime(days[int(d)],'%Y%m%d').timetuple().tm_yday for d in ar['days']])
 
 
-# In[37]:
+# In[39]:
 
 
 datetime.strptime(days[4],'%Y%m%d').timetuple().tm_yday
 
 
-# In[38]:
+# In[40]:
 
 
 ar['time_ae'] = ar['Start_UTC']+(24.0*(ar['doy']-244))
 
 
-# In[39]:
+# In[41]:
 
 
 ar['time_ae']
@@ -336,19 +345,19 @@ ar['time_ae']
 
 # ## Load the MODIS cloud retrievals
 
-# In[39]:
+# In[42]:
 
 
 import pytz
 
 
-# In[81]:
+# In[43]:
 
 
 fp
 
 
-# In[82]:
+# In[44]:
 
 
 fmod = os.listdir(fp+'data_other/MODIS/MOD06_L2/2016/268/')
@@ -357,19 +366,19 @@ fmod.sort()
 fgeo.sort()
 
 
-# In[83]:
+# In[45]:
 
 
 vals = (('QA',123),('CF',38),('ref',66),('COD',72),('mask',110),('t',0))
 
 
-# In[84]:
+# In[46]:
 
 
 geo,geo_dict = lu.load_hdf(fp+'data_other/MODIS/MOD03/2016/268/'+fgeo[0],values=(('lat',12),('lon',13)),verbose=False)
 
 
-# In[85]:
+# In[47]:
 
 
 def bits_stripping(bit_start,bit_count,value):
@@ -377,7 +386,7 @@ def bits_stripping(bit_start,bit_count,value):
 	return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
 
 
-# In[86]:
+# In[48]:
 
 
 def mod_qa(aq_val):
@@ -388,7 +397,7 @@ def mod_qa(aq_val):
     return (qa_cod_useful>0) & (qa_cod_conf>1) & (qa_ref_useful>0) & (qa_ref_conf>1) 
 
 
-# In[87]:
+# In[49]:
 
 
 def mod_qa_arr(aq_arr):
@@ -401,19 +410,27 @@ def mod_qa_arr(aq_arr):
 
 # ### pre-load the geo for easier calcs
 
-# In[88]:
+# In[50]:
 
 
 from pyhdf.SD import SD, SDC
 
 
-# In[89]:
+# In[51]:
 
 
 from copy import deepcopy
 
 
-# In[91]:
+# In[59]:
+
+
+if not 'fla' in locals(): 
+    # for all 4STAR aerosol arrays
+    fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA'] & (ar['days']>2.0)
+
+
+# In[60]:
 
 
 geoso = {}
@@ -441,7 +458,7 @@ for ddy in doys:
     geoso['{}'.format(ddy)]['fh'] = fh[:]
 
 
-# In[92]:
+# In[53]:
 
 
 geosy = {}
@@ -625,13 +642,7 @@ plt.plot(myd['cod'])
 # Do the same for ref 
 # 
 
-# In[103]:
-
-
-from scipy.interpolate import interp1d
-
-
-# In[104]:
+# In[64]:
 
 
 def fit_sine(f1,f2,t1,t2):
@@ -642,7 +653,7 @@ def fit_sine(f1,f2,t1,t2):
     return A,B
 
 
-# In[105]:
+# In[65]:
 
 
 def get_sines(A,B,f0,t0,utcs=np.arange(0,24.0,0.5),val_range=[0,100]):
@@ -691,6 +702,8 @@ A_cod,B_cod = fit_sine(mod['codb'],myd['codb'],mod['time'][iaes],myd['time'][iae
 A_ref,B_ref = fit_sine(mod['refb'],myd['refb'],mod['time'][iaes],myd['time'][iaes])
 
 
+# #### Save
+
 # In[113]:
 
 
@@ -703,13 +716,79 @@ diurn = {'A_cod':A_cod,'B_cod':B_cod,'A_ref':A_ref,'B_ref':B_ref,'utcs':np.arang
 sio.savemat(fp+'data_other/MODIS/MODIS_ORACLES2016_match.mat',{'mod':mod,'myd':myd,'diurn':diurn})
 
 
+# #### Load
+
+# In[47]:
+
+
+ddiurn = sio.loadmat(fp+'data_other/MODIS/MODIS_ORACLES2016_match.mat')
+
+
+# In[48]:
+
+
+ddiurn.keys()
+
+
+# In[49]:
+
+
+def revert_from_mat(m):
+    for k in m.dtype.names:
+        if len(m[k])==1:
+            m[k] = m[k][0,0]
+    return m
+
+
+# In[50]:
+
+
+mod = ddiurn['mod']
+myd = ddiurn['myd']
+diurn = ddiurn['diurn']
+
+
 # In[112]:
+
+
+mod = revert_from_mat(ddiurn['mod'])
+myd = revert_from_mat(ddiurn['myd'])
+diurn = revert_from_mat(ddiurn['diurn'])
+
+
+# In[51]:
+
+
+A_cod, B_cod, A_ref, B_ref, iaes = diurn['A_cod'][0,0].flatten(),diurn['B_cod'][0,0].flatten(),                                    diurn['A_ref'][0,0].flatten(),diurn['B_ref'][0,0].flatten(),diurn['iaes'][0,0].flatten()
+
+
+# In[52]:
+
+
+A_cod
+
+
+# In[53]:
 
 
 len(A_cod),len(mod['lat']),len(iaes)
 
 
-# In[396]:
+# In[54]:
+
+
+len(ddiurn['mod'])
+
+
+# In[55]:
+
+
+mod.dtype.names
+
+
+# #### plot
+
+# In[56]:
 
 
 plt.figure()
@@ -726,7 +805,7 @@ plt.title('ref')
 
 #  Fill out the values to not have NaN
 
-# In[390]:
+# In[57]:
 
 
 x_cod = np.arange(0,len(A_cod))
@@ -736,7 +815,7 @@ A_codb = fAcod(x_cod)
 B_codb = fBcod(x_cod)
 
 
-# In[391]:
+# In[58]:
 
 
 x_ref = np.arange(0,len(A_ref))
@@ -746,7 +825,24 @@ A_refb = fAref(x_ref)
 B_refb = fBref(x_ref)
 
 
-# In[392]:
+# In[62]:
+
+
+if not 'fla' in locals():
+    # for all 4STAR aerosol arrays
+    fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA'] & (ar['days']>2.0) 
+
+
+# In[59]:
+
+
+if not 'flb' in locals():
+    # for the cod and ref arrays
+    fld = (ar['days']>2.0) & (ar['days']!=17.0) 
+    flb = (ar['flag_acaod'][fld]==1) & ar['fl'][fld] & ar['fl_QA'][fld]
+
+
+# In[66]:
 
 
 # test
@@ -755,7 +851,7 @@ print cod[flb][iaes][i],ref[flb][iaes][i],ar['Start_UTC'][fla][iaes][i],A_cod[i]
 get_sines(A_cod[i],B_cod[i],cod[flb][iaes][i],ar['Start_UTC'][fla][iaes][i])
 
 
-# In[393]:
+# In[67]:
 
 
 get_sines(A_ref[i],B_ref[i],ref[flb][iaes][i],ar['Start_UTC'][fla][iaes][i])
@@ -803,7 +899,7 @@ if False:
         pbar.update(1)
 
 
-# In[573]:
+# In[68]:
 
 
 class KeyboardInterruptError(Exception): pass
@@ -881,21 +977,21 @@ cod[flb]
 
 # # Prepare the base dict and defaults
 
-# In[397]:
+# In[69]:
 
 
 from datetime import datetime
 datetime(2015,11,17).timetuple().tm_yday
 
 
-# In[40]:
+# In[70]:
 
 
 # for all 4STAR aerosol arrays
 fla = (ar['flag_acaod']==1) & ar['fl'] & ar['fl_QA'] & (ar['days']>2.0) 
 
 
-# In[41]:
+# In[71]:
 
 
 # for the cod and ref arrays
@@ -903,25 +999,25 @@ fld = (ar['days']>2.0) & (ar['days']!=17.0)
 flb = (ar['flag_acaod'][fld]==1) & ar['fl'][fld] & ar['fl_QA'][fld]
 
 
-# In[42]:
+# In[72]:
 
 
 len(ar['AOD0355'][fla])
 
 
-# In[43]:
+# In[73]:
 
 
 len(cod[flb])
 
 
-# In[44]:
+# In[74]:
 
 
 sum(np.isfinite(cod[~flb])),sum(np.isfinite(cod[flb])),len(cod[flb])
 
 
-# In[45]:
+# In[75]:
 
 
 ka = ar.keys()
@@ -929,19 +1025,19 @@ ka.sort()
 ka
 
 
-# In[46]:
+# In[76]:
 
 
 doy = datetime.strptime(dds[int(ar['days'][fla][0])],'%Y%m%d').timetuple().tm_yday
 
 
-# In[47]:
+# In[77]:
 
 
 doy
 
 
-# In[48]:
+# In[78]:
 
 
 geo = {'lat':ar['Latitude'][0],'lon':ar['Longitude'][0],'doy':doy,'zout':[0,1.5,100.0]}
@@ -952,7 +1048,7 @@ source = {'wvl_range':[201.0,4900.0],'source':'solar','integrate_values':True,'r
 albedo = {'create_albedo_file':False,'sea_surface_albedo':True,'wind_speed':5.0}
 
 
-# In[49]:
+# In[79]:
 
 
 cloud['phase'] = 'wc'
@@ -961,7 +1057,7 @@ cloud['tau'] = 2.0
 cloud['ref'] = 5.0
 
 
-# In[50]:
+# In[80]:
 
 
 pmom = Rl.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=True,new=True)
@@ -988,27 +1084,27 @@ pmom_new['wvl'][-1] = 4.900
 cloud['moms_dict'] = pmom_new
 
 
-# In[51]:
+# In[81]:
 
 
 pmom_new['wvl']
 
 
-# In[52]:
+# In[82]:
 
 
 wvl = np.append(np.append([250.0],ae['wavelength']),4900.0)
 wvl
 
 
-# In[53]:
+# In[83]:
 
 
 aero = {'expand_hg':True,'disort_phase':False,'z_arr':[2.0,5.0],
         'wvl_arr':wvl}
 
 
-# In[54]:
+# In[84]:
 
 
 def fx_aero(aprop):
@@ -1017,7 +1113,7 @@ def fx_aero(aprop):
     return np.array([atmp,atmp])
 
 
-# In[55]:
+# In[85]:
 
 
 def fx_ext(a0,a1,a2,wvl=wvl):
@@ -1027,19 +1123,19 @@ def fx_ext(a0,a1,a2,wvl=wvl):
     return np.array([aod/3.0,aod*0.0])
 
 
-# In[56]:
+# In[86]:
 
 
 aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][0],ar['AOD_polycoef_a1'][fla][0],ar['AOD_polycoef_a2'][fla][0])
 
 
-# In[57]:
+# In[87]:
 
 
 aero['asy'] = fx_aero(ae['g_total'][0])
 
 
-# In[58]:
+# In[88]:
 
 
 aero['ssa'] = fx_aero(ae['SSA'][0])
@@ -1047,13 +1143,13 @@ aero['ssa'] = fx_aero(ae['SSA'][0])
 
 # ## Prepare the file list and saving
 
-# In[417]:
+# In[89]:
 
 
 from path_utils import isjupyter
 
 
-# In[418]:
+# In[90]:
 
 
 isjupyter()
@@ -1266,29 +1362,34 @@ results = p.map(write_files,bb)
 
 # ### Diurnal averaging with multiprocessing
 
-# In[428]:
+# In[91]:
 
 
 if vv=='v3':
-    vvh = 'v3_24h' 
+    vvh = 'v3_24h'
+    dssa = 0.0
 elif vv =='v4':
     vvh = 'v4_24h'
+    dssa = 0.0
+elif vv == 'v5':
+    vvh = 'v5_ssam'
+    dssa = -0.03
 print vv,vvh
 
 
-# In[429]:
+# In[92]:
 
 
 vvh = vvh+'_diurnal' # for the version with diurnal cycles from MODIS
 
 
-# In[430]:
+# In[93]:
 
 
 print vvh
 
 
-# In[461]:
+# In[212]:
 
 
 def worker_init(verbose=True):
@@ -1300,7 +1401,7 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[439]:
+# In[213]:
 
 
 # open the list file
@@ -1309,7 +1410,7 @@ fpp_in = fp_rtm+'input/{}_DARE_{}/'.format(name,vvh)
 fpp_out = fp_rtm+'output/{}_DARE_{}/'.format(name,vvh)
 
 
-# In[438]:
+# In[214]:
 
 
 if not os.path.isdir(fpp_in):
@@ -1318,7 +1419,7 @@ if not os.path.isdir(fpp_out):
      os.mkdir(fpp_out)
 
 
-# In[440]:
+# In[215]:
 
 
 if isjupyter():
@@ -1346,7 +1447,11 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
     if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
 
         aero['ext'] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])
-        aero['ssa'] = fx_aero(ae['SSA'][iae])
+        aero['ssa'] = fx_aero(ae['SSA'][iae])+dssa
+        try: aero['ssa'][aero['ssa']>1.0] = 1.0
+        except: pass
+        try: aero['ssa'][aero['ssa']<0.0] = 0.0
+        except: pass
         aero['asy'] = fx_aero(ae['g_total'][iae])
 
         #Rl.write_input_aac(fpp_in+f_in,geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,
@@ -1371,7 +1476,7 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
 f.close()
 
 
-# In[470]:
+# In[216]:
 
 
 # Go through and write out the list file for 24 h
@@ -1395,13 +1500,13 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
 f.close()
 
 
-# In[435]:
+# In[217]:
 
 
 fp_rtm+'{}_DARE_{}.sh'.format(name,vvh)
 
 
-# In[195]:
+# In[218]:
 
 
 def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
@@ -1421,7 +1526,7 @@ def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
                                    verbose=False,make_base=False,set_quiet=True)
 
 
-# In[458]:
+# In[219]:
 
 
 from datetime import datetime, timedelta
@@ -1429,25 +1534,25 @@ ud = datetime(2016,1,1) + timedelta(bb[0]['geo']['doy'])
 bb[0]['geo']['doy']
 
 
-# In[459]:
+# In[220]:
 
 
 timedelta()
 
 
-# In[197]:
+# In[221]:
 
 
 ud.month
 
 
-# In[241]:
+# In[222]:
 
 
 len(bb)
 
 
-# In[198]:
+# In[223]:
 
 
 def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
@@ -1471,7 +1576,7 @@ def write_files(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
                                    verbose=False,make_base=False,set_quiet=True)
 
 
-# In[222]:
+# In[224]:
 
 
 def write_files_sub(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
@@ -1505,7 +1610,7 @@ def write_files_sub(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
         d['aero']['link_to_mom_file'] = True
 
 
-# In[467]:
+# In[225]:
 
 
 def write_files_sub_diurn(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero_no):
@@ -1544,7 +1649,7 @@ def write_files_sub_diurn(d,cloud=cloud,source=source,albedo=albedo,aero_no=aero
         d['aero']['link_to_mom_file'] = True
 
 
-# In[468]:
+# In[226]:
 
 
 p = Pool(cpu_count()-1,worker_init)
@@ -1561,7 +1666,7 @@ with tqdm(total=max_) as pbar:
         results.append(res)
 
 
-# In[469]:
+# In[227]:
 
 
 results = []
@@ -1878,19 +1983,19 @@ get_ipython().system(u'parallel --jobs=22 --bar < $f_list #2> $f_listout')
 
 # ### For daily averages
 
-# In[235]:
+# In[ ]:
 
 
 f_list = fp_rtm+'{}_DARE_{}.sh'.format(name,vvh)
 
 
-# In[236]:
+# In[182]:
 
 
 get_ipython().system(u' wc -l $f_list')
 
 
-# In[237]:
+# In[183]:
 
 
 f_listout = f_list+'.out'
@@ -1930,13 +2035,13 @@ get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
 
 # ## Read the files
 
-# In[61]:
+# In[1]:
 
 
 fpp_out,name,vv,geo['zout']
 
 
-# In[62]:
+# In[189]:
 
 
 n = len(ar['Start_UTC'][fla])
@@ -1962,7 +2067,11 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
     if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
 
         dat['ext'][i,:] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])[0]
-        dat['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]
+        dat['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]+dssa
+        try: dat['ssa'][i,dat['ssa'][i,:]>1.0] = 1.0
+        except: pass
+        try: dat['ssa'][i,dat['ssa'][i,:]<0.0] = 0.0
+        except: pass
         dat['asy'][i,:] = fx_aero(ae['g_total'][iae])[0]
 
 
@@ -2010,13 +2119,13 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
 
 # ### Multiprocessing
 
-# In[63]:
+# In[186]:
 
 
 class KeyboardInterruptError(Exception): pass
 
 
-# In[64]:
+# In[187]:
 
 
 def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
@@ -2050,7 +2159,7 @@ def read_files(i,fpp_out=fpp_out,name=name,vv=vv,zout=geo['zout']):
     return out
 
 
-# In[65]:
+# In[188]:
 
 
 def worker_init(verbose=True):
@@ -2121,7 +2230,7 @@ np.nanmean(dat['dn'])
 
 # ### Multiprocessing reading for diurnal averaging
 
-# In[489]:
+# In[94]:
 
 
 n = len(ar['Start_UTC'][fla])
@@ -2149,7 +2258,12 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
     if abs(ar['time_ae'][fla][i]-ae['time']/3600.0)[iae]<1.0: 
 
         dat_24h['ext'][i,:] = fx_ext(ar['AOD_polycoef_a0'][fla][i],ar['AOD_polycoef_a1'][fla][i],ar['AOD_polycoef_a2'][fla][i])[0]
-        dat_24h['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]
+        #dat_24h['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]
+        dat_24h['ssa'][i,:] = fx_aero(ae['SSA'][iae])[0]+dssa
+        try: dat_24h['ssa'][i,dat_24h['ssa'][i,:]>1.0] = 1.0
+        except: pass
+        try: dat_24h['ssa'][i,dat_24h['ssa'][i,:]<0.0] = 0.0
+        except: pass
         dat_24h['asy'][i,:] = fx_aero(ae['g_total'][iae])[0]
         
         dat_24h['cods'][i,:] = get_sines(A_cod[ii],B_cod[ii],cod[flb][i],u)
@@ -2157,31 +2271,39 @@ for i,u in enumerate(ar['Start_UTC'][fla]):
         ii = ii + 1
 
 
-# In[490]:
+# In[95]:
 
 
 class KeyboardInterruptError(Exception): pass
 
 
-# In[491]:
+# In[96]:
 
 
 v = np.zeros((48,3))+np.nan
 
 
-# In[492]:
+# In[97]:
 
 
 np.nanmean(v,axis=0)
 
 
-# In[493]:
+# In[98]:
 
 
 vvh
 
 
-# In[494]:
+# In[100]:
+
+
+if not 'fpp_out' in locals():
+    fpp_in = fp_rtm+'input/{}_DARE_{}/'.format(name,vvh)
+    fpp_out = fp_rtm+'output/{}_DARE_{}/'.format(name,vvh)
+
+
+# In[101]:
 
 
 def read_files(i,fpp_out=fpp_out,name=name,vv=vvh,zout=geo['zout']):
@@ -2224,7 +2346,7 @@ def read_files(i,fpp_out=fpp_out,name=name,vv=vvh,zout=geo['zout']):
     return out
 
 
-# In[495]:
+# In[102]:
 
 
 def worker_init(verbose=True):
@@ -2236,13 +2358,13 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[496]:
+# In[103]:
 
 
 p = Pool(cpu_count()-1,worker_init)
 
 
-# In[497]:
+# In[104]:
 
 
 outputs = []
@@ -2253,13 +2375,13 @@ with tqdm(total=max_) as pbar:
         outputs.append(outs)
 
 
-# In[498]:
+# In[105]:
 
 
 len(outputs)
 
 
-# In[499]:
+# In[106]:
 
 
 for oo in outputs:
@@ -2273,13 +2395,13 @@ for oo in outputs:
     dat_24h['up_noa'][oo['i'],:,:] = oo['up_noa']
 
 
-# In[500]:
+# In[107]:
 
 
 dat_24h['dare'] = (dat_24h['dn']-dat_24h['up']) - (dat_24h['dn_noa']-dat_24h['up_noa'])
 
 
-# In[501]:
+# In[108]:
 
 
 dat_24h['utc'] = ar['Start_UTC'][fla]
@@ -2288,7 +2410,7 @@ dat_24h['lon'] = ar['Longitude'][fla]
 dat_24h['doy'] = ar['doy'][fla]
 
 
-# In[502]:
+# In[109]:
 
 
 dat_24h['dare_avg'] = (dat_24h['dn_avg']-dat_24h['up_avg']) - (dat_24h['dn_noa_avg']-dat_24h['up_noa_avg'])
@@ -2296,13 +2418,13 @@ dat_24h['dare_avg'] = (dat_24h['dn_avg']-dat_24h['up_avg']) - (dat_24h['dn_noa_a
 
 # ### combine
 
-# In[74]:
+# In[110]:
 
 
 dat['dare'] = (dat['dn']-dat['up']) - (dat['dn_noa']-dat['up_noa'])
 
 
-# In[75]:
+# In[111]:
 
 
 dat['utc'] = ar['Start_UTC'][fla]
@@ -2311,13 +2433,13 @@ dat['lon'] = ar['Longitude'][fla]
 dat['doy'] = ar['doy'][fla]
 
 
-# In[76]:
+# In[206]:
 
 
 dat['dare_avg'] = (dat['dn_avg']-dat['up_avg']) - (dat['dn_noa_avg']-dat['up_noa_avg'])
 
 
-# In[77]:
+# In[207]:
 
 
 dat['dare_avg'].shape
@@ -2341,16 +2463,10 @@ print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv)
 hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vv),dat1)
 
 
-# In[503]:
+# In[112]:
 
 
 dat1_24h = iterate_dict_unicode(dat_24h)
 print 'saving file to: '+fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vvh)
 hs.savemat(fp+'{name}_DARE_{vv}.mat'.format(name=name,vv=vvh),dat1_24h)
-
-
-# In[ ]:
-
-
-
 
