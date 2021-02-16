@@ -166,7 +166,7 @@ if data_raw_found:
     for k in data_raw_files.keys():
         instname,daystr0 = k.split('_')
         fa_tmp = filetypes('{daystr}_AERONET_NASA_Ames.lev15'.format(instname=instname,daystr=daystr0))
-        fmla_tmp = get_newfilepath(fa_tmp,filters=filters,fake_file=True)
+        fmla_tmp = get_newfilepath(fa_tmp,filters=filters,fake_file=True,root_folder=root_folder)
         if not daystr in daystrss:
             daystrss.append(daystr0)
             if fa_tmp.campaign.find('rooftop') >= 0:
@@ -197,31 +197,31 @@ if run_matlab:
     for dr,drs in data_raw_files.items():
         # get the position of the new star.mat and starsun.mat files
         f = filetypes('{}star.mat'.format(dr),filters=filters)
-        fml = get_newfilepath(f,filters=filters,fake_file=True)
+        fml = get_newfilepath(f,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: f.newpath.mkdir(parents=True,exist_ok=True)
         fs = filetypes('{}starsun.mat'.format(dr),filters=filters)
-        fmls = get_newfilepath(fs,filters=filters,fake_file=True)
+        fmls = get_newfilepath(fs,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: fs.newpath.mkdir(parents=True,exist_ok=True)
             
         # make the position of the new quicklook file
         instname,daystr = dr.split('_')
         fq = filetypes('{daystr}_{instname}_Quicklooks.pptx'.format(instname=instname,daystr=daystr))
-        fmlq = get_newfilepath(fq,filters=filters,fake_file=True)
+        fmlq = get_newfilepath(fq,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: fq.newpath.mkdir(parents=True,exist_ok=True)
         
         # make the position of the new figure files
         ff = filetypes('{daystr}_{instname}_plots.png'.format(instname=instname,daystr=daystr))
-        fmlf = get_newfilepath(ff,filters=filters,fake_file=True)
+        fmlf = get_newfilepath(ff,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: ff.newpath.parent.mkdir(parents=True,exist_ok=True)
         
         # make the position of the aeronet files
         fa = filetypes('{daystr}_AERONET_NASA_Ames.lev15'.format(instname=instname,daystr=daystr))
-        fmla = get_newfilepath(fa,filters=filters,fake_file=True)
+        fmla = get_newfilepath(fa,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: fa.newpath.mkdir(parents=True,exist_ok=True)
         
         # make the position of the gas_summary files
         fg = filetypes('{instname}_{daystr}_gas_summary.mat'.format(instname=instname,daystr=daystr))
-        fmlg = get_newfilepath(fg,filters=filters,fake_file=True)
+        fmlg = get_newfilepath(fg,filters=filters,fake_file=True,root_folder=root_folder)
         if not dry_run: fg.newpath.mkdir(parents=True,exist_ok=True)
         
         # make a string of the raw files    

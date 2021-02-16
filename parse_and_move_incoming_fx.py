@@ -175,7 +175,7 @@ class filetypes:
 # In[6]:
 
 
-def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0):
+def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0,root_folder='/nobackupp10/nexprojects/sunsat/'):
     'function to build the end file path, input of filetype class f, outputs updated file class f'
     # determine the campaign
     campaign = 'rooftop'
@@ -336,7 +336,7 @@ def move_files(fl_arr,filters,verbose=False,dry_run=False):
         if f.p.is_dir(): continue # do nothing for directories
         f.prefix = '*DRY RUN*: ' if dry_run else ''
 
-        folders_match_label,nexact = get_newfilepath(f,filters=filters,debug=False,nexact=nexact)
+        folders_match_label,nexact = get_newfilepath(f,filters=filters,debug=False,nexact=nexact,root_folder=root_folder)
         if not folders_match_label: continue
 
         if 'data_raw' in folders_match_label:
