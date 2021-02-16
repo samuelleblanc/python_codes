@@ -33,9 +33,12 @@
 #   - ...
 # 
 # Modification History:
+#     
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2019-12-03
 #     Modified: Samuel LeBlanc, Santa Cruz, CA, 2020-04-14, under stay-at-home order for coronavirus
 #          - Adding version 3 plotting
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-02-11
+#          - Added version 5, with diurnal variations, and changes to ssa by 0.02
 # 
 
 # # Prepare python environment
@@ -78,31 +81,31 @@ fp = getpath(name)
 
 # ## Load DARE calculations
 
-# In[91]:
+# In[13]:
 
 
 s = hs.loadmat(fp+'ORACLES_DARE_{}.mat'.format(vv))
 
 
-# In[92]:
+# In[14]:
 
 
 s.keys()
 
 
-# In[93]:
+# In[15]:
 
 
 s['dare'].shape
 
 
-# In[7]:
+# In[16]:
 
 
 ss = hs.loadmat(fp+'ORACLES_DARE_aero_prop_{}.mat'.format(vv))
 
 
-# In[8]:
+# In[17]:
 
 
 s['sza'] = ss['sza']
@@ -110,61 +113,61 @@ s['sza'] = ss['sza']
 
 # ### Load the instant to 24h DARE ratio
 
-# In[9]:
+# In[5]:
 
 
 import pandas as pd
 
 
-# In[10]:
+# In[6]:
 
 
 fp
 
 
-# In[11]:
+# In[7]:
 
 
 inst2day = pd.read_csv(fp+'data_other/DARE_instant_over_24h_Redemann_2006.dat')
 
 
-# In[12]:
+# In[8]:
 
 
 i2d = inst2day.to_numpy() #mu, ratio (i/24h)
 
 
-# In[13]:
+# In[9]:
 
 
 i2d
 
 
-# In[94]:
+# In[18]:
 
 
 s['dare'].shape
 
 
-# In[370]:
+# In[19]:
 
 
 s['mu'] = np.cos(np.deg2rad(s['sza']))
 
 
-# In[371]:
+# In[20]:
 
 
 i_fac = [np.argmin(abs(i2d[:,0]-mu)) for mu in s['mu']]
 
 
-# In[95]:
+# In[21]:
 
 
 s['dare_24h'] = s['dare']*2.0+np.nan
 
 
-# In[96]:
+# In[22]:
 
 
 s['dare_24h'][:,0] = s['dare'][:,0]/i2d[i_fac,1]
@@ -174,25 +177,25 @@ s['dare_24h'][:,2] = s['dare'][:,2]/i2d[i_fac,1]
 
 # ## Load the 24h DARE calculations
 
-# In[41]:
+# In[23]:
 
 
 sh = hs.loadmat(fp+'ORACLES_DARE_{}_24h.mat'.format(vv))
 
 
-# In[19]:
+# In[24]:
 
 
 sh.keys()
 
 
-# In[20]:
+# In[25]:
 
 
 utcx = np.arange(0,24,0.5)
 
 
-# In[21]:
+# In[26]:
 
 
 ig = np.where(np.isfinite(sh['dare_avg'][:,2]) & (sh['dare_avg'][:,2] != 0.0) & (abs(sh['dare_avg'][:,2]) > 0.25))[0]
@@ -200,19 +203,19 @@ ig = np.where(np.isfinite(sh['dare_avg'][:,2]) & (sh['dare_avg'][:,2] != 0.0) & 
 
 # ### Check the daily edges
 
-# In[22]:
+# In[27]:
 
 
 from matplotlib import animation, rc
 
 
-# In[23]:
+# In[28]:
 
 
 print sh['dn'][ig[0],:,2] - sh['dn_noa'][ig[0],:,2]
 
 
-# In[24]:
+# In[29]:
 
 
 sh['zout']
@@ -234,7 +237,7 @@ plt.legend()
 plt.ylim(-20,1300)
 
 
-# In[29]:
+# In[30]:
 
 
 def init():
@@ -313,7 +316,7 @@ plt.legend()
 
 # ### Adjust the calculated DARE for issues with the edges
 
-# In[33]:
+# In[31]:
 
 
 bad_edge = abs(sh['dare'][:,11,2])>abs(sh['dare'][:,12,2]) 
@@ -321,7 +324,7 @@ bad_edge2 = (abs(sh['dare'][:,34,2])>abs(sh['dare'][:,33,2]))
 bad_edge3 = (abs(sh['dare'][:,35,2])>abs(sh['dare'][:,34,2]))
 
 
-# In[34]:
+# In[32]:
 
 
 sh['dare'][bad_edge,11,2] = sh['dare'][bad_edge,12,2]*0.1
@@ -329,25 +332,25 @@ sh['dare'][bad_edge2,34,2] = sh['dare'][bad_edge2,33,2]*0.1
 sh['dare'][bad_edge3,35,2] = sh['dare'][bad_edge3,34,2]*0.1
 
 
-# In[35]:
+# In[33]:
 
 
 a = np.array([[1,2,3],[2,3,4],[4,5,6],[7,8,9]])
 
 
-# In[36]:
+# In[34]:
 
 
 a.shape
 
 
-# In[37]:
+# In[35]:
 
 
 np.nanmean(a,axis=0)
 
 
-# In[38]:
+# In[36]:
 
 
 sh['dare_avg'][:,2] = np.nanmean(sh['dare'][:,:,2],axis=1)
@@ -355,13 +358,13 @@ sh['dare_avg'][:,2] = np.nanmean(sh['dare'][:,:,2],axis=1)
 
 # ## Load the DARE 24h with diurnal changing clouds
 
-# In[42]:
+# In[37]:
 
 
 shd = hs.loadmat(fp+'ORACLES_DARE_{}_24h_diurnal.mat'.format(vv))
 
 
-# In[43]:
+# In[38]:
 
 
 shd.keys()
@@ -379,7 +382,7 @@ plt.plot(shd['dare'][ig,12,2],'.',label='next')
 plt.legend()
 
 
-# In[45]:
+# In[39]:
 
 
 bad_edged = abs(shd['dare'][:,11,2])>abs(shd['dare'][:,12,2]) 
@@ -387,7 +390,7 @@ bad_edge2d = (abs(shd['dare'][:,34,2])>abs(shd['dare'][:,33,2]))
 bad_edge3d = (abs(shd['dare'][:,35,2])>abs(shd['dare'][:,34,2]))
 
 
-# In[46]:
+# In[40]:
 
 
 shd['dare'][bad_edged,11,2] = shd['dare'][bad_edged,12,2]*0.1
@@ -395,21 +398,71 @@ shd['dare'][bad_edge2d,34,2] = shd['dare'][bad_edge2d,33,2]*0.1
 shd['dare'][bad_edge3d,35,2] = shd['dare'][bad_edge3d,34,2]*0.1
 
 
-# In[47]:
+# In[41]:
 
 
 shd['dare_avg'][:,2] = np.nanmean(shd['dare'][:,:,2],axis=1)
 
 
+# ## Load DARE 24h diurnal clouds, with changing ssa
+
+# In[42]:
+
+
+shd_ssam = hs.loadmat(fp+'ORACLES_DARE_{}_diurnal.mat'.format('v5_ssam')) #ssa minus
+
+
+# In[43]:
+
+
+shd_ssap = hs.loadmat(fp+'ORACLES_DARE_{}_diurnal.mat'.format('v5_ssap')) #ssa plus
+
+
+# In[44]:
+
+
+shd_ssam.keys()
+
+
+# In[45]:
+
+
+shd_ssap.keys()
+
+
+# In[46]:
+
+
+bad_edged = abs(shd_ssam['dare'][:,11,2])>abs(shd_ssam['dare'][:,12,2]) 
+bad_edge2d = (abs(shd_ssam['dare'][:,34,2])>abs(shd_ssam['dare'][:,33,2]))
+bad_edge3d = (abs(shd_ssam['dare'][:,35,2])>abs(shd_ssam['dare'][:,34,2]))
+shd_ssam['dare'][bad_edged,11,2] = shd_ssam['dare'][bad_edged,12,2]*0.1
+shd_ssam['dare'][bad_edge2d,34,2] = shd_ssam['dare'][bad_edge2d,33,2]*0.1
+shd_ssam['dare'][bad_edge3d,35,2] = shd_ssam['dare'][bad_edge3d,34,2]*0.1
+shd_ssam['dare_avg'][:,2] = np.nanmean(shd_ssam['dare'][:,:,2],axis=1)
+
+
+# In[47]:
+
+
+bad_edged = abs(shd_ssap['dare'][:,11,2])>abs(shd_ssap['dare'][:,12,2]) 
+bad_edge2d = (abs(shd_ssap['dare'][:,34,2])>abs(shd_ssap['dare'][:,33,2]))
+bad_edge3d = (abs(shd_ssap['dare'][:,35,2])>abs(shd_ssap['dare'][:,34,2]))
+shd_ssap['dare'][bad_edged,11,2] = shd_ssap['dare'][bad_edged,12,2]*0.1
+shd_ssap['dare'][bad_edge2d,34,2] = shd_ssap['dare'][bad_edge2d,33,2]*0.1
+shd_ssap['dare'][bad_edge3d,35,2] = shd_ssap['dare'][bad_edge3d,34,2]*0.1
+shd_ssap['dare_avg'][:,2] = np.nanmean(shd_ssap['dare'][:,:,2],axis=1)
+
+
 # ## Load DARE parameters from SARE
 
-# In[130]:
+# In[48]:
 
 
 sa = sio.loadmat(fp+'ORACLES_2016_DARE_params_{}_px.mat'.format('v4'))
 
 
-# In[131]:
+# In[49]:
 
 
 sa.keys()
@@ -417,7 +470,7 @@ sa.keys()
 
 # ## Load DARE from ALADIN
 
-# In[53]:
+# In[50]:
 
 
 AL_dare_2016 = np.array([3.68,4.86,4.34,3.79,1.31,0.48,0.26,-0.02])
@@ -603,6 +656,32 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_SSA_500_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[123]:
+
+
+plt.figure(figsize=(6,3))
+plt.hist(s['ssa'][:,2],bins=30,range=[np.nanmin(s['ssa'][:,2]),np.nanmax(s['ssa'][:,2])],
+         normed=True,alpha=0.6,color='tab:grey',label='4STAR skyscan within 1hour')
+plt.hist(shd_ssam['ssa'][:,2],bins=30,range=[np.nanmin(s['ssa'][:,2]),np.nanmax(s['ssa'][:,2])],
+         normed=True,alpha=0.6,color='tab:red',label='ssa - 0.02')
+plt.hist(shd_ssap['ssa'][:,2],bins=30,range=[np.nanmin(s['ssa'][:,2]),np.nanmax(s['ssa'][:,2])],
+         normed=True,alpha=0.6,color='tab:green',label='ssa + 0.02')
+plt.axvline(np.nanmean(s['ssa'][:,2]),ls='-',color='k',label='mean')
+plt.axvline(np.nanmedian(s['ssa'][:,2]),ls='--',color='k',label='median')
+
+plt.axvline(np.nanmean(shd_ssam['ssa'][:,2]),ls='-',color='tab:red')
+plt.axvline(np.nanmedian(shd_ssam['ssa'][:,2]),ls='--',color='tab:red')
+
+plt.axvline(np.nanmean(shd_ssap['ssa'][:,2]),ls='-',color='tab:green')
+plt.axvline(np.nanmedian(shd_ssap['ssa'][:,2]),ls='--',color='tab:green')
+
+plt.legend(frameon=False)
+plt.xlabel('SSA at 500 nm')
+plt.tight_layout()
+plt.title('SSA from ORACLES 2016 for DARE calculations')
+plt.savefig(fp+'plot_DARE/ORACLES2016_SSA_500_hist_{}_deltassa.png'.format('v5'),dpi=600,transparent=True)
+
+
 # In[64]:
 
 
@@ -672,7 +751,7 @@ plt.figure()
 plt.hist(s['ext'][:,2],range=[np.nanmin(s['ext'][:,2]),np.nanmax(s['ext'][:,2])],bins=30)
 
 
-# ## DARE
+# ## DARE histograms
 
 # In[97]:
 
@@ -835,7 +914,7 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/DARE_TOA_hist_with_params_PX_{}.png'.format(vv),transparent=True,dpi=600)
 
 
-# In[111]:
+# In[94]:
 
 
 igood = np.isfinite(s['dare'][:,0])
@@ -858,7 +937,7 @@ np.nanmean(s['dare'][igood,2]),np.nanmedian(s['dare'][igood,2]),np.nanstd(s['dar
 
 # The observations and model data are aggregated within horizontal domains of at least 2o by 2o indicated in Fig. 2. One of the three main regions encompasses the routine flight track, with individual grid boxes centered at (14oE, 24oS), (12oE, 22oS), (10oE, 20oS), (8oE, 18oS), (6oE, 16oS), (4oE, 14oS), (2oE, 12oS) and (0oE, 10oS). Another more coastal north-south track has the southernmost grid box centered on 22oS, spanning between 9oE and 11.75oE. Seven grid boxes are located every 2 degrees north of this, with the northernmost grid box centered on 8oS. A third, zonal track covers the larger domain of the ER2 measurements, with individual grid boxes spanning latitudinally between 10oS and 6oS and separated longitudinally at two degree intervals beginning at 3oW to the west and 13oE in the east. The box for St. Helena Island spans between 6.72 oW and 4.72 oW, between 16.933 oS and 14.933 oS.
 
-# In[113]:
+# In[84]:
 
 
 boxes_diag = []
@@ -866,7 +945,7 @@ boxes_ns = []
 boxes_ew = []
 
 
-# In[114]:
+# In[85]:
 
 
 boxes_diag_ct = [[14.0,-24.0], [12.0,-22.0],[10.0,-20.0],[8.0,-18.0],[6.0,-16.0],[4.0,-14.0],[2.0,-12.0],[0.0,-10.0]]
@@ -876,43 +955,43 @@ boxes_ew_ct = [[-3.0,-8.0],[-1.0,-8.0],[1.0,-8.0],[3.0,-8.0],[5.0,-8.0],[7.0,-8.
 
 # Corners are [x0,x1,y0,y1]
 
-# In[115]:
+# In[86]:
 
 
 boxes_ns = [[9.0,11.75,i[1]-1.0,i[1]+1.0] for i in boxes_ns_ct]
 
 
-# In[116]:
+# In[87]:
 
 
 boxes_ew = [[-10.0,-6.0,i[0]-1.0,i[0]+1.0] for i in boxes_ew_ct]
 
 
-# In[117]:
+# In[88]:
 
 
 boxes_diag = [[i[0]-1.0,i[0]+1,i[1]-1.0,i[1]+1.0] for i in boxes_diag_ct]
 
 
-# In[118]:
+# In[89]:
 
 
 boxes_diag
 
 
-# In[119]:
+# In[90]:
 
 
 boxes_ew
 
 
-# In[120]:
+# In[91]:
 
 
 boxes_ns
 
 
-# In[121]:
+# In[95]:
 
 
 bins_diag = []
@@ -921,13 +1000,13 @@ for i,b in enumerate(boxes_diag):
     bins_diag.append(s['dare'][igood,2][ia])
 
 
-# In[122]:
+# In[96]:
 
 
 bins_diag[0] = bins_diag[1][0:5]
 
 
-# In[123]:
+# In[97]:
 
 
 bins_ns,bins_ns_num = [],[]
@@ -937,13 +1016,13 @@ for i,b in enumerate(boxes_ns):
     bins_ns_num.append(len(s['dare'][igood,2][ia]))
 
 
-# In[124]:
+# In[98]:
 
 
 bins_ns[-1] = bins_ns[-2][0:5]
 
 
-# In[125]:
+# In[99]:
 
 
 bins_ew = []
@@ -952,7 +1031,7 @@ for i,b in enumerate(boxes_ew):
     bins_ew.append(s['dare'][igood,2][ia])
 
 
-# In[128]:
+# In[100]:
 
 
 len(boxes_diag),len(bins_diag)
@@ -1035,19 +1114,19 @@ plt.savefig(fp+'plot_DARE/ORACLES_2016_DARE_TOA_calc_map_param_{}.png'.format(vv
 
 # ## Put into box-whisker plots
 
-# In[132]:
+# In[101]:
 
 
 ns_ct = np.array(boxes_ns_ct)
 
 
-# In[133]:
+# In[102]:
 
 
 ns_ct[:,1]
 
 
-# In[134]:
+# In[103]:
 
 
 def color_boxes(bp,color):
@@ -1172,13 +1251,13 @@ sa['bins_ns_px'][0]
 
 # ## Make the box-whisker plots for 24h DARE
 
-# In[139]:
+# In[104]:
 
 
 np.nanmean(s['dare_24h'][:,2]),np.nanstd(s['dare_24h'][:,2])
 
 
-# In[140]:
+# In[105]:
 
 
 bins_ns_24,bins_ns_24_num = [],[]
@@ -1188,7 +1267,7 @@ for i,b in enumerate(boxes_ns):
     bins_ns_24_num.append(len(s['dare_24h'][igood,2][ia]))
 
 
-# In[141]:
+# In[106]:
 
 
 bins_ns_24h,bins_ns_24h_num = [],[]
@@ -1229,13 +1308,13 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_boxplot_NS_lat_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[487]:
+# In[107]:
 
 
 np.nanmean(sh['dare_avg'][:,2]),np.nanstd(sh['dare_avg'][:,2])
 
 
-# In[143]:
+# In[108]:
 
 
 plt.figure(figsize=(4,4))
@@ -1267,7 +1346,7 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_boxplot_NS_lat_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[145]:
+# In[109]:
 
 
 dare_means
@@ -1425,7 +1504,7 @@ plt.plot(AL_Lat,AL_dare_2016,'-',color='tab:red',alpha=0.6,label='ALADIN Diurnal
 
 # ## Make box plot for 24h DARE, with clouds changing
 
-# In[ ]:
+# In[110]:
 
 
 bins_ns_24,bins_ns_24_num = [],[]
@@ -1435,7 +1514,7 @@ for i,b in enumerate(boxes_ns):
     bins_ns_24_num.append(len(s['dare_24h'][igood,2][ia]))
 
 
-# In[ ]:
+# In[111]:
 
 
 bins_ns_24h,bins_ns_24h_num = [],[]
@@ -1445,7 +1524,7 @@ for i,b in enumerate(boxes_ns):
     bins_ns_24h_num.append(len(sh['dare_avg'][:,2][ia]))
 
 
-# In[149]:
+# In[112]:
 
 
 binsd_ns_24h,binsd_ns_24h_num = [],[]
@@ -1535,14 +1614,87 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_boxplot_NS_lat_withcl_noleg_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[171]:
+# ### Add ssa +/-
+
+# In[113]:
+
+
+binsd_ns_24h_ssam,binsd_ns_24h_ssam_num = [],[]
+for i,b in enumerate(boxes_ns):
+    ia = (shd_ssam['lon']>= b[0]) & (shd_ssam['lon']<=b[1]) &(shd_ssam['lat']>=b[2]) &    (shd_ssam['lat']<=b[3]) & (np.isfinite(shd_ssam['dare_avg'][:,2]))
+    binsd_ns_24h_ssam.append(shd_ssam['dare_avg'][:,2][ia])
+    binsd_ns_24h_ssam_num.append(len(shd_ssam['dare_avg'][:,2][ia]))
+
+
+# In[114]:
+
+
+binsd_ns_24h_ssap,binsd_ns_24h_ssap_num = [],[]
+for i,b in enumerate(boxes_ns):
+    ia = (shd_ssap['lon']>= b[0]) & (shd_ssap['lon']<=b[1]) &(shd_ssap['lat']>=b[2]) &    (shd_ssap['lat']<=b[3]) & (np.isfinite(shd_ssap['dare_avg'][:,2]))
+    binsd_ns_24h_ssap.append(shd_ssap['dare_avg'][:,2][ia])
+    binsd_ns_24h_ssap_num.append(len(shd_ssap['dare_avg'][:,2][ia]))
+
+
+# In[117]:
+
+
+plt.figure(figsize=(5,4))
+#plt.plot(s['dare'][igood,2],s['lat'][igood],'.',alpha=0.05)
+bpdp = plt.boxplot(binsd_ns_24h_ssap,positions=ns_ct[:,1]+0.3,vert=False,showfliers=True,widths=0.3,showmeans=True,patch_artist=True)
+bpd = plt.boxplot(binsd_ns_24h,positions=ns_ct[:,1],vert=False,showfliers=True,widths=0.3,showmeans=True,patch_artist=True)
+bpdm = plt.boxplot(binsd_ns_24h_ssam,positions=ns_ct[:,1]-0.3,vert=False,showfliers=True,widths=0.3,showmeans=True,patch_artist=True)
+
+plt.xlabel('TOA Diurnally averaged DARE [W/m$^2$]')
+plt.ylabel('Latitude [$^{{\\circ}}$S]')
+
+#plt.plot(s['angs_470_865'][s['fl_QA_angs']],s['GPS_Alt'][s['fl_QA_angs']],'.',alpha=0.005)
+color_boxes(bpdp,'tab:green')
+color_boxes(bpd,'tab:grey')
+color_boxes(bpdm,'tab:red')
+
+dare_meansdp = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bpdp['means']])
+plt.plot(dare_meansdp[:,0],dare_meansdp[:,1],'-',color='tab:green',alpha=0.6,label='Means')
+dare_meansd = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bpd['means']])
+plt.plot(dare_meansd[:,0],dare_meansd[:,1],'-',color='tab:grey',alpha=0.6,label='Means')
+dare_meansdm = np.array([[b.get_data()[0][0],b.get_data()[1][0]] for b in bpdm['means']])
+plt.plot(dare_meansdm[:,0],dare_meansdm[:,1],'-',color='tab:red',alpha=0.6,label='Means')
+plt.xlim(-15,70)
+#plt.ylim(0,2500)
+
+for j,nn in enumerate(binsd_ns_24h_ssap_num): 
+    if nn>0:
+        plt.text(min(bpdp['means'][j].get_data()[0])+5,ns_ct[j,1]+0.3,'{:2.0f}'.format(nn),
+                 color='tab:green',fontsize=7,verticalalignment='center',horizontalalignment='left')
+for j,nn in enumerate(binsd_ns_24h_num): 
+    if nn>0:
+        plt.text(min(bp['means'][j].get_data()[0])+5,ns_ct[j,1],'{:2.0f}'.format(nn),
+                 color='tab:grey',fontsize=7,verticalalignment='center',horizontalalignment='left')
+for j,nn in enumerate(binsd_ns_24h_ssam_num): 
+    if nn>0:
+        plt.text(min(bpdm['means'][j].get_data()[0])+5,ns_ct[j,1]-0.3,'{:2.0f}'.format(nn),
+                 color='tab:red',fontsize=7,verticalalignment='center',horizontalalignment='left')
+#pu.prelim()
+plt.axvline(0,ls='--',lw=1,color='k',alpha=0.6)
+
+plt.legend([bpd['means'][0],bpd['medians'][0],bpd['boxes'][0],bpd['whiskers'][0],bpd['fliers'][0],bpd['boxes'][0],bpdp['boxes'][0],bpdm['boxes'][0]],
+           ['Mean','Median','25% - 75%','min-max','outliers','sine','ssa + 0.02','ssa - 0.02'],
+           frameon=True,loc=1,numpoints=1,bbox_to_anchor=[1.4,0.7])
+#plt.title('In situ calculated extinction CLAP+neph: {}'.format(day))
+plt.tight_layout()
+plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_from_calc_boxplot_NS_lat_withcl_{}_deltassa.png'.format('v5'),dpi=600,transparent=True)
+
+
+# ## DARE 24h diurnal clouds variations histogram
+
+# In[51]:
 
 
 sh['dare_avg'][sh['dare_avg'][:,2]==0,2] = np.nan
 shd['dare_avg'][shd['dare_avg'][:,2]==0,2] = np.nan
 
 
-# In[198]:
+# In[53]:
 
 
 plt.figure(figsize=(4,3))
@@ -1568,10 +1720,95 @@ plt.tight_layout()
 plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_24h_hist_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[182]:
+# In[54]:
 
 
 np.nanmean(sh['dare_avg'][:,2]),np.nanmean(shd['dare_avg'][:,2]),np.nanstd(sh['dare_avg'][:,2]),np.nanstd(shd['dare_avg'][:,2])
+
+
+# ### Add ssa +/-
+
+# In[55]:
+
+
+shd_ssam['dare_avg'][shd_ssam['dare_avg'][:,2]==0,2] = np.nan
+shd_ssap['dare_avg'][shd_ssap['dare_avg'][:,2]==0,2] = np.nan
+
+
+# In[75]:
+
+
+shd_ssam['dare_avg'][shd_ssam['dare_avg'][:,0]==0,0] = np.nan
+shd_ssap['dare_avg'][shd_ssap['dare_avg'][:,0]==0,0] = np.nan
+
+
+# In[79]:
+
+
+def plot_mean_med_vline(val,color='r',add_text=True,ytext=0.75,dxtext=12,labels=False):
+    
+    if labels:
+        plt.axvline(np.nanmean(val),ls='-',color=color,label='Mean')
+        plt.axvline(np.nanmedian(val),ls='--',color=color,label='Median')
+    else:
+        plt.axvline(np.nanmean(val),ls='-',color=color)
+        plt.axvline(np.nanmedian(val),ls='--',color=color)
+    if add_text:
+        ypos = plt.gca().get_ylim()[1]*ytext-plt.gca().get_ylim()[0]
+        plt.text(np.nanmean(val)-dxtext,ypos,'{:3.1f}'.format(np.nanmean(val)),
+             color=color,alpha=0.7)
+
+
+# In[62]:
+
+
+ax = plt.gca()
+
+
+# In[64]:
+
+
+ax.get_ylim()
+
+
+# In[80]:
+
+
+plt.figure()
+plt.hist(shd['dare_avg'][:,2],color='tab:grey',bins=30,range=[-15,75],alpha=0.5,label='Sine')
+plt.hist(shd_ssap['dare_avg'][:,2],color='tab:green',bins=30,range=[-15,75],alpha=0.5,label='SSA + 0.02')
+plt.hist(shd_ssam['dare_avg'][:,2],color='tab:red',bins=30,range=[-15,75],alpha=0.5,label='SSA - 0.02')
+
+plt.axvline(0,ls=':',c='grey',zorder=-10)
+plt.xlabel('TOA Diurnally averaged DARE [W/m$^2$]')
+
+plot_mean_med_vline(shd['dare_avg'][:,2],color='tab:grey',dxtext=0,ytext=0.8,labels=True)
+plot_mean_med_vline(shd_ssap['dare_avg'][:,2],color='tab:green',dxtext=7)
+plot_mean_med_vline(shd_ssam['dare_avg'][:,2],color='tab:red',dxtext=-1,ytext=0.7)
+
+plt.legend(frameon=False)
+plt.tight_layout()
+plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_TOA_24h_with_ssadelta_hist_{}.png'.format('v5'),dpi=600,transparent=True)
+
+
+# In[82]:
+
+
+plt.figure()
+plt.hist(shd['dare_avg'][:,0],color='tab:grey',bins=30,range=[-50,15],alpha=0.5,label='Sine')
+plt.hist(shd_ssap['dare_avg'][:,0],color='tab:green',bins=30,range=[-50,15],alpha=0.5,label='SSA + 0.02')
+plt.hist(shd_ssam['dare_avg'][:,0],color='tab:red',bins=30,range=[-50,15],alpha=0.5,label='SSA - 0.02')
+
+plt.axvline(0,ls=':',c='grey',zorder=-10)
+plt.xlabel('Surface Diurnally averaged DARE [W/m$^2$]')
+
+plot_mean_med_vline(shd['dare_avg'][:,0],color='tab:grey',dxtext=0,ytext=0.8,labels=True)
+plot_mean_med_vline(shd_ssap['dare_avg'][:,0],color='tab:green',dxtext=7)
+plot_mean_med_vline(shd_ssam['dare_avg'][:,0],color='tab:red',dxtext=-1,ytext=0.7)
+
+plt.legend(frameon=False)
+plt.tight_layout()
+plt.savefig(fp+'plot_DARE/ORACLES2016_DARE_SUR_24h_with_ssadelta_hist_{}.png'.format('v5'),dpi=600,transparent=True)
 
 
 # ## Check for trends in underlying properties
