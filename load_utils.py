@@ -250,8 +250,8 @@ def modis_qa_MOD06(qa_array):
 
 def bits_stripping(bit_start,bit_count,value):
     "Support function to the modis_qa flags (MOD06) to parse out a bit array from hdf files"
-	bitmask=pow(2,bit_start+bit_count)-1
-	return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
+    bitmask=pow(2,bit_start+bit_count)-1
+    return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
 
 
 # In[ ]:
