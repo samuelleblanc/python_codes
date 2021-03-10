@@ -191,11 +191,46 @@ def load_ict(fname,return_header=False,make_nan=True):
 
 def modis_qa_MOD06(qa_array):
     """
-    modis qa data parser for Cloud properties.
-    input of qa numpy array from MODIS MOD06/MYD06 hdf files
-    output qa numpy boolwan array (True is high QA)
-        Set for useful COD and REF
-        Set for 2nd highest (not highest) confidence level
+    Purpose:
+    
+        modis qa data parser for Cloud properties.
+
+            Set for useful COD and REF
+            Set for 2nd highest (not highest) confidence level
+            
+    Input: 
+    
+        input of qa numpy array from MODIS MOD06/MYD06 hdf files
+        qa_array: 3d array of the QA values 'Quality_Assurance_1km' from MOD06 hdf, read by pyhdf.SD
+    
+    Output:
+    
+        output qa numpy boolean array (True is high QA)
+    
+    Dependencies:
+
+        load_utils.bits_stripping
+    
+    Required files:
+   
+        none
+    
+    Example:
+
+        > from pyhdf.SD import SD, SDC
+        > fh = SD(str(fp+'data_other/MODIS/MOD06_L2/2016/264/MOD06_L2.A2016264.1030.061.2017328080629.hdf'),SDC.READ)
+        > co = fh.select('Cloud_Optical_Thickness')
+        > codm = co.get()
+        > codm = codm*co.attributes()['scale_factor']
+        > codm[codm<0] = np.nan
+        > qal = fh.select('Quality_Assurance_1km')
+        > qa = modis_qa_MOD06(qal.get())
+        > codm[~qa] = np.nan
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2020-11-23, Santa Cruz, CA, ported from earlier implementation in ORACLES_build_DARE
+        
     """
     #bin8 = lambda x : ''.join(reversed( [str((x >> i) & 1) for i in range(8)] ) )
     from load_utils import bits_stripping
@@ -206,16 +241,81 @@ def modis_qa_MOD06(qa_array):
     qa_ref_useful = bits_stripping(3,1,qa_array[:,:,4])
     qa_ref_conf = bits_stripping(4,2,qa_array[:,:,4])
     qa = (qa_cod_useful>0) & (qa_cod_conf>1) & (qa_ref_useful>0) & (qa_ref_conf>1) 
-    return qa
     
+    return qa
 
 
 # In[4]:
 
 
 def bits_stripping(bit_start,bit_count,value):
+    "Support function to the modis_qa flags (MOD06) to parse out a bit array from hdf files"
 	bitmask=pow(2,bit_start+bit_count)-1
 	return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
+
+
+# In[ ]:
+
+
+def read_mod06(fh,set_qa_nan=False):
+    """
+    Purpose:
+    
+        Simple modis reader function, with input 'fh' is a SD object. 
+        Part of broader analysis which preloads the hdf files for faster parallel analysis.
+        
+    Input: 
+    
+        fh: file SD handle for Hdf MOD06/MYD06 files
+        set_qa_nan: if set (default False) will nan ou bad cloud QA values
+    
+    Output:
+    
+        codm : Cloud optical thickness at 1km  
+        ref : cloud effective radius at 1km 
+        
+    Dependencies:
+
+        load_utils.modis_qa_MOD06
+    
+    Required files:
+   
+        MODIS hdf files
+    
+    Example:
+
+        > from pyhdf.SD import SD, SDC
+        > geosy[ad]['fh'] = [SD(str(fp+'data_other/MODIS/MYD06_L2/2016/264/MYD06_L2.A2016264.1315.061.2018062110512.hdf'),SDC.READ)]
+        > for igy,gy in enumerate(geosy[ad]['fh']):
+                ind = mu.map_ind(geosy[ad]['lat'][igy,:,:],geosy[ad]['lon'][igy,:,:],
+                         ar['Latitude'][fla][iaes][idd],ar['Longitude'][fla][iaes][idd])
+        >  if np.array(ind).any():
+                cody,refy = read_mod06(gy)
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2020-11-23, Santa Cruz, CA, ported from earlier implementation in ORACLES_build_DARE
+    
+    """
+    from load_utils import modis_qa_MOD06
+    re = fh.select('Cloud_Effective_Radius')
+    ref = re.get()
+    ref = ref*re.attributes()['scale_factor']
+    ref[ref<0] = np.nan
+    
+    co = fh.select('Cloud_Optical_Thickness')
+    codm = co.get()
+    codm = codm*co.attributes()['scale_factor']
+    codm[codm<0] = np.nan
+        
+    qal = fh.select('Quality_Assurance_1km')
+    qa = modis_qa_MOD06(qal.get())
+    
+    if set_qa_nan:
+        codm[~qa] = np.nan
+        ref[~qa] = np.nan
+    
+    return codm,ref
 
 
 # In[ ]:
