@@ -109,19 +109,19 @@ fp_librad = getpath('libradtranb')+'data/'
 
 # ## Load the 4STAR AOD
 
-# In[22]:
+# In[16]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 
 
-# In[23]:
+# In[17]:
 
 
 s.keys()
 
 
-# In[24]:
+# In[18]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -129,13 +129,13 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 
 # ### Load the flag files
 
-# In[25]:
+# In[19]:
 
 
 fmat = getpath('4STAR_data')
 
 
-# In[26]:
+# In[20]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -145,25 +145,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[27]:
+# In[21]:
 
 
 sf.keys()
 
 
-# In[28]:
+# In[22]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[29]:
+# In[23]:
 
 
 flag.shape
 
 
-# In[30]:
+# In[24]:
 
 
 sum(flag)
@@ -3082,26 +3082,26 @@ plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.png',dpi=600,transparent=True)
 
 # # Add MODIS AOD plots
 
-# In[65]:
+# In[8]:
 
 
 from mpl_toolkits.basemap import Basemap
 import georaster
 
 
-# In[17]:
+# In[9]:
 
 
 mod,modh = lu.load_hdf(fp+'data_other/MOD04_3K.A2018160.1855.061.2018161080147.hdf',values=(('lat',52),('lon',51),('aod',10)))
 
 
-# In[112]:
+# In[10]:
 
 
 modh['aod']
 
 
-# In[62]:
+# In[11]:
 
 
 def make_map1(ax=plt.gca()):
@@ -3117,7 +3117,7 @@ def make_map1(ax=plt.gca()):
     return m
 
 
-# In[54]:
+# In[12]:
 
 
 plt.figure()
@@ -3125,20 +3125,20 @@ plt.scatter(mod['lon'],mod['lat'],50,mod['aod'],marker='s')
 plt.colorbar()
 
 
-# In[67]:
+# In[13]:
 
 
 import rasterio
 from rasterio.plot import show
 
 
-# In[68]:
+# In[14]:
 
 
 src = rasterio.open(fp+'data_other/snapshot-2018-06-09T00_00_00Z.tiff')
 
 
-# In[136]:
+# In[15]:
 
 
 fla = np.where(flag & (s['Alt'][:,0]<1500.0))
