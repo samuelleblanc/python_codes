@@ -75,7 +75,7 @@ get_ipython().magic(u'matplotlib notebook')
 import plotting_utils as pu
 
 
-# In[7]:
+# In[6]:
 
 
 from load_utils import mat2py_time, toutc, load_ict
@@ -83,14 +83,14 @@ from Sp_parameters import smooth
 from path_utils import getpath
 
 
-# In[8]:
+# In[7]:
 
 
 #fp ='C:/Users/sleblan2/Research/KORUS-AQ/'
 fp = getpath('KORUS')
 
 
-# In[9]:
+# In[8]:
 
 
 vr = 'R0'
@@ -101,13 +101,13 @@ vr = 'R0'
 
 # ## Load the AOD files from 4STAR
 
-# In[10]:
+# In[9]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_ict.mat')
 
 
-# In[11]:
+# In[10]:
 
 
 ar.keys()
@@ -115,25 +115,25 @@ ar.keys()
 
 # ## Adjust the AOD to reflect dirt contamination
 
-# In[12]:
+# In[11]:
 
 
 aod_names = sorted([a for a in ar.keys() if ('AOD' in a) and not ('UNC' in a)])
 
 
-# In[13]:
+# In[12]:
 
 
 aod_names
 
 
-# In[14]:
+# In[13]:
 
 
 arc = {}
 
 
-# In[15]:
+# In[14]:
 
 
 for nn in aod_names:
@@ -142,7 +142,7 @@ for nn in aod_names:
     arc[nn][ar['UNC'+nn]>1.00] = ar[nn][ar['UNC'+nn]>1.00]-1.00
 
 
-# In[16]:
+# In[15]:
 
 
 arc.keys()
@@ -150,13 +150,13 @@ arc.keys()
 
 # ## Filter out bad data
 
-# In[17]:
+# In[16]:
 
 
 ar['fl'][0]
 
 
-# In[18]:
+# In[17]:
 
 
 ar['AOD0501'].shape
@@ -164,43 +164,43 @@ ar['AOD0501'].shape
 
 # ## Make some filters for altitudes 
 
-# In[19]:
+# In[18]:
 
 
 ar['fl_8'] = ar['GPS_Alt']>8000
 
 
-# In[20]:
+# In[19]:
 
 
 ar['fl_2_8'] = (ar['GPS_Alt']<=8000) & (ar['GPS_Alt']>2000) & ar['fl_QA']
 
 
-# In[21]:
+# In[20]:
 
 
 ar['fl_1.5_2'] = (ar['GPS_Alt']<=2000) & (ar['GPS_Alt']>1500) & ar['fl_QA']
 
 
-# In[22]:
+# In[21]:
 
 
 ar['fl_1_1.5'] = (ar['GPS_Alt']<=1500) & (ar['GPS_Alt']>1000) & ar['fl_QA']
 
 
-# In[23]:
+# In[22]:
 
 
 ar['fl_0.5_1'] = (ar['GPS_Alt']<=1000) & (ar['GPS_Alt']>500) & ar['fl_QA']
 
 
-# In[24]:
+# In[23]:
 
 
 ar['fl_0.5'] = (ar['GPS_Alt']<=500) & ar['fl_QA']
 
 
-# In[25]:
+# In[24]:
 
 
 ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
@@ -324,7 +324,7 @@ np.nanmean(arc['AOD0501'][ar['fl']]),np.nanmedian(arc['AOD0501'][ar['fl']])
 np.nanmean(arc['AOD0501'][ar['fl_0.5']]),np.nanmedian(arc['AOD0501'][ar['fl_0.5']])
 
 
-# In[33]:
+# In[26]:
 
 
 plt.figure()
@@ -336,41 +336,73 @@ plt.title('KORUS Altitudes')
 
 # ## Build vertical distribution of AOD
 
-# In[34]:
+# In[27]:
 
 
 bins.shape
 
 
-# In[35]:
+# In[28]:
 
 
 pos = np.array([(bins[i]+bins[i+1])/2.0 for i,b in enumerate(bins[:-1])])
 
 
-# In[36]:
+# In[29]:
 
 
 len(pos)
 
 
-# In[37]:
+# In[38]:
 
 
-plt.figure(figsize=(8,7))
+plt.figure(figsize=(4,5))
 plt.plot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.',alpha=0.0,color='w')
 pu.make_boxplot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],
-                bins,pos,color='lightblue',alpha=0.5,y=0,vert=False,label='500 nm Archived',fliers_off=True)
+                bins,pos,color='lightblue',alpha=0.5,y=0,vert=False,label='Uncorrected',fliers_off=True)
 pu.make_boxplot(arc['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],
-                bins,pos-50.0,color='blue',alpha=0.5,y=0,vert=False,label='500 nm Corrected\nfor window dirt',fliers_off=True)
+                bins,pos-50.0,color='blue',alpha=0.5,y=0,vert=False,label='Corrected\nfor window dirt',fliers_off=True)
 plt.legend(frameon=False)
-plt.xlim(0,1.0)
+plt.xlim(0,0.8)
 plt.ylim(0,10000)
 plt.xlabel('AOD @ 501 nm')
 plt.ylabel('GPS Altitude [m]')
-plt.title('KORUS-AQ average AOD profile from 4STAR')
+#plt.title('KORUS-AQ average AOD profile from 4STAR')
 plt.grid()
-plt.savefig(fp+'plot\\KORUS_AOD_profile_avg.png',transparent=True,dpi=600)
+plt.tight_layout()
+plt.savefig(fp+'plot\\KORUS_AOD_profile_avg_windowcorr.png',transparent=True,dpi=600)
+
+
+# In[39]:
+
+
+arc.keys()
+
+
+# In[41]:
+
+
+plt.figure(figsize=(4,5))
+plt.plot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],'.',alpha=0.0,color='w')
+
+pu.make_boxplot(arc['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],
+                bins,pos,color='green',alpha=0.5,y=0,vert=False,label='501 nm',fliers_off=True)
+
+pu.make_boxplot(arc['AOD0380'][ar['fl']],ar['GPS_Alt'][ar['fl']],
+                bins,pos+50.0,color='blue',alpha=0.5,y=0,vert=False,label='380 nm',fliers_off=True)
+
+pu.make_boxplot(arc['AOD0865'][ar['fl']],ar['GPS_Alt'][ar['fl']],
+                bins,pos-50.0,color='red',alpha=0.5,y=0,vert=False,label='865 nm',fliers_off=True)
+plt.legend(frameon=False)
+plt.xlim(0,0.8)
+plt.ylim(0,10000)
+plt.xlabel('AOD')
+plt.ylabel('GPS Altitude [m]')
+#plt.title('KORUS-AQ average AOD profile from 4STAR')
+plt.grid()
+plt.tight_layout()
+plt.savefig(fp+'plot\\KORUS_AOD_profile_wvls_avg.png',transparent=True,dpi=600)
 
 
 # In[38]:
@@ -422,6 +454,12 @@ plt.tight_layout()
 plt.subplots_adjust(top=0.92)
 
 plt.savefig(fp+'plot\\KORUS_AOD_profile_wvl_avg.png',transparent=True,dpi=600)
+
+
+# In[ ]:
+
+
+
 
 
 # ## Plot some AOD wavelength dependence
