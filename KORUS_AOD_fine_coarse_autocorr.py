@@ -46,7 +46,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[1]:
 
 
 #%config InlineBackend.rc = {}
@@ -67,9 +67,10 @@ from scipy.interpolate import UnivariateSpline
 import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 import scipy.stats as st
+import scipy.io as sio
 
 
-# In[3]:
+# In[2]:
 
 
 import map_utils as mu
@@ -79,20 +80,20 @@ import math
 import sys
 
 
-# In[4]:
+# In[3]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[5]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[6]:
+# In[5]:
 
 
 fp = getpath('KORUS')
@@ -104,109 +105,109 @@ fp = getpath('KORUS')
 
 # ## Load 4STAR AOD ict files
 
-# In[6]:
+# In[8]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[7]:
+# In[9]:
 
 
 ka = ar.keys()
 
 
-# In[8]:
+# In[10]:
 
 
 ka.sort()
 
 
-# In[9]:
+# In[11]:
 
 
 ka
 
 
-# In[10]:
+# In[12]:
 
 
 ar['qual_flag']
 
 
-# In[11]:
+# In[13]:
 
 
 ar['fl_QA']
 
 
-# In[12]:
+# In[14]:
 
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
 
-# In[13]:
+# In[15]:
 
 
 fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 
-# In[14]:
+# In[16]:
 
 
 fl_ci.sum()
 
 
-# In[15]:
+# In[17]:
 
 
 len(fl_ci)*1.0/60.0/60.0
 
 
-# In[16]:
+# In[18]:
 
 
 fl_ci.sum()/float(len(fl_ci))
 
 
-# In[17]:
+# In[19]:
 
 
 ar['fl_QA'].sum()*1.0/60.0/60.0
 
 
-# In[18]:
+# In[20]:
 
 
 ar['qual_flag'].sum()
 
 
-# In[19]:
+# In[21]:
 
 
 fl_ci
 
 
-# In[20]:
+# In[22]:
 
 
 nwl = ka[0:17]
 
 
-# In[21]:
+# In[23]:
 
 
 nwl
 
 
-# In[22]:
+# In[24]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
-# In[23]:
+# In[25]:
 
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
@@ -215,31 +216,31 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614']
 
 
-# In[24]:
+# In[26]:
 
 
 doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
 
 
-# In[25]:
+# In[27]:
 
 
 doys
 
 
-# In[26]:
+# In[28]:
 
 
 fdoys = np.array(doys)
 
 
-# In[27]:
+# In[29]:
 
 
 ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
 
 
-# In[28]:
+# In[30]:
 
 
 ar['doys']
@@ -2235,13 +2236,19 @@ hs.savemat(fp+'KORUS_autocorr_dvals.mat',dvals)
 
 # ## Load from file
 
-# In[7]:
+# In[ ]:
 
 
 dvals = hs.loadmat(fp+'KORUS_autocorr_dvals.mat')
 
 
-# In[8]:
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
 dvals.keys()
@@ -2795,6 +2802,8 @@ dat_u = wu.iterate_dict_unicode(dat_c)
 
 hs.savemat(fp+'KORUS_fine_coarse_autocorr_{}.mat'.format(vv),dat_u)
 
+
+# ### Load the models
 
 # ## Old calculation methods (no longer used)
 
@@ -3466,6 +3475,22 @@ dat_u = wu.iterate_dict_unicode(dat_c)
 hs.savemat(fp+'KORUS_fine_coarse_autocorr_montecarlo_{}.mat'.format(vv),dat_u)
 
 
+# ### Load autocorr and monte carlo
+
+# In[6]:
+
+
+vv = 'v1'
+dat_u = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_montecarlo_{}.mat'.format(vv))
+
+
+# In[11]:
+
+
+for k in dat_u.keys():
+    locals()[k] = dat_u[k]
+
+
 # ## Internal old testing
 
 # ### Integrated autocorrelation
@@ -3707,7 +3732,7 @@ for i,k in enumerate(key_list):
 
 # ## Load the Autocorrelations from Shinozuka & Redemann
 
-# In[76]:
+# In[13]:
 
 
 SR_corr_ks = [0.45,1.0,3.0,6.0,10.0,20.0,34.2]
@@ -3770,7 +3795,7 @@ SR_AE_corr_loc = [0.975,0.956,0.919,0.831,0.747,0.519,0.366]
 35,10728129935923; 0,9193744864787629
 
 
-# In[77]:
+# In[14]:
 
 
 note = [['a)','b)'],['c)','d)'],['e)','f)'],['g)','h)'],['i)','j)']]
@@ -4160,13 +4185,13 @@ plt.savefig(fp+'plot/KORUS_Autocorr_diff_rel_all_with_SR2011_GOCI_MERRA_insitu.p
 
 # ## Only plot subset of autocorrelation extensive vs intensive
 
-# In[346]:
+# In[15]:
 
 
 autocorr_len.keys()
 
 
-# In[79]:
+# In[16]:
 
 
 key_list = ['aod0500','aod1040','AE','aod_fine','aod_coarse']
@@ -4178,7 +4203,7 @@ tit = ['AOD$_{{500}}$','AOD$_{{1040}}$','AE','AOD$_{{fine}}$','AOD$_{{coarse}}$'
 tit2 = ['AOD$_{{500}}$','AOD$_{{1040}}$','AE','fine-mode fraction']
 
 
-# In[80]:
+# In[17]:
 
 
 fig, ax = plt.subplots(2,2,figsize=(6,4))
@@ -4231,19 +4256,19 @@ ax[i,1].legend(frameon=False,bbox_to_anchor=[0.95,-0.25])
 plt.savefig(fp+'plot/KORUS_Autocorr_number_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[350]:
+# In[18]:
 
 
 key_list2
 
 
-# In[351]:
+# In[19]:
 
 
 tit2
 
 
-# In[352]:
+# In[20]:
 
 
 key_list3 = ['aod0500','fmf']
@@ -4343,7 +4368,7 @@ plt.savefig(fp+'plot/KORUS_Autocorr_rel_subset_with_SR2011_GOCI_MERRA_insitu.png
 
 # ### Add the standard deviation subset
 
-# In[353]:
+# In[21]:
 
 
 corr_ks = np.array(corr_ks)
@@ -4523,41 +4548,145 @@ plt.subplots_adjust(left=None, bottom=0.15, right=None, top=None,
 
 # ## Autocorrelation of extrinsic vs intrisic properties
 
-# In[81]:
+# In[22]:
 
 
 autocorr.keys()
 
 
-# In[82]:
+# In[28]:
+
+
+autocorrs['AE'][j,jj:]
+
+
+# In[27]:
 
 
 autocorr_std['AE'][j,jj:]
 
 
-# In[84]:
+# In[26]:
 
 
 plt.figure()
+jj = 0
+
 plt.plot(corr_ks,autocorrs['AE'][j,jj:,:])
 
 
-# In[83]:
+# In[48]:
 
 
-plt.figure()
+fig, ax = plt.subplots(1,2,sharey=True,figsize=(8,4))
 j = 0
 jj = 0
-plt.plot(corr_ks[jj:],autocorr_mean['AE'][j,jj:],ls='--',marker='.')
-plt.errorbar(corr_ks[jj:],autocorr_mean['AE'][j,jj:],yerr=autocorr_std['AE'][j,jj:])
-plt.plot(corr_ks[jj:],autocorr_mean['MERRA_AE'][j,jj:],ls=':',marker='.')
-plt.plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],ls='-',marker='.')
+#ax[0].plot(corr_ks[jj:],autocorr_mean['AE'][j,jj:],ls='--',marker='.',label='AE',color='k')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['AE'][j,jj:],yerr=autocorr_d['AE'][j,jj:],ls='--',marker='.',label='4STAR')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AE'][j,jj:],yerr=autocorr_d['MERRA_AE'][j,jj:],ls='--',marker='.',label='MERRA')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['GOCI_AE'][j,jj:],yerr=autocorr_d['GOCI_AE'][j,jj:],ls='--',marker='.',label='GOCI')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['situ_ae'][j,jj:],yerr=autocorr_d['situ_ae'][j,jj:],ls='--',marker='.',label='Point / in situ')
+ax[1].set_title('AE')
 
-ax = plt.gca()
-ax.set_ylim(0,1)
-ax.set_yticks([0,0.25,0.5,0.75,1.0])
-ax.set_xscale('log')
-ax.grid()
+#ax[1].plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],yerr=autocorr_d['aod0500'][j,jj:],ls='-',marker='.',label='4STAR')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AOD'][j,jj:],yerr=autocorr_d['MERRA_AOD'][j,jj:],ls='-',marker='.',label='MERRA')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['GOCI_AOD'][j,jj:],yerr=autocorr_d['GOCI_AOD'][j,jj:],ls='-',marker='.',label='GOCI')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['situ_ext'][j,jj:],yerr=autocorr_d['situ_ext'][j,jj:],ls='-',marker='.',label='Point / in situ')
+ax[0].set_title('AOD$_{{500}}$')
+
+if False:
+    #ax[1].plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+    ax[2].errorbar(corr_ks[jj:],autocorr_mean['fmf'][j,jj:],yerr=autocorr_d['fmf'][j,jj:],ls='-',marker='.',label='4STAR',color='tab:blue')
+    #ax[0].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AOD'][j,jj:],yerr=autocorr_d['MERRA_AOD'][j,jj:],ls='-',marker='.',label='MERRA')
+    ax[2].errorbar(corr_ks[jj:],autocorr_mean['GOCI_fmf'][j,jj:],yerr=autocorr_d['GOCI_fmf'][j,jj:],ls='-',marker='.',label='GOCI',color='tab:green')
+    #ax[0].errorbar(corr_ks[jj:],autocorr_mean['situ_ext'][j,jj:],yerr=autocorr_d['situ_ext'][j,jj:],ls='-',marker='.',label='Point / in situ')
+    ax[2].set_title('FMF')
+
+ax[0].legend(frameon=False)
+
+ax[0].set_ylim(0,1)
+ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
+ax[0].set_xscale('log')
+ax[1].set_xscale('log')
+#ax[2].set_xscale('log')
+ax[0].grid()
+ax[1].grid()
+#ax[2].grid()
+
+plt.savefig(fp+'plot/KORUS_autocorr_AOD_AE_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[65]:
+
+
+fig, ax = plt.subplots(1,2,sharey=True,figsize=(8,4))
+j = 6
+jj = 0
+#ax[0].plot(corr_ks[jj:],autocorr_mean['AE'][j,jj:],ls='--',marker='.',label='AE',color='k')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['AE'][j,jj:],yerr=autocorr_d['AE'][j,jj:],ls='--',marker='.',label='4STAR')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AE'][j,jj:],yerr=autocorr_d['MERRA_AE'][j,jj:],ls='--',marker='.',label='MERRA')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['GOCI_AE'][j,jj:],yerr=autocorr_d['GOCI_AE'][j,jj:],ls='--',marker='.',label='GOCI')
+ax[1].errorbar(corr_ks[jj:],autocorr_mean['situ_ae'][j,jj:],yerr=autocorr_d['situ_ae'][j,jj:],ls='--',marker='.',label='Point / in situ')
+ax[1].set_title('AE')
+
+#ax[1].plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],yerr=autocorr_d['aod0500'][j,jj:],ls='-',marker='.',label='4STAR')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AOD'][j,jj:],yerr=autocorr_d['MERRA_AOD'][j,jj:],ls='-',marker='.',label='MERRA')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['GOCI_AOD'][j,jj:],yerr=autocorr_d['GOCI_AOD'][j,jj:],ls='-',marker='.',label='GOCI')
+ax[0].errorbar(corr_ks[jj:],autocorr_mean['situ_ext'][j,jj:],yerr=autocorr_d['situ_ext'][j,jj:],ls='-',marker='.',label='Point / in situ')
+ax[0].set_title('AOD$_{{500}}$')
+
+if False:
+    #ax[1].plot(corr_ks[jj:],autocorr_mean['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+    ax[2].errorbar(corr_ks[jj:],autocorr_mean['fmf'][j,jj:],yerr=autocorr_d['fmf'][j,jj:],ls='-',marker='.',label='4STAR',color='tab:blue')
+    #ax[0].errorbar(corr_ks[jj:],autocorr_mean['MERRA_AOD'][j,jj:],yerr=autocorr_d['MERRA_AOD'][j,jj:],ls='-',marker='.',label='MERRA')
+    ax[2].errorbar(corr_ks[jj:],autocorr_mean['GOCI_fmf'][j,jj:],yerr=autocorr_d['GOCI_fmf'][j,jj:],ls='-',marker='.',label='GOCI',color='tab:green')
+    #ax[0].errorbar(corr_ks[jj:],autocorr_mean['situ_ext'][j,jj:],yerr=autocorr_d['situ_ext'][j,jj:],ls='-',marker='.',label='Point / in situ')
+    ax[2].set_title('FMF')
+
+ax[0].legend(frameon=False)
+
+ax[0].set_ylim(0,1)
+ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
+ax[0].set_xscale('log')
+ax[1].set_xscale('log')
+#ax[2].set_xscale('log')
+ax[0].grid()
+ax[1].grid()
+#ax[2].grid()
+
+#plt.savefig(fp+'plot/KORUS_autocorr_AOD_AE_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[53]:
+
+
+np.argmin(abs(aae[0]*np.exp(-1.0)-aae))
+
+
+# In[54]:
+
+
+corr_ks[19]
+
+
+# In[55]:
+
+
+aae[0]*np.exp(-1.0)
+
+
+# In[56]:
+
+
+aae[0]
+
+
+# In[51]:
+
+
+aae = autocorr_mean['AE'][j,jj:]
 
 
 # In[359]:
