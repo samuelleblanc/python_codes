@@ -109,19 +109,19 @@ fp_librad = getpath('libradtranb')+'data/'
 
 # ## Load the 4STAR AOD
 
-# In[16]:
+# In[8]:
 
 
 s = sio.loadmat(fp+'os_data/4STAR_{}starsun.mat'.format(day))
 
 
-# In[17]:
+# In[9]:
 
 
 s.keys()
 
 
-# In[18]:
+# In[10]:
 
 
 s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
@@ -129,13 +129,13 @@ s['utc'] = lu.toutc(lu.mat2py_time(s['t']))
 
 # ### Load the flag files
 
-# In[19]:
+# In[11]:
 
 
 fmat = getpath('4STAR_data')
 
 
-# In[20]:
+# In[12]:
 
 
 with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
@@ -145,25 +145,25 @@ with open (fmat+'starinfo_{}.m'.format(day), 'rt') as in_file:
 sf = hs.loadmat(fmat+ff)
 
 
-# In[21]:
+# In[13]:
 
 
 sf.keys()
 
 
-# In[22]:
+# In[14]:
 
 
 flag = sf['manual_flags']['good'][0,:,0]
 
 
-# In[23]:
+# In[15]:
 
 
 flag.shape
 
 
-# In[24]:
+# In[16]:
 
 
 sum(flag)
@@ -171,19 +171,19 @@ sum(flag)
 
 # ### use the polyfit aod on the wavelength array
 
-# In[11]:
+# In[17]:
 
 
 s['tau_aero_polynomial'].shape
 
 
-# In[12]:
+# In[18]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[13]:
+# In[19]:
 
 
 s['aod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -193,13 +193,13 @@ for i in xrange(len(s['utc'])):
                                          np.log(wvl)))
 
 
-# In[23]:
+# In[20]:
 
 
 s['aod'].shape
 
 
-# In[24]:
+# In[21]:
 
 
 s['aod'][10:-1:200,:].shape
@@ -219,13 +219,13 @@ plt.xlim(0.25,5)
 
 # ### Alternative build of tau aero polynomials for AOD
 
-# In[38]:
+# In[22]:
 
 
 wvl = np.array([0.25,0.35,0.4,0.5,0.675,0.87,0.995,1.2,1.4,1.6,2.1,3.2,4.9])
 
 
-# In[37]:
+# In[23]:
 
 
 sai = s['aerosolcols'][0,:].astype(int)
@@ -266,7 +266,7 @@ plt.plot(s['w'][0,sai],s['tau_aero'][i,sai],'.')
 plt.ylim(0,0.5)
 
 
-# In[31]:
+# In[24]:
 
 
 np.where(flag)[0]
@@ -300,7 +300,7 @@ plt.gca().set_position([box.x0, box.y0, box.width * 0.96, box.height])
 plt.savefig(fp+'plots/Good_AOD_spectra_examples_{}.png'.format(day),dpi=600,transparent=True)
 
 
-# In[32]:
+# In[25]:
 
 
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
@@ -354,14 +354,14 @@ plt.plot(s['w'][0,saii],s['tau_aero'][i,saii],'.')
 plt.ylim(0,0.5)
 
 
-# In[34]:
+# In[26]:
 
 
 saii = sai[((s['w'][0,sai]>0.364) & (s['w'][0,sai]<0.370)) | ((s['w'][0,sai]>0.435) & (s['w'][0,sai]<1.566)) | 
             ((s['w'][0,sai]>1.584) & (s['w'][0,sai]<1.597)) ]
 
 
-# In[304]:
+# In[27]:
 
 
 pl = su.logaod_polyfit(np.append(s['w'][0,saii],[2.2,2.7,3.5]),np.append(s['tau_aero'][i,saii],[s['tau_aero'][i,saii][-1]*2.0/3.0,s['tau_aero'][i,saii][-1]/2.0,s['tau_aero'][i,saii][-1]/4.0]),polynum=2)
@@ -382,13 +382,13 @@ plt.ylim(0.01,2)
 plt.xlim(0.3,5)
 
 
-# In[306]:
+# In[28]:
 
 
 from scipy import polyfit
 
 
-# In[307]:
+# In[29]:
 
 
 tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_aero_subtract_all'][i,saii][-1]*2.0/3.0,
@@ -396,19 +396,19 @@ tau_aero_good = np.array([np.append(s['tau_aero_subtract_all'][i,saii],[s['tau_a
                           for i in xrange(len(s['t']))])
 
 
-# In[308]:
+# In[30]:
 
 
 poly = np.array([polyfit(np.log(np.append(s['w'][0,saii],[2.2,2.7,3.7])),np.log(aodd),2) for aodd in tau_aero_good])
 
 
-# In[309]:
+# In[31]:
 
 
 poly.shape
 
 
-# In[310]:
+# In[32]:
 
 
 s['paod'] = np.zeros((len(s['utc']),len(wvl)))
@@ -429,25 +429,25 @@ plt.ylim(0.01,10)
 plt.xlim(0.25,5)
 
 
-# In[312]:
+# In[33]:
 
 
 s['aod'] = s['paod']
 
 
-# In[313]:
+# In[34]:
 
 
 i=3778
 
 
-# In[314]:
+# In[35]:
 
 
 s['aod'][i,3]
 
 
-# In[315]:
+# In[36]:
 
 
 s['Alt'][i]
@@ -2524,7 +2524,7 @@ tval,pval
 
 # #### Estimate the uncertainty in DARE
 
-# In[403]:
+# In[102]:
 
 
 import plotting_utils as pu
@@ -3082,26 +3082,26 @@ plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.png',dpi=600,transparent=True)
 
 # # Add MODIS AOD plots
 
-# In[8]:
+# In[37]:
 
 
 from mpl_toolkits.basemap import Basemap
 import georaster
 
 
-# In[9]:
+# In[38]:
 
 
 mod,modh = lu.load_hdf(fp+'data_other/MOD04_3K.A2018160.1855.061.2018161080147.hdf',values=(('lat',52),('lon',51),('aod',10)))
 
 
-# In[10]:
+# In[39]:
 
 
 modh['aod']
 
 
-# In[11]:
+# In[40]:
 
 
 def make_map1(ax=plt.gca()):
@@ -3125,26 +3125,26 @@ plt.scatter(mod['lon'],mod['lat'],50,mod['aod'],marker='s')
 plt.colorbar()
 
 
-# In[13]:
+# In[41]:
 
 
 import rasterio
 from rasterio.plot import show
 
 
-# In[14]:
+# In[42]:
 
 
 src = rasterio.open(fp+'data_other/snapshot-2018-06-09T00_00_00Z.tiff')
 
 
-# In[15]:
+# In[43]:
 
 
 fla = np.where(flag & (s['Alt'][:,0]<1500.0))
 
 
-# In[143]:
+# In[44]:
 
 
 plt.figure()
@@ -3159,5 +3159,136 @@ plt.scatter(s['Lon'][fla,0],s['Lat'][fla,0],50,s['tau_aero'][fla,406],marker='o'
 plt.legend()
 plt.xlabel('Longitude [$^{{\circ}}$]')
 plt.ylabel('Latitude [$^{{\circ}}$]')
-plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor.png',dpi=600,transparent=True)
+#plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor.png',dpi=600,transparent=True)
+
+
+# ## Co-locate the MODIS and 4STAR AODs
+
+# In[103]:
+
+
+import map_utils as mu
+import plotting_utils as pu
+from Sp_parameters import doublenanmask
+
+
+# In[99]:
+
+
+m2s = mu.stats_within_radius(s['Lat'][fla],s['Lon'][fla],mod['lat'],mod['lon'],mod['aod'],1500.0,subset=False)
+
+
+# In[90]:
+
+
+m2s.keys()
+
+
+# In[91]:
+
+
+m2s['mean'].shape
+
+
+# In[92]:
+
+
+len(s['Lat'][fla])
+
+
+# In[93]:
+
+
+len(m2s['mean'])
+
+
+# In[94]:
+
+
+m2s['mean']
+
+
+# In[95]:
+
+
+m2s['index']
+
+
+# In[135]:
+
+
+plt.figure()
+
+xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2))
+pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+plt.xlim(0,0.8)
+plt.ylim(0,0.8)
+plt.plot([0,1],[0,1],'--',c='k')
+plt.legend(frameon=False)
+plt.xlabel('4STAR AOD')
+plt.ylabel('MODIS Dark Target TERRA AOD')
+
+
+# In[153]:
+
+
+plt.figure()
+
+xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
+plt.hist2d(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask],bins=(30,30),range=[[0,0.8],[0,0.8]],cmap=plt.cm.Reds)
+plt.colorbar(label='Number of co-located points')
+pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+plt.xlim(0,0.8)
+plt.ylim(0,0.8)
+plt.plot([0,1],[0,1],'--',c='k')
+plt.legend(frameon=True)
+plt.xlabel('4STAR AOD')
+plt.ylabel('MODIS Dark Target TERRA AOD')
+
+
+# In[180]:
+
+
+fig,ax = plt.subplots(1,2,figsize=(9,3.5))
+plt.sca(ax[0])
+show(src.read(),transform=src.transform,ax=ax[0])
+plt.xlim(-113.1,-109.8)
+plt.ylim(55.8,59.0)
+plt.pcolor(mod['lon'],mod['lat'],mod['aod'],vmin=0,vmax=0.5,cmap='plasma',label='MODIS DT TERRA')
+plt.colorbar(label='AOD',extend='max',shrink=0.68,pad=0.03)
+ax[0].plot(s['Lon'],s['Lat'],'-',color='k',markersize=0.2,label='flight path')
+ax[0].scatter(s['Lon'][fla,0],s['Lat'][fla,0],50,s['tau_aero'][fla,406],marker='o',
+            cmap='plasma',vmin=0,vmax=0.5,zorder=10,label='4STAR',lw=0.1,edgecolor='k',alpha=0.2)
+plt.legend()
+plt.xlabel('Longitude [$^{{\circ}}$]')
+plt.ylabel('Latitude [$^{{\circ}}$]')
+
+plt.sca(ax[1])
+
+xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
+plt.hist2d(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask],cmap=plt.cm.Reds,bins=(30,30),range=[[0,0.8],[0,0.8]])
+plt.colorbar(label='Number of co-located points')
+pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+plt.xlim(0,0.8)
+plt.ylim(0,0.8)
+plt.plot([0,1],[0,1],'--',c='k')
+plt.legend(frameon=True)
+plt.xlabel('4STAR AOD')
+plt.ylabel('MODIS Dark Target TERRA AOD')
+
+plt.tight_layout()
+
+plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.png',dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 
