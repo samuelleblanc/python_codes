@@ -38,7 +38,7 @@
 
 # # Set up the background functions
 
-# In[2]:
+# In[57]:
 
 
 from __future__ import print_function 
@@ -47,13 +47,13 @@ from parse_and_move_incoming_fx import get_date_and_string,      pull_labels, ge
 
 # # Prepare the command line argument parser
 
-# In[11]:
+# In[2]:
 
 
 import argparse
 
 
-# In[12]:
+# In[3]:
 
 
 long_description = """    Run the incoming file parser and moves the files to the desired sunsat locations
@@ -63,7 +63,7 @@ long_description = """    Run the incoming file parser and moves the files to th
     Can run a call to matlab for any incoming 4STAR raw data"""
 
 
-# In[13]:
+# In[4]:
 
 
 parser = argparse.ArgumentParser(description=long_description)
@@ -81,7 +81,7 @@ parser.add_argument('-m','--run_matlab',help='if set, will run the matlab calls 
                     action='store_true')
 
 
-# In[14]:
+# In[5]:
 
 
 in_ = vars(parser.parse_known_args()[0])
@@ -89,7 +89,7 @@ in_ = vars(parser.parse_known_args()[0])
 
 # # Load the modules and get the defaults
 
-# In[15]:
+# In[6]:
 
 
 import os, zipfile
@@ -105,14 +105,14 @@ import threading
 from aeronet import get_AERONET_file_v2
 
 
-# In[16]:
+# In[7]:
 
 
 in_directory = in_.get('in_dir','/data/sunsat/_incoming_gdrive/')
 root_folder = in_.get('root_dir','/data/sunsat/')
 
 
-# In[17]:
+# In[8]:
 
 
 verbose = not in_.get('quiet',False)
@@ -120,13 +120,13 @@ dry_run = in_.get('dry_run',True)
 run_matlab = in_.get('run_matlab',False)
 
 
-# In[18]:
+# In[9]:
 
 
 if verbose: print( in_)
 
 
-# In[19]:
+# In[11]:
 
 
 # Go through and unzip any folder
@@ -144,17 +144,17 @@ for item in os.listdir(in_directory): # loop through items in dir
         if not dry_run: os.remove(str(file_name)) # delete zipped file
 
 
-# In[21]:
+# In[58]:
 
 
 filters = get_filters_from_json(in_directory)
 fl_arr = recurse_through_dir(in_directory,verbose=verbose,filters=filters)
 
 
-# In[22]:
+# In[59]:
 
 
-data_raw_found, data_raw_files, nexact, nmoved, ncreated, ndataraw =                move_files(fl_arr,filters,verbose=verbose,dry_run=dry_run)
+data_raw_found, data_raw_files, nexact, nmoved, ncreated, ndataraw =                move_files(fl_arr,filters,verbose=verbose,dry_run=dry_run,root_folder=root_folder)
 
 
 # In[65]:
@@ -166,8 +166,11 @@ if data_raw_found:
     for k in data_raw_files.keys():
         instname,daystr0 = k.split('_')
         fa_tmp = filetypes('{daystr}_AERONET_NASA_Ames.lev15'.format(instname=instname,daystr=daystr0))
-        fmla_tmp = get_newfilepath(fa_tmp,filters=filters,fake_file=True,root_folder=root_folder)
-        if not daystr in daystrss:
+        fmla_tmp = get_newfilepath(fa_tmp,filters=filters,fake_file=True,
+                                   root_folder=root_folder,verbose=verbose,dry_run=dry_run)
+        if not fa_tmp.newpath.exists() & verbose: print( '{prefix}+Creating new path: {newpath}'.format(**fa_tmp) )
+        if not dry_run: fa_tmp.newpath.mkdir(parents=True,exist_ok=True)
+        if not daystr0 in daystrss:
             daystrss.append(daystr0)
             if fa_tmp.campaign.find('rooftop') >= 0:
                 aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath))
@@ -188,7 +191,7 @@ for dirpath, dirnames, filenames in os.walk(in_directory,topdown=False):
             pass
 
 
-# In[75]:
+# In[67]:
 
 
 nmats = 0
@@ -254,8 +257,14 @@ if run_matlab:
                 os.remove(mfile)
 
 
-# In[140]:
+# In[68]:
 
 
 print(datetime.now().strftime("%c")+' :Python moved {nmoved} files, Created {ncreated} folders, found {ndataraw} files, and generated {nmats} starmats/suns'      .format(nmoved=nmoved,ncreated=ncreated,ndataraw=ndataraw,nmats=nmats))
+
+
+# In[ ]:
+
+
+
 

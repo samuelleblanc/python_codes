@@ -120,6 +120,11 @@ def pull_labels(p,datestr,filters={},dirlabel_in=None):
         label = '_'.join(f_strs)
         label = label.strip('_')
     
+    if instname == '5STAR':
+        label = label.replace('_RADIOMETERS','')
+        if (len(label.split('_'))>1) & label.split('_')[0].isdigit():
+            label = '_'.join(label.split('_')[1:])
+    
     return dirlabel,label,instname
 
 
@@ -154,6 +159,8 @@ class filetypes:
         self.p = p
         if not self.dirlabel:
             self.dirlabel = dirlabel
+        if not self.dirlabel:
+            self.dirlabel = self.label
         if not dirdate:
             self.dirdate = self.fdate
         else:
@@ -175,7 +182,8 @@ class filetypes:
 # In[6]:
 
 
-def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0,root_folder='/nobackupp10/nexprojects/sunsat/'):
+def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0,
+                    root_folder='/nobackupp10/nexprojects/sunsat/',verbose=False,dry_run=False):
     'function to build the end file path, input of filetype class f, outputs updated file class f'
     # determine the campaign
     campaign = 'rooftop'
@@ -218,6 +226,7 @@ def get_newfilepath(f,filters={},debug=False,fake_file=False,nexact=0,root_folde
     f.newfile = f.newpath.joinpath(f.p.name)
     
     if debug: print( 'newpath:',str(f.newpath),' newfile:',str(f.newfile))
+    f.prefix = '*DRY RUN*: ' if dry_run else ''
         
     #check if destination file already exists:
     if f.newfile.exists() & (not fake_file):
@@ -326,7 +335,7 @@ def make_temp_mfile(mfilepath,filelist,starmat,starsun,quicklooks,fig_path,aero_
 # In[10]:
 
 
-def move_files(fl_arr,filters,verbose=False,dry_run=False):
+def move_files(fl_arr,filters,verbose=False,dry_run=False,root_folder='/nobackupp10/nexprojects/sunsat/'):
     'Function to go through and move the files, create folders if necessary, and check if there are any new raw data'
     data_raw_found = False
     data_raw_files = {}
@@ -336,7 +345,8 @@ def move_files(fl_arr,filters,verbose=False,dry_run=False):
         if f.p.is_dir(): continue # do nothing for directories
         f.prefix = '*DRY RUN*: ' if dry_run else ''
 
-        folders_match_label,nexact = get_newfilepath(f,filters=filters,debug=False,nexact=nexact,root_folder=root_folder)
+        folders_match_label,nexact = get_newfilepath(f,filters=filters,debug=False,
+                                                     nexact=nexact,root_folder=root_folder,verbose=verbose,dry_run=dry_run)
         if not folders_match_label: continue
 
         if 'data_raw' in folders_match_label:
