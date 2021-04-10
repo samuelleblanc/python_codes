@@ -3144,7 +3144,14 @@ src = rasterio.open(fp+'data_other/snapshot-2018-06-09T00_00_00Z.tiff')
 fla = np.where(flag & (s['Alt'][:,0]<1500.0))
 
 
-# In[44]:
+# In[279]:
+
+
+flat = np.where(flag & (s['Alt'][:,0]<1500.0) & (s['utc']>16.0) & (s['utc']<22.0))
+flat_30 = np.where(flag & (s['Alt'][:,0]<1500.0) & (s['utc']>18.5) & (s['utc']<19.5))
+
+
+# In[254]:
 
 
 plt.figure()
@@ -3154,7 +3161,7 @@ plt.ylim(56.3,58.3)
 plt.pcolor(mod['lon'],mod['lat'],mod['aod'],vmin=0,vmax=0.5,cmap='plasma',label='MODIS DT TERRA')
 plt.colorbar(label='AOD',extend='max',shrink=0.68,pad=0.03)
 plt.plot(s['Lon'],s['Lat'],'-',color='k',markersize=0.2,label='flight path')
-plt.scatter(s['Lon'][fla,0],s['Lat'][fla,0],50,s['tau_aero'][fla,406],marker='o',
+plt.scatter(s['Lon'][flat,0],s['Lat'][flat,0],50,s['tau_aero'][flat,406],marker='o',
             cmap='plasma',vmin=0,vmax=0.5,zorder=10,label='4STAR',lw=0.1,edgecolor='k',alpha=0.2)
 plt.legend()
 plt.xlabel('Longitude [$^{{\circ}}$]')
@@ -3164,7 +3171,7 @@ plt.ylabel('Latitude [$^{{\circ}}$]')
 
 # ## Co-locate the MODIS and 4STAR AODs
 
-# In[103]:
+# In[255]:
 
 
 import map_utils as mu
@@ -3172,76 +3179,102 @@ import plotting_utils as pu
 from Sp_parameters import doublenanmask
 
 
-# In[99]:
+# In[270]:
 
 
-m2s = mu.stats_within_radius(s['Lat'][fla],s['Lon'][fla],mod['lat'],mod['lon'],mod['aod'],1500.0,subset=False)
+m2s = mu.stats_within_radius(s['Lat'][flat],s['Lon'][flat],mod['lat'],mod['lon'],mod['aod'],3000.0,subset=False)
 
 
-# In[90]:
+# In[280]:
+
+
+m2s_30 = mu.stats_within_radius(s['Lat'][flat_30],s['Lon'][flat_30],mod['lat'],mod['lon'],mod['aod'],3000.0,subset=False)
+
+
+# In[262]:
 
 
 m2s.keys()
 
 
-# In[91]:
+# In[235]:
 
 
 m2s['mean'].shape
 
 
-# In[92]:
+# In[274]:
 
 
-len(s['Lat'][fla])
+len(s['Lat'][flat])
 
 
-# In[93]:
+# In[275]:
 
 
 len(m2s['mean'])
 
 
-# In[94]:
+# In[278]:
 
 
-m2s['mean']
+np.sum(np.isnan(m2s['mean']))
 
 
-# In[95]:
+# In[276]:
 
 
 m2s['index']
 
 
-# In[135]:
+# In[281]:
 
 
 plt.figure()
 
-xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
-r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
-plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2))
-pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+xn,yn,mask = doublenanmask(s['tau_aero'][flat,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][flat,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][flat,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}, N={:2.3f}'.format(r2,len(m2s['mean'][mask])))
+pu.plot_lin(s['tau_aero'][flat,406].T[:,0],m2s['mean'],labels=True,lblfmt='2.3f')
 plt.xlim(0,0.8)
 plt.ylim(0,0.8)
 plt.plot([0,1],[0,1],'--',c='k')
 plt.legend(frameon=False)
 plt.xlabel('4STAR AOD')
 plt.ylabel('MODIS Dark Target TERRA AOD')
+plt.title('+/- 3 hour collocation')
 
 
-# In[153]:
+# In[283]:
 
 
 plt.figure()
 
-xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
-r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
-plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
-plt.hist2d(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask],bins=(30,30),range=[[0,0.8],[0,0.8]],cmap=plt.cm.Reds)
-plt.colorbar(label='Number of co-located points')
-pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+xn,yn,mask = doublenanmask(s['tau_aero'][flat_30,406].T[:,0],m2s_30['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][flat_30,406].T[mask,0],m2s_30['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][flat_30,406].T,m2s_30['mean'],'.',label='R$^2$={:2.3f}, N={:2.3f}'.format(r2,len(m2s_30['mean'][mask])))
+pu.plot_lin(s['tau_aero'][flat_30,406].T[:,0],m2s_30['mean'],labels=True,lblfmt='2.3f')
+plt.xlim(0,0.8)
+plt.ylim(0,0.8)
+plt.plot([0,1],[0,1],'--',c='k')
+plt.legend(frameon=False)
+plt.xlabel('4STAR AOD')
+plt.ylabel('MODIS Dark Target TERRA AOD')
+plt.title('+/- 30 minute collocation')
+
+
+# In[258]:
+
+
+plt.figure()
+
+xn,yn,mask = doublenanmask(s['tau_aero'][flat,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][flat,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][flat,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
+plt.hist2d(s['tau_aero'][flat,406].T[mask,0],m2s['mean'][mask],bins=(30,30),range=[[0,0.8],[0,0.8]],
+           cmap=plt.cm.Reds,cmax=100)
+plt.colorbar(label='Number of co-located points',extend='max')
+pu.plot_lin(s['tau_aero'][flat,406].T[:,0],m2s['mean'],labels=True,lblfmt='2.3f')
 plt.xlim(0,0.8)
 plt.ylim(0,0.8)
 plt.plot([0,1],[0,1],'--',c='k')
@@ -3250,7 +3283,7 @@ plt.xlabel('4STAR AOD')
 plt.ylabel('MODIS Dark Target TERRA AOD')
 
 
-# In[180]:
+# In[260]:
 
 
 fig,ax = plt.subplots(1,2,figsize=(9,3.5))
@@ -3259,22 +3292,23 @@ show(src.read(),transform=src.transform,ax=ax[0])
 plt.xlim(-113.1,-109.8)
 plt.ylim(55.8,59.0)
 plt.pcolor(mod['lon'],mod['lat'],mod['aod'],vmin=0,vmax=0.5,cmap='plasma',label='MODIS DT TERRA')
-plt.colorbar(label='AOD',extend='max',shrink=0.68,pad=0.03)
+plt.colorbar(label='AOD',extend='max',shrink=1.0,pad=0.03)
 ax[0].plot(s['Lon'],s['Lat'],'-',color='k',markersize=0.2,label='flight path')
 ax[0].scatter(s['Lon'][fla,0],s['Lat'][fla,0],50,s['tau_aero'][fla,406],marker='o',
-            cmap='plasma',vmin=0,vmax=0.5,zorder=10,label='4STAR',lw=0.1,edgecolor='k',alpha=0.2)
+            cmap='plasma',vmin=0,vmax=0.5,zorder=10,label='4STAR',lw=0.25,edgecolor='k',alpha=0.3)
 plt.legend()
 plt.xlabel('Longitude [$^{{\circ}}$]')
 plt.ylabel('Latitude [$^{{\circ}}$]')
 
 plt.sca(ax[1])
 
-xn,yn,mask = doublenanmask(s['tau_aero'][fla,406].T[:,0],m2s['mean'],return_mask=True)
-r2 = np.corrcoef(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask])[0,1]**2
-plt.plot(s['tau_aero'][fla,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
-plt.hist2d(s['tau_aero'][fla,406].T[mask,0],m2s['mean'][mask],cmap=plt.cm.Reds,bins=(30,30),range=[[0,0.8],[0,0.8]])
-plt.colorbar(label='Number of co-located points')
-pu.plot_lin(s['tau_aero'][fla,406].T[:,0],m2s['mean'],labels=True)
+xn,yn,mask = doublenanmask(s['tau_aero'][flat,406].T[:,0],m2s['mean'],return_mask=True)
+r2 = np.corrcoef(s['tau_aero'][flat,406].T[mask,0],m2s['mean'][mask])[0,1]**2
+plt.plot(s['tau_aero'][flat,406].T,m2s['mean'],'.',label='R$^2$={:2.3f}'.format(r2),alpha=0.0)
+plt.hist2d(s['tau_aero'][flat,406].T[mask,0],m2s['mean'][mask],cmap=plt.cm.Reds,bins=(30,30),
+           range=[[0,0.8],[0,0.8]],cmax=70)
+plt.colorbar(label='Number of co-located points',extend='max',pad=0.03)
+pu.plot_lin(s['tau_aero'][flat,406].T[:,0],m2s['mean'],labels=True,lblfmt='2.3f')
 plt.xlim(0,0.8)
 plt.ylim(0,0.8)
 plt.plot([0,1],[0,1],'--',c='k')
@@ -3285,6 +3319,12 @@ plt.ylabel('MODIS Dark Target TERRA AOD')
 plt.tight_layout()
 
 plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.png',dpi=600,transparent=True)
+
+
+# In[284]:
+
+
+fp
 
 
 # In[ ]:
