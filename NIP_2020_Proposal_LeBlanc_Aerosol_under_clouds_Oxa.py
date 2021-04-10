@@ -265,6 +265,195 @@ plt.pcolor(da['//Nav_Data/Midtime'],da['//Nav_Data/Altitudes'],da['//Data_Produc
 plt.colorbar(extend='both')
 
 
+# # Load rtm model data
+
+# In[3]:
+
+
+import load_utils as lu
+
+
+# In[5]:
+
+
+rtm,rtmd = lu.load_netcdf('/home/sam/unl-vrtm/unl-vrtm-2.1/run/O3band.unlvrtm.nc',everything=True)
+
+
+# In[62]:
+
+
+rtmd['LinPar']
+
+
+# In[59]:
+
+
+rtmd['tauAER_WFS']
+
+
+# In[65]:
+
+
+rtm['LinPar']
+
+
+# In[30]:
+
+
+rtm['Flux_Direct']
+
+
+# In[55]:
+
+
+plt.figure()
+plt.plot(rtm['Lamdas'],rtm['omegaAER'].T[:,0,0],label='Aerosol type 1')
+plt.ylabel('SSA of the aerosol')
+plt.xlabel('Wavelength [nm]')
+plt.title('SSA for aerosol')
+
+
+plt.plot(rtm['Lamdas'],rtm['omegaAER'].T[:,0,1],label='Aerosol type 2')
+plt.legend()
+
+
+# In[43]:
+
+
+plt.figure()
+plt.plot(rtm['Lamdas'],rtm['omegaIOP'].T)
+plt.ylabel('SSA of the atmosphere')
+plt.xlabel('Wavelength [nm]')
+plt.title('SSA at various atmospheric layers')
+
+
+# In[37]:
+
+
+plt.figure()
+plt.plot(rtm['Lamdas'],rtm['Flux_Direct'][0,0,0,:])
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Direct Irradiance [W/m$^2$/nm]')
+plt.title('Ox-A modeled direct beam irradiance UNL-VRTM')
+
+
+# ## For 2 different ssa
+
+# In[70]:
+
+
+rtm85_2,rtmd85_2 = lu.load_netcdf('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa085.unlvrtm.nc',everything=True)
+
+
+# In[67]:
+
+
+rtm97,rtmd97 = lu.load_netcdf('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa097.unlvrtm.nc',everything=True)
+
+
+# In[68]:
+
+
+plt.figure()
+plt.plot(rtm97['Lamdas'],rtm97['Flux_Direct'][0,0,0,:],label='SSA=0.97')
+plt.plot(rtm85['Lamdas'],rtm85['Flux_Direct'][0,0,0,:],label='SSA=0.85')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Direct Irradiance [W/m$^2$/nm]')
+plt.title('Ox-A modeled direct beam irradiance UNL-VRTM (AOD=0.4)')
+plt.legend()
+
+
+# In[71]:
+
+
+plt.figure()
+plt.plot(rtm97['Lamdas'],rtm97['Flux_Direct'][0,0,0,:]/rtm97['Flux_Direct'][0,0,0,0],label='SSA=0.97')
+plt.plot(rtm85['Lamdas'],rtm85['Flux_Direct'][0,0,0,:]/rtm85['Flux_Direct'][0,0,0,0],label='SSA=0.85')
+plt.plot(rtm85['Lamdas'],rtm85_2['Flux_Direct'][0,0,0,:]/rtm85_2['Flux_Direct'][0,0,0,0],label='SSA=0.85')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Direct Irradiance')
+plt.title('Ox-A modeled direct beam irradiance UNL-VRTM (AOD=0.4)')
+plt.legend()
+
+
+# In[72]:
+
+
+rtm85_2['Flux_Direct'].shape
+
+
+# In[73]:
+
+
+rtm85['Flux_Direct'].shape
+
+
+# In[77]:
+
+
+rtm85_d,rtmd85_d = lu.load_netcdf('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa085_deg30.unlvrtm.nc',everything=True)
+rtm97_d,rtmd97_d = lu.load_netcdf('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa098_deg30.unlvrtm.nc',everything=True)
+
+
+# In[78]:
+
+
+plt.figure()
+plt.plot(rtm97_d['Lamdas'],rtm97_d['Flux_Direct'][0,0,0,:]/rtm97_d['Flux_Direct'][0,0,0,0],label='SSA=0.97')
+plt.plot(rtm85_d['Lamdas'],rtm85_d['Flux_Direct'][0,0,0,:]/rtm85_d['Flux_Direct'][0,0,0,0],label='SSA=0.85')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Direct Irradiance')
+plt.title('Ox-A modeled direct beam irradiance UNL-VRTM (AOD=0.4)')
+plt.legend()
+
+
+# In[79]:
+
+
+plt.figure()
+plt.plot(rtm97_d['Lamdas'],rtm97_d['Flux_Direct'][0,0,0,:],label='SSA=0.97')
+plt.plot(rtm85_d['Lamdas'],rtm85_d['Flux_Direct'][0,0,0,:],label='SSA=0.85')
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Normalized Direct Irradiance')
+plt.title('Ox-A modeled direct beam irradiance UNL-VRTM (AOD=0.4)')
+plt.legend()
+
+
+# In[80]:
+
+
+import pyunlvrtm as pum
+
+
+# In[102]:
+
+
+a = pum.read_unlvrtm('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa085_deg30.unlvrtm.nc')
+b = pum.read_unlvrtm('/home/sam/unl-vrtm/unl-vrtm-2.1/run/OxA_ssa098_deg30.unlvrtm.nc')
+
+
+# In[103]:
+
+
+a['Stokes']
+
+
+# In[105]:
+
+
+plt.figure()
+plt.plot(a['Lamdas'],a['Stokes'][0,:])
+plt.plot(b['Lamdas'],b['Stokes'][0,:])
+
+
+# In[104]:
+
+
+plt.figure()
+plt.plot(a['Lamdas'],a['Stokes'][0,:]/a['Stokes'][0,0])
+plt.plot(b['Lamdas'],b['Stokes'][0,:]/b['Stokes'][0,0])
+
+
 # In[ ]:
 
 
