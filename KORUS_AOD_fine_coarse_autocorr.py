@@ -5065,22 +5065,22 @@ pd_fold
 vv = 'v2'
 
 
-# In[731]:
+# In[736]:
 
 
-dat_c = {u'pd_fold':pd_fold.to_dict(), u'mean_vals':mean_vals,u'std_vals':std_vals,u'dvals':dvals,
+dat_c = { u'mean_vals':mean_vals,u'std_vals':std_vals,u'dvals':dvals,
         u'vals':vals,u'types':types,
         u'itypes':itypes,u'corr_ks':corr_ks,u'autocorr_mean':autocorr_mean}
 
 
-# In[734]:
+# In[737]:
 
 
 import write_utils as wu
 dat_u = wu.iterate_dict_unicode(dat_c)
 
 
-# In[735]:
+# In[738]:
 
 
 hs.savemat(fp+'KORUS_fine_coarse_autocorr_dvals_{}.mat'.format(vv),dat_u)
