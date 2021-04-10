@@ -727,3 +727,21 @@ def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False,
     
     return
 
+
+# In[1]:
+
+
+def match_ygrid(ax1,ax2,ticks):
+    'function to match the grid ticks to a dual y axis plot, matching limits of ax2 such that the ticks line up with ax1 grid'
+    y0,y1 = ax1.get_ybound()
+    ti = ax1.get_yticks()
+    ax2.set_yticks(ticks)
+    if ax1.get_yscale() =='log':
+        a = (np.log10(ti[1])-np.log10(ti[0]))/(ticks[1]-ticks[0])
+        dy = a*ticks[0]-np.log10(ti[0])
+        ax2.set_ylim((np.log10(y0)+dy)/a,(np.log10(y1)+dy)/a)
+    else:
+        a = (ti[1]-ti[0])/(ticks[1]-ticks[0])
+        dy = a*ticks[0]-ti[0]
+        ax2.set_ylim((y0+dy)/a,(y1+dy)/a)
+
