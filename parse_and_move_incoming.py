@@ -38,7 +38,7 @@
 
 # # Set up the background functions
 
-# In[57]:
+# In[35]:
 
 
 from __future__ import print_function 
@@ -126,7 +126,7 @@ run_matlab = in_.get('run_matlab',False)
 if verbose: print( in_)
 
 
-# In[11]:
+# In[37]:
 
 
 # Go through and unzip any folder
@@ -134,17 +134,20 @@ prefix = '*DRY RUN*: ' if dry_run else ''
 for item in os.listdir(in_directory): # loop through items in dir
     if item.lower().endswith('.zip'): # check for ".zip" extension
         file_name = Path(in_directory+item) # get full path of files
-        zip_ref = zipfile.ZipFile(str(file_name)) # create zipfile object
-        if verbose: 
-            print( '{prefix}found zip file: {file_name}, extracting here.'.format(prefix=prefix,file_name=file_name))
-        if not dry_run: 
-            file_name.parent.joinpath(file_name.stem).mkdir(parents=True,exist_ok=True) # make a dir to extract to
-            zip_ref.extractall(str(file_name.parent.joinpath(file_name.stem))) # extract file to dir
-        zip_ref.close() # close file
-        if not dry_run: os.remove(str(file_name)) # delete zipped file
+        try: 
+            zip_ref = zipfile.ZipFile(str(file_name)) # create zipfile object
+            if verbose: 
+                print( '{prefix}found zip file: {file_name}, extracting here.'.format(prefix=prefix,file_name=file_name))
+            if not dry_run: 
+                file_name.parent.joinpath(file_name.stem).mkdir(parents=True,exist_ok=True) # make a dir to extract to
+                zip_ref.extractall(str(file_name.parent.joinpath(file_name.stem))) # extract file to dir
+            zip_ref.close() # close file
+            if not dry_run: os.remove(str(file_name)) # delete zipped file
+        except NotImplementedError:
+            if verbose: print('{prefix}Error in processing zip file: {file_name}'.format(prefix=prefix,file_name=file_name))
 
 
-# In[58]:
+# In[38]:
 
 
 filters = get_filters_from_json(in_directory)

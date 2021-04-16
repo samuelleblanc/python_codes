@@ -63,6 +63,8 @@ def get_date_and_string(p,dirdate=None):
     fd = [dtemp for dtemp in find_dates(p.stem,source=True)]
     if fd:
         fdate,f_datestr = fd[0]
+        if len(f_datestr)<4:
+            del fdate,f_datestr
     else:
         f_datestr_re = re.search("(\d{4}?\d{2}?\d{2})",p.stem)          
         if f_datestr_re:
@@ -79,7 +81,7 @@ def get_date_and_string(p,dirdate=None):
                 f_datestr = re.search("(\d{2}?\d{2}?\d{2})",p.stem).group()
                 fdate = dateutil.parser.parse(f_datestr,yearfirst=True)
     
-    if not fdate: fdate = datetime.fromtimestamp(p.stat().st_ctime)
+    if not locals().get('fdate'): fdate = datetime.fromtimestamp(p.stat().st_ctime)
     if not locals().get('f_datestr'): f_datestr = fdate.strftime('%Y%m%d')
         
     return fdate,f_datestr
