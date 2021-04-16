@@ -46,7 +46,7 @@
 
 # # Prepare python environment
 
-# In[7]:
+# In[1]:
 
 
 #%config InlineBackend.rc = {}
@@ -71,7 +71,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[8]:
+# In[2]:
 
 
 import map_utils as mu
@@ -81,20 +81,20 @@ import math
 import sys
 
 
-# In[9]:
+# In[3]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[10]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[430]:
+# In[5]:
 
 
 fp = getpath('KORUS')
@@ -106,109 +106,109 @@ fp = getpath('KORUS')
 
 # ## Load 4STAR AOD ict files
 
-# In[432]:
+# In[6]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[433]:
+# In[7]:
 
 
 ka = ar.keys()
 
 
-# In[434]:
+# In[8]:
 
 
 ka.sort()
 
 
-# In[435]:
+# In[9]:
 
 
 ka
 
 
-# In[436]:
+# In[10]:
 
 
 ar['qual_flag']
 
 
-# In[437]:
+# In[11]:
 
 
 ar['fl_QA']
 
 
-# In[438]:
+# In[12]:
 
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
 
-# In[439]:
+# In[13]:
 
 
 fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 
-# In[440]:
+# In[14]:
 
 
 fl_ci.sum()
 
 
-# In[441]:
+# In[15]:
 
 
 len(fl_ci)*1.0/60.0/60.0
 
 
-# In[442]:
+# In[16]:
 
 
 fl_ci.sum()/float(len(fl_ci))
 
 
-# In[443]:
+# In[17]:
 
 
 ar['fl_QA'].sum()*1.0/60.0/60.0
 
 
-# In[444]:
+# In[18]:
 
 
 ar['qual_flag'].sum()
 
 
-# In[445]:
+# In[19]:
 
 
 fl_ci
 
 
-# In[446]:
+# In[20]:
 
 
 nwl = ka[0:17]
 
 
-# In[447]:
+# In[21]:
 
 
 nwl
 
 
-# In[448]:
+# In[22]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
-# In[449]:
+# In[23]:
 
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
@@ -217,31 +217,31 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614']
 
 
-# In[450]:
+# In[24]:
 
 
 doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
 
 
-# In[451]:
+# In[25]:
 
 
 doys
 
 
-# In[452]:
+# In[26]:
 
 
 fdoys = np.array(doys)
 
 
-# In[453]:
+# In[27]:
 
 
 ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
 
 
-# In[454]:
+# In[28]:
 
 
 ar['doys']
@@ -249,19 +249,19 @@ ar['doys']
 
 # ## Load GOCI AOD files
 
-# In[455]:
+# In[29]:
 
 
 gl = os.listdir(fp+'data_other/GOCI')
 
 
-# In[456]:
+# In[30]:
 
 
 gl.sort()
 
 
-# In[457]:
+# In[31]:
 
 
 goci = []
@@ -280,7 +280,7 @@ if false:
             goci.append(g_tmp)  
 
 
-# In[458]:
+# In[32]:
 
 
 for l in gl:
@@ -291,31 +291,31 @@ for l in gl:
     goci.append(g_tmp)  
 
 
-# In[459]:
+# In[33]:
 
 
 len(goci)
 
 
-# In[460]:
+# In[34]:
 
 
 np.nanmax(goci[0]['t']),np.nanmean(goci[0]['t']),np.nanmin(goci[0]['t'])
 
 
-# In[461]:
+# In[35]:
 
 
 g_dict
 
 
-# In[462]:
+# In[36]:
 
 
 gl[0][-14:-10],gl[0][-10:-8],gl[0][-8:-6]
 
 
-# In[463]:
+# In[37]:
 
 
 goci_doy = []
@@ -327,7 +327,7 @@ for i,l in enumerate(gl):
 goci_doy = np.array(goci_doy)
 
 
-# In[464]:
+# In[38]:
 
 
 for og in goci:
@@ -337,13 +337,13 @@ for og in goci:
 
 # ### Build collcation of goci data to 4STAR
 
-# In[465]:
+# In[39]:
 
 
 ig4 = Sp.find_closest(goci_doy,ar['doys'])
 
 
-# In[466]:
+# In[40]:
 
 
 ig4
@@ -358,43 +358,43 @@ plt.plot(ar['doys'],'x',label='4star')
 plt.legend()
 
 
-# In[467]:
+# In[41]:
 
 
 bad_ig4 = abs(goci_doy[ig4]-ar['doys'])>(1.0/24.0)
 
 
-# In[468]:
+# In[42]:
 
 
 sum(bad_ig4)/float(len(ig4))
 
 
-# In[469]:
+# In[43]:
 
 
 len(np.where(bad_ig4)[0])
 
 
-# In[470]:
+# In[44]:
 
 
 len(ig4)
 
 
-# In[471]:
+# In[45]:
 
 
 ar['doys']%1.0
 
 
-# In[472]:
+# In[46]:
 
 
 goci[0].keys()
 
 
-# In[473]:
+# In[47]:
 
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[],'aod_f':[],'aod_c':[]}
@@ -427,55 +427,55 @@ for k in goci2ar.keys():
     goci2ar[k] = np.array(goci2ar[k])
 
 
-# In[474]:
+# In[48]:
 
 
 igoci
 
 
-# In[475]:
+# In[49]:
 
 
 len(goci2ar['aod'])
 
 
-# In[476]:
+# In[50]:
 
 
 goci2ar['aod'][2000]
 
 
-# In[477]:
+# In[51]:
 
 
 np.unique(ig4)
 
 
-# In[478]:
+# In[52]:
 
 
 imeas = np.where(ig4==8)[0]
 
 
-# In[479]:
+# In[53]:
 
 
 len(imeas)
 
 
-# In[480]:
+# In[54]:
 
 
 np.argmin((goci[8]['lon']-ar['Longitude'][imeas[0]])**2.0+(goci[8]['lat']-ar['Latitude'][imeas[0]])**2.0)
 
 
-# In[481]:
+# In[55]:
 
 
 goci[8]['lon'].flatten()[94639],goci[8]['lat'].flatten()[94639]
 
 
-# In[482]:
+# In[56]:
 
 
 ar['Longitude'][imeas[0]],ar['Latitude'][imeas[0]]
@@ -490,7 +490,7 @@ plt.figure()
 plt.plot(goci2ar['AE'])
 
 
-# In[484]:
+# In[57]:
 
 
 goci2ar['aod'][bad_ig4] = np.nan
@@ -501,13 +501,13 @@ goci2ar['fmf'][bad_ig4] = np.nan
 goci2ar['CF'][bad_ig4] = np.nan
 
 
-# In[485]:
+# In[58]:
 
 
 len(goci2ar['aod_c'])
 
 
-# In[486]:
+# In[59]:
 
 
 len(goci2ar['aod'])
@@ -1081,26 +1081,26 @@ plt.plot(ar['doys'],ar['AOD0501'],'.')
 # 
 # Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavg1_2d_aer_Nx: 2d,1-Hourly,Time-averaged,Single-Level,Assimilation,Aerosol Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), Accessed: 2020-09-17, 10.5067/KLICLTZ8EM9D
 
-# In[80]:
+# In[60]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2/aer')
 
 
-# In[81]:
+# In[61]:
 
 
 ml = [ m for m in ml if m.endswith('nc4')] 
 ml.sort()
 
 
-# In[82]:
+# In[62]:
 
 
 mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+ml[0])
 
 
-# In[83]:
+# In[63]:
 
 
 merra = []
@@ -1113,19 +1113,19 @@ for m in ml:
     merra.append(mtmp)
 
 
-# In[84]:
+# In[64]:
 
 
 len(merra),len(ml)
 
 
-# In[85]:
+# In[65]:
 
 
 mdict.keys()
 
 
-# In[86]:
+# In[66]:
 
 
 mdict['TOTANGSTR']
@@ -1143,19 +1143,19 @@ mdict['TOTEXTTAU']
 mdict['SSEXTTAU'],mdict['BCEXTTAU'],mdict['OCEXTTAU'],mdict['SUEXTTAU'],mdict['DUEXTTAU']
 
 
-# In[89]:
+# In[67]:
 
 
 merra[0]['time']/60.0/24.0
 
 
-# In[90]:
+# In[68]:
 
 
 merra[0]['time']
 
 
-# In[91]:
+# In[69]:
 
 
 delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
@@ -1163,13 +1163,13 @@ delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
 
 # #### Collocate new version to 4STAR
 
-# In[92]:
+# In[70]:
 
 
 merra_doy = [datetime(int(l[-12:-8]),int(l[-8:-6]),int(l[-6:-4])).timetuple().tm_yday for l in ml]
 
 
-# In[93]:
+# In[71]:
 
 
 for m in merra:
@@ -1182,19 +1182,19 @@ for m in merra:
     m['aod_sulf'] = m['SUEXTTAU']
 
 
-# In[94]:
+# In[72]:
 
 
 im4 = Sp.find_closest(np.array(merra_doy),(ar['doys']+delta_time).astype(int))
 
 
-# In[95]:
+# In[73]:
 
 
 np.unique(im4)
 
 
-# In[96]:
+# In[74]:
 
 
 nmerra = len(merra)
@@ -1203,7 +1203,7 @@ nlon = len(merra[0]['lon'])
 ntime = len(merra[0]['time'])
 
 
-# In[137]:
+# In[75]:
 
 
 merra2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'ae':[],'ind':[],
@@ -1386,25 +1386,25 @@ plt.savefig(fp+'plot/KORUS_MERRA_hist_daily_avgs.png',dpi=600,transparent=True)
 
 # ## Load in situ extinction
 
-# In[98]:
+# In[103]:
 
 
 lrgl = os.listdir(fp+'data_other/LARGE')
 
 
-# In[99]:
+# In[104]:
 
 
 lrgl.sort()
 
 
-# In[100]:
+# In[105]:
 
 
 lrgl
 
 
-# In[101]:
+# In[106]:
 
 
 large = []
@@ -1416,37 +1416,37 @@ for g in lrgl:
 
 # ### Match to 4STAR
 
-# In[102]:
+# In[107]:
 
 
 large[2]['UTC_mid'],large[3]['UTC_mid'] 
 
 
-# In[103]:
+# In[108]:
 
 
 ar['doys']
 
 
-# In[104]:
+# In[109]:
 
 
 large_doys = [datetime(int(l[26:30]),int(l[30:32]),int(l[32:34])).timetuple().tm_yday+np.nanmean(large[i]['UTC_mid'])/24.0 for i,l in enumerate(lrgl)]
 
 
-# In[105]:
+# In[110]:
 
 
 large_doys
 
 
-# In[106]:
+# In[111]:
 
 
 il4 = Sp.find_closest(np.array(large_doys),ar['doys'])
 
 
-# In[107]:
+# In[112]:
 
 
 lg2ar = {'ext_532':[],'SSA_550':[],'scat_450':[],'scat_550':[],'scat_700':[],'AE':[]}
@@ -1786,25 +1786,25 @@ plt.scatter(foco['SoundingGeometry']['sounding_longitude'].value,
 # # Run analysis and prepare variables
 # Do some of the calculations to the data here
 
-# In[108]:
+# In[76]:
 
 
 fl1 = ar['days']==ar['days'][0]
 
 
-# In[109]:
+# In[77]:
 
 
 fl1.shape
 
 
-# In[110]:
+# In[78]:
 
 
 fl = (ar['qual_flag']==0) & (np.isfinite(ar['AOD0501'])) 
 
 
-# In[111]:
+# In[79]:
 
 
 fl1.shape
@@ -1812,25 +1812,25 @@ fl1.shape
 
 # ## Calculate the Angstrom Exponent
 
-# In[112]:
+# In[80]:
 
 
 nwl,nm
 
 
-# In[113]:
+# In[81]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[114]:
+# In[82]:
 
 
 aodrr.shape
 
 
-# In[115]:
+# In[83]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
@@ -1838,19 +1838,19 @@ angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 # ## Calculate the fine mode fraction
 
-# In[116]:
+# In[84]:
 
 
 fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
 
 
-# In[117]:
+# In[85]:
 
 
 fmf.keys()
 
 
-# In[118]:
+# In[86]:
 
 
 fmf['tauc'].shape, ar['GPS_Alt'].shape
@@ -1858,7 +1858,7 @@ fmf['tauc'].shape, ar['GPS_Alt'].shape
 
 # ## Subset the level legs
 
-# In[119]:
+# In[87]:
 
 
 def running_std(x,n):
@@ -1870,49 +1870,49 @@ def running_std(x,n):
     return o 
 
 
-# In[120]:
+# In[88]:
 
 
 nbox = 20
 
 
-# In[121]:
+# In[89]:
 
 
 std_alt = running_std(ar['GPS_Alt'][fl],nbox)
 
 
-# In[122]:
+# In[90]:
 
 
 std_alt.shape
 
 
-# In[123]:
+# In[91]:
 
 
 ar['GPS_Alt'][fl].shape
 
 
-# In[124]:
+# In[92]:
 
 
 f_level = np.where(std_alt<5.0)[0]
 
 
-# In[125]:
+# In[93]:
 
 
 std_alt1 = running_std(ar['GPS_Alt'][fl1],nbox)
 
 
-# In[126]:
+# In[94]:
 
 
 f_level1 = np.where(std_alt1<5.0)[0]
 
 
-# In[127]:
+# In[95]:
 
 
 ar['Start_UTC'][fl1][f_level1]
@@ -1950,7 +1950,7 @@ plt.ylim(0,100)
 
 # ## Seperate each of the level legs into distinct segments
 
-# In[128]:
+# In[96]:
 
 
 def get_segments(index,vals_dict,nsep=150,set_nan=True):
@@ -1978,19 +1978,13 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
     return d
 
 
-# In[129]:
+# In[97]:
 
 
 np.unique(ar['days'])
 
 
-# In[130]:
-
-
-np.where(np.diff(vals['doys'][f_level],1)>0.5)
-
-
-# In[131]:
+# In[99]:
 
 
 def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=True):
@@ -2018,25 +2012,19 @@ def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=Tr
     return d
 
 
-# In[132]:
-
-
-ar['days']
-
-
-# In[133]:
+# In[101]:
 
 
 angs[angs>5.0] = np.nan
 
 
-# In[134]:
+# In[113]:
 
 
 lg2ar.keys()
 
 
-# In[138]:
+# In[114]:
 
 
 vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][fl],'lon':ar['Longitude'][fl],
@@ -2050,55 +2038,55 @@ vals = {'utc':ar['Start_UTC'][fl],'alt':ar['GPS_Alt'][fl],'lat':ar['Latitude'][f
         'situ_ext':lg2ar['ext_532'][fl],'situ_ssa':lg2ar['SSA_550'][fl],'situ_ae':lg2ar['AE'][fl]}
 
 
-# In[576]:
+# In[115]:
 
 
 vals.keys()
 
 
-# In[139]:
+# In[116]:
 
 
 dvals = get_segments(f_level,vals,nsep=100)
 
 
-# In[140]:
+# In[117]:
 
 
 dvalst = get_segments_by_time(f_level,vals['doys'],vals,tsep=200.0/24.0/60.0/60.0)
 
 
-# In[141]:
+# In[118]:
 
 
 dvals.keys()
 
 
-# In[142]:
+# In[119]:
 
 
 len(dvals['AE']),len(dvalst['AE'])
 
 
-# In[143]:
+# In[120]:
 
 
 dvals['doys'][0]
 
 
-# In[144]:
+# In[121]:
 
 
 dvalst['doys'][0]
 
 
-# In[145]:
+# In[122]:
 
 
 dvalst['doys'][1]
 
 
-# In[146]:
+# In[123]:
 
 
 dvals['len_minutes'] = []
@@ -2117,7 +2105,7 @@ for i,n in enumerate(dvals['utc']):
         dvals['len_doys'].append(np.nan)
 
 
-# In[147]:
+# In[124]:
 
 
 dvalst['len_minutes'] = []
@@ -2145,7 +2133,7 @@ plt.ylabel('Number of segments')
 plt.xlabel('Fractional day length of segment')
 
 
-# In[148]:
+# In[125]:
 
 
 dvals = dvalst # set the default to use the time seperated segments
@@ -2198,7 +2186,7 @@ for q in np.unique(ar['days']):
 
 # ## Now calculate the distances travelled within each segments
 
-# In[149]:
+# In[126]:
 
 
 def get_distances(seg_dict):
@@ -2230,7 +2218,7 @@ def get_distances(seg_dict):
     return seg_dict
 
 
-# In[150]:
+# In[127]:
 
 
 def sort_by_cumdist(dd):
@@ -2249,31 +2237,31 @@ def sort_by_cumdist(dd):
     return dd
 
 
-# In[151]:
+# In[128]:
 
 
 ddv = get_distances(dvals)
 
 
-# In[152]:
+# In[129]:
 
 
 sort_by_cumdist(dvals)
 
 
-# In[153]:
+# In[130]:
 
 
 dvals['dist'][0]
 
 
-# In[154]:
+# In[131]:
 
 
 dvals['cumdist'][0:2]
 
 
-# In[155]:
+# In[132]:
 
 
 len(dvals['cumdist'])
@@ -2360,7 +2348,7 @@ dvals['dist'][0].shape
 
 # ### Build the limits of the autocorrelation
 
-# In[159]:
+# In[133]:
 
 
 # for met times
@@ -2370,7 +2358,7 @@ dt3 = ['20160523','20160531']
 dt4 = ['20160601','20160607']
 
 
-# In[160]:
+# In[134]:
 
 
 t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
@@ -2379,14 +2367,14 @@ t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
 
 
-# In[161]:
+# In[135]:
 
 
 # limits of DOY for each of the met times
 t1,t2,t3,t4
 
 
-# In[162]:
+# In[136]:
 
 
 #altitude limits in m
@@ -2397,13 +2385,13 @@ z3 = [3000.0, 15000.0]
 
 # ### Test out Shinozuka & Redemann autocorrelation 
 
-# In[163]:
+# In[137]:
 
 
 dvals['cumdist'][2]
 
 
-# In[164]:
+# In[138]:
 
 
 dvals.keys()
@@ -2450,19 +2438,19 @@ if False:
         cr.append(corr)
 
 
-# In[49]:
+# In[139]:
 
 
 len(cr)
 
 
-# In[165]:
+# In[140]:
 
 
 min_num = 100 # minimum number of points to be considered valid
 
 
-# In[166]:
+# In[141]:
 
 
 types = ['all','t1','t2','t3','t4','z1','z2','z3']
@@ -2470,7 +2458,7 @@ types = ['all','t1','t2','t3','t4','z1','z2','z3']
 
 # ### Alternate calculations (lower mem)
 
-# In[171]:
+# In[142]:
 
 
 min_num = 100 # minimum number of points to be considered valid
@@ -2529,13 +2517,13 @@ if False:
                     corr_alln[7][1][ik][val].append(dvals[val][i][iipg])
 
 
-# In[16]:
+# In[143]:
 
 
 dvals['doys'][0][0], dvals['alt'][0][0]
 
 
-# In[172]:
+# In[144]:
 
 
 dv = 0.20
@@ -2546,19 +2534,19 @@ for i,cd in enumerate(dvals['cumdist']):
     iis.append([np.where((mat_dist[i]>(k*(1.0-dv)))&(mat_dist[i]<(k*(1.0+dv)))) for ik,k in enumerate(corr_ks)])
 
 
-# In[173]:
+# In[145]:
 
 
 N = [len(cd) for i,cd in enumerate(dvals['cumdist'])]
 
 
-# In[174]:
+# In[146]:
 
 
 dvals.keys()
 
 
-# In[175]:
+# In[147]:
 
 
 alldist = np.hstack([dist for dist in dvals['dist']])
@@ -2574,32 +2562,32 @@ plt.xlabel('Distance from previous point [km]')
 plt.ylabel('Numbers of point')
 
 
-# In[24]:
+# In[148]:
 
 
 dvals['dist'][0]
 
 
-# In[25]:
+# In[149]:
 
 
 mat_dist[0]
 
 
-# In[26]:
+# In[150]:
 
 
 iis[0]
 
 
-# In[176]:
+# In[151]:
 
 
 dvals['doys_n'] = np.array([dvals['doys'][i][0] for i,cd in enumerate(dvals['cumdist'])])
 dvals['alt_n'] = np.array([dvals['alt'][i][0] for i,cd in enumerate(dvals['cumdist'])])
 
 
-# In[177]:
+# In[152]:
 
 
 itypes = [None]*8
@@ -2620,19 +2608,19 @@ itypes[6], = np.where((dvals['alt_n'] > z2[0]) & (dvals['alt_n'] < z2[1]))
 itypes[7], = np.where((dvals['alt_n'] > z3[0]) & (dvals['alt_n'] < z3[1]))
 
 
-# In[178]:
+# In[153]:
 
 
 z1,z2
 
 
-# In[179]:
+# In[154]:
 
 
 np.array(corr_ks)*(1.0-dv),np.array(corr_ks)*(1.0+dv),corr_ks
 
 
-# In[31]:
+# In[155]:
 
 
 # Spot check the distance indices represent the actual distance values in the each segment
@@ -2641,7 +2629,7 @@ for ik,k in enumerate(corr_ks):
     print k, dvals['cumdist'][j][iis[j][ik][0]]-dvals['cumdist'][j][iis[j][ik][1]]
 
 
-# In[32]:
+# In[156]:
 
 
 val = 'AE'
@@ -2651,31 +2639,31 @@ corrp = np.hstack([dvals[val][i][iis[i][ik][1]] for i,cd in enumerate(dvals['cum
 corrm = np.hstack([dvals[val][i][iis[i][ik][0]] for i,cd in enumerate(dvals['cumdist']) if i in itypes[j]])
 
 
-# In[33]:
+# In[157]:
 
 
 dvals[val][0][3]
 
 
-# In[34]:
+# In[158]:
 
 
 iis[0][ik][1]
 
 
-# In[35]:
+# In[159]:
 
 
 corrp
 
 
-# In[36]:
+# In[160]:
 
 
 len(corrp),len(corrm)
 
 
-# In[37]:
+# In[161]:
 
 
 corr_vals = ['aod1040','aod0500','AE','aod_fine','aod_coarse','fmf',
@@ -2684,7 +2672,7 @@ corr_vals = ['aod1040','aod0500','AE','aod_fine','aod_coarse','fmf',
              'situ_ext','situ_ae','situ_ssa']
 
 
-# In[38]:
+# In[162]:
 
 
 range_vals = {'aod1040':[0.0,3.0],'aod0500':[0.0,5.0],'AE':[-1.0,5.0],'aod_fine':[0.0,5.0],'aod_coarse':[0.0,5.0],
@@ -2696,6 +2684,12 @@ range_vals = {'aod1040':[0.0,3.0],'aod0500':[0.0,5.0],'AE':[-1.0,5.0],'aod_fine'
 
 
 corr_vals = ['AE','aod1040','fmf','aod0500']
+
+
+# In[163]:
+
+
+len(dvals['cumdist'])
 
 
 # In[242]:
@@ -2735,9 +2729,83 @@ for val in corr_vals:
                 autocorr[val][j,ik] = np.nan
 
 
+# In[194]:
+
+
+ix
+
+
+# In[196]:
+
+
+# For calculating monte carlo over the selection of horizontal legs, and not the samples, first testing
+autocorr_mc = {}
+autocorr_len_mc = {}
+subsamp_ratio = 0.30
+N_mc = 50
+
+
+for val in ['AE']:
+    autocorr_mc[val] = np.zeros((len(types),len(corr_ks),N_mc))+np.nan
+    autocorr_len_mc[val] = np.zeros((len(types),len(corr_ks),N_mc))
+    for ix in range(N_mc):
+        print ix, val
+        irand = np.random.randint(len(dvals['cumdist']),size=int(subsamp_ratio*len(dvals['cumdist'])))
+        for ik,k in enumerate(corr_ks):
+            sys.stdout.write("{} ".format(ik))
+            for j,jt in enumerate(types):        
+                corrp = np.hstack([dvals[val][i][iis[i][ik][1]] for i in irand if i in itypes[j]])
+                corrm = np.hstack([dvals[val][i][iis[i][ik][0]] for i in irand if i in itypes[j]])
+                badc = (corrp>range_vals[val][1]) | (corrp<range_vals[val][0])
+                if any(badc): 
+                    corrp[badc] = np.nan
+                    corrm[badc] = np.nan
+
+                badc = (corrm>range_vals[val][1]) | (corrm<range_vals[val][0])
+                if any(badc): 
+                    corrp[badc] = np.nan
+                    corrm[badc] = np.nan
+
+                mmk = np.nanmean(corrm)
+                mpk = np.nanmean(corrp)
+                smk = np.nanstd(corrm)
+                spk = np.nanstd(corrp)
+                top = (corrm-mpk)*(corrp-mmk) #[(v-mpk)*(corrp[iv]-mmk) for iv,v in enumerate(corrm)]
+                #print val,ik,j,mmk,mpk,smk,spk,np.nansum(top)
+                autocorr_mc[val][j,ik,ix] = np.nansum(top)/((len(corrm)-1)*spk*smk)
+                autocorr_len_mc[val][j,ik,ix] = len(corrm)
+                if autocorr_len_mc[val][j,ik,ix]<min_num:
+                    autocorr_mc[val][j,ik,ix] = np.nan
+
+
+# In[197]:
+
+
+autocorr_mc['AE'].shape
+
+
+# In[198]:
+
+
+plt.figure()
+plt.errorbar(corr_ks,np.nanmean(autocorr_mc['AE'][0,:,:],axis=1),yerr=np.nanstd(autocorr_mc['AE'][0,:,:],axis=1))
+
+
+# In[199]:
+
+
+np.nanmean(autocorr_mc['AE'][0,:,:],axis=1)
+
+
+# In[202]:
+
+
+autocorr_len_mc['AE'][0,6,:]
+
+
 # ### Functionalize for using multiprocessing
 
-# In[39]:
+# In[166]:
 
 
 from multiprocessing import Pool, cpu_count
@@ -2745,13 +2813,13 @@ from tqdm.notebook import tqdm
 import signal
 
 
-# In[40]:
+# In[167]:
 
 
 class KeyboardInterruptError(Exception): pass
 
 
-# In[41]:
+# In[168]:
 
 
 def worker_init(verbose=True):
@@ -2763,14 +2831,14 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[42]:
+# In[169]:
 
 
 autocorr = {}
 autocorr_len = {}
 
 
-# In[43]:
+# In[203]:
 
 
 corr_vals = ['aod1040','aod0500','AE','aod_fine','aod_coarse','fmf',
@@ -2816,10 +2884,77 @@ def calc_autocorr(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=ity
     return dat
 
 
-# In[45]:
+# In[204]:
 
 
-p = Pool(5,worker_init)
+subsamp_ratio = 0.30
+N_mc = 50
+
+
+# In[272]:
+
+
+if (vv == 'v2') | (vv == 'v3'):
+    corr_vals = ['aod_fine','aod_coarse','GOCI_AOD_c','GOCI_AOD_f',
+                 'MERRA_AOD_dust','MERRA_AOD_sea','MERRA_AOD_bc','MERRA_AOD_oc','MERRA_AOD_sulf',
+                 'aod1040','aod0500','AE','fmf',
+                 'GOCI_AOD','GOCI_AE','GOCI_fmf',
+                 'MERRA_AOD','MERRA_AE',
+                 'situ_ext','situ_ae','situ_ssa']
+    range_vals = {'aod_fine':[0.0,5.0],'aod_coarse':[0.0,5.0],'GOCI_AOD_c':[0.0,5.0],'GOCI_AOD_f':[0.0,5.0],
+                  'MERRA_AOD_dust':[0.0,5.0],'MERRA_AOD_sea':[0.0,5.0],'MERRA_AOD_bc':[0.0,5.0],
+                  'MERRA_AOD_oc':[0.0,5.0],'MERRA_AOD_sulf':[0.0,5.0],
+                  'aod1040':[0.0,3.0],'aod0500':[0.0,5.0],'AE':[-1.0,5.0],
+                  'fmf':[0.0,1.0],'GOCI_AOD':[0.0,5.0],'GOCI_AE':[-1.0,5.0],'GOCI_fmf':[0.0,1.0],
+                  'MERRA_AOD':[0.0,5.0],'MERRA_AE':[-1.0,5.0],'situ_ext':[0.0,1000.0],
+                  'situ_ae':[-1.0,5.0],'situ_ssa':[0.2,1.0]}
+    
+
+
+# In[273]:
+
+
+def calc_autocorr_mc(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=itypes,range_vals=range_vals,
+                     subsamp_ratio=subsamp_ratio,N_mc=N_mc):
+    dat = {'c':{},'l':{}}
+    dat['c'][val] = np.zeros((len(types),len(corr_ks),N_mc))+np.nan
+    dat['l'][val] = np.zeros((len(types),len(corr_ks),N_mc))
+    for ix in range(N_mc):
+        print ix,val
+        irand = np.random.randint(len(dvals['cumdist']),size=int(subsamp_ratio*len(dvals['cumdist'])))
+        for ik,k in enumerate(corr_ks):
+            sys.stdout.write("{} ".format(ik))
+            for j,jt in enumerate(types):
+                corrp = np.hstack([dvals[val][i][iis[i][ik][1]] for i in irand if i in itypes[j]])
+                corrm = np.hstack([dvals[val][i][iis[i][ik][0]] for i in irand if i in itypes[j]])
+                badc = (corrp>range_vals[val][1]) | (corrp<range_vals[val][0])
+                if any(badc): 
+                    corrp[badc] = np.nan
+                    corrm[badc] = np.nan
+
+                badc = (corrm>range_vals[val][1]) | (corrm<range_vals[val][0])
+                if any(badc): 
+                    corrp[badc] = np.nan
+                    corrm[badc] = np.nan
+
+                mmk = np.nanmean(corrm)
+                mpk = np.nanmean(corrp)
+                smk = np.nanstd(corrm)
+                spk = np.nanstd(corrp)
+                top = (corrm-mpk)*(corrp-mmk) #[(v-mpk)*(corrp[iv]-mmk) for iv,v in enumerate(corrm)]
+                #print val,ik,j,mmk,mpk,smk,spk,np.nansum(top)
+                dat['c'][val][j,ik,ix] = np.nansum(top)/((len(corrm)-1)*spk*smk)
+                dat['l'][val][j,ik,ix] = len(corrm)
+                if dat['l'][val][j,ik,ix]<min_num:
+                    dat['c'][val][j,ik,ix] = np.nan
+                
+    return dat
+
+
+# In[274]:
+
+
+p = Pool(7,worker_init)
 
 
 # In[46]:
@@ -2835,37 +2970,50 @@ with tqdm(total=len(corr_vals)) as pbar:
         autocorr_len[k] = outs['l'][k]
 
 
-# In[47]:
+# In[275]:
 
 
-autocorr['GOCI_fmf']
+autocorr_mc = {}
+autocorr_len_mc = {}
+with tqdm(total=len(corr_vals)) as pbar:
+    for i, outs in tqdm(enumerate(p.imap_unordered(calc_autocorr_mc, corr_vals))):
+        pbar.update()
+        k = outs['c'].keys()[0]
+        autocorr_mc[k] = outs['c'][k]
+        autocorr_len_mc[k] = outs['l'][k]
+
+
+# In[276]:
+
+
+autocorr_mc['GOCI_fmf'].shape
 
 
 # ### Save
 
-# In[50]:
+# In[277]:
 
 
-vv = 'v1'
+vv = 'v3'
 
 
-# In[48]:
+# In[278]:
 
 
-dat_c = {u'autocorr':autocorr,'autocorr_len':autocorr_len}
+dat_c = {u'autocorr_mc':autocorr_mc,'autocorr_len_mc':autocorr_len_mc}
 
 
-# In[49]:
+# In[279]:
 
 
 import write_utils as wu
 dat_u = wu.iterate_dict_unicode(dat_c)
 
 
-# In[51]:
+# In[280]:
 
 
-hs.savemat(fp+'KORUS_fine_coarse_autocorr_{}.mat'.format(vv),dat_u)
+hs.savemat(fp+'KORUS_fine_coarse_autocorr_mc_{}.mat'.format(vv),dat_u)
 
 
 # ### Load the models
@@ -3400,10 +3548,10 @@ for val in corr_vals:
 
 # ### Apply multi-processing
 
-# In[181]:
+# In[269]:
 
 
-if vv == 'v2':
+if (vv == 'v2') | (vv == 'v3'):
     corr_vals = ['aod_fine','aod_coarse','GOCI_AOD_c','GOCI_AOD_f',
                  'MERRA_AOD_dust','MERRA_AOD_sea','MERRA_AOD_bc','MERRA_AOD_oc','MERRA_AOD_sulf']
     range_vals = {'aod_fine':[0.0,5.0],'aod_coarse':[0.0,5.0],'GOCI_AOD_c':[0.0,5.0],'GOCI_AOD_f':[0.0,5.0],
@@ -3411,7 +3559,7 @@ if vv == 'v2':
                   'MERRA_AOD_oc':[0.0,5.0],'MERRA_AOD_sulf':[0.0,5.0]}
 
 
-# In[183]:
+# In[270]:
 
 
 autocorr_std = {}
@@ -3839,7 +3987,7 @@ for i,k in enumerate(key_list):
 
 # ## Load the Autocorrelations from Shinozuka & Redemann
 
-# In[210]:
+# In[246]:
 
 
 SR_corr_ks = [0.45,1.0,3.0,6.0,10.0,20.0,34.2]
@@ -3902,7 +4050,7 @@ SR_AE_corr_loc = [0.975,0.956,0.919,0.831,0.747,0.519,0.366]
 35,10728129935923; 0,9193744864787629
 
 
-# In[375]:
+# In[244]:
 
 
 note = [['a)','b)'],['c)','d)'],['e)','f)'],['g)','h)'],['i)','j)']]
@@ -4298,7 +4446,7 @@ plt.savefig(fp+'plot/KORUS_Autocorr_diff_rel_all_with_SR2011_GOCI_MERRA_insitu.p
 autocorr_len.keys()
 
 
-# In[16]:
+# In[281]:
 
 
 key_list = ['aod0500','aod1040','AE','aod_fine','aod_coarse']
@@ -4375,7 +4523,7 @@ key_list2
 tit2
 
 
-# In[371]:
+# In[235]:
 
 
 key_list3 = ['aod0500','fmf']
@@ -4475,7 +4623,7 @@ plt.savefig(fp+'plot/KORUS_Autocorr_rel_subset_with_SR2011_GOCI_MERRA_insitu.png
 
 # ### Add the standard deviation subset
 
-# In[21]:
+# In[282]:
 
 
 corr_ks = np.array(corr_ks)
@@ -4729,15 +4877,106 @@ plt.subplots_adjust(left=0.07, bottom=0.15, right=1.25, top=0.94,
 plt.savefig(fp+'plot/KORUS_Autocorr_dif_rel_subset_with_SR2011_GOCI_MERRA_{}.png'.format(vv).format(vv),dpi=600,transparent=True)
 
 
+# ### With the v3 monte carlo based on segments instead of samples
+
+# In[283]:
+
+
+autocorr_mm = {}
+autocorr_dm = {}
+for k in autocorr_mc.keys():
+    autocorr_mm[k] = np.zeros((len(types),len(corr_ks)))+np.nan
+    autocorr_dm[k] = np.zeros((len(types),len(corr_ks)))+np.nan
+    for j,jt in enumerate(types):
+        autocorr_mm[k][j,:] = np.nanmean(autocorr_mc[k][j,:,:],axis=1)
+        autocorr_dm[k][j,:] = np.nanstd(autocorr_mc[k][j,:,:],axis=1)
+
+
+# In[284]:
+
+
+fig, ax = plt.subplots(2,3,figsize=(12,3.5))
+for i,k in enumerate(key_list3):
+    for j in [0,1,2,3,4]:
+        ax[i,0].plot(corr_ks[1:],autocorr_mm[k][j,1:]/autocorr_mm[k][j,1],label=legend_list[j],color=cl_list[j],
+                     marker=m_list[j],alpha=0.6)
+        ax[i,0].errorbar(corr_ks[1:]*(0.94+j/50.0),autocorr_mm[k][j,1:]/autocorr_mm[k][j,1],yerr=autocorr_dm[k][j,1:]/autocorr_mm[k][j,1],
+                         color=cl_list[j],marker=m_list[j],alpha=0.6,capsize=1.0,elinewidth=0.6)
+        if k is 'aod0500':
+            ax[i,0].plot(corr_ks[1:],autocorr_mm['GOCI_AOD'][j,1:]/autocorr_mm['GOCI_AOD'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+            ax[i,0].plot(corr_ks[1:],autocorr_mm['MERRA_AOD'][j,1:]/autocorr_mm['MERRA_AOD'][j,1],
+                        color=cl_list[j],ls='--',lw=1)
+
+        if k is 'fmf':
+            ax[i,0].plot(corr_ks[1:],autocorr_mm['GOCI_fmf'][j,1:]/autocorr_mm['GOCI_fmf'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+    for j in [0,5,6,7]:    
+        ax[i,1].plot(corr_ks[1:],autocorr_mm[k][j,1:]/autocorr_mm[k][j,1],label=legend_list[j],color=cl_list[j],
+                     marker=m_list[j],alpha=0.6)
+        ax[i,1].errorbar(corr_ks[1:]*(0.92+j/50.0),autocorr_mm[k][j,1:]/autocorr_mm[k][j,1],yerr=autocorr_dm[k][j,1:]/autocorr_mm[k][j,1],
+                         color=cl_list[j],marker=m_list[j],alpha=0.6,capsize=1.0,elinewidth=0.6)
+        if k is 'aod0500':
+            ax[i,1].plot(corr_ks[1:],autocorr_mm['GOCI_AOD'][j,1:]/autocorr_mm['GOCI_AOD'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+            ax[i,1].plot(corr_ks[1:],autocorr_mm['MERRA_AOD'][j,1:]/autocorr_mm['MERRA_AOD'][j,1],
+                         color=cl_list[j],ls='--',lw=1)
+
+        if k is 'fmf':
+            ax[i,1].plot(corr_ks[1:],autocorr_mm['GOCI_fmf'][j,1:]/autocorr_mm['GOCI_fmf'][j,1],
+                         color=cl_list[j],ls=':',lw=1)
+    ax[i,0].set_ylim(0,1.1)
+    ax[i,1].set_ylim(0,1.1)
+    ax[i,0].set_yticks([0,0.25,0.5,0.75,1.0])
+    ax[i,1].set_yticks([0,0.25,0.5,0.75,1.0])
+    ax[i,0].set_xscale('log')
+    ax[i,1].set_xscale('log')
+    ax[i,0].grid()
+    ax[i,1].grid()
+    
+    ax[i,2].set_visible(False)
+    
+    #print 'r({})'.format(k)
+    ax[i,0].set_ylabel('Normalized\nr({})'.format(tit3[i]))
+    plt.setp(ax[i,0].get_xticklabels(), visible=False)
+    plt.setp(ax[i,1].get_xticklabels(), visible=False)
+    pu.sub_note(note[i][0],ax=ax[i,0],out=True,fontsize=12)
+    pu.sub_note(note[i][1],ax=ax[i,1],out=True,fontsize=12)
+    
+    if i==0:
+        ax[i,0].set_title('Meteorology')
+        ax[i,1].set_title('Altitude')
+        
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_loc,'d--',c='pink',label='SR 2011 Local')
+        ax[i,0].plot(SR_corr_ks,SR_aod_corr_long,'>--',c='yellow',label='SR 2011 Long')
+        
+    if i==0:
+        ax[i,0].plot([],[],':',c='k',lw=1,label='GOCI YAER v2')
+        ax[i,0].plot([],[],'--',c='grey',lw=1,label='MERRA2 AODANA')
+        ax[i,0].legend(frameon=False,bbox_to_anchor=[2.7,1.25],title='Meteorology')
+        ax[i,1].legend(frameon=False,bbox_to_anchor=[1.055,-0.55],title='Altitude')
+
+    if i==1:
+        ax[i,0].set_xlabel('Distance [km]')
+        ax[i,1].set_xlabel('Distance [km]')
+        plt.setp(ax[i,0].get_xticklabels(), visible=True)
+        plt.setp(ax[i,1].get_xticklabels(), visible=True)
+
+plt.subplots_adjust(left=0.07, bottom=0.15, right=1.25, top=0.94,
+                wspace=None, hspace=None)
+        
+plt.savefig(fp+'plot/KORUS_Autocorr_dif_rel_subset_with_SR2011_GOCI_MERRA_{}.png'.format(vv).format(vv),dpi=600,transparent=True)
+
+
 # ## Autocorrelation of extrinsic vs intrisic properties
 
-# In[211]:
+# In[285]:
 
 
 autocorr.keys()
 
 
-# In[212]:
+# In[286]:
 
 
 autocorrs['AE'][j,jj:]
@@ -4807,28 +5046,28 @@ ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
 ax[0].set_xscale('log')
 
 
-# In[223]:
+# In[260]:
 
 
 e_folding_autocorr = lambda x: corr_ks[np.argmin(abs(x[0]*np.exp(-1.0)-x))]
 percentile_autocorr = lambda x,p: corr_ks[np.argmin(abs(x[0]*p-x))]
 
 
-# In[228]:
+# In[261]:
 
 
 ka = autocorr_mean.keys()
 ka.sort()
 
 
-# In[234]:
+# In[262]:
 
 
 kas = ['GOCI_AOD_c','GOCI_AOD_f','MERRA_AOD_bc','MERRA_AOD_dust','MERRA_AOD_oc','MERRA_AOD_sea','MERRA_AOD_sulf',
        'aod_coarse','aod_fine']
 
 
-# In[289]:
+# In[264]:
 
 
 legend_list = ['All','Dynamic','Stagnation','Extreme\npollution','Blocking','0-1 km','1-3 km','3+ km']
@@ -4874,7 +5113,7 @@ for i,e in enumerate(e_foldr):
 pd_fold = pd.DataFrame(percr,columns=['types'] + kas) 
 
 
-# In[596]:
+# In[295]:
 
 
 cl_list = plt.cm.tab20(range(12)*21)
@@ -4928,7 +5167,7 @@ lbls = ['GOCI Coarse','GOCI Fine','MERRA Black Carbon','MERRA Dust',
 
 # ### Add the average AODs for each species
 
-# In[592]:
+# In[257]:
 
 
 mean_vals = {}
@@ -4943,13 +5182,13 @@ for kv in vals.keys():
         std_vals[kv].append(np.nanstd(dv_temp))
 
 
-# In[585]:
+# In[258]:
 
 
 vals.keys()
 
 
-# In[709]:
+# In[259]:
 
 
 def match_ygrid(ax1,ax2,ticks):
@@ -5045,16 +5284,129 @@ np.array(mean_vals['MERRA_AOD_dust'])+np.array(mean_vals['MERRA_AOD_sea']),np.ar
 pd_fold
 
 
-# In[ ]:
+# ### Redo 85th percentil plot with segment monte carlo (v3)
+
+# In[287]:
 
 
+ka = autocorr_mc.keys()
+ka.sort()
 
 
-
-# In[ ]:
-
+# In[288]:
 
 
+e_fold = {}
+perc = {}
+for k in types:
+    e_fold[k] = []
+    perc[k] = []
+jj = 0
+for j,t in enumerate(types):
+    print 'Type {}: label {}'.format(t,legend_list[j])
+    for k in kas:
+        print '..{}: efolding={}, 90%={}, 85%={}'.format(k,
+        e_folding_autocorr(np.nanmean(autocorr_mc[k][j,jj:,:],axis=1)),
+        percentile_autocorr(np.nanmean(autocorr_mc[k][j,jj:,:],axis=1),0.9),percentile_autocorr(np.nanmean(autocorr_mc[k][j,jj:,:],axis=1),0.85))
+        e_fold[t].append(e_folding_autocorr(np.nanmean(autocorr_mc[k][j,jj:,:],axis=1)))
+        perc[t].append(percentile_autocorr(np.nanmean(autocorr_mc[k][j,jj:,:],axis=1),0.85))
+
+
+# In[291]:
+
+
+e_foldr = [e_fold[k] for k in types]
+percr = [perc[k] for k in types]
+
+
+# In[292]:
+
+
+for i,e in enumerate(e_foldr):
+    e.insert(0,legend_list[i])
+    percr[i].insert(0,legend_list[i])
+
+
+# In[293]:
+
+
+pd_fold = pd.DataFrame(percr,columns=['types'] + kas) 
+
+
+# In[289]:
+
+
+autocorr_mc.keys()
+
+
+# In[300]:
+
+
+pd_fold['types'][3] = 'Extreme\npollution'
+
+
+# In[303]:
+
+
+fig, ax = plt.subplots(2,1,sharex=True,figsize=(10,3))
+
+y1_lbl = ['aod_coarse','GOCI_AOD_c','MERRA_AOD_dust','MERRA_AOD_sea']
+b1 = pd_fold.plot(x='types',
+        kind='bar',
+        stacked=False,
+        title='Autocorrelation distance at 85th percentile for speciated AOD',
+        ax=ax[0],grid=True,logy=True,rot=0,color=cl_list[1::2],
+        y=y1_lbl)
+
+b1x = np.reshape([rect.get_x()+rect.get_width()/2.0 for rect in b1.patches],(len(y1_lbl),len(types)))
+b1c = [rect.get_facecolor() for ir,rect in enumerate(b1.patches) if ir%len(types)==0]
+b1x2 = b1.twinx()
+for iy, lbl in enumerate(y1_lbl):
+    #b1x2.plot(b1x[iy,:],mean_vals[lbl],'^',color='k',markersize=8)
+    b1x2.errorbar(b1x[iy,:],mean_vals[lbl],yerr=std_vals[lbl],marker='+',color='k',alpha=0.5,ls='None')
+    
+b1x2.set_ylabel('Coarse AOD')
+match_ygrid(b1,b1x2,np.linspace(0,0.45,4))
+
+ax[0].legend(['4STAR Coarse','GOCI Coarse','MERRA Dust','MERRA Sea salt'],
+             frameon=False,loc='center left', bbox_to_anchor=(1.085, 0.5))
+ax[0].set_yticks([0.1,1,10,100])
+ax[0].set_ylabel('Distance\n[km]')
+
+y2_lbl = ['aod_fine','GOCI_AOD_f','MERRA_AOD_bc','MERRA_AOD_oc','MERRA_AOD_sulf']
+b2 = pd_fold.plot(x='types',
+        kind='bar',
+        stacked=False,
+        ax=ax[1],grid=True,logy=True,rot=0,color=cl_list[0::2],
+        y=y2_lbl)
+
+
+b2x = np.reshape([rect.get_x()+rect.get_width()/2.0 for rect in b2.patches],(len(y2_lbl),len(types)))
+b2c = [rect.get_facecolor() for ir,rect in enumerate(b2.patches) if ir%len(types)==0]
+b2x2 = b2.twinx()
+for iy, lbl in enumerate(y2_lbl):
+    b2x2.errorbar(b2x[iy,:],mean_vals[lbl],yerr=std_vals[lbl],marker='+',color='k',alpha=0.8,ls='None')
+    
+b2x2.set_ylabel('Fine AOD')
+match_ygrid(b2,b2x2,np.linspace(0,0.45,4))
+ax[1].legend(['4STAR Fine','GOCI Fine','MERRA Black Carbon','MERRA Org. Carbon','MERRA Sulfate'],
+             frameon=False,loc='center left', bbox_to_anchor=(1.085, 0.5))
+ax[1].set_yticks([0.1,1,10,100])
+ax[1].set_ylabel('Distance\n[km]')
+ax[1].set_xlabel('')
+#ax[0].legend(['GOCI Coarse','GOCI Fine','MERRA Black Carbon','MERRA Dust',
+#           'MERRA Org. Carbon','MERRA Sea salt','MERRA Sulfate','4STAR Coarse','4STAR Fine'],
+#          frameon=False,loc='center left', bbox_to_anchor=(1.0, 0.5))
+plt.tight_layout(h_pad=0.5,w_pad=-12)
+match_ygrid(b2,b2x2,np.linspace(0,0.45,4))
+match_ygrid(b1,b1x2,np.linspace(0,0.45,4))
+plt.savefig(fp+'plot/KORUS_autocorr_percentile_speciated_AOD_withAODavgs_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[304]:
+
+
+vv
 
 
 # ### Save autocorr and monte carlo calculations to file
@@ -5189,6 +5541,95 @@ ax[1].grid()
 #ax[2].grid()
 
 #plt.savefig(fp+'plot/KORUS_autocorr_AOD_AE_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# ### For v3 instrisic vs. extrinsic (monte carlo on segments instead of samples)
+
+# In[225]:
+
+
+corr_ks = np.array(corr_ks)
+
+
+# In[316]:
+
+
+fig, ax = plt.subplots(1,2,sharey=True,figsize=(8,4))
+j = 0
+jj = 0
+cl = ['tab:blue','tab:orange','tab:green','tab:red']
+#ax[0].plot(corr_ks[jj:],np.nanmean(autocorr_mc['AE'][j,jj:],ls='--',marker='.',label='AE',color='k')
+ax[1].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['AE'][j,jj:,:],axis=1),yerr=np.nanstd(autocorr_mc['AE'][j,jj:,:],axis=1),
+               elinewidth=0.51,ls='--',marker='.',label='4STAR',color=cl[0])
+ax[1].axvline(percentile_autocorr(np.nanmean(autocorr_mc['AE'][j,jj:,:],axis=1),0.85)*1.03,ls=':',color=cl[0])
+ax[1].errorbar(corr_ks[jj:]*1.02,np.nanmean(autocorr_mc['MERRA_AE'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['MERRA_AE'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='--',marker='.',label='MERRA',color=cl[1])
+ax[1].axvline(percentile_autocorr(np.nanmean(autocorr_mc['MERRA_AE'][j,jj:,:],axis=1),0.85),ls=':',color=cl[1])
+ax[1].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['GOCI_AE'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['GOCI_AE'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='--',marker='.',label='GOCI',color=cl[2])
+ax[1].axvline(percentile_autocorr(np.nanmean(autocorr_mc['GOCI_AE'][j,jj:,:],axis=1),0.85)*0.97,ls=':',color=cl[2])
+ax[1].errorbar(corr_ks[jj:]*1.02,np.nanmean(autocorr_mc['situ_ae'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['situ_ae'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='--',marker='.',label='Point / in situ',color=cl[3])
+ax[1].axvline(percentile_autocorr(np.nanmean(autocorr_mc['situ_ae'][j,jj:,:],axis=1),0.85),ls=':',color='k',label='85th percentile')
+ax[1].axvline(percentile_autocorr(np.nanmean(autocorr_mc['situ_ae'][j,jj:,:],axis=1),0.85),ls=':',color=cl[3])
+ax[1].set_title('AE')
+
+#ax[1].plot(corr_ks[jj:],np.nanmean(autocorr_mc['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+ax[0].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['aod0500'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['aod0500'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='-',marker='.',label='4STAR')
+ax[0].errorbar(corr_ks[jj:]*1.02,np.nanmean(autocorr_mc['MERRA_AOD'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['MERRA_AOD'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='-',marker='.',label='MERRA')
+ax[0].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['GOCI_AOD'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['GOCI_AOD'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='-',marker='.',label='GOCI')
+ax[0].errorbar(corr_ks[jj:]*1.02,np.nanmean(autocorr_mc['situ_ext'][j,jj:,:],axis=1),
+               yerr=np.nanstd(autocorr_mc['situ_ext'][j,jj:,:],axis=1),elinewidth=0.51,
+               ls='-',marker='.',label='Point / in situ')
+ax[0].axvline(percentile_autocorr(np.nanmean(autocorr_mc['aod0500'][j,jj:,:],axis=1),0.85),ls=':',color=cl[0],lw=1.2)
+ax[0].axvline(percentile_autocorr(np.nanmean(autocorr_mc['MERRA_AOD'][j,jj:,:],axis=1),0.85)*1.03,ls=':',color=cl[1])
+ax[0].axvline(percentile_autocorr(np.nanmean(autocorr_mc['GOCI_AOD'][j,jj:,:],axis=1),0.85),ls=':',color=cl[2])
+ax[0].axvline(percentile_autocorr(np.nanmean(autocorr_mc['situ_ext'][j,jj:,:],axis=1),0.85),ls=':',color='k',label='85th percentile')
+ax[0].axvline(percentile_autocorr(np.nanmean(autocorr_mc['situ_ext'][j,jj:,:],axis=1),0.85),ls=':',color=cl[3])
+ax[0].set_title('AOD$_{{500}}$')
+
+if False:
+    #ax[1].plot(corr_ks[jj:],np.nanmean(autocorr_mc['aod0500'][j,jj:],ls='-',marker='.',label='AOD',color='k')
+    ax[2].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['fmf'][j,jj:,:],axis=1),yerr=np.nanstd(autocorr_mc['fmf'][j,jj:,:],axis=1),ls='-',marker='.',label='4STAR',color='tab:blue')
+    #ax[0].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['MERRA_AOD'][j,jj:],yerr=np.nanstd(autocorr_mc['MERRA_AOD'][j,jj:],ls='-',marker='.',label='MERRA')
+    ax[2].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['GOCI_fmf'][j,jj:,:],axis=1),yerr=np.nanstd(autocorr_mc['GOCI_fmf'][j,jj:,:],axis=1),ls='-',marker='.',label='GOCI',color='tab:green')
+    #ax[0].errorbar(corr_ks[jj:],np.nanmean(autocorr_mc['situ_ext'][j,jj:],yerr=np.nanstd(autocorr_mc['situ_ext'][j,jj:],ls='-',marker='.',label='Point / in situ')
+    ax[2].set_title('FMF')
+
+ax[0].legend(frameon=False)
+
+ax[0].set_ylim(0,1)
+ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
+ax[0].set_xscale('log')
+ax[1].set_xscale('log')
+ax[0].set_xlabel('distance [km]')
+ax[1].set_xlabel('distance [km]')
+ax[0].set_ylabel('Autocorrelation')
+ax[0].grid()
+ax[1].grid()
+#ax[2].grid()
+
+plt.savefig(fp+'plot/KORUS_autocorr_AOD_AE_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[315]:
+
+
+j=0
+jj=0
+for k in ['GOCI_AOD','MERRA_AOD','aod0500','situ_ext']:
+    print k, np.nanmean(np.nanstd(autocorr_mc[k][j,jj:-1,:],axis=1))
+for k in ['GOCI_AE','MERRA_AE','AE','situ_ae']:
+    print k, np.nanmean(np.nanstd(autocorr_mc[k][j,jj:-1,:],axis=1))
 
 
 # ### Larger plots
