@@ -176,7 +176,7 @@ if data_raw_found:
         if not daystr0 in daystrss:
             daystrss.append(daystr0)
             if fa_tmp.campaign.find('rooftop') >= 0:
-                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath))
+                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
                 if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
 
 
