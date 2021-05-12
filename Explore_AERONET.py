@@ -938,8 +938,55 @@ help(dump)
 dump(n,'/mnt/c/Users/sleblanc/Research/ORACLES/aero_file_v4.txt')
 
 
-# In[ ]:
+# # Test out web saving aeronet files
+
+# In[6]:
 
 
+def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None,version=2):
+    """ 
+    Purpose:
+       function to dowload the aeronet file for a particular site and particular day, in the same v2 format for lev15 AOD
+    Inputs:
+       date: (optional, defaults to today) day for aeronet data in datetime 
+       site: (defaults to NASA_Ames) the name of the AERONET site to download - must be known.
+       path: (defaults to current working directory) path of the file to be saved at
+    Outputs:
+       fname: full file name of the one day of AOD lev15 AOD data.
+    Dependencies:
+       urllib
+       BeautifulSoup
+       datetime
+       os
+    Example:
+       ...
+    History:
+       Written: Samuel LeBlanc, 2020-12-03, Santa Cruz, CA
+       Modified: Samuel LeBlanc, 2021-04-19, Santa Cruz, CA
+                 added support for v3
+    """
+    from urllib import urlopen
+    from bs4 import BeautifulSoup
+    from datetime import datetime
+    import os
+    
+    if not date: date = datetime.now()
+    if not path: path = os.curdir
+        
+    url = "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_v{version}?site={site}&"+          "year={t.year}&month={t.month}&day={t.day}&year2={t.year}&month2={t.month}&day2={t.day}&"+          "AOD15=1&AVG=10&if_no_html=1"
+    htm = urlopen(url.format(site=site,t=date,version=version))
+    html = htm.read()
+    soup = BeautifulSoup(html,features="lxml")
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title','h2'])]
+    
+    fname = os.path.join(path,'{t:%y%m%d}_{t:%y%m%d}_{site}.lev15'.format(t=date,site=site,version=version))
+    with open(fname,'w') as f:
+        f.write(soup.text.lstrip().replace('\n\n','\n'))
+    return fname
 
+
+# In[7]:
+
+
+get_AERONET_file_v2(version=3)
 
