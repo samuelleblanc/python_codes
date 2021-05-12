@@ -106,8 +106,6 @@
 #  
 # 
 # Here is a quick plot of all 32 signals (including references) after removing the minimum value as a baseline.   Time is on the horizontal.
-# 
-# ![image001.png](attachment:image001.png)
 
 # From Conrad Esch, 
 # Oct 20, 2020, 12:57 PM
@@ -308,6 +306,170 @@
 # 5STARG_20210201_120748_RADIOMETERS_6HOUR.dat
 # 
 
+# ## Test 2021-02-03 - TEC on/off
+# I got the described test done. To do the test I started with the TEC driver off and waited for 5 minutes then turned it on. This alternated every 5 minutes up to 30 minutes.
+# 
+# I did not bother pre biasing the NIR board for this because I figured it would drift over time anyways.
+# 
+# Hope this provides insight into how efficient the TEC drivers are.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210203_133652_RADIOMETERS_TECDriverOnOFF.dat
+
+# ## Test 2021-02-08 and 09 - Refrigerator tests
+# 
+# From 2021-02-09:
+# The desiccant arrived and I spent yesterday getting the system set up and running a quick proof of concept test. Included are those results. The main difference from other tests I have ran is that the Mezzanine Temperature sensor is now in free air to measure the refrigerator temperature.
+# 
+# I'm running a much longer test today.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210208_142931_RADIOMETERS_SHORT_FRIDGE.dat
+# 
+# 
+# From 2021-02-10:
+# I got a very long test done yesterday in the refrigerator. Hopefully there is some useful data in here. The test I sent you yesterday and this one all involved starting at atmospheric temp and then letting the fridge cool the system. I think a good next test might be to let the fridge run overnight to fully cool the system. After which I can bias the op amps and let a test run for a few hours. What do you think?
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210209_103836_RADIOMETERS_LongFridge.dat
+# 
+
+# ## Test 2021-02-12 - TEC set points change
+# 
+# I got two tests done last friday where Channels 6 and 7 had a modified TEC setpoint (to be colder).
+# 
+# The first test was run while the system was cooling off in the fridge (QuickCooloff). After which I changed the bias setpoint of the amplifiers and ran the test again for another two hours.
+# 
+# In terms of operator experience, the two radiometers with the changed TEC setpoint were much easier to bias, turns of the dial resulted in a much lower bias change, similar to the Vis photodiodes.
+# 
+# I'll change the other two channels setpoints today. Let me know what other testing can be run.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+#  5STARG_20210212_125431_RADIOMETERS_QuickCoolOff...
+#  5STARG_20210212_152351_RADIOMETERS_QuickPreCooo...
+
+# ## Test 2021-02-17 - TEC on/off with lower set point
+# 
+# Included is a test where I alternated having the TEC's on and off over 30 minutes. CH's 6 and 7 are set to -20C and 8 and 9 are set to -30C. I switched which TEC pins we were monitoring. This test monitors CH8 instead of CH6. I'm currently running a longer 2 hour test.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 
+# 5STARG_20210217_133256_RADIOMETERS_TEC_OnOFF.dat
+
+# ## Test 2021-02-19 - TEC on/off with even lower set point
+# I rebiased channels 8 and 9 to hopefully be at about -28C. I reran the on off test over a longer interval. The whole system is cooling down for a longer drift test currently.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 5STARG_20210219_122658_RADIOMETERS_TEC_OnOff3.dat
+# 
+
+# ## Test 2021-02-19 - Drift test lower set point
+# Happy Monday! Included is a drift test I performed last Friday. This is the same as the TEC on off test except that the system was pre cooled then biased.
+# 
+# Do you think there is any further testing that can be done without a temperature controlled system? I did find some miniature heatsinks that may fit on the op amps.
+# 
+# I'll contact Steve and work out a time to pick up the TEC driver.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+#  5STARG_20210219_154436_RADIOMETERS_DriftWModifi...
+# 
+
+# ## Test 2021-02-23 - without trimpot
+# Hi Sam,
+# 
+# I desoldered the trimpot on channel 9 yesterday to run a drift test. As you predicted, the dark current of the photodiode more than rails the 100x100 amplifier. I still ran the test though to see if there is any useful temperature dependent data from it.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 
+# 5STARG_20210223_160552_RADIOMETERS_CH9_without_trim.dat
+
+# ## Test 2021-02-24 - with heatsinks
+# Included is the test I ran yesterday. To run this test I cooled the system while it was on and then placed heat sinks on the op amps of channels 6 and 8. I did not bias the system before the test. Let me know if there is anything interesting in this.
+# 
+# Best,
+# 
+# Conrad Esch
+# 
+# 
+#  5STARG_20210224_172007_RADIOMETERS_CH6_CH8_With...
+# Attachments area
+# 
+# 
+# For context, this was the setup.
+# 
+# Ch 6, -20C setpoint, no Op Amp Heat Sink  
+# Ch 7, -20C setpoint, with Op Amp Heat Sink  
+# Ch 8, -28C setpoint, no Op Amp Heat Sink  
+# Ch 9, -28C setpoint, with Op Amp Heat Sink
+# 
+# 
+# The temp sensors I have cannot measure below freezing so that would explain why the free air temp didn't go lower.
+
+# ## Test 2021-03-02 - resistor instead of diodes
+# 
+# Upon a recommendation from Roy I ran another test. For this test I replaced all of the NIR photodiodes with resistors.
+# 
+# Channels 6 and 7 have a 28k ohm resistor in them and 8 and 9 have a 1.2M ohm resistor. For this test the normal NIR Block temp sensor was placed on the board. TECA and TECB were floating.
+# 
+# Best,
+# 
+# Conrad Esch  
+#  5STARG_20210301_190356_RADIOMETERS_NIRResistor.dat
+# 
+
+# ## Test 2021-04-05 - Labjack test
+# I got the labjack data we've been discussing.
+# 
+# For the test I set up both boards with photodiodes in them. I did not setup the temp sensors or turn on the fridge. The NIR photodiodes were also uncooled because I don't have the mounting blocks with me right now.
+# 
+# Something of note, because the Labjack uses a different type of ADC compared to the NI board, the bit resolution is variable. Basically larger bit resolutions take longer to find the correct voltage value.
+# 
+# I found that 20bit resolution took about 500 milliseconds to sample all 32 analog channels and 18bit resolution took 100 milliseconds.
+# 
+# As a result for this test I set the resolution to 18 bits. For reference the NI USB 6218 is 16 bit resolution.
+# 
+# Thanks,
+# 
+# Conrad Esch  
+# 5STARG_20210405_155921_RADIOMETERS.dat
+# 
+# >I've noticed some differences here with the Labjack. Looks like there is no 5v reference. In the other files I had to convert the channels to actual voltages by (ch+5v_ref)*-1. These are just directly used is that right?
+# 
+# >Yes, exactly. It would just be *-1.
+
+# ## Test 2021-04-06 - Labjack 20 bit
+# 
+# I ran another test this morning with the resolution set to 20 bits instead of 18. I'm curious to see if this made much of a difference. One noticeable difference is that the file size is much smaller.
+# 
+# Best,
+# 
+# Conrad Esch  
+# 5STARG_20210406_091547_RADIOMETERS.dat
+
 # # Prepare python environment
 
 # In[1]:
@@ -334,16 +496,22 @@ get_ipython().magic(u'matplotlib notebook')
 # In[3]:
 
 
+plt.rcParams['figure.dpi'] = 100 # 200 e.g. is really fine, but slower
+
+
+# In[4]:
+
+
 name = 'muSSTAR'
 fp = getpath(name)
 
 
 # # Make functions for faster analysis
 
-# In[97]:
+# In[52]:
 
 
-def reader_RADIOMETER(file_in,lat = 36.970087, lon = -122.052537, alt = 74.0):
+def reader_RADIOMETER(file_in,lat = 36.970087, lon = -122.052537, alt = 74.0,islabjack=False):
     """
 Purpose:
     Read in the 5STARG_RADIOMETERS*.dat files, and do preliminary calculations
@@ -362,6 +530,7 @@ Keywords:
     lat: latitude of meaurements for sza calc (defaults to Conrad's house, but does not need to be exact)
     lon: longitude of measurements for sza calc  (defaults to Conrad's house, but does not need to be exact)
     alt: altitude of measurements for sza calc  (defaults to Conrad's house, but does not need to be exact)
+    islabjack: (default False) If True, computes the voltages without the 5v reference, for use with labjack instead of ni
 
 Dependencies:
     - pandas
@@ -374,7 +543,7 @@ Needed Files:
 
 Modification History:
     Written: Samuel LeBlanc, Santa Cruz, CA, 2020-11-18
-    Modified:
+    Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-04,06, added handling for labjack
     
     """
     import pandas as pd
@@ -414,12 +583,14 @@ Modification History:
     s['sza'],s['azi'],s['sf'],s['dec'] = mu.get_sza_azi(lat,lon,s['UTC'],alt=alt,return_sunf_and_dec=True)
     
     # now get the reference voltages
-    s['ref5v'] = s['-5v_0_66']*3.0
+    s['ref5v'] = s.get('-5v_0_66',np.zeros_like(s['sza']))*3.0
     s['ref12v_pos'] = s['12pos_0_33']*3.0
     s['ref12v_neg'] = s['12neg_0_33']*3.0
     s['5vtef_tempC'] = s['5vref_temp']/0.0021-273.15
     
     # run some calculations
+    if '1020_outa' in s.keys(): s['nir_1020_teca'] = s['1020_outa']
+    if '1020_outb' in s.keys(): s['nir_1020_tecb'] = s['1020_outb']
     if 'nir_1020_tecb' in s.keys(): s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
     v2c = 100.0 #  "Temp = 10mv/DegC"
     if 'nir_block' in s.keys():
@@ -428,22 +599,31 @@ Modification History:
             s['nir_board'] = s['nir_board']*v2c
             s['vis_block'] = s['vis_block']*v2c
             s['vis_board'] = s['vis_board']*v2c
-            s['mezz'] = s['mezz']*v2c
+            try:
+                s['mezz'] = s['mezz']*v2c
+            except:
+                print 'issue with the mezz need to multiply by {}'.format(v2c)
     if 'nir_block_temp' in s.keys():
         if (min(s['nir_block_temp']) > 0.0) & (max(s['nir_block_temp']) < 1.0):
             s['nir_block'] = s['nir_block_temp']*v2c
             s['nir_board'] = s['nir_board_temp']*v2c
             s['vis_block'] = s['vis_block_temp']*v2c
             s['vis_board'] = s['vis_board_temp']*v2c
-            s['mezz'] = s['mezz']*v2c
+            try:
+                s['mezz'] = s['mezz']*v2c
+            except:
+                print 'issue with the mezz need to multiply by {}'.format(v2c)
     
     print len(s['UTC']),len(s['ref5v'])
     
     # now run through and calculate the voltages  compared to reference voltages
     V = np.zeros((9,3,len(s['ref5v'])))+np.nan
     for k in s.keys():
-        if k.startswith('CH'):
-            s[k.replace('CH','V')] = -s[k]-s['ref5v']
+        if k.startswith('CH') and k[-1].isdigit():
+            if islabjack:
+                s[k.replace('CH','V')] = -s[k]
+            else:
+                s[k.replace('CH','V')] = -s[k]-s['ref5v']
             # make array for easier use. channel, gain stage, then measurements
             icht,istaget = [int(i) for i in k.replace('CH','').split('_')]
             V[icht-1,istaget/2,:] = s[k.replace('CH','V')]
@@ -452,7 +632,7 @@ Modification History:
     return s
 
 
-# In[219]:
+# In[6]:
 
 
 def define_long_names(s):
@@ -493,7 +673,7 @@ def define_long_names(s):
         'CH9_4':'2200 nm 100x 100x',
         'spare':'Spare - Empty [V]',
         '5vref_temp':'5Vref Temp, 2.1mV/DegC [V]',
-        '5vtef_tempC':'Temp of 5Vref [°C]',
+        '5vtef_tempC':u'Temp of 5Vref [°C]',
         '12pos_0_33':'1/3 of +12V rail [V/3]',
         '12neg_0_33':'1/3 of -12v rail [V/3]',
         '-5v_0_66':'1/3 of our -5v reference signal [V/3]',
@@ -501,19 +681,20 @@ def define_long_names(s):
         'ref12v_pos':'calculated +12V reference signal [V]',
         'ref12v_neg':'calculated -12V reference signal [V]',
         'V':'Calculated voltage output [V], reference adjusted',
-        'lat':'Latitude of measurement [°]',
-        'lon':'Longitude of measurement [°]',
+        'lat':u'Latitude of measurement [°]',
+        'lon':u'Longitude of measurement [°]',
         'alt':'Altitude of measurement [m]',
-        'sza':'Solar Zenith Angle [°], calculated',
-        'azi':'Solar Azimuth Angle [°], calculated',
+        'sza':u'Solar Zenith Angle [°], calculated',
+        'azi':u'Solar Azimuth Angle [°], calculated',
         'sf':'Solar-Earth factor due to distance between Earth and sun [unitless], calculated',
-        'dec':'Solar declination per respect to earth [°],calculated',
+        'dec':u'Solar declination per respect to earth [°],calculated',
         'nir_block':u'NIR Block temp [°C]',
         'nir_board':u'NIR Board temp [°C]',
         'vis_block':u'VIS Block temp [°C]',
         'vis_board':u'VIS Board temp [°C]',
         'mezz':u'Mezzanine board temp [°C]',
-        'nir_tec_V':'TEC difference voltage [V]'}
+        'nir_tec_V':'TEC difference voltage [V]',
+        'air':u'Ambient air temp [°C]'}
     for k in names.keys():
         if k.startswith('CH'):
             names[k.replace('CH','V')] = names[k]+' [V]'
@@ -522,7 +703,7 @@ def define_long_names(s):
         s[k].name = names.get(k,'Undefined')
 
 
-# In[86]:
+# In[7]:
 
 
 def plot_housekeeping(s):
@@ -532,7 +713,7 @@ def plot_housekeeping(s):
     myFmt = mdates.DateFormatter('%H:%M:%S')
     
     
-    fig = plt.figure()
+    fig = plt.figure(dpi=100)
     plt.plot(s['UTC'],s['spare'])
     plt.plot(s['UTC'],s['5vref_temp'])
     plt.plot(s['UTC'],s['ref5v'],label='(-5v_0_66)*3:\n {:02.5f}+/-{:02.5f}'.format(                                        np.nanmean(s['ref5v']),np.nanstd(s['ref5v'])))
@@ -548,7 +729,7 @@ def plot_housekeeping(s):
     except:
         pass
 
-    fig1,ax = plt.subplots(4,1,sharex=True)
+    fig1,ax = plt.subplots(4,1,sharex=True,dpi=100)
     ax[2].plot(s['UTC'],s['ref5v'],'.',label='5V ref: {:6.4f} +/- {:6.4f} V'.format(np.nanmean(s['ref5v']),np.nanstd(s['ref5v'])))
     ax[2].xaxis.set_major_formatter(myFmt)
     ax[2].grid()
@@ -583,13 +764,16 @@ def plot_housekeeping(s):
     except:
         pass
     
-    if 'mezz' in s.keys():
-        fig2,ax2 = plt.subplots(1,1)
+    if 'vis_block' in s.keys():
+        fig2,ax2 = plt.subplots(1,1,dpi=100)
         plt.plot(s['UTC'],s['vis_block'])
         plt.plot(s['UTC'],s['nir_block'])
         plt.plot(s['UTC'],s['vis_board'])
         plt.plot(s['UTC'],s['nir_board'])
-        plt.plot(s['UTC'],s['mezz'])
+        if 'mezz' in s.keys():
+            plt.plot(s['UTC'],s['mezz'])
+        if 'air' in s.keys():
+            plt.plot(s['UTC'],s['air'])
         plt.grid()
         plt.legend()
         plt.xlabel('UTC [Hour]')
@@ -605,9 +789,13 @@ def plot_housekeeping(s):
         fig2 = None
         
     if 'nir_tec_V' in s.keys():
-        fig3,ax = plt.subplots(2,1,sharex=True)
-        ax[0].plot(s['UTC'],s['nir_1020_teca'],'.')
-        ax[0].plot(s['UTC'],s['nir_1020_tecb'],'.')
+        fig3,ax = plt.subplots(2,1,sharex=True,dpi=100)
+        if 'nir_1020_teca' in s.keys():
+            ax[0].plot(s['UTC'],s['nir_1020_teca'],'.')
+            ax[0].plot(s['UTC'],s['nir_1020_tecb'],'.')
+        if 'CH8_TEC_B' in s.keys():
+            ax[0].plot(s['UTC'],s['CH8_TEC_A'],'.')
+            ax[0].plot(s['UTC'],s['CH8_TEC_B'],'.')
         ax[1].plot(s['UTC'],s['nir_tec_V'],'-',label='tecb - teca',lw=0.2)
         ax[0].legend()
         ax[1].legend()
@@ -626,14 +814,14 @@ def plot_housekeeping(s):
     return [fig,fig1,fig2,fig3]
 
 
-# In[87]:
+# In[8]:
 
 
 def plot_v(s,gain=0):
     'function to plot out the different gain channels'
     import matplotlib.dates as mdates
     myFmt = mdates.DateFormatter('%H:%M:%S')
-    fig,ax = plt.subplots(2,1,sharex=True)
+    fig,ax = plt.subplots(2,1,sharex=True,dpi=100)
     
     ig = ['0','2','4']
     ig_str = ['1x','100x','100x-100x']
@@ -667,14 +855,14 @@ def plot_v(s,gain=0):
     return fig,ax
 
 
-# In[88]:
+# In[9]:
 
 
 def plot_v_expect(s,gain=0):
     'function to plot out the different gain channels, gain refers to the base gain'
     import matplotlib.dates as mdates
     myFmt = mdates.DateFormatter('%H:%M:%S')
-    fig,ax = plt.subplots(2,1,sharex=True,figsize=(9,6))
+    fig,ax = plt.subplots(2,1,sharex=True,figsize=(9,6),dpi=100)
     
     cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
     
@@ -717,7 +905,7 @@ def plot_v_expect(s,gain=0):
     return fig,ax
 
 
-# In[89]:
+# In[10]:
 
 
 def plot_channel_multigain(s,ch=1,ns=300):
@@ -725,7 +913,7 @@ def plot_channel_multigain(s,ch=1,ns=300):
     from Sp_parameters import smooth
     import matplotlib.dates as mdates
     myFmt = mdates.DateFormatter('%H:%M:%S')
-    fig,ax = plt.subplots(3,1,sharex=True,figsize=(7,7))
+    fig,ax = plt.subplots(3,1,sharex=True,figsize=(7,7),dpi=100)
 
     cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
     ic = (ch-1)%5
@@ -761,7 +949,7 @@ def plot_channel_multigain(s,ch=1,ns=300):
     return fig, ax
 
 
-# In[162]:
+# In[11]:
 
 
 def plot_gains(s,ch,ns=300):
@@ -769,10 +957,10 @@ def plot_gains(s,ch,ns=300):
     from Sp_parameters import smooth
     import plotting_utils as pu
 
-    fig,ax = plt.subplots(1,2,figsize=(7,3))
+    fig,ax = plt.subplots(1,2,figsize=(7,3),dpi=100)
     cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
     ic = (ch-1)%5
-    igood = (s['V{}_0'.format(ch)] < 10.3) & (s['V{}_2'.format(ch)] < 10.3) 
+    igood = (s['V{}_0'.format(ch)] < 10.3) & (s['V{}_2'.format(ch)] < 10.3) & (s['V{}_2'.format(ch)] > 0.0)
     ax[0].plot(smooth(s['V{}_0'.format(ch)][igood],ns,old=True),s['V{}_2'.format(ch)][igood],'.',
                alpha=0.02,label=s['V{}_0'.format(ch)].name,c=cs[ic])
     pu.plot_lin(smooth(s['V{}_0'.format(ch)][igood],ns,old=True),s['V{}_2'.format(ch)][igood],
@@ -782,7 +970,7 @@ def plot_gains(s,ch,ns=300):
     ax[0].set_xlabel('smooth ('+s['V{}_0'.format(ch)].name+')')
     ax[0].xaxis.set_major_locator(plt.MaxNLocator(5))
 
-    igood2 = (s['V{}_2'.format(ch)] < 10.3) & (s['V{}_4'.format(ch)] < 10.3) 
+    igood2 = (s['V{}_2'.format(ch)] < 10.3) & (s['V{}_4'.format(ch)] < 10.3) & (s['V{}_4'.format(ch)] > 0.0)
     ax[1].plot(smooth(s['V{}_2'.format(ch)][igood2],ns,old=True),s['V{}_4'.format(ch)][igood2],'.',
                alpha=0.02,label=s['V{}_2'.format(ch)].name,c=cs[ic])
     pu.plot_lin(smooth(s['V{}_2'.format(ch)][igood2],ns,old=True),s['V{}_4'.format(ch)][igood2],
@@ -797,7 +985,7 @@ def plot_gains(s,ch,ns=300):
     return fig,ax
 
 
-# In[223]:
+# In[12]:
 
 
 def plot_corr_temp(s,ig=0,tmp='nir_block'):
@@ -805,9 +993,9 @@ def plot_corr_temp(s,ig=0,tmp='nir_block'):
     import plotting_utils as pu
     #tmp = ['nir_block','nir_board','vis_block','vis_board','mezz'][it]
     cs = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple']
-    fig,ax = plt.subplots(3,3,sharex=True)
+    fig,ax = plt.subplots(3,3,sharex=True,dpi=100)
     for ia, x in enumerate(ax.ravel()):
-        goods = s['V{}_{}'.format(ia+1,ig)]<10.3
+        goods = (s['V{}_{}'.format(ia+1,ig)]<10.3) & (s['V{}_{}'.format(ia+1,ig)]>0.0) 
         r = np.corrcoef(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods])[0,1]
         x.plot(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods],'.',alpha=0.01,label='R$^2$={:1.4f}'.format(r*r),c=cs[ig])
         pu.plot_lin(s[tmp][goods],s['V{}_{}'.format(ia+1,ig)][goods],ax=x,lblfmt='1.4f',color=cs[ig])
@@ -820,7 +1008,7 @@ def plot_corr_temp(s,ig=0,tmp='nir_block'):
     return fig
 
 
-# In[90]:
+# In[13]:
 
 
 def plot_channels(s,fp,ns=300,dpi=600):
@@ -832,30 +1020,35 @@ def plot_channels(s,fp,ns=300,dpi=600):
                     dpi=dpi,transparent=True)
 
 
-# In[152]:
+# In[14]:
 
 
 def plot_all_gainratios(s,fpp,ns=300,dpi=300):
     'Run through and plot each wavelenght and gain stage ratios'
     for i in xrange(9):
-        fig,ax = plot_gains(s,i+1,ns=ns)
-        u = 'V{}_0'.format(i+1)
-        fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_{wvl}_gainratios.png'.format(s=s,wvl=s[u].name.split()[0]),
-                    dpi=dpi,transparent=True)
+        try:
+            fig,ax = plot_gains(s,i+1,ns=ns)
+            u = 'V{}_0'.format(i+1)
+            fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_{wvl}_gainratios.png'.format(s=s,wvl=s[u].name.split()[0]),
+                        dpi=dpi,transparent=True)
+        except:
+            print 'issue with gain ratios for wvl {wvl}'.format(wvl=s[u].name.split()[0])
+            pass
 
 
-# In[109]:
+# In[15]:
 
 
 def clean_up_and_prep_for_plots(s,fpp):
     'to clean up the label and make the path for plotting, and other pre-plotting setups'
-    if len(s.label.split('_'))>1:
+    if (len(s.label.split('_'))>1) & s.label.split('_')[0].isdigit():
         s.label = s.label.split('_')[-1]
     if not os.path.isdir(fpp+'{s.daystr}_{s.label}/'.format(s=s)):
         os.makedirs(fpp+'{s.daystr}_{s.label}/'.format(s=s))
+    define_long_names(s)
 
 
-# In[93]:
+# In[16]:
 
 
 def plt_hskp(s,fpp,dpi=300):
@@ -874,51 +1067,74 @@ def plt_hskp(s,fpp,dpi=300):
     #return fig
 
 
-# In[107]:
+# In[17]:
 
 
 def plt_gains(s,fpp,dpi=300):
     'plot all the different channels seperated by the gains'
-    fig1,ax1 = plot_v(s,gain=0)
-    ax1[0].autoscale(axis='y')
-    ax1[1].autoscale(axis='y')
-    fig1.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=dpi,transparent=True)
-
-    fig2,ax2 = plot_v(s,gain=1)
-    ax2[0].autoscale(axis='y')
-    ax2[1].autoscale(axis='y')
-    fig2.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    try:
+        fig1,ax1 = plot_v(s,gain=0)
+        ax1[0].autoscale(axis='y')
+        ax1[1].autoscale(axis='y')
+        fig1.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        print 'issue with gain 0, 1x'
+        pass
+        
+    try:
+        fig2,ax2 = plot_v(s,gain=1)
+        ax2[0].autoscale(axis='y')
+        ax2[1].autoscale(axis='y')
+        fig2.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        print 'issue with gain 0, 100x'
+        pass
     
-    fig3,ax3 = plot_v(s,gain=2)
-    ax3[0].autoscale(axis='y')
-    ax3[1].autoscale(axis='y')
-    fig3.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    try:
+        fig3,ax3 = plot_v(s,gain=2)
+        ax3[0].autoscale(axis='y')
+        ax3[1].autoscale(axis='y')
+        fig3.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        print 'issue with gain 0, 100x - 100x'
+        pass
     
-    fig4,ax4 = plot_v_expect(s,gain=0)
-    #plt.title('5STARG radiometers 1x 2020-11-17')
-    ax4[0].autoscale(axis='y')
-    ax4[1].autoscale(axis='y')
-    fig4.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
-    
-    fig5,ax5 = plot_v_expect(s,gain=1)
-    #plt.title('5STARG radiometers 1x 2020-11-17')
-    ax5[0].autoscale(axis='y')
-    ax5[1].autoscale(axis='y')
-    fig5.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
+    try:
+        fig4,ax4 = plot_v_expect(s,gain=0)
+        #plt.title('5STARG radiometers 1x 2020-11-17')
+        ax4[0].autoscale(axis='y')
+        ax4[1].autoscale(axis='y')
+        fig4.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        print 'issue with gain 0, 100x, expect'
+        pass
+        
+    try:
+        fig5,ax5 = plot_v_expect(s,gain=1)
+        #plt.title('5STARG radiometers 1x 2020-11-17')
+        ax5[0].autoscale(axis='y')
+        ax5[1].autoscale(axis='y')
+        fig5.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=dpi,transparent=True)
+    except:
+        print 'issue with gain 0, 100x - 100x expect'
+        pass
     
     #return [fig1,fig2,fig3,fig4,fig5],[ax1,ax2,ax3,ax4,ax5]
 
 
-# In[216]:
+# In[18]:
 
 
 def plt_corrs(s,fpp,dpi=300):
     'Run through the different gains and temperatures'
     for ig in [0,2,4]:
         for it in ['nir_block','vis_block','nir_tec_V']:
-            fig = plot_corr_temp(s,ig,it)
-            fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_corr_gain{}_temp{}.png'.format(ig,it,s=s),
-                         dpi=dpi,transparent=True)
+            try:
+                fig = plot_corr_temp(s,ig,it)
+                fig.savefig(fpp+'{s.daystr}_{s.label}/{s.instname}_{s.daystr}_corr_gain{}_temp{}.png'.format(ig,it,s=s),
+                             dpi=dpi,transparent=True)
+            except:
+                print 'problem with corr gain {} temp {}'.format(ig,it)
 
 
 # # Load files
@@ -1197,19 +1413,19 @@ s = reader_RADIOMETER(fp+'data/5STARG_20210127_141658_RADIOMETERS_SpeakerWire.da
 
 # ## Test 2012-01-28
 
-# In[141]:
+# In[178]:
 
 
 s = reader_RADIOMETER(fp+'data/5STARG_20210128_155528_RADIOMETERS_TECDriverVoltages.dat')
 
 
-# In[142]:
+# In[179]:
 
 
 s.keys()
 
 
-# In[144]:
+# In[180]:
 
 
 s['nir_block'] = s['nir_block']*100.0
@@ -1219,7 +1435,7 @@ s['vis_board'] = s['vis_board']*100.0
 s['mezz'] = s['mezz']*100.0
 
 
-# In[145]:
+# In[181]:
 
 
 s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
@@ -1233,25 +1449,25 @@ s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
 os.listdir(fp+'data/')
 
 
-# In[13]:
+# In[186]:
 
 
 s = reader_RADIOMETER(fp+'data/5STARG_20210129_163011_RADIOMETERS_CoverONOFF.dat')
 
 
-# In[14]:
+# In[187]:
 
 
 s.keys()
 
 
-# In[15]:
+# In[188]:
 
 
 s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
 
 
-# In[18]:
+# In[189]:
 
 
 s['nir_block'] = s['nir_block_temp']*100.0
@@ -1269,16 +1485,426 @@ s['mezz'] = s['mezz']*100.0
 os.listdir(fp+'data/')
 
 
-# In[100]:
+# In[214]:
 
 
 s = reader_RADIOMETER(fp+'data/5STARG_20210201_120748_RADIOMETERS_6HOUR.dat')
 
 
-# In[101]:
+# In[215]:
 
 
 s.keys()
+
+
+# ## Test 2021-02-03 - TEC On/Off
+
+# In[48]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[222]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210203_133652_RADIOMETERS_TECDriverOnOFF.dat')
+
+
+# In[223]:
+
+
+s.keys()
+
+
+# In[224]:
+
+
+if 'nir_1020_tecb' in s.keys(): s['nir_tec_V'] = s['nir_1020_tecb'] - s['nir_1020_teca']
+v2c = 100.0 #  "Temp = 10mv/DegC"
+if 'nir_block' in s.keys():
+    if (min(s['nir_block']) > 0.0) & (max(s['nir_block']) < 1.0):
+        s['nir_block'] = s['nir_block']*v2c
+        s['nir_board'] = s['nir_board']*v2c
+        s['vis_block'] = s['vis_block']*v2c
+        s['vis_board'] = s['vis_board']*v2c
+        s['mezz'] = s['mezz']*v2c
+if 'nir_block_temp' in s.keys():
+    #if (min(s['nir_block_temp']) > 0.0) & (max(s['nir_block_temp']) < 1.0):
+    s['nir_block'] = s['nir_block_temp']*v2c
+    s['nir_board'] = s['nir_board_temp']*v2c
+    s['vis_block'] = s['vis_block_temp']*v2c
+    s['vis_board'] = s['vis_board_temp']*v2c
+    s['mezz'] = s['mezz']*v2c
+
+
+# ## Test 2021-02-08 and 09 - Fridge tests
+
+# In[18]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[228]:
+
+
+s1 = reader_RADIOMETER(fp+'data/5STARG_20210208_142931_RADIOMETERS_SHORT_FRIDGE.dat')
+s2 = reader_RADIOMETER(fp+'data/5STARG_20210209_103836_RADIOMETERS_LongFridge.dat')
+
+
+# In[229]:
+
+
+s2.keys()
+
+
+# In[230]:
+
+
+s1['air'] = s1['free_air']*100.0
+s2['air'] = s2['air']*100.0
+
+
+# ## Tests 2021-02-12 - TEC set point change
+
+# In[57]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[69]:
+
+
+s1 = reader_RADIOMETER(fp+'data/5STARG_20210212_152351_RADIOMETERS_QuickPreCoooled.dat')
+s2 = reader_RADIOMETER(fp+'data/5STARG_20210212_125431_RADIOMETERS_QuickCoolOff.dat')
+
+
+# In[70]:
+
+
+s2.keys()
+
+
+# In[71]:
+
+
+s1.keys()
+
+
+# In[72]:
+
+
+s1['air'] = s1['free']*100.0
+s2['air'] = s2['free']*100.0
+
+
+# In[73]:
+
+
+define_long_names(s1)
+define_long_names(s2)
+
+
+# In[75]:
+
+
+s1['V2_4'].name
+
+
+# ## Test 2021-02-17 - TEC On/Off with lower set point
+
+# In[87]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[96]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210217_133256_RADIOMETERS_TEC_OnOFF.dat')
+
+
+# In[97]:
+
+
+s.keys()
+
+
+# In[100]:
+
+
+s['air'] = s['free']*100.0
+
+
+# In[101]:
+
+
+if 'CH8_TEC_B' in s.keys(): s['nir_tec_V'] = s['CH8_TEC_B'] - s['CH8_TEC_A']
+
+
+# ## Test 2021-02-19 - TEC On/Off, set point to -28C
+
+# In[112]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[113]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210219_122658_RADIOMETERS_TEC_OnOff3.dat')
+
+
+# In[114]:
+
+
+s.keys()
+
+
+# In[115]:
+
+
+s['air'] = s['free']*100
+
+
+# In[137]:
+
+
+s['nir_board'] = s['nir_board']*100.0
+s['vis_board'] = s['vis_board']*100.0
+s['nir_block'] = s['nir_block']*100.0
+s['vis_block'] = s['vis_block']*100.0
+
+
+# In[116]:
+
+
+if 'CH8_TEC_B' in s.keys(): s['nir_tec_V'] = s['CH8_TEC_B'] - s['CH8_TEC_A']
+
+
+# In[132]:
+
+
+define_long_names(s)
+
+
+# In[133]:
+
+
+s['V9_2'].name
+
+
+# In[134]:
+
+
+s['air'].name
+
+
+# ## Tests 2021-02-19 - Drift test with -28C
+
+# In[31]:
+
+
+os.listdir(fp+'data/')
+
+
+# In[32]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210219_154436_RADIOMETERS_DriftWModifiedTECSetpoints.dat')
+
+
+# In[33]:
+
+
+s.keys()
+
+
+# In[36]:
+
+
+s['air'] = s['free']*100
+
+
+# In[39]:
+
+
+s['nir_board'].name
+
+
+# In[38]:
+
+
+define_long_names(s)
+
+
+# In[34]:
+
+
+if 'CH8_TEC_B' in s.keys(): s['nir_tec_V'] = s['CH8_TEC_B'] - s['CH8_TEC_A']
+if 'CH8_TECB' in s.keys(): 
+    s['nir_tec_V'] = s['CH8_TECB'] - s['CH8_TECA']
+    s['CH8_TEC_B'] = s['CH8_TECB']
+    s['CH8_TEC_A'] = s['CH8_TECA']
+
+
+# ## Test 2021-02-23 - without trimpot
+
+# In[164]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210223_160552_RADIOMETERS_CH9_without_trim.dat')
+
+
+# In[165]:
+
+
+s.keys()
+
+
+# In[166]:
+
+
+s['air'] = s['free']*100
+
+
+# In[167]:
+
+
+s['nir_board'].name
+
+
+# In[170]:
+
+
+define_long_names(s)
+
+
+# In[169]:
+
+
+if 'CH8_TEC_B' in s.keys(): s['nir_tec_V'] = s['CH8_TEC_B'] - s['CH8_TEC_A']
+
+
+# ## Test 2021-02-24 - with heatsink
+
+# In[20]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210224_172007_RADIOMETERS_CH6_CH8_WithHeatSink.dat')
+
+
+# In[21]:
+
+
+s.keys()
+
+
+# In[22]:
+
+
+s['air'] = s['free']*100
+
+
+# In[27]:
+
+
+s['nir_board'].name
+
+
+# In[26]:
+
+
+define_long_names(s)
+
+
+# In[24]:
+
+
+if 'CH8_TECB' in s.keys(): s['nir_tec_V'] = s['CH8_TECB'] - s['CH8_TECA']
+
+
+# In[23]:
+
+
+s['CH8_TEC_B'] = s['CH8_TECB']
+s['CH8_TEC_A'] = s['CH8_TECA']
+
+
+# ## Test 2021-03-02 - resistor instead of diodes
+
+# In[43]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210301_190356_RADIOMETERS_NIRResistor.dat')
+
+
+# In[44]:
+
+
+s.keys()
+
+
+# In[45]:
+
+
+s['air'] = s['free']*100
+
+
+# In[46]:
+
+
+define_long_names(s)
+
+
+# ## Test 2021-04-05 - Labjack
+
+# In[36]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210405_155921_RADIOMETERS.dat',islabjack=True)
+
+
+# In[37]:
+
+
+s.keys()
+
+
+# In[38]:
+
+
+define_long_names(s)
+
+
+# ## Test 2021-04-06 - Labjack 20 bit
+
+# In[53]:
+
+
+s = reader_RADIOMETER(fp+'data/5STARG_20210406_091547_RADIOMETERS.dat',islabjack=True)
+
+
+# In[54]:
+
+
+s.keys()
+
+
+# In[57]:
+
+
+define_long_names(s)
+
+
+# In[58]:
+
+
+s.label = 'Labjack20bit'
 
 
 # # Plot out data
@@ -1300,7 +1926,7 @@ s.keys()
 
 # ### TEst 2020-10-16
 
-# In[23]:
+# In[ ]:
 
 
 plt.figure()
@@ -1335,7 +1961,7 @@ np.nanmean(ref5v)
 s1.keys()
 
 
-# In[50]:
+# In[ ]:
 
 
 for i,si in enumerate(ss):
@@ -1431,7 +2057,7 @@ plt.savefig(fp+'2020101622_SZA_rad_test_1x_ref.png',dpi=600,transparent=True)
 
 # #### 100x
 
-# In[29]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -1508,7 +2134,7 @@ ax[1].set_ylim(-0.5,10.5)
 plt.savefig(fp+'2020101622_rad_test_100x_ref_expect.png',dpi=600,transparent=True)
 
 
-# In[64]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -1587,7 +2213,7 @@ plt.savefig(fp+'2020101622_rad_test_gainof100x.png',dpi=600,transparent=True)
 
 # #### 100x - 100x
 
-# In[66]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -2031,7 +2657,7 @@ for i,si in enumerate(ss):
 
 # ## Just voltages
 
-# In[38]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -2062,7 +2688,7 @@ ax[1].legend()
 plt.savefig(fp+'2020101622_rad_test_1x.png',dpi=600,transparent=True)
 
 
-# In[36]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -2093,7 +2719,7 @@ ax[1].legend()
 plt.savefig(fp+'2020101622_rad_test_100x.png',dpi=600,transparent=True)
 
 
-# In[37]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(2,1)
@@ -2126,7 +2752,7 @@ plt.savefig(fp+'2020101622_rad_test_100x_100x.png',dpi=600,transparent=True)
 
 # ## Plot out test 2020-11-17, with new functions
 
-# In[176]:
+# In[ ]:
 
 
 fig = plot_housekeeping(s)
@@ -2185,7 +2811,7 @@ fig[0].savefig(fp+'{s.instname}_{s.daystr}_Housekeeping.png'.format(s=s),dpi=600
 fig[1].savefig(fp+'{s.instname}_{s.daystr}_Housekeeping_inputV.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[131]:
+# In[ ]:
 
 
 fig,ax = plot_v(s,gain=0)
@@ -2194,7 +2820,7 @@ ax[1].set_ylim(-0.015,0.02)
 fig.savefig(fp+'{s.instname}_{s.daystr}_rad_1x.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[136]:
+# In[ ]:
 
 
 fig,ax = plot_v(s,gain=1)
@@ -2203,7 +2829,7 @@ ax[1].set_ylim(-0.015,0.8)
 fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[141]:
+# In[ ]:
 
 
 fig,ax = plot_v(s,gain=2)
@@ -2212,7 +2838,7 @@ ax[1].set_ylim(-0.015,10.5)
 fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x_100x.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[143]:
+# In[ ]:
 
 
 fig,ax = plot_v_expect(s,gain=0)
@@ -2222,7 +2848,7 @@ ax[1].set_ylim(-1.0,2.0)
 fig.savefig(fp+'{s.instname}_{s.daystr}_rad_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[145]:
+# In[ ]:
 
 
 fig,ax = plot_v_expect(s,gain=1)
@@ -2371,7 +2997,7 @@ fig[1].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_inputV.
 fig[2].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_Housekeeping_Temps.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[94]:
+# In[ ]:
 
 
 fig,ax = plot_v(s,gain=0)
@@ -2398,7 +3024,7 @@ ax[1].set_ylim(-1.5,11.0)
 fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[95]:
+# In[ ]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}/'.format(s=s),dpi=200)
@@ -2468,7 +3094,7 @@ s3.label = s3.label.split('_')[-1]
 os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s3))
 
 
-# In[120]:
+# In[ ]:
 
 
 fig = plot_housekeeping(s3)
@@ -2477,7 +3103,7 @@ fig[1].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_Housekeepi
 fig[2].savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_Housekeeping_Temps.png'.format(s=s3),dpi=600,transparent=True)
 
 
-# In[125]:
+# In[ ]:
 
 
 fig,ax = plot_v(s3,gain=0)
@@ -2504,7 +3130,7 @@ ax[1].set_ylim(-1.5,10.5)
 fig.savefig(fp+'plots/{s.daystr}/{s.instname}_{s.daystr}_{s.label}_rad_100x_100x_expect.png'.format(s=s3),dpi=600,transparent=True)
 
 
-# In[126]:
+# In[ ]:
 
 
 plot_channels(s3,fp+'plots/{s.daystr}_{s.label}/'.format(s=s3),dpi=200)
@@ -2560,7 +3186,7 @@ ax[1].set_ylim(-1.5,11.0)
 fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[138]:
+# In[ ]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
@@ -2568,7 +3194,7 @@ plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 # ## Plot out test 2021-01-28 - TEC voltages
 
-# In[146]:
+# In[182]:
 
 
 s.label = s.label.split('_')[-1]
@@ -2580,7 +3206,7 @@ s.label = s.label.split('_')[-1]
 os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s))
 
 
-# In[148]:
+# In[183]:
 
 
 fig = plot_housekeeping(s)
@@ -2611,7 +3237,7 @@ ax[0].grid()
 fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_NIR_TECvoltages.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[161]:
+# In[184]:
 
 
 fig,ax = plot_v(s,gain=0)
@@ -2638,7 +3264,7 @@ ax[1].set_ylim(-1.5,11.0)
 fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[162]:
+# In[ ]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
@@ -2646,7 +3272,7 @@ plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 # ## Plot out test 2021-01-29 - on/off cover
 
-# In[19]:
+# In[190]:
 
 
 s.label = s.label.split('_')[-1]
@@ -2658,7 +3284,7 @@ s.label = s.label.split('_')[-1]
 os.makedirs(fp+'plots/{s.daystr}_{s.label}/'.format(s=s))
 
 
-# In[21]:
+# In[191]:
 
 
 fig = plot_housekeeping(s)
@@ -2689,7 +3315,7 @@ ax[0].grid()
 fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_NIR_TECvoltages.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[23]:
+# In[192]:
 
 
 fig,ax = plot_v(s,gain=0)
@@ -2716,7 +3342,7 @@ ax[1].set_ylim(-1.5,11.0)
 fig.savefig(fp+'plots/{s.daystr}_{s.label}/{s.instname}_{s.daystr}_rad_100x_100x_expect.png'.format(s=s),dpi=600,transparent=True)
 
 
-# In[24]:
+# In[193]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
@@ -2724,38 +3350,502 @@ plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 # ## Plot out test 2021-02-01 - 6 hour drift
 
-# In[105]:
+# In[216]:
 
 
 clean_up_and_prep_for_plots(s,fp+'plots/')
 
 
-# In[106]:
+# In[217]:
 
 
 plt_hskp(s,fp+'plots/')
 
 
-# In[108]:
+# In[218]:
 
 
 plt_gains(s,fp+'plots/')
 
 
-# In[163]:
+# In[219]:
 
 
 plot_all_gainratios(s,fp+'plots/')
 
 
-# In[54]:
+# In[220]:
 
 
 plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
 
 
-# In[224]:
+# In[221]:
 
 
 plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out test 2021-02-03 - TEC On/Off
+
+# In[225]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[226]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[227]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# ## Plot out test 2021-02-08 and 09 - fridge tests
+
+# In[231]:
+
+
+clean_up_and_prep_for_plots(s1,fp+'plots/')
+clean_up_and_prep_for_plots(s2,fp+'plots/')
+
+
+# In[232]:
+
+
+plt_hskp(s1,fp+'plots/')
+
+
+# In[233]:
+
+
+plt_hskp(s2,fp+'plots/')
+
+
+# In[234]:
+
+
+plt_gains(s1,fp+'plots/')
+plt_gains(s2,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s1,fp+'plots/')
+plot_all_gainratios(s2,fp+'plots/')
+
+
+# In[37]:
+
+
+plot_channels(s1,fp+'plots/{s.daystr}_{s.label}/'.format(s=s1),dpi=200)
+plot_channels(s2,fp+'plots/{s.daystr}_{s.label}/'.format(s=s2),dpi=200)
+
+
+# In[236]:
+
+
+define_long_names(s1)
+
+
+# In[237]:
+
+
+define_long_names(s2)
+
+
+# In[239]:
+
+
+plt_corrs(s1,fp+'plots/')
+plt_corrs(s2,fp+'plots/')
+
+
+# ## Plot out the test 2021-02-12 - TEC set point change
+
+# In[76]:
+
+
+clean_up_and_prep_for_plots(s1,fp+'plots/')
+clean_up_and_prep_for_plots(s2,fp+'plots/')
+
+
+# In[77]:
+
+
+plt_hskp(s1,fp+'plots/')
+
+
+# In[78]:
+
+
+plt_hskp(s2,fp+'plots/')
+
+
+# In[79]:
+
+
+plt_gains(s1,fp+'plots/')
+plt_gains(s2,fp+'plots/')
+
+
+# In[80]:
+
+
+plot_channels(s1,fp+'plots/{s.daystr}_{s.label}/'.format(s=s1),dpi=200)
+plot_channels(s2,fp+'plots/{s.daystr}_{s.label}/'.format(s=s2),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s1,fp+'plots/')
+#plot_all_gainratios(s2,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s1,fp+'plots/')
+plt_corrs(s2,fp+'plots/')
+
+
+# ## Plot out the tests 2021-02-17 - TEC On/Off with lower set point
+
+# In[103]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the tests 2021-02-19 - TEC On/Off with  set point-28C
+
+# In[121]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[140]:
+
+
+s['air'].name
+
+
+# In[141]:
+
+
+define_long_names(s)
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the test 2021-02-19 - Drift with -28C set point
+
+# In[41]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the test 2021-02-23 - Drift without trimpot
+
+# In[171]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+
+
+
+# ## Plot out the test 2021-02-24 - with heatsink
+
+# In[28]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the test 2021-03-02 - resistors instead of diodes
+
+# In[47]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the test 2021-04-05 - Labjack 18bit
+
+# In[39]:
+
+
+s.label = 'Labjack'
+
+
+# In[40]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# ## Plot out the test 2021-04-06 - Labjack 20bit
+
+# In[59]:
+
+
+clean_up_and_prep_for_plots(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_hskp(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_gains(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plot_channels(s,fp+'plots/{s.daystr}_{s.label}/'.format(s=s),dpi=200)
+
+
+# In[ ]:
+
+
+plot_all_gainratios(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+plt_corrs(s,fp+'plots/')
+
+
+# In[ ]:
+
+
+
 
