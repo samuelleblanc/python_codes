@@ -91,15 +91,15 @@ def load_modis(geofile,datfile):
     datsds = gdal.Open(datfile)
     geosub = geosds.GetSubDatasets()
     datsub = datsds.GetSubDatasets()
-    print 'Outputting the Geo subdatasets:'
+    print('Outputting the Geo subdatasets:')
     for i in range(len(geosub)):
-        print str(i)+': '+geosub[i][1]
-    print 'Outputting the Data subdatasets:'
+        print(str(i)+': '+geosub[i][1])
+    print('Outputting the Data subdatasets:')
     for i in range(len(datsub)):
         if any(i in val for val in modis_values):
-            print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+            print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1]))
         else:
-            print str(i)+': '+datsub[i][1]
+            print(str(i)+': '+datsub[i][1])
     latsds = gdal.Open(geosub[12][0],gdal.GA_ReadOnly)
     lonsds = gdal.Open(geosub[13][0],gdal.GA_ReadOnly)
     szasds = gdal.Open(geosub[21][0],gdal.GA_ReadOnly)
@@ -107,7 +107,7 @@ def load_modis(geofile,datfile):
     modis['lat'] = latsds.ReadAsArray()
     modis['lon'] = lonsds.ReadAsArray()
     modis['sza'] = szasds.ReadAsArray()
-    print modis['lon'].shape
+    print(modis['lon'].shape)
     meta = datsds.GetMetadata() 
     import gc; gc.collect()
     modis_dicts = dict()
@@ -130,7 +130,7 @@ def load_modis(geofile,datfile):
             modis[i][bad_points] = np.nan
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
-    print modis.keys()
+    print(list(modis.keys()))
     del geosds, datsds,sds,lonsds,latsds,geosub,datsub
     return modis,modis_dicts
 
@@ -156,23 +156,23 @@ def load_ict(fname,return_header=False,make_nan=True):
     try:
         num2skip = int(first.strip().split(sep)[0])
     except ValueError:
-        print 'Seperation is set to a space'
+        print('Seperation is set to a space')
         sep = None
         num2skip = int(first.strip().split(sep)[0])
     header = lines[0:num2skip]
-    factor = map(float,header[10].strip().split(sep))
-    missing = map(float,header[11].strip().split(sep))
+    factor = list(map(float,header[10].strip().split(sep)))
+    missing = list(map(float,header[11].strip().split(sep)))
     f.close()
     if any([i!=1 for i in factor]):
         print('Some Scaling factors are not equal to one, Please check the factors:')
-        print factor
+        print(factor)
     def mktime(txt):
         return datetime.strptime(txt,'%Y-%m-%d %H:%M:%S')
     def utctime(seconds_utc):
         return float(seconds_utc)/3600.
     conv = {"Date_Time":mktime, "UTC":utctime, "Start_UTC":utctime, "TIME_UTC":utctime, "UTC_mid":utctime}
     data = np.genfromtxt(fname,names=True,delimiter=sep,skip_header=num2skip-1,converters=conv)
-    print data.dtype.names
+    print(data.dtype.names)
     #scale the values by using the scale factors
     for i,name in enumerate(data.dtype.names):
         if i>0:
@@ -418,12 +418,12 @@ def load_emas(datfile):
                     )
     datsds = gdal.Open(datfile)
     datsub = datsds.GetSubDatasets()
-    print 'Outputting the Data subdatasets:'
+    print('Outputting the Data subdatasets:')
     for i in range(len(datsub)):
         if any(i in val for val in emas_values):
-            print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+            print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1]))
         else:
-            print str(i)+': '+datsub[i][1]
+            print(str(i)+': '+datsub[i][1])
     emas = dict()
     meta = datsds.GetMetadata() 
     import gc; gc.collect()
@@ -451,7 +451,7 @@ def load_emas(datfile):
             emas[i][bad_points] = np.nan
         progress(float(tuple(i[0] for i in emas_values).index(i))/len(emas_values)*100.)
     endprogress()
-    print emas.keys()
+    print(list(emas.keys()))
     del datsds,sds,datsub
     return emas,emas_dicts
 
@@ -525,19 +525,19 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
     try:
         datsds = gdal.Open(datfile)
     except:
-        print 'Trying with load_hdf_h5py'
+        print('Trying with load_hdf_h5py')
         return load_hdf_h5py(datfile,values=values,verbose=verbose,all_values=all_values)
     datsub = datsds.GetSubDatasets()
     if verbose: 
-        print 'Outputting the Data subdatasets:'
+        print('Outputting the Data subdatasets:')
         for i in range(len(datsub)):
             if values:
                 if any(i in val for val in values):
-                    print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1])
+                    print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1]))
                 else:
-                    print str(i)+': '+datsub[i][1]
+                    print(str(i)+': '+datsub[i][1])
             else:
-                print str(i)+': '+datsub[i][1]
+                print(str(i)+': '+datsub[i][1])
     if all_values:
         values = []
         for i in range(len(datsub)):
@@ -545,9 +545,9 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
         values = tuple(values)
     if not values:
         if verbose:
-            print 'Done going through file... Please supply pairs of name and index for reading file'
-            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
-            print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
+            print('Done going through file... Please supply pairs of name and index for reading file')
+            print(" in format values = (('name1',index1),('name2',index2),('name3',index3),...)")
+            print(" where namei is the nameof the returned variable, and indexi is the index of the variable (from above)")
         return None, None
     hdf = dict()
     meta = datsds.GetMetadata() 
@@ -568,7 +568,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
             makenan = False
         except ValueError:
             makenan = False
-            print '*** FillValue not used to replace NANs, will have to do manually ***'
+            print('*** FillValue not used to replace NANs, will have to do manually ***')
         try:
             scale = float(hdf_dicts[i]['scale_factor'])
             offset = float(hdf_dicts[i]['add_offset'])
@@ -587,7 +587,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
             progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
     if verbose:
         endprogress()
-        print hdf.keys()
+        print(list(hdf.keys()))
     del datsds,sds,datsub
     return hdf,hdf_dicts
 
@@ -653,18 +653,18 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
     from Sp_parameters import startprogress, progress, endprogress
     
     dat = h5py.File(datfile,'r')
-    if verbose: print 'Reading file: {}'.format(datfile)
-    datsub = dat.items()
+    if verbose: print('Reading file: {}'.format(datfile))
+    datsub = list(dat.items())
     if verbose: 
-        print 'Outputting the Data subdatasets:'
+        print('Outputting the Data subdatasets:')
         for i in range(len(datsub)):
             if values:
                 if any(i in val for val in values):
-                    print '\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][0])
+                    print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][0]))
                 else:
-                    print str(i)+': '+datsub[i][0]
+                    print(str(i)+': '+datsub[i][0])
             else:
-                print str(i)+': '+datsub[i][0]
+                print(str(i)+': '+datsub[i][0])
     if all_values:
         values = []
         for i in range(len(datsub)):
@@ -672,9 +672,9 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
         values = tuple(values)
     if not values:
         if verbose:
-            print 'Done going through file... Please supply pairs of name and index for reading file'
-            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
-            print " where namei is the nameof the returned variable, and indexi is the index of the variable (from above)"
+            print('Done going through file... Please supply pairs of name and index for reading file')
+            print(" in format values = (('name1',index1),('name2',index2),('name3',index3),...)")
+            print(" where namei is the nameof the returned variable, and indexi is the index of the variable (from above)")
         return None, None
     hdf = dict()
     meta = dict(dat.attrs)
@@ -695,7 +695,7 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
             makenan = False
         except ValueError:
             makenan = False
-            print '*** FillValue not used to replace NANs, will have to do manually ***'
+            print('*** FillValue not used to replace NANs, will have to do manually ***')
         try:
             scale = float(hdf_dicts[i]['scale_factor'])
             offset = float(hdf_dicts[i]['add_offset'])
@@ -714,7 +714,7 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
             progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
     if verbose:
         endprogress()
-        print hdf.keys()
+        print(list(hdf.keys()))
     hdf_dicts['Global'] = meta
     del sds,datsub
     return hdf,hdf_dicts
@@ -800,7 +800,7 @@ def load_cpl_layers(datfile,values=None):
             else:
                 i = iline-head_lines
                 line = line.strip()
-                temp = filter(None, re.split(r"[ :()]",line))
+                temp = [_f for _f in re.split(r"[ :()]",line) if _f]
                 d['hh'][i], d['mm'][i], d['ss'][i] = temp[0], temp[1], temp[2]
                 d['lat'][i], d['lon'][i], d['alt'][i] = temp[3], temp[4], temp[5]
                 d['rol'][i], d['num'][i], d['gh'][i] = temp[6], temp[7], temp[8]
@@ -877,10 +877,10 @@ def load_apr(datfiles):
     
     first = True
     for f in datfiles:
-        print 'Running file: ',f
+        print('Running file: ',f)
         if not(os.path.isfile(f)):
-            print 'Problem with file:', f
-            print ' ... Skipping'
+            print('Problem with file:', f)
+            print(' ... Skipping')
             continue
         
         apr_value = (('lat',16),('lon',17),('alt',15),('time',13),('dbz',0),('lat3d',30),
@@ -902,7 +902,7 @@ def load_apr(datfiles):
                 apr['altfltz'][z,:,:] = apr['altzen'][z,:,:]+apr['alt'][z,:]
         except IndexError:
             try:
-                print 'swaping axes'
+                print('swaping axes')
                 apr['altflt'] = np.swapaxes(apr['altflt'],0,1)
                 apr['altz'] = np.swapaxes(apr['altz'],0,1)
                 apr['altfltz'] = np.swapaxes(apr['altfltz'],0,1)
@@ -917,12 +917,12 @@ def load_apr(datfiles):
                 for z in range(apr['altzen'].shape[0]):
                     apr['altfltz'][z,:,:] = apr['altzen'][z,:,:]+apr['alt'][z,:]
             except:
-                print 'Problem file:',f
-                print '... Skipping'
+                print('Problem file:',f)
+                print('... Skipping')
                 continue
         except:
-            print 'Problem with file: ',f
-            print ' ... Skipping'
+            print('Problem with file: ',f)
+            print(' ... Skipping')
             continue
         izen = apr['altz'][:,0,0].argmax() #get the index of zenith
         izenz = apr['altzen'][:,0,0].argmax() #get the index of zenith
@@ -950,9 +950,9 @@ def load_apr(datfiles):
             utc = (apr['time'][izen,:]-(datetime.datetime(v.year,v.month,v.day,0,0,0)-datetime.datetime(1970,1,1)).total_seconds())/3600.
             aprout['utc'] = np.concatenate((aprout['utc'].T,utc.T)).T
             
-    print aprout.keys()
-    print 'Loaded data points: ', aprout['utc'].shape
-    return aprout        
+    print(list(aprout.keys()))
+    print('Loaded data points: ', aprout['utc'].shape)
+    return aprout
 
 
 # In[1]:
@@ -1080,12 +1080,12 @@ def load_hdf_sd(FILE_NAME):
     """
     import numpy as np
     from pyhdf.SD import SD, SDC
-    print 'Reading file: '+FILE_NAME
+    print('Reading file: '+FILE_NAME)
     hdf = SD(str(FILE_NAME), SDC.READ)
     dat = dict()
     dat_dict = dict()
-    for name in hdf.datasets().keys():
-        print '  '+name+': %s' % (hdf.datasets()[name],)
+    for name in list(hdf.datasets().keys()):
+        print('  '+name+': %s' % (hdf.datasets()[name],))
         dat[name] = hdf.select(name)[:]
         dat_dict[name] = hdf.select(name).attributes()
         try:
@@ -1096,17 +1096,17 @@ def load_hdf_sd(FILE_NAME):
             try:
                 dat[name][dat[name] == dat_dict[name].get('missing_value')*scale_factor] = np.nan
             except TypeError:
-                print 'No missing_value on '+name
+                print('No missing_value on '+name)
             try:
                 dat[name][dat[name] == dat_dict[name].get('_FillValue')*scale_factor] = np.nan
             except TypeError:
-                print 'No FillValue on '+name
+                print('No FillValue on '+name)
             add_offset = dat_dict[name].get('add_offset')
             if not add_offset:
                 add_offset = 0
             dat[name] = dat[name] + add_offset
         except:
-            print 'Problem in filling with nans and getting the offsets, must do it manually'
+            print('Problem in filling with nans and getting the offsets, must do it manually')
     return dat, dat_dict
 
 
@@ -1177,26 +1177,26 @@ def load_netcdf(datfile,values=None,verbose=True,everything=False):
     """
     import netCDF4 as nc
     if verbose:
-        print 'Reading file: '+datfile
+        print('Reading file: '+datfile)
     f = nc.Dataset(datfile,'r')
-    varnames = f.variables.keys()
+    varnames = list(f.variables.keys())
     if everything: values = [('nul',-999)]
     if verbose: 
-        print 'Outputting the Data subdatasets:'
+        print('Outputting the Data subdatasets:')
         for i in range(len(varnames)):
             if values:
                 if everything: values.append((varnames[i].encode('ascii','ignore'),i))
                 if any(i in val for val in values):
-                    print '\x1b[1;36m{0}: {1}\x1b[0m'.format(i,varnames[i])
+                    print('\x1b[1;36m{0}: {1}\x1b[0m'.format(i,varnames[i]))
                 else:
-                    print '{0}: {1}'.format(i,varnames[i])
+                    print('{0}: {1}'.format(i,varnames[i]))
             else:
-                print '{0}: {1}'.format(i,varnames[i])
+                print('{0}: {1}'.format(i,varnames[i]))
     if not values:
         if verbose:
-            print 'Done going through file... Please supply pairs of name and index for reading file'
-            print " in format values = (('name1',index1),('name2',index2),('name3',index3),...)"
-            print " where namei is the name of the returned variable, and indexi is the index of the variable (from above)"
+            print('Done going through file... Please supply pairs of name and index for reading file')
+            print(" in format values = (('name1',index1),('name2',index2),('name3',index3),...)")
+            print(" where namei is the name of the returned variable, and indexi is the index of the variable (from above)")
         return None, None
     if everything: values = values[1:]
     cdf_dict = {}
@@ -1205,7 +1205,7 @@ def load_netcdf(datfile,values=None,verbose=True,everything=False):
         cdf_dict[i] = f.variables[varnames[j]]
         cdf_data[i] = f.variables[varnames[j]][:]
     if verbose:
-        print cdf_dict.keys()
+        print(list(cdf_dict.keys()))
     return cdf_data,cdf_dict
 
 
@@ -1272,7 +1272,7 @@ def load_aeronet(f,verbose=True,version=2):
         return lm.toutc(datetime.strptime(txt,'%H:%M:%S'))
     conv = {'Dateddmmyy':makeday,'Timehhmmss':maketime}
     if verbose:
-        print 'Opening file: {}'.format(f)
+        print('Opening file: {}'.format(f))
     if version==3:
         header_lines = 6
     else:
@@ -1289,7 +1289,7 @@ def load_aeronet(f,verbose=True,version=2):
                 da[u[0]]=float(u[1])
             except:
                 da[u[0]] = u[1].strip()
-    return da    
+    return da
 
 
 # In[ ]:
@@ -1355,7 +1355,7 @@ def load_multi_aeronet(dir_path,verbose=True):
             
     anet = {}
     nstations = len(aero)
-    for name in aero[0].keys():
+    for name in list(aero[0].keys()):
         if not isinstance(aero[0][name],np.ndarray):
             anet[name] = []
             for n in range(nstations):
@@ -1657,6 +1657,6 @@ if __name__ == "__main__":
         progress(float(tuple(i[0] for i in modis_values).index(i))/len(modis_values)*100.)
     endprogress()
 
-    print modis.keys()
-    print modis_dicts.keys()
+    print(list(modis.keys()))
+    print(list(modis_dicts.keys()))
 

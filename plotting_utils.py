@@ -72,15 +72,15 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     if ax is None:
         ax = plt.gca()    
 
-    if isinstance(c,basestring):
+    if isinstance(c,str):
         color = c     # ie. use colors.colorConverter.to_rgba_array(c)
     else:
         color = None  # use cmap, norm after collection is created
     kwargs.update(color=color)
 
-    if isinstance(x, (int, long, float)):
+    if isinstance(x, (int, float)):
         patches = [Circle((x, y), s),]
-    elif isinstance(s, (int, long, float)):
+    elif isinstance(s, (int, float)):
         patches = [Circle((x_,y_), s) for x_,y_ in zip(x,y)]
     else:
         patches = [Circle((x_,y_), s_) for x_,y_,s_ in zip(x,y,s)]
@@ -262,7 +262,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
             else:
                 dat = odr.RealData(xn,yn)
         outa = odr.ODR(dat,model,beta0=[1.0,0.5]).run()
-        print outa.cov_beta
+        print(outa.cov_beta)
         perr = np.sqrt(np.diag(outa.cov_beta))
         p = outa.beta
     elif use_method=='linfit':
@@ -281,7 +281,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
         p = results.params
         perr = results.bse
     else:
-        print 'Method: %s is not a valid choice' % use_method
+        print('Method: %s is not a valid choice' % use_method)
         return
     xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
     if labels:
@@ -324,15 +324,15 @@ def confidence_envelope(xn,p,p_err,ci=95,size=1000):
     from plotting_utils import lin
     from scipy import stats
     if len(xn)<=1:
-        print '** Problem with input xn **'
+        print('** Problem with input xn **')
         return None,None
     p0s = np.random.normal(loc=p[0],scale=p_err[0],size=size)
     p1s = np.random.normal(loc=p[1],scale=p_err[1],size=size)
     ys = np.zeros((size,len(xn)))
-    for i in xrange(size):
+    for i in range(size):
         ys[i,:] = lin([p0s[i],p1s[i]],xn)
     y_up, y_down = np.zeros((2,len(xn)))
-    for j in xrange(len(xn)):
+    for j in range(len(xn)):
         y_up[j] = stats.scoreatpercentile(ys[:,j],ci)
         y_down[j] = stats.scoreatpercentile(ys[:,j],100-ci)
     return y_up, y_down
@@ -452,7 +452,7 @@ def plotmatfig(filename,fignr=None):
             leg_entries = tuple(['$' + l + '$' for l in legs.properties.String])
             py_locs = ['upper center','lower center','right','left','upper right','upper left','lower right','lower left','best','best']
             MAT_locs=['North','South','East','West','NorthEast', 'NorthWest', 'SouthEast', 'SouthWest','Best','none']
-            Mat2py = dict(zip(MAT_locs,py_locs))
+            Mat2py = dict(list(zip(MAT_locs,py_locs)))
             location = legs.properties.Location
             plt.legend(leg_entries,loc=Mat2py[location])
         #plt.hold(False)
@@ -530,7 +530,7 @@ def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
     for g in glob.glob(filepath+glob_pattern):
         pic_left  = int(prs.slide_width * 0.05)
         pic_width = int(prs.slide_width * 0.9)
-        print g
+        print(g)
         slide = prs.slides.add_slide(prs.slide_layouts[6])
 
         tb = slide.shapes.add_textbox(0, 0, prs.slide_width, pic_top / 2)
@@ -548,10 +548,10 @@ def make_pptx(filepath,filename,title='',glob_pattern='*',wide=False):
                 pic_left = int((prs.slide_width-pic_width)/2 + prs.slide_width * 0.05)
                 #import pdb; pdb.set_trace()
         except:
-            print 'Error on picture: {} using default size values'.format(g) 
+            print('Error on picture: {} using default size values'.format(g)) 
         #pic   = slide.shapes.add_picture(g, pic_left, pic_top)
         pic   = slide.shapes.add_picture(g, pic_left, pic_top, pic_width, pic_height)
-    print 'Saving to: {}{}.pptx'.format(filepath,filename)
+    print('Saving to: {}{}.pptx'.format(filepath,filename))
     prs.save(filepath+'%s.pptx' % filename)
 
 
@@ -571,13 +571,13 @@ def color_box(bp, color):
         colors = color
     elif len(color)==1:
         colors = []
-        [colors.extend(color) for i in xrange(len(bp[elements[0]]))]
+        [colors.extend(color) for i in range(len(bp[elements[0]]))]
         
     for elem in elements:
         if len(bp[elem]) > len(colors):
-            [plt.setp(bp[elem][idx], color=colors[idx/2]) for idx in xrange(len(bp[elem]))]
+            [plt.setp(bp[elem][idx], color=colors[idx/2]) for idx in range(len(bp[elem]))]
         else:
-            [plt.setp(bp[elem][idx], color=colors[idx]) for idx in xrange(len(bp[elem]))]
+            [plt.setp(bp[elem][idx], color=colors[idx]) for idx in range(len(bp[elem]))]
     return
 
 
@@ -625,13 +625,13 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
     
     bo = ax.boxplot(bins,y,'.',showmeans=True,positions=pos,vert=vert,**kwargs)
     color_box(bo,color)
-    for n in bo.keys():
-        nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in xrange(len(bo[n]))]
+    for n in list(bo.keys()):
+        nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in range(len(bo[n]))]
     if fliers_off:
-        u = [plt.setp(bo['fliers'][idx],alpha=0.00)for idx in xrange(len(bo['fliers']))]
+        u = [plt.setp(bo['fliers'][idx],alpha=0.00)for idx in range(len(bo['fliers']))]
     else:
-        u = [plt.setp(bo['fliers'][idx],alpha=0.04)for idx in xrange(len(bo['fliers']))]
-    v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in xrange(len(bo['means']))]
+        u = [plt.setp(bo['fliers'][idx],alpha=0.04)for idx in range(len(bo['fliers']))]
+    v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in range(len(bo['means']))]
     if vert:
         mean = [a.get_ydata()[0] for a in bo['means']]
         ax.plot(pos, mean,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)

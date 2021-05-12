@@ -141,8 +141,8 @@ def listpath():
     
     with open(f) as json_file:  
         p = json.load(json_file)
-    for k in p.keys():
-        print "'{}': {}".format(k,p[k])
+    for k in list(p.keys()):
+        print("'{}': {}".format(k,p[k]))
 
 
 # In[62]:
@@ -200,15 +200,14 @@ def getpath(s='research',make_path=False,path='',verbose=True):
             p = namepath(s,path,verbose=verbose)
 
     if p.get(s.lower()):
-        if verbose: print 'Return path named: ',s,p.get(s.lower())
+        if verbose: print('Return path named: ',s,p.get(s.lower()))
         return p.get(s.lower())
     else:
         if os.path.isdir(os.path.join(p['research'],s)):
             return os.path.isdir(os.path.join(p['research'],s))
         else:
             warn(os.path.join(p['research'],s)+'directory does not exists, returning default research directory')
-            return p['research']        
-                
+            return p['research']
 
 
 # In[90]:
@@ -263,7 +262,7 @@ def namepath(name,path,verbose=False):
     else:
         p[name.lower()] = os.path.join(p['research'],path)+os.path.sep
     
-    if verbose: print 'Created new path: {} under the name: {}'.format(p[name.lower()],name)
+    if verbose: print('Created new path: {} under the name: {}'.format(p[name.lower()],name))
     if not os.path.isdir(p[name.lower()]):
         warn('New named path {} does not exist'.format(p[name.lower()]))
     

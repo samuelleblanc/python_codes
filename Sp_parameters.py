@@ -102,10 +102,10 @@ def deriv(y,x):
     import numpy as np
     d = np.zeros_like(x)*np.nan
     if len(x) != len(y):
-        print '*** warning x is not the same length as y nothing done ***'
+        print('*** warning x is not the same length as y nothing done ***')
         return
     if len(x) < 3:
-        print '*** Not enough points ***'
+        print('*** Not enough points ***')
         return
     d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) -            y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) +            y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
     d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) +             y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) -             y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
@@ -129,7 +129,7 @@ def doublenanmask(x,y,return_mask=False):
     if return_mask is set to True (default is False), the mask is also returned
     """
     if len(x) != len(y):
-        print "The two arrays don't match sizes, returning"
+        print("The two arrays don't match sizes, returning")
         return
     mask = ~np.isnan(x) & ~np.isnan(y)
     if return_mask:
@@ -286,10 +286,10 @@ def ext_prof(alt,aod,binsize=100,use_deriv=True,verbose=False):
     
     n = len(str(binsize))
     rg = [round(alt.min()-0.5*10**n,1-n),round(alt.max()+0.5*10**n,1-n)]
-    if verbose: print 'range: {}'.format(rg)
+    if verbose: print('range: {}'.format(rg))
     bins = np.arange(rg[0],rg[1]+1,binsize)
     nbins = len(bins)
-    if verbose: print 'nbins: {}'.format(nbins)
+    if verbose: print('nbins: {}'.format(nbins))
     aod_binned = binned_statistic(alt,aod,avg,nbins,rg)
     if use_deriv:
         ext = deriv(aod_binned,bins)
@@ -469,12 +469,12 @@ class Sp:
         if self.wvl[0] < 100.0:
             self.wvl = self.wvl*1000.0
         self.iwvls = np.argsort(self.wvl)
-        if verbose: print len(self.iwvls), len(self.wvl)
+        if verbose: print(len(self.iwvls), len(self.wvl))
         self.wvl = np.sort(self.wvl)
         self.wvlsort(s,irrad)
         self.isubwvl = self.wvl_for_norm(self.wvl,wrange=[315.0,940.0])
         self.norm = self.normsp(self.sp,iws=self.isubwvl)
-        if verbose: print self.sp.shape
+        if verbose: print( self.sp.shape)
         if self.sp.ndim > 2:
             self.tau = s['tau']
             self.ref = s['ref']
@@ -491,10 +491,10 @@ class Sp:
                 else:
                     self.good = s['good']
             else:
-                if verbose: print 'No indexed good values, choosing all times that are greater than 0 and that are not parked'
+                if verbose: print( 'No indexed good values, choosing all times that are greater than 0 and that are not parked')
                 try:
                     self.good = np.where((self.utc>0.0)&(s['Md'][self.iset][:,0]==8))[0]
-                    if verbose: print 'good length:',len(self.good),'/',len(self.utc)
+                    if verbose: print( 'good length:',len(self.good),'/',len(self.utc))
                 except:
                     self.good = np.where(self.utc>0.0)[0]
             if 'Alt' in s:
@@ -531,20 +531,20 @@ class Sp:
         'Method to return the utc and datestr'
         from load_utils import mat2py_time, toutc
         
-        if self.verbose: print 'Calculating the utc times'
+        if self.verbose: print( 'Calculating the utc times')
         if 'utc' in s:
             if 'iset' in self.__dict__.keys():
                 utc = s['utc'][self['iset']]
             else:
                 if self.verbose:
-                    print 'No iset subset set, check multiple rad measurements'
+                    print( 'No iset subset set, check multiple rad measurements')
                 utc = s['utc']
             if 't' in s:
                 tt = mat2py_time(s['t'])
                 datestr = tt[0].strftime('%Y%m%d')
             else:
                 if self.verbose:
-                    print 'Not possible to get datestr, returning empty'
+                    print( 'Not possible to get datestr, returning empty')
                 datestr = ''
         else:
             if 't' in s:
@@ -553,7 +553,7 @@ class Sp:
                     utc = toutc(tt)[self.iset]
                 else:
                     if self.verbose:
-                        print 'No iset subset set, check multiple rad measurements'
+                        print('No iset subset set, check multiple rad measurements')
                     utc = toutc(tt)
                 datestr = tt[0].strftime('%Y%m%d')
             else:
@@ -631,7 +631,7 @@ class Sp:
         from scipy import interpolate
         if self.verbose: print('Running parameter hires')
         if np.all(np.isnan(self.par)):
-            print 'Run params() before'
+            print( 'Run params() before')
             return
         tau = self.tau
         ref = self.ref
@@ -647,7 +647,7 @@ class Sp:
                 if not end_tau:
                     end_tau = self.tau[-1]+1.0
             except ValueError:
-                print 'subsetting the hires params failed, using the data defaults'
+                print( 'subsetting the hires params failed, using the data defaults')
                 start_ref = self.ref[0]
                 end_ref = self.ref[-1]+1.0
                 start_tau = self.tau[0] 
@@ -655,8 +655,8 @@ class Sp:
             tau_hires = np.concatenate((np.arange(start_tau,1.0,0.1),np.arange(1.0,4.0,0.5),
                                         np.arange(4.0,end_tau,1.0)))
             ref_hires = np.arange(start_ref,end_ref)
-            if self.verbose: print tau_hires.shape
-            if self.verbose: print ref_hires.shape
+            if self.verbose: print( tau_hires.shape)
+            if self.verbose: print( ref_hires.shape)
             import gc; gc.collect()
             par_hires = np.zeros([2,len(ref_hires),len(tau_hires),self.npar])*np.nan
             startprogress('Running interpolation on params')
@@ -676,7 +676,7 @@ class Sp:
                     progress(float(pp+self.npar*ph)/(self.npar*2)*100.0)
             endprogress()
         else: 
-            print 'Problem with param_hires: number of dimensions not matched {}'.format(self.sp.ndim  )
+            print( 'Problem with param_hires: number of dimensions not matched {}'.format(self.sp.ndim  ))
         self.par = par_hires
         self.tausp = tau
         self.refsp = ref
@@ -690,7 +690,7 @@ class Sp:
         Simple program that returns the ref ranges with valid first parameter for two phases
         """
         if np.all(np.isnan(self.par)):
-            print 'Run params() before'
+            print( 'Run params() before')
             return
         if hasattr(self,'refranges'):
             return self.refranges
@@ -739,8 +739,8 @@ class Sp:
             return
         tau_hires = np.concatenate((np.arange(tau[0],1.0,0.1),np.arange(1.0,4.0,0.5),np.arange(4.0,tau[-1]+1.0,1.0)))
         ref_hires = np.arange(ref[0],ref[-1]+1.0)
-        if self.verbose: print tau_hires.shape 
-        if self.verbose: print ref_hires.shape
+        if self.verbose: print( tau_hires.shape) 
+        if self.verbose: print( ref_hires.shape)
         import gc; gc.collect()
         sp_hires = np.zeros([2,len(wvl),self.zout,len(ref_hires),len(tau_hires)])*np.nan
         startprogress('Running interpolation')
@@ -843,25 +843,25 @@ class Sp:
         """
         iwvls = self.iwvls
         if sorted(iwvls) is iwvls:
-            print '*** wvls are already sorted, there may be a problem! ***'
+            print( '*** wvls are already sorted, there may be a problem! ***')
         if 'sp' in s:
-            if self.verbose: print 'in sp'
-            if self.verbose: print s['sp'].shape
+            if self.verbose: print( 'in sp')
+            if self.verbose: print( s['sp'].shape)
             ui = [i for i in range(s['sp'].ndim) if s['sp'].shape[i] == len(self.wvl)]
             if 1 in ui:
                 sp = s['sp'][:,iwvls,:,:,:]
             else: 
                 raise LookupError
         if 'rads' in s:
-            if self.verbose: print 'in rads'
-            if self.verbose: print s['rads'].shape, s['rads'].ndim, len(iwvls)
+            if self.verbose: print( 'in rads')
+            if self.verbose: print( s['rads'].shape, s['rads'].ndim, len(iwvls))
             ui = [i for i in range(s['rads'].ndim) if s['rads'].shape[i] == len(self.wvl)]
             #print ui
             if 1 in ui:
-                if self.verbose: print '1 in ui'
+                if self.verbose: print( '1 in ui')
                 sp = s['rads'][:,iwvls]
             else: 
-                if self.verbose: print 'not 1 in ui'
+                if self.verbose: print( 'not 1 in ui')
                 sp = s['rads'][iwvls,:]
             if 'iset' in s:
                 if s['iset'].ndim>1:
@@ -869,21 +869,21 @@ class Sp:
                 else:
                     self.iset = s['iset']
             else:
-                print '** Problem, rads present (radiance subset), but not the subset integers **'
+                print( '** Problem, rads present (radiance subset), but not the subset integers **')
         elif 'rad' in s:
-            if self.verbose: print 'in rad'
-            if self.verbose: print s['rad'].shape, s['rad'].ndim, len(iwvls)
+            if self.verbose: print( 'in rad')
+            if self.verbose: print( s['rad'].shape, s['rad'].ndim, len(iwvls))
             ui = [i for i in range(s['rad'].ndim) if s['rad'].shape[i] == len(self.wvl)]
             #print ui
             if 1 in ui:
-                if self.verbose: print '1 in ui'
+                if self.verbose: print( '1 in ui')
                 sp = s['rad'][:,iwvls]
             else: 
-                if self.verbose: print 'not 1 in ui'
+                if self.verbose: print( 'not 1 in ui')
                 sp = s['rad'][iwvls,:]
             self.iset = np.where(s['rad'][:,0])[0]
         if irrad:
-            if self.verbose: print 'in irrad'
+            if self.verbose: print( 'in irrad')
             ui = [i for i in range(s['sp_irrdn'].ndim) if s['sp_irrdn'].shape[i] == len(self.wvl)]
             if 1 in ui:
                 self.sp_irrdn = s['sp_irrdn'][:,iwvls,:,:,:]
@@ -984,7 +984,7 @@ class Sp:
         Function that goes through measured spectra to ensure that the vis and nir agree on the wavelength range of 980 mn
         ratio the NIR protion of the spectrum to the ratio difference NIR and VIS at 980 nm, VIS does not change
         """
-        print 'Ratio-ing the NIR spectra to match VIS *** Only for 4STAR ***'
+        print( 'Ratio-ing the NIR spectra to match VIS *** Only for 4STAR ***')
         ivis = range(1055,1069)
         inir = range(1004,1037)
         mean_vis = np.nanmean(mea['rad'][600,ivis])
@@ -1189,7 +1189,7 @@ def plot_zen_cld_retrieval(meas):
     import matplotlib.pyplot as plt
     import Sp_parameters as Sp
     if not hasattr(meas,'tau'):
-        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        print( 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function')
         return None
     fig,ax = plt.subplots(4,sharex=True)
     ax[0].set_title('Retrieval results time trace')
@@ -1246,7 +1246,7 @@ def plot_map_cld_retrieval(meas):
     import matplotlib.pyplot as plt
     import Sp_parameters as Sp
     if not hasattr(meas,'tau'):
-        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        print( 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function')
         return None
     fig = plt.figure()
     ax0 = plt.subplot(1,2,1)
@@ -1299,7 +1299,7 @@ def plot_hist_cld_retrieval(meas):
     import matplotlib.pyplot as plt
     import Sp_parameters as Sp
     if not hasattr(meas,'tau'):
-        print 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function'
+        print( 'the meas class does not have the tau values saved to it. Please run the retrieval before calling this function')
         return None
 
     # ensure inputs to histograms
@@ -1362,7 +1362,7 @@ def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
     if forceliq and forceice:
         raise ValueError('forceliq and forceice cannot be used together')
     if not hasattr(lut,'tau'):
-        print 'The lut object does not have the tau variable, please check the it again. Returning...'
+        print( 'The lut object does not have the tau variable, please check the it again. Returning...')
         return None
     
     fig3,ax3 = plt.subplots(4,4,sharex=True,figsize=(15,8))
@@ -1548,10 +1548,10 @@ def plot_sp_movie(meas,fp,fps=10,gif=True):
         rmt = ''
     fpp = fp+'SP_animation{rtm}_{datestr}'.format(rtm=rtm,datestr=datestr)
     if gif:
-        print 'Movie file writing to {}.gif'.format(fpp)
+        print( 'Movie file writing to {}.gif'.format(fpp))
         animation.write_gif(fpp+'.gif', fps=fps)
     else:
-        print 'Movie file writing to {}.mp4'.format(fpp)
+        print( 'Movie file writing to {}.mp4'.format(fpp))
         animation.write_videofile(fpp+'.mp4', fps=fps)    
     return
 

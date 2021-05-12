@@ -150,7 +150,7 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     
     # Compile the header information and verify some inputs
     if not order:
-        order = data_dict.keys() 
+        order = list(data_dict.keys()) 
     head['data_format'] = '{t:.0f}'
     head['data_head'] = ','.join(('1 '*head['num_data']).split())+'\n'
     for n in order:
@@ -167,17 +167,17 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     head['indep_var_unit'],head['indep_var_desc'] = data_dict[nv]['unit'],data_dict[nv]['long_description']
     head['rev_comments'] = head['rev_comments'].strip()
     if head['rev_comments'].find(head['rev'])<0:
-        print "*** Revision comments don't include the current revision, please update ***"
-        print '*** exiting, file not saved ***'
+        print("*** Revision comments don't include the current revision, please update ***")
+        print('*** exiting, file not saved ***')
         return 
     if head['rev_comments'].find(head['rev'])>0:
-        print """*** Revision comments are not in the right order please update
-    Have the current revision identifier in the top place ***"""
-        print '*** exiting, file not saved ***'
+        print("""*** Revision comments are not in the right order please update
+    Have the current revision identifier in the top place ***""")
+        print('*** exiting, file not saved ***')
         return 
     dnames = []           
     for n in order:
-        print n
+        print(n)
         if not n==head['indep_var_name']:
             stemp = '{n}, {unit}, {long_description}'.format(n=n,**data_dict[n])
             head['data_head'] = head['data_head']+'\n'+stemp
@@ -210,8 +210,8 @@ REVISION: {rev}
 -----------------------------------------------------------------------------
 {data_names}""".format(**head)
     except KeyError as v:
-        print '*** problem with header value of {v} ***'.format(v=v)
-        print '*** exiting, file not saved ***'
+        print('*** problem with header value of {v} ***'.format(v=v))
+        print('*** exiting, file not saved ***')
         return
     head['num_info'] = len(head['support_info'].splitlines())
     try:
@@ -232,8 +232,8 @@ REVISION: {rev}
 {support_info}
 """.format(**head)
     except KeyError as v:
-        print '*** problem with header value of {v} ***'.format(v=v)
-        print '*** exiting, file not saved ***'
+        print('*** problem with header value of {v} ***'.format(v=v))
+        print('*** exiting, file not saved ***')
         return
     
     # Now open and write out the header and data to the file
@@ -256,7 +256,7 @@ REVISION: {rev}
                 f.write(head['data_format'].format(*dat,t=t)+'\n')
             except:
                 import pdb; pdb.set_trace()
-    print 'File writing successful to: {}'.format(fname)
+    print('File writing successful to: {}'.format(fname))
     return
 
 
@@ -271,7 +271,7 @@ def merge_dicts(*dict_args):
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
-    return result 
+    return result
 
 
 # In[282]:
@@ -288,7 +288,7 @@ def ict_tester():
           'X2':{'data':[10.9,11.9,12.9],'unit':'None','long_description':'test2'},
           'X3':{'data':[-2,-3,np.NaN],'unit':'somethinf','long_description':'tutor3'}
           }
-    print d_dict
+    print(d_dict)
     hdict = {'PI':'Samuel LeBlanc',
          'Institution':'NASA Ames',
          'Instrument':'tester',
@@ -305,10 +305,10 @@ def ict_tester():
          'stipulations':'None',
          'rev_comments':"""  RA: first test of it\nR0: older"""
         }
-    print hdict
+    print(hdict)
     order = ['X1','X2','X3']
     write_ict(hdict,d_dict,filepath='C:/Users/sleblan2/Research/NAAMES/',
-              data_id='4STAR_test',loc_id='C130',date='20160402',rev='RA',order=order)    
+              data_id='4STAR_test',loc_id='C130',date='20160402',rev='RA',order=order)
 
 
 # In[369]:
@@ -364,12 +364,12 @@ def prep_data_for_ict(data_dict,Start_UTC=None,End_UTC=None,
     
     # check input
     if not in_var_name in data_dict:
-        print "*** the variable defined by '{}' should be included in the data_dict ***".format(in_var_name)
+        print("*** the variable defined by '{}' should be included in the data_dict ***".format(in_var_name))
     iv = in_var_name
     ov = out_var_name
     if type(data_dict[iv]['data']) is np.ndarray:
         if data_dict[iv]['data'].dtype is np.dtype(object):
-            print 'input variable not a recognized type'
+            print('input variable not a recognized type')
             return
         elif data_dict[iv]['data'].dtype is np.dtype(float):
             # manageable type of float utc hours
@@ -378,7 +378,7 @@ def prep_data_for_ict(data_dict,Start_UTC=None,End_UTC=None,
         if type(data_dict[iv]['data']) is float:
             utcs = np.array(data_dict[iv]['data'])*3600.0
         else:
-            print 'non manageable input type, please make utc hours'
+            print('non manageable input type, please make utc hours')
             return   
     
     # get the limits of the time series
@@ -491,7 +491,7 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
     import matplotlib.pyplot as plt
     plt.rc('text', usetex=False)
     utc = data_dict[indep_var_name]['data']
-    ll = data_dict.keys()
+    ll = list(data_dict.keys())
     ll.remove(indep_var_name)
     if plot_together:
         fig = plt.figure()
@@ -501,8 +501,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.legend(frameon=False)
         plt.xlabel('UTC [seconds from midnight]')
         plt.ylabel('Values')
-        plt.title(u'{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
-        print 'plotting the togethers'
+        plt.title('{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
+        print('plotting the togethers')
         fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
         
     if plot_together2:
@@ -513,8 +513,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.legend(frameon=False)
         plt.xlabel('UTC [seconds from midnight]')
         plt.ylabel('Values')
-        plt.title(u'{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
-        print 'plotting the togethers 2'
+        plt.title('{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
+        print('plotting the togethers 2')
         fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together2.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
         
     for n in ll:
@@ -523,8 +523,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.legend(frameon=False)
         plt.xlabel('UTC [seconds from midnight]')
         plt.ylabel('{n} [{unit}]'.format(n=n,unit=data_dict[n].get('unit')))
-        plt.title(u'{data_id}_{loc_id}_{date}_{rev} for {n}'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n))
-        print 'plotting {}'.format(n)
+        plt.title('{data_id}_{loc_id}_{date}_{rev} for {n}'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n))
+        print('plotting {}'.format(n))
         fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_{n}.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n),dpi=600,transparent=True)
 
 
@@ -547,16 +547,16 @@ def dict_keys_to_unicode(d):
 def iterate_dict_unicode(dt):
     'Iterate through a dict object/objects to change all dict to unicode keys'
     from write_utils import dict_keys_to_unicode
-    for n in dt.keys():
+    for n in list(dt.keys()):
         if type(dt[n]) is list:
-            print n
+            print(n)
             for i,t in enumerate(dt[n]):
                 try:
                     dt[n][i] = dict_keys_to_unicode(t)
                 except:
-                    print 'problem with {}'.format(n)
+                    print('problem with {}'.format(n))
         else:
-            print 'no',n
+            print('no',n)
             dt[n] = dict_keys_to_unicode(dt[n])
     return dt
 
