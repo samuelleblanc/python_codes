@@ -250,6 +250,7 @@ def modis_qa_MOD06(qa_array):
 
 def bits_stripping(bit_start,bit_count,value):
     "Support function to the modis_qa flags (MOD06) to parse out a bit array from hdf files"
+    import numpy as np
     bitmask=pow(2,bit_start+bit_count)-1
     return np.right_shift(np.bitwise_and(value,bitmask),bit_start)
 
@@ -582,7 +583,11 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
             if issubclass(hdf[i].dtype.type, np.integer):
                 makenan = False
         if makenan:
-            hdf[i][bad_points] = np.nan
+            try:
+                hdf[i][bad_points] = np.nan
+            except ValueError:
+                print('*** Can not replace NaN into variable: {}, for the bad points {} ***'.format(i,bad_points))
+                
         if verbose:
             progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
     if verbose:
