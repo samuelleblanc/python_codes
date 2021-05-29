@@ -460,7 +460,7 @@ def load_emas(datfile):
 # In[ ]:
 
 
-def load_hdf(datfile,values=None,verbose=True,all_values=False):
+def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
     """
     Name:
 
@@ -492,6 +492,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
                 example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
         verbose: if true (default), then everything is printed. if false, nothing is printed
         all_values: if True, then outputs all the values with their original names, (defaults to False), overrides values keyword
+        i_subdata: value of the subdataset index
     
     Dependencies:
 
@@ -517,11 +518,15 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
                         - added error handling for missing fill value
         Modified (v1.3): Samuel LeBlanc, 2016-11-15, NASA Ames
                         - added all_values keyword
+        Modified (v1.4): Samuel LeBlanc, 2021-05-28, Santa Cruz, CA
+                        - added the i_subdata keyword
     """
     import numpy as np
     from osgeo import gdal
     from Sp_parameters import startprogress, progress, endprogress
     from load_utils import load_hdf_h5py
+    
+    sds_level = 1
     
     try:
         datsds = gdal.Open(datfile)
@@ -534,15 +539,15 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
         for i in range(len(datsub)):
             if values:
                 if any(i in val for val in values):
-                    print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][1]))
+                    print('\x1b[1;36m%i: %s\x1b[0m' %(i,datsub[i][sds_level]))
                 else:
-                    print(str(i)+': '+datsub[i][1])
+                    print(str(i)+': '+datsub[i][sds_level])
             else:
-                print(str(i)+': '+datsub[i][1])
+                print(str(i)+': '+datsub[i][sds_level])
     if all_values:
         values = []
         for i in range(len(datsub)):
-            values.append((datsub[i][1].split(' ')[1],i))
+            values.append((datsub[i][sds_level].split(' ')[1],i))
         values = tuple(values)
     if not values:
         if verbose:
@@ -557,7 +562,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False):
     if verbose:
         startprogress('Running through data values')
     for i,j in values:
-        sds = gdal.Open(datsub[j][0])
+        sds = gdal.Open(datsub[j][i_subdata])
         hdf_dicts[i] = sds.GetMetadata()
         hdf[i] = np.array(sds.ReadAsArray())
         if not hdf[i].any():
@@ -690,9 +695,17 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
     for i,j in values:
         sds = dat[i]
         hdf_dicts[i] = dict(sds.attrs)
-        hdf[i] = np.array(dat[i].value)
-        if not hdf[i].any():
+        try:
+            hdf[i] = np.array(dat[i].value)
+        except TypeError:
             import pdb; pdb.set_trace()
+        try:
+            if not hdf[i].any():
+                if len(hdf[i])<1:
+                    import pdb; pdb.set_trace()
+        except TypeError:
+            chararray = [''.join(sdf) for sdf in hdf[i]]
+            hdf[i] = np.array(chararray)
         try:
             bad_points = np.where(hdf[i] == sds.fillvalue)
             makenan = True
@@ -1034,7 +1047,7 @@ def load_amsr(datfile,lonlatfile):
 # In[ ]:
 
 
-def load_hdf_sd(FILE_NAME):
+def load_hdf_sd(FILE_NAME,vals=[],verbose=True):
     """
     Name:
 
@@ -1081,6 +1094,9 @@ def load_hdf_sd(FILE_NAME):
         Modified (v1.1): by Samuel LeBlanc, 2015-07-01, NASA Ames, Happy Canada Day!
                         - added Fill value keyword selection
                         - added scale factor and add offset
+        Modified (v1.2): Samuel LeBlanc, 2021-05-28, Santa Cruz, CA
+                        - added the vals keyword for only reading certain variables
+                        - added verbose keyword
         
     """
     import numpy as np
@@ -1090,28 +1106,29 @@ def load_hdf_sd(FILE_NAME):
     dat = dict()
     dat_dict = dict()
     for name in list(hdf.datasets().keys()):
-        print('  '+name+': %s' % (hdf.datasets()[name],))
-        dat[name] = hdf.select(name)[:]
-        dat_dict[name] = hdf.select(name).attributes()
-        try:
-            scale_factor = dat_dict[name].get('scale_factor')
-            if not scale_factor:
-                scale_factor = 1.0
-            dat[name] = dat[name]*scale_factor
+        if not vals or name in vals:
+            if verbose: print('  '+name+': %s' % (hdf.datasets()[name],))
+            dat[name] = hdf.select(name)[:]
+            dat_dict[name] = hdf.select(name).attributes()
             try:
-                dat[name][dat[name] == dat_dict[name].get('missing_value')*scale_factor] = np.nan
-            except TypeError:
-                print('No missing_value on '+name)
-            try:
-                dat[name][dat[name] == dat_dict[name].get('_FillValue')*scale_factor] = np.nan
-            except TypeError:
-                print('No FillValue on '+name)
-            add_offset = dat_dict[name].get('add_offset')
-            if not add_offset:
-                add_offset = 0
-            dat[name] = dat[name] + add_offset
-        except:
-            print('Problem in filling with nans and getting the offsets, must do it manually')
+                scale_factor = dat_dict[name].get('scale_factor')
+                if not scale_factor:
+                    scale_factor = 1.0
+                dat[name] = dat[name]*scale_factor
+                try:
+                    dat[name][dat[name] == dat_dict[name].get('missing_value')*scale_factor] = np.nan
+                except TypeError:
+                    if verbose: print('No missing_value on '+name)
+                try:
+                    dat[name][dat[name] == dat_dict[name].get('_FillValue')*scale_factor] = np.nan
+                except TypeError:
+                    if verbose: print('No FillValue on '+name)
+                add_offset = dat_dict[name].get('add_offset')
+                if not add_offset:
+                    add_offset = 0
+                dat[name] = dat[name] + add_offset
+            except:
+                if verbose: print('Problem in filling with nans and getting the offsets, must do it manually')
     return dat, dat_dict
 
 
