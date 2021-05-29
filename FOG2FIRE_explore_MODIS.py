@@ -238,7 +238,10 @@ if run_fire:
 
 if run_fire:
     fires,time_fires = [],[]
+    print('loading of fire files : {}'.format(nfiles))
     for l in lc:
+        if not l.endswith('hdf'): continue
+        print('loading file: {}/{}, {}'.format(i,nfiles,l))
         try: 
             fir,fir_dict = lu.load_hdf_sd(fp+'MYD14/'+l,vals=['FP_longitude','FP_latitude','FP_power'],verbose=False)
         except ValueError: 
