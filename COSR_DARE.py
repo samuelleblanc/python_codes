@@ -2992,20 +2992,20 @@ np.nanstd(dare_out1),np.nanstd(dare_out2),np.nanstd(dare_out3),np.nanstd(dare_ou
 
 # # Get the p-value for the delta tau vs. distance of AERONET vs 4STAR
 
-# In[177]:
+# In[24]:
 
 
 import plotting_utils as pu
 from scipy import stats
 
 
-# In[9]:
+# In[25]:
 
 
 s2aero = pd.read_excel(fp+'starAero.xlsx'.format('20180609'))
 
 
-# In[10]:
+# In[26]:
 
 
 s2aero.keys()
@@ -3028,31 +3028,31 @@ p_value
 
 # ## Subset for different days
 
-# In[168]:
+# In[27]:
 
 
 s2aero['day'] = s2aero['Time'].dt.date
 
 
-# In[169]:
+# In[28]:
 
 
 ds = s2aero['day'].unique()
 
 
-# In[170]:
+# In[29]:
 
 
 d = ds[0]
 
 
-# In[173]:
+# In[30]:
 
 
 print '{}'.format(d)
 
 
-# In[209]:
+# In[84]:
 
 
 plt.figure(figsize=(8,4))
@@ -3078,30 +3078,33 @@ p,perr = pu.plot_lin(s2aero['distKM'],s2aero['deltaaodfine'],y_err=s2aero['delta
 plt.legend(bbox_to_anchor=[1.05,0.99])
 plt.tight_layout()
 plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.png',dpi=600,transparent=True)
+plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.eps',format='eps',dpi=1200)
+plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.svg',format='svg',dpi=1200)
+plt.savefig(fp+'COSR_distance_to_AERONET_taudiff.pdf',format='pdf',dpi=1200)
 
 
 # # Add MODIS AOD plots
 
-# In[37]:
+# In[34]:
 
 
 from mpl_toolkits.basemap import Basemap
 import georaster
 
 
-# In[38]:
+# In[63]:
 
 
-mod,modh = lu.load_hdf(fp+'data_other/MOD04_3K.A2018160.1855.061.2018161080147.hdf',values=(('lat',52),('lon',51),('aod',10)))
+mod,modh = lu.load_hdf(fp+'data_other/MOD04_3K.A2018160.1855.061.2018161080147.hdf',values=(('lat',52),('lon',51),('aod',10)),i_subdata=0)
 
 
-# In[39]:
+# In[64]:
 
 
 modh['aod']
 
 
-# In[40]:
+# In[65]:
 
 
 def make_map1(ax=plt.gca()):
@@ -3125,33 +3128,33 @@ plt.scatter(mod['lon'],mod['lat'],50,mod['aod'],marker='s')
 plt.colorbar()
 
 
-# In[41]:
+# In[66]:
 
 
 import rasterio
 from rasterio.plot import show
 
 
-# In[42]:
+# In[67]:
 
 
 src = rasterio.open(fp+'data_other/snapshot-2018-06-09T00_00_00Z.tiff')
 
 
-# In[43]:
+# In[68]:
 
 
 fla = np.where(flag & (s['Alt'][:,0]<1500.0))
 
 
-# In[279]:
+# In[69]:
 
 
 flat = np.where(flag & (s['Alt'][:,0]<1500.0) & (s['utc']>16.0) & (s['utc']<22.0))
 flat_30 = np.where(flag & (s['Alt'][:,0]<1500.0) & (s['utc']>18.5) & (s['utc']<19.5))
 
 
-# In[254]:
+# In[70]:
 
 
 plt.figure()
@@ -3171,7 +3174,7 @@ plt.ylabel('Latitude [$^{{\circ}}$]')
 
 # ## Co-locate the MODIS and 4STAR AODs
 
-# In[255]:
+# In[71]:
 
 
 import map_utils as mu
@@ -3179,55 +3182,55 @@ import plotting_utils as pu
 from Sp_parameters import doublenanmask
 
 
-# In[270]:
+# In[72]:
 
 
 m2s = mu.stats_within_radius(s['Lat'][flat],s['Lon'][flat],mod['lat'],mod['lon'],mod['aod'],3000.0,subset=False)
 
 
-# In[280]:
+# In[73]:
 
 
 m2s_30 = mu.stats_within_radius(s['Lat'][flat_30],s['Lon'][flat_30],mod['lat'],mod['lon'],mod['aod'],3000.0,subset=False)
 
 
-# In[262]:
+# In[74]:
 
 
 m2s.keys()
 
 
-# In[235]:
+# In[75]:
 
 
 m2s['mean'].shape
 
 
-# In[274]:
+# In[76]:
 
 
 len(s['Lat'][flat])
 
 
-# In[275]:
+# In[77]:
 
 
 len(m2s['mean'])
 
 
-# In[278]:
+# In[78]:
 
 
 np.sum(np.isnan(m2s['mean']))
 
 
-# In[276]:
+# In[79]:
 
 
 m2s['index']
 
 
-# In[281]:
+# In[80]:
 
 
 plt.figure()
@@ -3283,7 +3286,7 @@ plt.xlabel('4STAR AOD')
 plt.ylabel('MODIS Dark Target TERRA AOD')
 
 
-# In[260]:
+# In[83]:
 
 
 fig,ax = plt.subplots(1,2,figsize=(9,3.5))
@@ -3319,6 +3322,9 @@ plt.ylabel('MODIS Dark Target TERRA AOD')
 plt.tight_layout()
 
 plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.png',dpi=600,transparent=True)
+plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.eps',format='eps',dpi=600)
+plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.svg',format='svg',dpi=1200)
+plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.pdf',format='pdf',dpi=1200)
 
 
 # In[284]:
