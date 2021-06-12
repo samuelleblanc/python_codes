@@ -65,7 +65,7 @@ if not nomap:
 
 
 name = 'FOG2FIRE'
-vv = 'v1'
+vv = 'v2'
 fp = getpath(name)
 yy = '2020'
 
@@ -239,7 +239,7 @@ if run_fire:
 if run_fire:
     fires,time_fires = [],[]
     print('loading of fire files : {}'.format(nfiles))
-    for l in lc:
+    for i,l in enumerate(lc):
         if not l.endswith('hdf'): continue
         print('loading file: {}/{}, {}'.format(i,nfiles,l))
         try: 
