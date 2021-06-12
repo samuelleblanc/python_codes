@@ -46,7 +46,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 #%config InlineBackend.rc = {}
@@ -71,7 +71,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[2]:
+# In[3]:
 
 
 import map_utils as mu
@@ -81,20 +81,20 @@ import math
 import sys
 
 
-# In[3]:
+# In[4]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[4]:
+# In[5]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[5]:
+# In[49]:
 
 
 fp = getpath('KORUS')
@@ -106,25 +106,25 @@ fp = getpath('KORUS')
 
 # ## Load 4STAR AOD ict files
 
-# In[6]:
+# In[29]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[7]:
+# In[30]:
 
 
 ka = ar.keys()
 
 
-# In[8]:
+# In[31]:
 
 
 ka.sort()
 
 
-# In[9]:
+# In[32]:
 
 
 ka
@@ -280,7 +280,7 @@ if false:
             goci.append(g_tmp)  
 
 
-# In[32]:
+# In[ ]:
 
 
 for l in gl:
@@ -394,7 +394,7 @@ ar['doys']%1.0
 goci[0].keys()
 
 
-# In[47]:
+# In[ ]:
 
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[],'aod_f':[],'aod_c':[]}
@@ -948,7 +948,7 @@ ml = [ m for m in ml if m.endswith('nc4')]
 ml.sort()
 
 
-# In[61]:
+# In[ ]:
 
 
 merra = []
@@ -1151,7 +1151,7 @@ mdict['TOTANGSTR']
 mdict['TOTEXTTAU']
 
 
-# In[88]:
+# In[ ]:
 
 
 mdict['SSEXTTAU'],mdict['BCEXTTAU'],mdict['OCEXTTAU'],mdict['SUEXTTAU'],mdict['DUEXTTAU']
@@ -1265,6 +1265,32 @@ for k in merra2ar.keys():
 plt.figure()
 plt.plot(merra2ar['doys'],merra2ar['aod'],'.')
 plt.plot(ar['doys'],ar['AOD0501'],'.')
+
+
+# ### Load MERRA-2 from 4D interpolation (from Patricia)
+
+# In[50]:
+
+
+fp
+
+
+# In[84]:
+
+
+reload(lu)
+
+
+# In[85]:
+
+
+mei, mei_dict = lu.load_hdf_h5py(fp+'data_other/MERRA2_interp/KORUS_level_legs_v2.ext_470.nc4',all_values=True,verbose=True)
+
+
+# In[ ]:
+
+
+mei_dict
 
 
 # ### Make daily regional averages
@@ -1421,7 +1447,7 @@ lrgl.sort()
 lrgl
 
 
-# In[106]:
+# In[ ]:
 
 
 large = []
@@ -1544,7 +1570,7 @@ mod1,mod1_dict = lu.load_hdf(fp+'data_other/MOD02QKM.A2016140.0140.061.201732601
 moda,moda_dict = lu.load_hdf(fp+'data_other/MOD04_L2.A2016140.0140.061.2017326145822.hdf',values=(('aod',135),('lat',71),('lon',70)))
 
 
-# In[27]:
+# In[ ]:
 
 
 moda_dict['aod']
@@ -2115,7 +2141,7 @@ dvalst['doys'][0]
 dvalst['doys'][1]
 
 
-# In[123]:
+# In[ ]:
 
 
 dvals['len_minutes'] = []
@@ -2134,7 +2160,7 @@ for i,n in enumerate(dvals['utc']):
         dvals['len_doys'].append(np.nan)
 
 
-# In[124]:
+# In[ ]:
 
 
 dvalst['len_minutes'] = []
@@ -2272,7 +2298,7 @@ def sort_by_cumdist(dd):
 ddv = get_distances(dvals)
 
 
-# In[129]:
+# In[ ]:
 
 
 sort_by_cumdist(dvals)
@@ -2304,7 +2330,7 @@ len(dvals['cumdist'])
 fp
 
 
-# In[157]:
+# In[8]:
 
 
 vv = 'v2'
@@ -2318,19 +2344,13 @@ hs.savemat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv),dvals)
 
 # ## Load from file
 
-# In[ ]:
+# In[7]:
 
 
-dvals = hs.loadmat(fp+'KORUS_autocorr_dvals.mat')
+dvals = hs.loadmat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv))
 
 
-# In[ ]:
-
-
-
-
-
-# In[575]:
+# In[9]:
 
 
 dvals.keys()
@@ -2346,6 +2366,50 @@ len(dvals['dist'])
 
 
 dvals['dist'][0].shape
+
+
+# ## Print to text file for MERRA-2 interpolations 
+
+# In[11]:
+
+
+dvals['doys'][0]
+
+
+# In[19]:
+
+
+from datetime import timedelta
+
+
+# In[34]:
+
+
+time = datetime(2016,1,1) + timedelta(days=dvals['doys'][0][0])-timedelta(days=1)
+
+
+# In[37]:
+
+
+time.isoformat()
+
+
+# In[48]:
+
+
+with open(fp+'KORUS_level_legs_{}.dat'.format(vv),'w') as fo:
+    for i,dv in enumerate(dvals['doys']):
+        if i>299:
+            continue
+        for j,do in enumerate(dv):
+            time = datetime(2016,1,1)+timedelta(days=do)-timedelta(days=1)
+            fo.write('{},{:3.10f},{:3.10f},{}\n'.format(time.isoformat(),dvals['lat'][i][j],dvals['lon'][i][j],i))
+
+
+# In[47]:
+
+
+dvals['lon'][299]
 
 
 # # Calculate the autocorrelation of AOD with respect to distance
@@ -2981,7 +3045,7 @@ def calc_autocorr_mc(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=
     return dat
 
 
-# In[408]:
+# In[ ]:
 
 
 p = Pool(7,worker_init)
@@ -3306,7 +3370,7 @@ wu.dict_keys_to_unicode(autocorr_dat)
 # In[ ]:
 
 
-np.save(fp+'autocorr_dat_{}.npy'.foramt(vv),autocorr_dat,allow_pickle=True)
+np.save(fp+'autocorr_dat_{}.npy'.format(vv),autocorr_dat,allow_pickle=True)
 
 
 # ### Run offline
@@ -3363,7 +3427,7 @@ def run_autocorr(val,types=types,corr_ks=corr_ks,corr_all=corr_all,corr_alln=cor
     return autocorr, autocorr_len
 
 
-# In[82]:
+# In[ ]:
 
 
 autocorr = {}
@@ -6467,12 +6531,6 @@ blon,baltlo,bnumlo,bndayslo = make_bined_alt(ar['Longitude'],ar['GPS_Alt'],ar['d
 
 blats = [np.nanmedian(ll) for ll in blat]
 blons = [np.nanmedian(ll) for ll in blon]
-
-
-# In[90]:
-
-
-blons
 
 
 # ### Plot the fine mode fraction distribution
