@@ -593,10 +593,11 @@ def subset_bins(vals,val_lim,lims):
     return bins
 
 
-# In[1]:
+# In[2]:
 
 
-def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False,**kwargs):
+def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False,
+                 tick_labels=True,**kwargs):
     """Compile the functions to make a box plot
     
     vals: values to box
@@ -642,13 +643,22 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
     
     #plt.gca().xaxis.set_major_locator(AutoLocator())
     #plt.gca().xaxis.set_major_locator(AutoLocator)
+    
     if vert:
         ti1 = ax.set_xticks(ti)
-        tl1 = ax.set_xticklabels([t for t in ti])
+        if tick_labels: 
+            tl1 = ax.set_xticklabels([t for t in tl])
+        else: 
+            ax.set_xticks([])
+            ax.set_xticklabels([])
+            
     else:
         ti1 = ax.set_yticks(ti)
-        tl1 = ax.set_yticklabels([t for t in ti])
-        
+        if tick_labels: 
+            tl1 = ax.set_yticklabels([t for t in tl])
+        else: 
+            ax.set_yticks([])
+            ax.set_yticklabels([])
     return mean
 
 
@@ -719,7 +729,7 @@ def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False,
         b.set_alpha(0.7)
     for j,b in enumerate(bp['caps']):
         b.set_alpha(0.7)
-        b.set_color(whiskers_color)#gr(binned_ndays[j]*1.0/bndm))
+        b.set_color(whisker_color)#gr(binned_ndays[j]*1.0/bndm))
     for j,b in enumerate( bp['medians']):
         b.set_linewidth(4)
         b.set_color(median_color)
