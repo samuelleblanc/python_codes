@@ -1,40 +1,75 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# # Info
+# Purpose:
+# 
+#     Describe the details ...
+# 
+# Input:
+# 
+#     arguments
+# 
+# Output:
+# 
+#     Figure and save files
+# 
+# Keywords:
+# 
+#     none
+# 
+# Dependencies:
+# 
+#     - load_utils.py
+#     - matplotlib
+#     - numpy
+#     - Sp_parameters
+#     - write_utils
+#     - path_utils
+#     - hdf5storage
+#     - scipy
+# 
+# Needed Files:
+#   - file.rc : for consistent creation of look of matplotlib figures
+#   - ...
+# 
+# Modification History:
+# 
+#     Written: Samuel LeBlanc, Santa Cruz, CA, 2021-08-03
+#     Modified:
+# 
 
-from IPython.html.services.config import ConfigManager
-from IPython.display import HTML
-ip = get_ipython()
-cm = ConfigManager(parent=ip, profile_dir=ip.profile_dir.location)
-extensions =cm.get('notebook')
-table = ""
-for ext in extensions['load_extensions']:
-    table += "<tr><td>%s</td>\n" % (ext)
+# # Prepare python environment
 
-top = """
-<table border="1">
-  <tr>
-    <th>Extension name</th>
-  </tr>
-"""
-bottom = """
-</table>
-"""
-HTML(top + table + bottom)
+# In[1]:
 
 
-# In[5]:
+import numpy as np
+import Sp_parameters as Sp
+import load_utils as lu
+import write_utils as wu
+from path_utils import getpath
+import hdf5storage as hs
+import scipy.io as sio
+import matplotlib.pyplot as plt
+get_ipython().magic(u'matplotlib notebook')
+import os
 
-extensions
 
+# In[2]:
+
+
+name = 'ORACLES'
+vv = 'v1'
+fp = getpath(name)
+
+
+# # Load files
+
+# # Plot out data
 
 # In[ ]:
 
-
-
-
-# In[ ]:
 
 
 
