@@ -46,7 +46,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[1]:
 
 
 #%config InlineBackend.rc = {}
@@ -71,7 +71,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[3]:
+# In[2]:
 
 
 import map_utils as mu
@@ -81,20 +81,20 @@ import math
 import sys
 
 
-# In[4]:
+# In[3]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[5]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[49]:
+# In[5]:
 
 
 fp = getpath('KORUS')
@@ -2344,13 +2344,19 @@ hs.savemat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv),dvals)
 
 # ## Load from file
 
+# In[6]:
+
+
+vv='v2'
+
+
 # In[7]:
 
 
 dvals = hs.loadmat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv))
 
 
-# In[9]:
+# In[8]:
 
 
 dvals.keys()
@@ -2366,6 +2372,69 @@ len(dvals['dist'])
 
 
 dvals['dist'][0].shape
+
+
+# ### Check previous versions of loaded files
+
+# In[19]:
+
+
+mera = np.array([])
+for d in dvals['MERRA_AOD']:
+    mera = np.hstack([mera,d])
+
+
+# In[24]:
+
+
+dvals4 = hs.loadmat(fp+'KORUS_autocorr_dvals_{}.mat'.format('v4'))
+
+
+# In[25]:
+
+
+mera4 = np.array([])
+for d in dvals4['MERRA_AOD']:
+    mera4 = np.hstack([mera4,d])
+
+
+# In[30]:
+
+
+mera4
+
+
+# In[37]:
+
+
+star = np.array([])
+for d in dvals['aod0500']:
+    star = np.hstack([star,d]) 
+
+
+# In[44]:
+
+
+np.nanmean(mera),np.nanmean(mera4),np.nanmean(star)
+
+
+# In[45]:
+
+
+np.nanmax(mera),np.nanmax(mera4), np.nanmax(star)
+
+
+# In[41]:
+
+
+plt.figure()
+plt.hist(star,bins=50,label='4STAR',alpha=0.6)
+plt.hist(mera,bins=50,label='MERRA-2 nearest neighbor')
+plt.hist(mera4,range=[np.nanmin(mera4),np.nanmax(mera4)],label='MERRA-2 with 4d interpolation files')
+plt.xlabel('MERRA-2 AOD 500 nm')
+plt.ylabel('counts')
+plt.title('KORUS-AQ level legs')
+plt.legend(frameon=False)
 
 
 # ## Print to text file for MERRA-2 interpolations 
