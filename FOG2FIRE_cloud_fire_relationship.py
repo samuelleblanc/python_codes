@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[3]:
+# In[1]:
 
 
 import numpy as np
@@ -56,13 +56,13 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[80]:
+# In[2]:
 
 
 from scipy.interpolate import UnivariateSpline
 
 
-# In[4]:
+# In[3]:
 
 
 name = 'FOG2FIRE'
@@ -72,7 +72,7 @@ fp = getpath(name)
 
 # # Load files
 
-# In[11]:
+# In[4]:
 
 
 f = os.listdir(fp)
@@ -80,7 +80,7 @@ f.sort()
 f
 
 
-# In[12]:
+# In[5]:
 
 
 years = ['2002','2003','2004','2005','2006','2007','2008','2009',
@@ -89,7 +89,7 @@ years = ['2002','2003','2004','2005','2006','2007','2008','2009',
 
 # ## Load the clouds
 
-# In[54]:
+# In[6]:
 
 
 cld = []
@@ -102,7 +102,7 @@ for y in years:
     cld.append(c)
 
 
-# In[56]:
+# In[7]:
 
 
 cld[1].keys()
@@ -110,7 +110,7 @@ cld[1].keys()
 
 # ## Load the fire counts
 
-# In[57]:
+# In[8]:
 
 
 fir = []
@@ -123,7 +123,7 @@ for y in years:
     fir.append(i)
 
 
-# In[60]:
+# In[9]:
 
 
 fir[1].keys()
@@ -131,25 +131,25 @@ fir[1].keys()
 
 # # Plot out data
 
-# In[176]:
+# In[10]:
 
 
 cld[1]['CF'].keys()
 
 
-# In[65]:
+# In[11]:
 
 
 cld[1]['CF']['coast'].keys()
 
 
-# In[69]:
+# In[12]:
 
 
 cld[1]['CF']['coast']['mean'].shape
 
 
-# In[111]:
+# In[13]:
 
 
 def smooth(x,y,w):
@@ -160,19 +160,19 @@ def smooth(x,y,w):
     return fx(x)
 
 
-# In[115]:
+# In[14]:
 
 
 from scipy.signal import savgol_filter
 
 
-# In[130]:
+# In[15]:
 
 
 import statsmodels.api as sm
 
 
-# In[134]:
+# In[16]:
 
 
 def smooth_l(x,y,w):
@@ -183,7 +183,7 @@ def smooth_l(x,y,w):
     return fx[:,0],fx[:,1]
 
 
-# In[137]:
+# In[17]:
 
 
 def non_uniform_savgol(x, y, window, polynom):
@@ -297,7 +297,7 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-# In[157]:
+# In[18]:
 
 
 def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
@@ -347,7 +347,7 @@ def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
     return smoothed
 
 
-# In[152]:
+# In[19]:
 
 
 def smooth_s(x,y,w=25,p=4):
@@ -361,7 +361,7 @@ def smooth_s(x,y,w=25,p=4):
     return x[igood],yp
 
 
-# In[160]:
+# In[20]:
 
 
 def smooth_g(x,y,s=0.1):
@@ -372,13 +372,13 @@ def smooth_g(x,y,s=0.1):
     return x[igood],yp
 
 
-# In[105]:
+# In[21]:
 
 
 cld[i]['time'][0].minute
 
 
-# In[206]:
+# In[22]:
 
 
 for j in range(4):
@@ -390,7 +390,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[194]:
+# In[23]:
 
 
 for j in range(4):
@@ -434,13 +434,18 @@ for j in range(4):
     plt.tight_layout()
 
 
-# In[277]:
+# In[74]:
 
 
-for j in range(4):
+txts = ['Oregon','NorCal','Central','SoCal']
 
-    fig, ax = plt.subplots(1,3,figsize=(9,2.5))
-    axx = [axs.twinx() for axs in ax]
+
+# In[77]:
+
+
+fig, ax = plt.subplots(4,3,figsize=(9,7.5))
+for j in range(4):    
+    axx = [axs.twinx() for axs in ax[j,:]]
     for i,yy in enumerate(years):
         if fir[i]:
             doyf = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
@@ -449,41 +454,55 @@ for j in range(4):
             doy = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
             cld[i]['doy'] = np.array(doy)
 
-            p = ax[0].plot(doy,cld[i]['CF']['ocean']['dev'][:,j],'-',alpha=0.5,label=yy)
+            p = ax[j,0].plot(doy,cld[i]['CF']['ocean']['dev'][:,j],'-',alpha=0.5,label=yy)
+            ax[j,0].set_ylabel('Cumulative CF \ndeviation from mean')
             #x,y = savgol_filter((doy,cld[i]['CF']['coast']['mean'][:,0]),25,3)
             #x,y = smooth_l(doy,cld[i]['CF']['coast']['mean'][:,0],1)
             #x,y = smooth_s(doy,cld[i]['CF']['coast']['mean'][:,0],w=125,p=3)
             #x,y = smooth_g(doy,cld[i]['CF']['ocean']['mean'][:,j],s=12.0)
             #ax[0].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
-            ax[1].plot(doy,cld[i]['CF']['coast']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
+            ax[j,1].plot(doy,cld[i]['CF']['coast']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
             #x,y = smooth_g(doy,cld[i]['CF']['coast']['mean'][:,j],s=12.0)
             #ax[1].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
-            ax[2].plot(doy,cld[i]['CF']['land']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
+            ax[j,2].plot(doy,cld[i]['CF']['land']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
+            if j>=3:
+                ax[j,0].set_xlabel('DOY')
+                ax[j,1].set_xlabel('DOY')
+                ax[j,2].set_xlabel('DOY')
             #x,y = smooth_g(doy,cld[i]['CF']['land']['mean'][:,j],s=12.0)
             #ax[2].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
             if fir[i]:
+                
                 doyf = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
                 fir[i]['doy'] = np.array(doyf)
                 axx[0].plot(doyf,fir[i]['FP']['ocean']['num'][:,0],'+',alpha=0.6,c=p[0].get_color())
                 axx[1].plot(doyf,fir[i]['FP']['coast']['num'][:,1],'+',alpha=0.6,c=p[0].get_color())
                 axx[2].plot(doyf,fir[i]['FP']['land']['num'][:,2],'+',alpha=0.6,c=p[0].get_color())
+                axx[2].set_ylabel('Fire counts')
                 #x,y = smooth_g(doyf,fir[i]['FP']['ocean']['num'][:,j],s=12.0)
                 #axx[0].plot(x,y,'+',c=p[0].get_color())
                 #x,y = smooth_g(doyf,fir[i]['FP']['coast']['num'][:,j],s=12.0)
                 #axx[1].plot(x,y,'+',c=p[0].get_color())
                 #x,y = smooth_g(doyf,fir[i]['FP']['land']['num'][:,j],s=12.0)
                 #axx[2].plot(x,y,'+',c=p[0].get_color())
+                nul = [axs.set_ylim([10,300]) for axs in axx]
 
-    nul = [axs.set_ylim([-25,25]) for axs in ax]
-    nul = [axs.set_xlim([150,360]) for axs in ax]
-    ax[2].legend(frameon=False,bbox_to_anchor=(1.0,1.2) )
-    ax[0].set_title('Ocean')
-    ax[1].set_title('Coast')
-    ax[2].set_title('Land')
-    plt.tight_layout()
+    nul = [axs.set_ylim([-25,25]) for axs in ax[j,:]]
+    nul = [axs.set_xlim([150,360]) for axs in ax[j,:]]
+    ax[j,0].text(180,20,txts[j])
+    
+    if j==2:
+        ax[j,2].plot(doy[0],[0],'+',alpha=0.6,c='grey',label='Fire #')
+        ax[j,2].legend(frameon=False,bbox_to_anchor=(2.1,1.6),loc=1)
+    if j==0:
+        ax[j,0].set_title('Ocean')
+        ax[j,1].set_title('Coast')
+        ax[j,2].set_title('Land')
+    plt.tight_layout(rect=(0,0,0.9,1),h_pad=-4.0,w_pad=-1.0)
+plt.savefig(fp+'FOG2FIRE_cumCF_fire_counts.png',dpi=600,transparent=True)
 
 
 # In[284]:
