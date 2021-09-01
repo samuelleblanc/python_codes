@@ -326,6 +326,10 @@ def mat2py_time(matlab_datenum):
     "convert a matlab datenum to a python datetime object. Works on numpy arrays of datenum"
     from datetime import datetime, timedelta
     #matlab_datenum = 731965.04835648148
+    try: #for python 3 compatibility
+        xrange
+    except NameError:
+        xrange = range
     m2ptime = lambda tmat: datetime.fromordinal(int(tmat)) + timedelta(days=tmat%1) - timedelta(days = 366)
     try:
         python_datetime = m2ptim2(matlab_datenum)
@@ -341,6 +345,10 @@ def mat2py_time(matlab_datenum):
 def toutc(pydatetime):
     "Convert python datetime to utc fractional hours"
     utc_fx = lambda x: float(x.hour)+float(x.minute)/60.0+float(x.second)/3600.0+float(x.microsecond)/3600000000.0
+    try: #for python 3 compatibility
+        xrange
+    except NameError:
+        xrange = range
     try: 
         return utc_fx(pydatetime)
     except:
