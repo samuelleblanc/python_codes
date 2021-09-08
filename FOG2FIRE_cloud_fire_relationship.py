@@ -131,23 +131,25 @@ fir[1].keys()
 
 # # Plot out data
 
-# In[10]:
+# In[78]:
 
 
 cld[1]['CF'].keys()
 
 
-# In[11]:
+# In[79]:
 
 
 cld[1]['CF']['coast'].keys()
 
 
-# In[12]:
+# In[80]:
 
 
 cld[1]['CF']['coast']['mean'].shape
 
+
+# ## Make smoothing and plotting functions
 
 # In[13]:
 
@@ -378,6 +380,8 @@ def smooth_g(x,y,s=0.1):
 cld[i]['time'][0].minute
 
 
+# ## Plot out the CF time series
+
 # In[22]:
 
 
@@ -434,16 +438,57 @@ for j in range(4):
     plt.tight_layout()
 
 
-# In[74]:
+# ## CF Histogram for each region
+
+# In[120]:
 
 
 txts = ['Oregon','NorCal','Central','SoCal']
 
 
-# In[77]:
+# In[105]:
 
 
-fig, ax = plt.subplots(4,3,figsize=(9,7.5))
+cf = {}
+for u in ['ocean','coast','land']:
+    cf[u] = [[],[],[],[]]
+
+
+# In[106]:
+
+
+for u in ['ocean','coast','land']:
+    for j in range(4): 
+        for i,yy in enumerate(years):
+            if cld[i]:
+                cf[u][j].append(cld[i]['CF'][u]['mean'][:,j])
+        cf[u][j] = np.hstack(cf[u][j])
+
+
+# In[142]:
+
+
+fig,axs = plt.subplots(4,1,sharex=True,figsize=(5,3))
+
+for j,ax in enumerate(axs): 
+    ax.hist([cf['ocean'][3-j],cf['coast'][3-j],cf['land'][3-j]],label=['ocean','coast','land'])
+    if j==0: ax.legend(frameon=True)
+    if j==3: 
+        ax.set_xlabel('Cloud Fraction')
+    if j==3: 
+        ax.text(0.4,800,txts[j])
+    else:
+        ax.text(0.4,1000,txts[j])
+plt.tight_layout(h_pad=-0.2)
+plt.savefig(fp+'FOG2FIRE_CF_histogram.png',dpi=600,transparent=True)
+
+
+# ## Time series of CF and fire count
+
+# In[204]:
+
+
+fig, ax = plt.subplots(4,3,figsize=(9,5.0))
 for j in range(4):    
     axx = [axs.twinx() for axs in ax[j,:]]
     for i,yy in enumerate(years):
@@ -454,23 +499,27 @@ for j in range(4):
             doy = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
             cld[i]['doy'] = np.array(doy)
 
-            p = ax[j,0].plot(doy,cld[i]['CF']['ocean']['dev'][:,j],'-',alpha=0.5,label=yy)
-            ax[j,0].set_ylabel('Cumulative CF \ndeviation from mean')
+            p = ax[j,0].plot(doy,cld[i]['CF']['ocean']['dev'][:,3-j],'-',alpha=0.5,label=yy)
+            ax[j,0].set_ylabel('Cumulative \n$\Delta$CF')
             #x,y = savgol_filter((doy,cld[i]['CF']['coast']['mean'][:,0]),25,3)
-            #x,y = smooth_l(doy,cld[i]['CF']['coast']['mean'][:,0],1)
+            #x,y = smooth_l(doy,cld[i]['CF']['coast']['mean'][:,0],1)x/
             #x,y = smooth_s(doy,cld[i]['CF']['coast']['mean'][:,0],w=125,p=3)
             #x,y = smooth_g(doy,cld[i]['CF']['ocean']['mean'][:,j],s=12.0)
             #ax[0].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
-            ax[j,1].plot(doy,cld[i]['CF']['coast']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
+            ax[j,1].plot(doy,cld[i]['CF']['coast']['dev'][:,3-j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
             #x,y = smooth_g(doy,cld[i]['CF']['coast']['mean'][:,j],s=12.0)
             #ax[1].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
-            ax[j,2].plot(doy,cld[i]['CF']['land']['dev'][:,j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
+            ax[j,2].plot(doy,cld[i]['CF']['land']['dev'][:,3-j],'-',alpha=0.5,c=p[0].get_color(),label=yy)
             if j>=3:
                 ax[j,0].set_xlabel('DOY')
                 ax[j,1].set_xlabel('DOY')
                 ax[j,2].set_xlabel('DOY')
+            else:
+                ax[j,0].set_xticklabels([])
+                ax[j,1].set_xticklabels([])
+                ax[j,2].set_xticklabels([])
             #x,y = smooth_g(doy,cld[i]['CF']['land']['mean'][:,j],s=12.0)
             #ax[2].plot(x,y,'-',c=p[0].get_color(),label=yy)
 
@@ -478,9 +527,9 @@ for j in range(4):
                 
                 doyf = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
                 fir[i]['doy'] = np.array(doyf)
-                axx[0].plot(doyf,fir[i]['FP']['ocean']['num'][:,0],'+',alpha=0.6,c=p[0].get_color())
-                axx[1].plot(doyf,fir[i]['FP']['coast']['num'][:,1],'+',alpha=0.6,c=p[0].get_color())
-                axx[2].plot(doyf,fir[i]['FP']['land']['num'][:,2],'+',alpha=0.6,c=p[0].get_color())
+                #axx[0].plot(doyf,fir[i]['FP']['ocean']['num'][:,3-j],'+',alpha=0.6,c=p[0].get_color())
+                axx[1].plot(doyf,fir[i]['FP']['coast']['num'][:,3-j],'+',alpha=0.6,c=p[0].get_color())
+                axx[2].plot(doyf,fir[i]['FP']['land']['num'][:,3-j],'+',alpha=0.6,c=p[0].get_color())
                 axx[2].set_ylabel('Fire counts')
                 #x,y = smooth_g(doyf,fir[i]['FP']['ocean']['num'][:,j],s=12.0)
                 #axx[0].plot(x,y,'+',c=p[0].get_color())
@@ -490,19 +539,49 @@ for j in range(4):
                 #axx[2].plot(x,y,'+',c=p[0].get_color())
                 nul = [axs.set_ylim([10,300]) for axs in axx]
 
-    nul = [axs.set_ylim([-25,25]) for axs in ax[j,:]]
+    nul = [axs.set_ylim([-30,30]) for axs in ax[j,:]]
     nul = [axs.set_xlim([150,360]) for axs in ax[j,:]]
     ax[j,0].text(180,20,txts[j])
     
     if j==2:
         ax[j,2].plot(doy[0],[0],'+',alpha=0.6,c='grey',label='Fire #')
-        ax[j,2].legend(frameon=False,bbox_to_anchor=(2.1,1.6),loc=1)
+        ax[j,2].legend(frameon=False,bbox_to_anchor=(2.1,2.0),loc=1)
     if j==0:
         ax[j,0].set_title('Ocean')
         ax[j,1].set_title('Coast')
         ax[j,2].set_title('Land')
-    plt.tight_layout(rect=(0,0,0.9,1),h_pad=-4.0,w_pad=-1.0)
+    plt.tight_layout(rect=(0,0,0.98,1),h_pad=-10.0,w_pad=0.0)
 plt.savefig(fp+'FOG2FIRE_cumCF_fire_counts.png',dpi=600,transparent=True)
+
+
+# In[190]:
+
+
+for j in range(4):    
+    for i,yy in enumerate(years):
+        for t in ['ocean','coast','land']:
+            if cld[i]:
+                doy = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+                cld[i]['doy'] = np.array(doy)
+
+                ic = (cld[i]['CF'][t]['dev'][:,3-j]<-1.0)&(cld[i]['doy']>150)
+                ic2 = (cld[i]['CF'][t]['dev'][:,3-j]<-5.0)&(cld[i]['doy']>150)
+                #if any(ic):print('CLD :',j,yy,'[-1]',t,doy[np.where(ic)[0][0]])
+                #if any(ic2):print('CLD :',j,yy,'[-5]',t,doy[np.where(ic)[0][0]])
+            if fir[i]:
+                doyf = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+                fir[i]['doy'] = np.array(doyf)
+                iff = (fir[i]['FP'][t]['num'][:,3-j]>15)&(fir[i]['doy']>150.0)
+                iff2 = (fir[i]['FP'][t]['num'][:,3-j]>35)&(fir[i]['doy']>150.0)
+                #if any(iff): print('FIRE:',j,yy,'.15.',t,doyf[np.where(iff)[0][0]])
+                #if any(iff2): print('FIRE:',j,yy,'.35.',t,doyf[np.where(iff2)[0][0]])
+                if cld[i] and any(ic) and any(iff):
+                    print(j,yy,t,'cld:[-1]',doy[np.where(ic)[0][0]],'fir:[15]',doyf[np.where(iff)[0][0]],
+                          'fir:[max]',doyf[np.argmax(fir[i]['FP'][t]['num'][:,3-j])])
+                    if any(ic2):
+                        print('.','....',t,'cld:[-5]',doy[np.where(ic2)[0][0]])
+                    if any(iff2):
+                        print('.','....',t,'fir:[35]',doyf[np.where(iff2)[0][0]])
 
 
 # In[284]:
