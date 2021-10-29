@@ -13,6 +13,10 @@ import os
 import warnings
 import sys
 warnings.simplefilter('ignore', np.RankWarning)
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 # Prepare the different functions require to run the class Sp
@@ -53,11 +57,11 @@ def smooth(x, window,nan=True,old=False,fill='mean'):
         from scipy import interpolate
         ix = np.arange(len(x))
         xmasked, mask = nanmasked(x)
-        if fill is 'mean':
+        if fill == 'mean':
             fv = np.mean(xmasked)
-        elif fill is 'median':
+        elif fill == 'median':
             fv = np.median(xmasked)
-        elif fill is 'zero':
+        elif fill == 'zero':
             fv = 0.0
         else:
             raise ValueError('the fill keyword doesnt match possible values, try mean, median, or zero')
@@ -361,7 +365,7 @@ class lut:
         par = self.par
         if pcoef is not None:
             # for defined coefficients
-            if self.phase is 'liq' or 'ice':
+            if self.phase == 'liq' or 'ice':
                 parn = np.transpose(self.par*pcoef['coef'].T-pcoef['add'].T)
             elif self.phase is None:
                 if self.par.ndim == 4:
@@ -448,9 +452,13 @@ class Sp:
                     - added keyword for ice_only lut development
     Modified (v1.8): Samuel LeBlanc, Mountain View, CA, 2017-02-22
                     - added keyword in params for defining which zout to use when calculating parameters for luts.
+    Modified (v1.9): Samuel LeBlanc, Santa Cruz, CA, 2021-08-31
+                    - moved param from Sp_parameters as an input to the params method (defaults to the ormal from Sp_parameters)
+                      in order to test out different parameter calculating functions.
 
     """    
     import numpy as np
+    from Sp_parameters import param
     def __init__(self,s,irrad=False,verbose=True,liq_only=False,ice_only=False,sza=None):
         import numpy as np
         self.verbose = verbose
@@ -560,7 +568,7 @@ class Sp:
                 raise IOError('No defined time array (key t or utc) in input object')
         return utc, datestr
     
-    def params(self,liq_only=False,ice_only=True,iz=0,norm_1050=False):
+    def params(self,liq_only=False,ice_only=True,iz=0,norm_1050=False,param=param):
         """
         Purpose:
             Runs through each spectrum in the sp array to calculate the parameters
@@ -573,7 +581,6 @@ class Sp:
                           respect to 1000 nm, but the average between 1040 and 1050 nm.
         """
         useezmap = False
-        from Sp_parameters import param
         import warnings
         if self.verbose: print('Running Parameters')
         if liq_only and ice_only:
@@ -583,6 +590,7 @@ class Sp:
             from ezmap import map as zmap
         warnings.filterwarnings("ignore",category=RuntimeWarning,module="param")
         warnings.filterwarnings("ignore",category=RuntimeWarning,module="Sp_parameters.normsp")
+        self.param = param
         sp = self.sp
         wvl = self.wvl
         if sp.ndim == 5:
@@ -595,14 +603,14 @@ class Sp:
                 applypar = lambda w,r,t:param(sp[w,:,iz,r,t],wvl,norm_1050=norm_1050)
                 #import pdb; pdb.set_trace()
                 partemp = map(applypar,w.ravel(),r.ravel(),t.ravel())
-            par = np.reshape(partemp,[2,len(self.ref),len(self.tau),-1])
+            par = np.reshape(list(partemp),[2,len(self.ref),len(self.tau),-1])
             if liq_only:
                 import warnings
-                warnings.warn('Copyig the parameters calculated for liquid LUT to the ice LUT, ice parameters will be lost')
+                warnings.warn('Copying the parameters calculated for liquid LUT to the ice LUT, ice parameters will be lost')
                 par[1,:,:,:] = par[0,:,:,:]
             if ice_only:
                 import warnings
-                warnings.warn('Copyig the parameters calculated for Ice LUT to the liquid LUT, liquid parameters will be lost')
+                warnings.warn('Copying the parameters calculated for Ice LUT to the liquid LUT, liquid parameters will be lost')
                 par[0,:,:,:] = par[1,:,:,:]
             self.npar = par.shape[3]
         elif sp.ndim == 2:
@@ -611,7 +619,7 @@ class Sp:
                 par = np.array(zmap(applypartime,xrange(len(self.utc)),ncpu=2,progress=True))
             else:
                 part = map(applypartime,xrange(len(self.utc)))
-                par = np.array(part)
+                par = np.array(list(part))
             self.npar = par.shape[1]
         else: raise LookupError
         self.par = par
@@ -919,7 +927,7 @@ class Sp:
         if phase is None:
             warning('No phase selected, returning nothing')
             return
-        elif phase is 'liq':
+        elif phase == 'liq':
             ref = self.ref[self.ref <= 30]
             if self.par.ndim == 4:
                 par = self.par[0,self.ref<=30,:,:]
@@ -928,7 +936,7 @@ class Sp:
             else:
                 warning('Problem with par dimensions')
             self.liq = lut(par,self.tau,ref,phase=phase)
-        elif phase is 'ice':
+        elif phase == 'ice':
             ref = self.ref[self.ref >= 10]
             if self.par.ndim == 4:
                 par = self.par[1,self.ref>=10,:,:]
@@ -965,7 +973,7 @@ class Sp:
         Function that creates a set of uncertainty for each parameter.
         Currently just uses white noise (gaussian)
         """
-        from Sp_parameters import param
+        param = self.param
         meansp = self.mean()
         stdsp = self.std()
         num_noise = 200
@@ -973,7 +981,7 @@ class Sp:
         # should be at every sp in utc, but for now, use mean sp
         sp_arr = meansp*noise
         #import code; code.interact(local=locals())
-        par_noisy = np.array(map(lambda tt:param(sp_arr[tt,:],self.wvl),xrange(num_noise)))
+        par_noisy = np.array(list(map(lambda tt:param(sp_arr[tt,:],self.wvl),xrange(num_noise))))
         notaxis = tuple(np.where(par_noisy.shape != self.npar)[0])
         stdpar = np.nanstd(par_noisy,axis=notaxis)
         self.stdpar = stdpar
