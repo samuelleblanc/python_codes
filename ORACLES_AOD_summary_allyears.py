@@ -734,7 +734,7 @@ ar8['fl_QA_angs'] = ar8['fl_QA'] & (ar8['AOD0501']>0.1)
 ar8['fl_QA_angs_aca'] = ar8['flac'] & (ar8['AOD0501']>0.1) & (ar8['GPS_Alt']>300.0)
 
 
-# In[29]:
+# In[25]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70):
@@ -748,14 +748,19 @@ def make_bined_alt(x,alt,days,fl,n=70):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[74]:
+# In[101]:
 
 
-def set_box_whisker_color(cl,bp,binned_ndays,a=0.6):
+def set_box_whisker_color(cl,bp,binned_ndays,binmax=None,a=0.6):
     bndm = np.nanmax(binned_ndays)*1.0
+    if binmax: bndm = binmax
     for j,b in enumerate(bp['boxes']):
-        b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
-        b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
+        try:
+            b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
+            b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
+        except:
+            b.set_color(cl(binned_ndays[j]*1.0/bndm))
+            b.set_fillstyle('full')
         b.set_alpha(a)
     for j,b in enumerate(bp['means']):
         b.set_marker('.')
@@ -959,6 +964,48 @@ binned_aodr8,binned_altar8,binned_numar8,binned_ndaysar8 = make_bined_alt(ar8['A
                                                                    ar8['GPS_Alt'],ar8['days'],ar8['flr'])
 
 
+# ## Prepare profiles for different wavelengths
+
+# In[20]:
+
+
+aodnames = np.sort([k for k in ar6.keys() if k.startswith('AOD') & ('_' not in k)])
+
+
+# In[21]:
+
+
+aodnames
+
+
+# In[22]:
+
+
+aod_wvl = [float(a[3:]) for a in aodnames]
+
+
+# In[23]:
+
+
+aod_wvl
+
+
+# In[27]:
+
+
+bina6 = {}
+binz6 = {}
+binn6 = {}
+bind6 = {}
+bina6r = {}
+binz6r = {}
+binn6r = {}
+bind6r = {}
+for i,a in enumerate(aodnames):
+    bina6[a],binz6[a],binn6[a],bind6[a] = make_bined_alt(ar6[a],ar6['GPS_Alt'],ar6['days'],ar6['flo'])
+    bina6r[a],binz6r[a],binn6r[a],bind6r[a] = make_bined_alt(ar6[a],ar6['GPS_Alt'],ar6['days'],ar6['flr'])
+
+
 # ## Plot the profiles
 
 # In[39]:
@@ -1100,6 +1147,132 @@ cbaxesgr.text(-6.0,0.5,'Days sampled',rotation=90,verticalalignment='center')
 
 plt.savefig(fp+'plot_all/ORACLES2018_4STAR_AOD_vertical_cb.png',
             transparent=True,dpi=500)
+
+
+# ## plot the profiles for 2016 per wavelength
+
+# In[116]:
+
+
+def extract_from_bp(bp):
+    'Function to extract the means, medians, percentile, and range from boxplots'
+    d = {}
+    d['means'] = np.array([m.get_xdata()[0] for m in bp['means']])
+    d['medians'] = np.array([m.get_xdata()[0] for m in bp['medians']])
+    d['Q1_percentile'] = np.array([m.get_xdata()[0] for m in bp['boxes']])
+    d['Q3_percentile'] = np.array([m.get_xdata()[2] for m in bp['boxes']])
+    d['min'] = np.array([m.get_xdata()[0] for i,m in enumerate(bp['whiskers']) if not i%2])
+    d['max'] = np.array([m.get_xdata()[1] for i,m in enumerate(bp['whiskers']) if i%2])
+    return d
+
+
+# In[130]:
+
+
+d = {}
+
+
+# In[131]:
+
+
+for i,a in enumerate(aodnames):
+    d[a] = {}
+    plt.figure(figsize=(4,6))
+    bp = plt.boxplot(bina6[a],positions=np.array(binz6[a])-5.0,vert=False,
+                    showfliers=False,widths=90,showmeans=True,patch_artist=False)
+    d[a]['coastal'] = extract_from_bp(bp)
+    [[m.remove() for m in bp[k]] for k in bp]
+    bp =plt.boxplot(bina6[a],positions=np.array(binz6[a])-5.0,vert=False,
+                    showfliers=False,widths=90,showmeans=True,patch_artist=True)
+    plt.xlabel('{}'.format(a))
+    plt.ylabel('Altitude [m]')
+    gr = plt.cm.YlGn
+    bl = plt.cm.YlOrBr
+    set_box_whisker_color(gr,bp,binn6[a],binmax=1800)
+
+    bpc =plt.boxplot(bina6r[a],positions=np.array(binz6r[a])+10.0,vert=False,
+                     showfliers=False,widths=90,showmeans=True,patch_artist=False)
+    d[a]['oceanic'] = extract_from_bp(bpc)
+    [[m.remove() for m in bpc[k]] for k in bpc]
+    bpc =plt.boxplot(bina6r[a],positions=np.array(binz6r[a])+10.0,vert=False,
+                     showfliers=False,widths=90,showmeans=True,patch_artist=True)
+    set_box_whisker_color(bl,bpc,binn6r[a],binmax=1800)
+    bpc['boxes'][0].set_color('grey')
+
+    ax = plt.gca()
+    plt.title('2016')
+    plt.ylim(0,7000)
+    plt.yticks([0,1000,2000,3000,4000,5000,6000,7000])
+    ax.set_yticklabels([0,1000,2000,3000,4000,5000,6000,7000])
+    plt.xlim(0,0.8)
+    plt.grid()
+    plt.legend([bp['boxes'][5],bpc['boxes'][18],bpc['means'][0],bpc['medians'][0],bpc['boxes'][0],bpc['whiskers'][0]],
+               ['Coastal (Other)','Oceanic (Routine)','Mean','Median','25\% - 75\%','min-max'],
+               frameon=False,numpoints=1)
+
+    scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+    scalarmapgr.set_array([0,1800])
+    scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+    scalarmapbl.set_array([0,1800])
+    cbaxesgr = plt.gcf().add_axes([0.8, 0.3, 0.015, 0.3])
+    cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr,extend='max')
+    cbaxesbl = plt.gcf().add_axes([0.82, 0.3, 0.015, 0.3])
+    cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl,extend='max')
+    cbg.set_ticks([0,300,600,900,1200,1500])
+    cbb.set_ticks([0,300,600,900,1200,1500]),cbb.set_ticklabels(['','','','',''])
+    cbaxesgr.yaxis.set_ticks_position('left'),cbaxesbl.yaxis.set_ticks_position('left')
+    cbaxesgr.text(-9.0,0.5,'Number of samples',rotation=90,verticalalignment='center')
+
+    #plt.tight_layout()
+
+    plt.savefig(fp+'plot_all/ORACLES2016_4STAR_AOD_vertical_cb_{}.png'.format(a),
+            transparent=True,dpi=500)
+
+
+# ## Save to file the binned vertical AODs
+
+# In[135]:
+
+
+d['AOD0530']['coastal']['means']
+
+
+# In[133]:
+
+
+binz6[a]
+
+
+# In[139]:
+
+
+d[a]['coastal'].keys()
+
+
+# In[140]:
+
+
+binn6_rg = {'coastal':binn6,'oceanic':binn6r}
+
+
+# In[149]:
+
+
+from datetime import datetime
+
+
+# In[152]:
+
+
+for i,a in enumerate(aodnames):
+    for reg in ['coastal','oceanic']:
+        with open(fp+'ORACLES2016_profiles_{}_{}.dat'.format(a,reg),'w') as f:
+            f.write('# 4STAR AOD profiles aglomerrated from all valid ORACLES 2016 measurements (R3) for wavelength: {:4.1f} nm in region: {}, by Samuel LeBlanc on {}\n'.format(aod_wvl[i],reg,datetime.now()))
+            f.write('#Alt[m],mean,median,25thpercentile,75thpercentile,min,max,number[#]\n')
+            for j,z in enumerate(binz6[a]):
+                f.write('{:4.1f},{:2.3f},{:2.3f},{:2.3f},{:2.3f},{:2.3f},{:2.3f},{}\n'.format(z,
+                        d[a][reg]['means'][j],d[a][reg]['medians'][j],d[a][reg]['Q1_percentile'][j],d[a][reg]['Q3_percentile'][j],
+                        d[a][reg]['min'][j],d[a][reg]['max'][j],binn6_rg[reg][a][j]))
 
 
 # # Plot a 3 year time series for a region
