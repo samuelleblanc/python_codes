@@ -46,6 +46,8 @@
 #     Modified: Samuel LeBlanc, Santa Cruz, CA, 2020-01-14
 #                 Added plotting of maps statistics
 #     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-06-13
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2021-11-05
+#                 Added ocean/land mask for GOCI comparison
 
 # # Prepare python environment
 
@@ -300,43 +302,43 @@ for k in ka:
 
 # ### Calculate the Angstrom Exponent
 
-# In[55]:
+# In[35]:
 
 
 nwl,nm
 
 
-# In[56]:
+# In[36]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[57]:
+# In[37]:
 
 
 aodrr.shape
 
 
-# In[58]:
+# In[38]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[70]:
+# In[39]:
 
 
 iangsf = np.isfinite(angs) & ar['fl'] & (ar['GPS_Alt']<500.0)
 
 
-# In[71]:
+# In[40]:
 
 
 np.nanmean(angs[iangsf])
 
 
-# In[72]:
+# In[41]:
 
 
 np.nanstd(angs[iangsf])
@@ -344,19 +346,19 @@ np.nanstd(angs[iangsf])
 
 # ### Calculate the fine mode fraction
 
-# In[39]:
+# In[42]:
 
 
 fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
 
 
-# In[40]:
+# In[43]:
 
 
 fmf.keys()
 
 
-# In[41]:
+# In[44]:
 
 
 fmf['tauc'].shape, ar['GPS_Alt'].shape
@@ -364,25 +366,25 @@ fmf['tauc'].shape, ar['GPS_Alt'].shape
 
 # ## Load GOCI AOD files
 
-# In[40]:
+# In[45]:
 
 
 gl = os.listdir(fp+'data_other/GOCI')
 
 
-# In[41]:
+# In[46]:
 
 
 gl.sort()
 
 
-# In[42]:
+# In[47]:
 
 
 goci = []
 
 
-# In[43]:
+# In[48]:
 
 
 for l in gl:
@@ -393,25 +395,25 @@ for l in gl:
     goci.append(g_tmp)  
 
 
-# In[44]:
+# In[49]:
 
 
 len(goci)
 
 
-# In[45]:
+# In[50]:
 
 
 np.nanmax(goci[0]['t']),np.nanmean(goci[0]['t']),np.nanmin(goci[0]['t'])
 
 
-# In[46]:
+# In[51]:
 
 
 g_dict
 
 
-# In[47]:
+# In[52]:
 
 
 goci_doy = []
@@ -423,7 +425,7 @@ for i,l in enumerate(gl):
 goci_doy = np.array(goci_doy)
 
 
-# In[48]:
+# In[53]:
 
 
 for og in goci:
@@ -433,19 +435,19 @@ for og in goci:
 
 # ### Build collcation of goci data to 4STAR
 
-# In[49]:
+# In[54]:
 
 
 ig4 = Sp.find_closest(goci_doy,ar['doys'])
 
 
-# In[50]:
+# In[55]:
 
 
 ig4
 
 
-# In[51]:
+# In[56]:
 
 
 #check co-location of data
@@ -455,31 +457,31 @@ plt.plot(ar['doys'],'x',label='4star')
 plt.legend()
 
 
-# In[52]:
+# In[57]:
 
 
 bad_ig4 = abs(goci_doy[ig4]-ar['doys'])>(1.0/24.0)
 
 
-# In[53]:
+# In[58]:
 
 
 sum(bad_ig4)/float(len(ig4)), len(np.where(bad_ig4)[0]), len(ig4)
 
 
-# In[54]:
+# In[59]:
 
 
 ar['doys']%1.0
 
 
-# In[55]:
+# In[60]:
 
 
 goci[0].keys()
 
 
-# In[56]:
+# In[61]:
 
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[],'aod_f':[],'aod_c':[]}
@@ -512,43 +514,43 @@ for k in goci2ar.keys():
     goci2ar[k] = np.array(goci2ar[k])
 
 
-# In[57]:
+# In[62]:
 
 
 igoci, len(goci2ar['aod']), goci2ar['aod'][2000], len(np.unique(ig4))
 
 
-# In[58]:
+# In[63]:
 
 
 imeas = np.where(ig4==8)[0]
 
 
-# In[59]:
+# In[64]:
 
 
 len(imeas)
 
 
-# In[60]:
+# In[65]:
 
 
 np.argmin((goci[8]['lon']-ar['Longitude'][imeas[0]])**2.0+(goci[8]['lat']-ar['Latitude'][imeas[0]])**2.0)
 
 
-# In[61]:
+# In[66]:
 
 
 goci[8]['lon'].flatten()[94639],goci[8]['lat'].flatten()[94639]
 
 
-# In[62]:
+# In[67]:
 
 
 ar['Longitude'][imeas[0]],ar['Latitude'][imeas[0]]
 
 
-# In[64]:
+# In[68]:
 
 
 plt.figure()
@@ -561,7 +563,7 @@ plt.xlabel('GOCI interpolated to 4STAR number of points')
 plt.ylabel('GOCI AE')
 
 
-# In[65]:
+# In[69]:
 
 
 goci2ar['aod'][bad_ig4] = np.nan
@@ -572,10 +574,60 @@ goci2ar['fmf'][bad_ig4] = np.nan
 goci2ar['CF'][bad_ig4] = np.nan
 
 
-# In[66]:
+# In[70]:
 
 
 len(goci2ar['aod_c']), len(goci2ar['aod'])
+
+
+# ### Flag for over ocean
+
+# In[71]:
+
+
+from global_land_mask import globe
+# from Karin, Todd. Global Land Mask. October 5, 2020. https://doi.org/10.5281/zenodo.4066722
+# using GLOBE data from Hastings, David A., and Paula K. Dunbar, 1999. Global Land One-kilometer Base Elevation
+#(GLOBE) Digital Elevation Model, Documentation, Volume 1.0. Key to Geophysical Records
+#Documentation (KGRD) 34. National Oceanic and Atmospheric Administration, National
+#Geophysical Data Center, 325 Broadway, Boulder, Colorado 80303, U.S.A, https://repository.library.noaa.gov/view/noaa/13424
+
+
+# In[99]:
+
+
+is_in_ocean_good = globe.is_ocean(goci2ar['lat'][fl], goci2ar['lon'][fl])
+
+
+# In[101]:
+
+
+is_in_ocean = np.full(goci2ar['lat'].shape,False)
+is_in_ocean[fl] = is_in_ocean_good
+
+
+# In[81]:
+
+
+goci2ar['lat'][fl].shape
+
+
+# In[82]:
+
+
+goci2ar['lat'].shape
+
+
+# In[102]:
+
+
+is_in_ocean.shape
+
+
+# In[105]:
+
+
+is_in_ocean
 
 
 # ### Make daily regional averages to compare to flight subsets
@@ -1833,7 +1885,7 @@ plt.savefig(fp+'plot/KORUS_GOCI_MERRA_AOD_daily_hist_avgs_combined_{}.svg'.forma
 
 # ## Subset the level legs
 
-# In[149]:
+# In[158]:
 
 
 def running_std(x,n):
@@ -1845,43 +1897,43 @@ def running_std(x,n):
     return o 
 
 
-# In[150]:
+# In[159]:
 
 
 nbox = 20
 
 
-# In[151]:
+# In[160]:
 
 
 std_alt = running_std(ar['GPS_Alt'][fl],nbox)
 
 
-# In[152]:
+# In[161]:
 
 
 std_alt.shape, ar['GPS_Alt'][fl].shape
 
 
-# In[153]:
+# In[162]:
 
 
 f_level = np.where(std_alt<5.0)[0]
 
 
-# In[154]:
+# In[163]:
 
 
 std_alt1 = running_std(ar['GPS_Alt'][fl1],nbox)
 
 
-# In[155]:
+# In[164]:
 
 
 f_level1 = np.where(std_alt1<5.0)[0]
 
 
-# In[156]:
+# In[165]:
 
 
 ar['Start_UTC'][fl1][f_level1]
@@ -4249,13 +4301,59 @@ plt.legend()
 plt.title('All 4STAR samples below 0.5km with nearby GOCI')
 
 
+# In[108]:
+
+
+fla = ar['fl_QA'] & (ar['GPS_Alt']<500.0)
+fl_ocean_a = is_in_ocean & (ar['GPS_Alt']<500.0)
+fl_land_a = ~is_in_ocean & ar['fl_QA'] & (ar['GPS_Alt']<500.0)
+flan = ar['fl_QA'] & (ar['GPS_Alt']<500.0) & np.isfinite(ar['AOD0501']) & np.isfinite(goci2ar['aod'])
+fl_ocean_an = is_in_ocean & (ar['GPS_Alt']<500.0) & np.isfinite(ar['AOD0501']) & np.isfinite(goci2ar['aod'])
+fl_land_an = ~is_in_ocean & ar['fl_QA'] & (ar['GPS_Alt']<500.0) & np.isfinite(ar['AOD0501']) & np.isfinite(goci2ar['aod'])
+
+
+# In[156]:
+
+
+#sanity check of the land-ocean mask
+fig,ax = plt.subplots(1,1)
+m = make_map(ax)
+#m.plot(ar['Longitude'],ar['Latitude'],'.',markersize=0.2,color='tab:blue',latlon=True,label='All data')
+#m.plot(ar['Longitude'][fl][f_level],ar['Latitude'][fl][f_level],'.',markersize=0.5,color='tab:red',latlon=True,label='level legs')
+#m.plot(s['Lon'][it],s['Lat'][it],'r+',latlon=True)
+m.plot(goci2ar['lon'][fl_ocean_an],goci2ar['lat'][fl_ocean_an],'.',label='ocean',latlon=True)
+m.plot(goci2ar['lon'][fl_land_an],goci2ar['lat'][fl_land_an],'.',label='land',latlon=True)
+plt.legend()
+
+
+# In[111]:
+
+
+plt.figure()
+r_oc = np.corrcoef(ar['AOD0501'][fl_ocean_an],goci2ar['aod'][fl_ocean_an])[0,1]**2.0
+r_ld = np.corrcoef(ar['AOD0501'][fl_land_an],goci2ar['aod'][fl_land_an])[0,1]**2.0
+
+plt.plot(ar['AOD0501'][fl_ocean_a],goci2ar['aod'][fl_ocean_a],'.',label='Ocean, R$^2$ = {:1.3f}'.format(r_oc))
+plt.plot(ar['AOD0501'][fl_land_a],goci2ar['aod'][fl_land_a],'.',label='Land, R$^2$ = {:1.3f}'.format(r_ld))
+plt.xlim(0,1.5)
+plt.ylim(0,1.5)
+plt.xlabel('4STAR AOD$_{{500}}$')
+plt.ylabel('GOCI AOD')
+plt.plot([0,1.5],[0,1.5],'--k',label='1:1')
+pu.plot_lin(ar['AOD0501'][fl_ocean_a],goci2ar['aod'][fl_ocean_a],x_err=ar['UNCAOD0501'][fl_ocean_a],labels=True,shaded_ci=True,ci=95,color='tab:blue')
+pu.plot_lin(ar['AOD0501'][fl_land_a],goci2ar['aod'][fl_land_a],x_err=ar['UNCAOD0501'][fl_land_a],labels=True,shaded_ci=True,ci=95,color='tab:orange')
+
+plt.legend()
+plt.title('All 4STAR samples below 0.5km with nearby GOCI')
+
+
 # In[175]:
 
 
 len(np.unique(goci2ar['lon'][flan]))
 
 
-# In[260]:
+# In[112]:
 
 
 nsub = len(np.unique(goci2ar['lon'][flan]))
@@ -4282,7 +4380,59 @@ for j,la in enumerate(np.unique(goci2ar['lat'][flan])):
     
 
 
-# In[261]:
+# In[113]:
+
+
+nsub = len(np.unique(goci2ar['lon'][fl_ocean_an]))
+aod_star_o = np.zeros((nsub))
+aod_goci_o = np.zeros((nsub))
+ae_star_o = np.zeros((nsub))
+ae_goci_o = np.zeros((nsub))
+fmf_star_o = np.zeros((nsub))
+fmf_goci_o = np.zeros((nsub))
+aod_star_std_o = np.zeros((nsub))
+ae_star_std_o = np.zeros((nsub))
+fmf_star_std_o = np.zeros((nsub))
+for j,la in enumerate(np.unique(goci2ar['lat'][fl_ocean_an])):
+    ipixel = np.where(goci2ar['lat'][fl_ocean_an]==la)[0]
+    aod_goci_o[j] = np.mean(goci2ar['aod'][fl_ocean_an][ipixel])
+    ae_goci_o[j] = np.mean(goci2ar['AE'][fl_ocean_an][ipixel])
+    fmf_goci_o[j] = np.mean(goci2ar['fmf'][fl_ocean_an][ipixel])
+    aod_star_o[j] = np.mean(ar['AOD0501'][fl_ocean_an][ipixel])
+    ae_star_o[j] = np.mean(angs[fl_ocean_an][ipixel])
+    fmf_star_o[j] = np.mean(fmf['eta'][fl_ocean_an][ipixel])
+    aod_star_std_o[j] = np.std(ar['AOD0501'][fl_ocean_an][ipixel])
+    ae_star_std_o[j] = np.std(angs[fl_ocean_an][ipixel])
+    fmf_star_std_o[j] = np.std(fmf['eta'][fl_ocean_an][ipixel])
+
+
+# In[114]:
+
+
+nsub = len(np.unique(goci2ar['lon'][fl_land_an]))
+aod_star_l = np.zeros((nsub))
+aod_goci_l = np.zeros((nsub))
+ae_star_l = np.zeros((nsub))
+ae_goci_l = np.zeros((nsub))
+fmf_star_l = np.zeros((nsub))
+fmf_goci_l = np.zeros((nsub))
+aod_star_std_l = np.zeros((nsub))
+ae_star_std_l = np.zeros((nsub))
+fmf_star_std_l = np.zeros((nsub))
+for j,la in enumerate(np.unique(goci2ar['lat'][fl_land_an])):
+    ipixel = np.where(goci2ar['lat'][fl_land_an]==la)[0]
+    aod_goci_l[j] = np.mean(goci2ar['aod'][fl_land_an][ipixel])
+    ae_goci_l[j] = np.mean(goci2ar['AE'][fl_land_an][ipixel])
+    fmf_goci_l[j] = np.mean(goci2ar['fmf'][fl_land_an][ipixel])
+    aod_star_l[j] = np.mean(ar['AOD0501'][fl_land_an][ipixel])
+    ae_star_l[j] = np.mean(angs[fl_land_an][ipixel])
+    fmf_star_l[j] = np.mean(fmf['eta'][fl_land_an][ipixel])
+    aod_star_std_l[j] = np.std(ar['AOD0501'][fl_land_an][ipixel])
+    ae_star_std_l[j] = np.std(angs[fl_land_an][ipixel])
+    fmf_star_std_l[j] = np.std(fmf['eta'][fl_land_an][ipixel])
+
+
+# In[122]:
 
 
 fig,ax = plt.subplots(1,2,figsize=(10,5))
@@ -4296,6 +4446,7 @@ ax[0].set_ylim(0,1.5)
 ax[0].set_xlabel('4STAR AOD averaged within GOCI pixel')
 ax[0].set_ylabel('GOCI AOD')
 ax[0].set_title('KORUS-AQ Average AOD below 0.5 km')
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.1)
 
 flae = np.isfinite(ae_star) & np.isfinite(ae_goci)
 rbinae = np.corrcoef(ae_star[flae],ae_goci[flae])[0,1]**2.0
@@ -4308,8 +4459,11 @@ ax[1].set_xlim(0.2,1.8)
 ax[1].set_xlabel('4STAR AE averaged within GOCI pixel')
 ax[1].set_ylabel('GOCI AE')
 ax[1].set_title('KORUS-AQ Average AE below 0.5 km')
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.1)
 
-plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_{}.eps'.format('v2'))
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_{}.pdf'.format('v2'))
 
 
 # In[262]:
@@ -4329,7 +4483,7 @@ plt.ylabel('GOCI AE')
 plt.title('Average AE below 0.5 km')
 
 
-# In[288]:
+# In[124]:
 
 
 fig,ax = plt.subplots(1,2,figsize=(10,5))
@@ -4340,6 +4494,8 @@ ax[0].axvline(np.nanmean(aod_star-aod_goci),ls='-',color='darkblue',alpha=0.6,lw
 ax[0].axvline(np.nanmedian(aod_star-aod_goci),ls='--',color='darkblue',alpha=0.6,lw=3,
             label='median={:2.2f}'.format(np.nanmedian(aod_star-aod_goci)))
 ax[0].legend()
+pu.sub_note('c)',ax=ax[0],out=True,dx=-0.1)
+
 flae = np.isfinite(ae_star) & np.isfinite(ae_goci)
 ax[1].hist(ae_star[flae]-ae_goci[flae],bins=50,normed=True)
 ax[1].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
@@ -4351,7 +4507,133 @@ ax[1].legend()
 ax[0].set_xlabel('AOD difference (4STAR-GOCI)')
 ax[0].set_ylabel('Normalized counts')
 ax[1].set_xlabel('AE difference (4STAR-GOCI)')
-plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE.png',dpi=600,transparent=True)
+pu.sub_note('d)',ax=ax[1],out=True,dx=-0.1)
+plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE_{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE_{}.eps'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE_{}.pdf'.format('v2'),dpi=600,transparent=True)
+
+
+# In[126]:
+
+
+aod_fine_star = aod_star * fmf_star
+aod_fine_goci = aod_goci * fmf_goci
+aod_coarse_star = aod_star * (1.0-fmf_star)
+aod_coarse_goci = aod_goci * (1.0-fmf_goci)
+aod_fine_star_o = aod_star_o * fmf_star_o
+aod_fine_goci_o = aod_goci_o * fmf_goci_o
+aod_coarse_star_o = aod_star_o * (1.0-fmf_star_o)
+aod_coarse_goci_o = aod_goci_o * (1.0-fmf_goci_o)
+aod_fine_star_l = aod_star_l * fmf_star_l
+aod_fine_goci_l = aod_goci_l * fmf_goci_l
+aod_coarse_star_l = aod_star_l * (1.0-fmf_star_l)
+aod_coarse_goci_l = aod_goci_l * (1.0-fmf_goci_l)
+
+
+# In[151]:
+
+
+fig,ax = plt.subplots(2,2,figsize=(8,8))
+ax = ax.flatten()
+lfont=8
+fl_f = np.isfinite(aod_fine_star) & np.isfinite(aod_fine_goci)
+rbin = np.corrcoef(aod_fine_star[fl_f],aod_fine_goci[fl_f])[0,1]**2.0
+ax[0].plot(aod_fine_star,aod_fine_goci,'.',label='All R$^2$ = {:1.3f}'.format(rbin),color='grey')
+pu.plot_lin(aod_fine_star,aod_fine_goci,labels=True,shaded_ci=True,ci=95,ax=ax[0],color='grey')
+
+fl_f_o = np.isfinite(aod_fine_star_o) & np.isfinite(aod_fine_goci_o)
+rbin_o = np.corrcoef(aod_fine_star_o[fl_f_o],aod_fine_goci_o[fl_f_o])[0,1]**2.0
+ax[0].plot(aod_fine_star_o,aod_fine_goci_o,'.',label='Ocean R$^2$ = {:1.3f}'.format(rbin_o),color='tab:blue')
+pu.plot_lin(aod_fine_star_o,aod_fine_goci_o,labels=True,shaded_ci=True,ci=95,ax=ax[0],color='tab:blue')
+
+fl_f_l = np.isfinite(aod_fine_star_l) & np.isfinite(aod_fine_goci_l)
+rbin_l = np.corrcoef(aod_fine_star_l[fl_f_l],aod_fine_goci_l[fl_f_l])[0,1]**2.0
+ax[0].plot(aod_fine_star_l,aod_fine_goci_l,'.',label='Land R$^2$ = {:1.3f}'.format(rbin_l),color='tab:orange')
+pu.plot_lin(aod_fine_star_l,aod_fine_goci_l,labels=True,shaded_ci=True,ci=95,ax=ax[0],color='tab:orange')
+
+
+ax[0].plot([0,1.0],[0,1.0],'--k',label='1:1')
+ax[0].legend(fontsize=lfont)
+ax[0].set_xlim(0,1.0)
+ax[0].set_ylim(0,1.0)
+ax[0].set_xlabel('4STAR Fine AOD averaged within GOCI pixel')
+ax[0].set_ylabel('GOCI Fine mode AOD')
+ax[0].set_title('KORUS-AQ Average Fine mode AOD')
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.2)
+
+fl_c = np.isfinite(aod_coarse_star) & np.isfinite(aod_coarse_goci)
+rbinc = np.corrcoef(aod_coarse_star[fl_c],aod_coarse_goci[fl_c])[0,1]**2.0
+ax[1].plot(aod_coarse_star,aod_coarse_goci,'.',label='All, R$^2$ = {:1.3f}'.format(rbinc),color='grey')
+pu.plot_lin(aod_coarse_star,aod_coarse_goci,labels=True,shaded_ci=True,ci=95,ax=ax[1],color='grey')
+
+fl_c_o = np.isfinite(aod_coarse_star_o) & np.isfinite(aod_coarse_goci_o)
+rbinc_o = np.corrcoef(aod_coarse_star_o[fl_c_o],aod_coarse_goci_o[fl_c_o])[0,1]**2.0
+ax[1].plot(aod_coarse_star_o,aod_coarse_goci_o,'.',label='Ocean, R$^2$ = {:1.3f}'.format(rbinc_o),color='tab:blue')
+pu.plot_lin(aod_coarse_star_o,aod_coarse_goci_o,labels=True,shaded_ci=True,ci=95,ax=ax[1],color='tab:blue')
+
+fl_c_l = np.isfinite(aod_coarse_star_l) & np.isfinite(aod_coarse_goci_l)
+rbinc_l = np.corrcoef(aod_coarse_star_l[fl_c_l],aod_coarse_goci_l[fl_c_l])[0,1]**2.0
+ax[1].plot(aod_coarse_star_l,aod_coarse_goci_l,'.',label='Land, R$^2$ = {:1.3f}'.format(rbinc_l),color='tab:orange')
+pu.plot_lin(aod_coarse_star_l,aod_coarse_goci_l,labels=True,shaded_ci=True,ci=95,ax=ax[1],color='tab:orange')
+
+ax[1].plot([0,0.8],[0,0.8],'--k',label='1:1')
+ax[1].legend(fontsize=lfont)
+ax[1].set_xlim(0,0.8)
+ax[1].set_ylim(0,0.8)
+ax[1].set_xlabel('4STAR coarse AOD averaged within GOCI pixel')
+ax[1].set_ylabel('GOCI coarse mode AOD')
+ax[1].set_title('KORUS-AQ Average Coarse mode AOD')
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.2)
+
+
+ax[2].hist(aod_fine_star[fl_f]-aod_fine_goci[fl_f],bins=50,normed=False,color='lightgrey')
+ax[2].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[2].axvline(np.nanmean(aod_fine_star[fl_f]-aod_fine_goci[fl_f]),ls='-',color='grey',alpha=0.6,lw=3,
+            label='All mean={:2.2f}'.format(np.nanmean(aod_fine_star[fl_f]-aod_fine_goci[fl_f])))
+ax[2].axvline(np.nanmedian(aod_fine_star[fl_f]-aod_fine_goci[fl_f]),ls='--',color='grey',alpha=0.6,lw=3,
+            label='All median={:2.2f}'.format(np.nanmedian(aod_fine_star[fl_f]-aod_fine_goci[fl_f])))
+
+ax[2].hist(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o],bins=50,normed=False,color='tab:blue',alpha=0.4)
+ax[2].axvline(np.nanmean(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o]),ls='-',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean mean={:2.2f}'.format(np.nanmean(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o])))
+ax[2].axvline(np.nanmedian(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o]),ls='--',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean median={:2.2f}'.format(np.nanmedian(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o])))
+
+ax[2].hist(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l],bins=50,normed=False,color='tab:orange',alpha=0.4)
+ax[2].axvline(np.nanmean(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l]),ls='-',color='tab:orange',alpha=0.6,lw=3,
+            label='Land mean={:2.2f}'.format(np.nanmean(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l])))
+ax[2].axvline(np.nanmedian(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l]),ls='--',color='tab:orange',alpha=0.6,lw=3,
+            label='Land median={:2.2f}'.format(np.nanmedian(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l])))
+ax[2].legend(fontsize=lfont)
+pu.sub_note('c)',ax=ax[2],out=True,dx=-0.2,dy=-0.1)
+
+ax[3].hist(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c],bins=50,normed=False,color='lightgrey')
+ax[3].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[3].axvline(np.nanmean(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c]),ls='-',color='grey',alpha=0.6,lw=3,
+            label='All mean={:2.2f}'.format(np.nanmean(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c])))
+ax[3].axvline(np.nanmedian(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c]),ls='--',color='grey',alpha=0.6,lw=3,
+            label='All median={:2.2f}'.format(np.nanmedian(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c])))
+ax[3].hist(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o],bins=50,normed=False,color='tab:blue',alpha=0.4)
+ax[3].axvline(np.nanmean(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o]),ls='-',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean, mean={:2.2f}'.format(np.nanmean(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o])))
+ax[3].axvline(np.nanmedian(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o]),ls='--',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean, median={:2.2f}'.format(np.nanmedian(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o])))
+ax[3].hist(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l],bins=50,normed=False,color='tab:orange',alpha=0.4)
+ax[3].axvline(np.nanmean(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l]),ls='-',color='tab:orange',alpha=0.6,lw=3,
+            label='Land, mean={:2.2f}'.format(np.nanmean(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l])))
+ax[3].axvline(np.nanmedian(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l]),ls='--',color='tab:orange',alpha=0.6,lw=3,
+            label='Land, median={:2.2f}'.format(np.nanmedian(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l])))
+ax[3].legend(fontsize=lfont)
+ax[2].set_xlabel('Fine AOD difference (4STAR-GOCI)')
+ax[2].set_ylabel('Counts')
+ax[3].set_xlabel('Coarse AOD difference (4STAR-GOCI)')
+pu.sub_note('d)',ax=ax[3],out=True,dx=-0.2,dy=-0.1)
+
+plt.tight_layout()
+
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_{}.eps'.format('v2'))
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_{}.pdf'.format('v2'))
 
 
 # ## Compare MERRA2 AOD to 4STAR
@@ -5205,7 +5487,7 @@ autocor_c.shape
 
 # ## Map out the level legs and numbers
 
-# In[341]:
+# In[155]:
 
 
 
@@ -5223,7 +5505,13 @@ def make_map(ax=plt.gca()):
     return m
 
 
-# In[303]:
+# In[ ]:
+
+
+plt.annotate()
+
+
+# In[184]:
 
 
 fig,ax = plt.subplots(1,1)
@@ -5231,8 +5519,18 @@ m = make_map(ax)
 m.plot(ar['Longitude'],ar['Latitude'],'.',markersize=0.2,color='tab:blue',latlon=True,label='All data')
 m.plot(ar['Longitude'][fl][f_level],ar['Latitude'][fl][f_level],'.',markersize=0.5,color='tab:red',latlon=True,label='level legs')
 #m.plot(s['Lon'][it],s['Lat'][it],'r+',latlon=True)
+xy_1 = m(123.9,35.5)
+plt.annotate('Yellow\n(Western) sea',xy_1,color='grey', ha='center')
+xy_2 = m(130.7,36.7)
+plt.annotate('Sea of Japan\n(East sea)',xy_2,color='grey', ha='center')
+xy_3 = m(127.01,37.5198)
+plt.annotate('Seoul',xy_3,color='k',ha='center',fontsize=12)
+plt.scatter(xy_3[0],xy_3[1],marker='+',color='k')
+xy_4 = m(127.038,37.085)
+plt.annotate('Osan',xy_4,color='k')
+plt.scatter(xy_4[0],xy_4[1],marker='+',color='k')
 plt.legend(markerscale=20)
-plt.savefig(fp+'plot/KORUS_map_QA.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_map_QA_{}.png'.format('v2'),dpi=600,transparent=True)
 
 
 # ## Plot the AOD histogram by met
