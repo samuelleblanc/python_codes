@@ -794,7 +794,7 @@ goci2ar.keys()
 goci2ar['doys'].astype(int)
 
 
-# In[35]:
+# In[216]:
 
 
 # for met times
@@ -5535,7 +5535,7 @@ plt.savefig(fp+'plot/KORUS_map_QA_{}.png'.format('v2'),dpi=600,transparent=True)
 
 # ## Plot the AOD histogram by met
 
-# In[36]:
+# In[232]:
 
 
 ar['fl_QA_met1'] = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1])
@@ -5601,22 +5601,56 @@ plt.tight_layout()
 plt.savefig(fp+'plot/AOD_line_hist_met_KORUS_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# ### Investigate the second mode of dynamic period
+
+# In[276]:
+
+
+met1_aodh = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1]) & (ar['AOD0501']>0.2) & np.isfinite(angs)
+met1_aodl = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1]) & (ar['AOD0501']<0.2) & np.isfinite(angs)
+met1_aod = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1]) & np.isfinite(angs)
+
+
+# In[245]:
+
+
+ars.shape
+
+
+# In[278]:
+
+
+ae = [linfit(np.log10(wvl[1:-4]),-np.log10(arsi[1:-4]))[0][0] for arsi in ars.T]
+
+
+# In[279]:
+
+
+ae = np.array(ae)
+
+
+# In[280]:
+
+
+np.nanmean(ae[met1_aodl]),np.nanmean(ae[met1_aodh]),np.nanmean(ae[met1_aod]),np.nanmedian(ae[met1_aodl]),np.nanmedian(ae[met1_aodh]),np.nanmedian(ae[met1_aod]) 
+
+
 # ## Plot the AOD spectra by met
 
-# In[31]:
+# In[229]:
 
 
 aod_names = sorted([a for a in ar.keys() if ('AOD' in a) and not ('UNC' in a)])
 
 
-# In[32]:
+# In[230]:
 
 
 wvl = np.array([380,452,501,520,532,550,606,620,675,781,865,1020,1040,1064,1236,1559,1627])
 wvl_bins = np.append(wvl[0]-10,wvl+10)
 
 
-# In[37]:
+# In[233]:
 
 
 ars = []
@@ -5636,7 +5670,7 @@ arsn = ars.reshape(ars.size)
 wvsn = wvs.reshape(wvs.size)
 
 
-# In[49]:
+# In[234]:
 
 
 ar['AOD0501'].shape
@@ -5951,7 +5985,7 @@ len(arsn[fls['fl_0.5']])/17.0, len(arsn[fls['fl_0.5_1']])/17.0,len(arsn[fls['fl_
 
 # # Spatial maps and time traces
 
-# In[318]:
+# In[189]:
 
 
 def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
@@ -5991,7 +6025,7 @@ def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
     return stat
 
 
-# In[319]:
+# In[190]:
 
 
 rg = [[32.5,38.5],[123.5,131.5]]
@@ -6000,7 +6034,7 @@ nbins = 18
 
 # ## Make a map of 4STAR AOD
 
-# In[346]:
+# In[193]:
 
 
 flalt = ar['fl'] & (ar['GPS_Alt']<1000.0)
@@ -6008,43 +6042,51 @@ astat_aod = stats_2d(ar['Latitude'],ar['Longitude'],ar['AOD0501'],fl=flalt,days=
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[347]:
+# In[204]:
+
+
+flalta = ar['fl'] & (ar['GPS_Alt']<1000.0) & np.isfinite(angs)
+astat_ae = stats_2d(ar['Latitude'],ar['Longitude'],angs,fl=flalta,days=ar['days'],
+                     bins=nbins,rg=rg,verbose=True)
+
+
+# In[194]:
 
 
 astat_aod.keys()
 
 
-# In[348]:
+# In[195]:
 
 
 iao = np.where((astat_aod['cnt'].data>0.0) & (astat_aod['std'].data<1.0))
 
 
-# In[349]:
+# In[196]:
 
 
 astat_aod['xm'][15]
 
 
-# In[350]:
+# In[197]:
 
 
 astat_aod['ym'][8]
 
 
-# In[351]:
+# In[198]:
 
 
 astat_aod['mean'][15,8] # for Seoul
 
 
-# In[352]:
+# In[199]:
 
 
 astat_aod['mean'][14,8] # for South of Seoul
 
 
-# In[353]:
+# In[200]:
 
 
 astat_aod['mean'][13,7] # for South of Incheon/Suwon
@@ -6085,6 +6127,34 @@ plt.tight_layout(pad=1.12,h_pad=1.8,w_pad=3.0,rect=(0.05,0,1,1))
 plt.savefig(fp+'plot/KORUS_4STAR_AOD_map_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[214]:
+
+
+np.corrcoef(astat_aod['cnt'].data[iao[0],iao[1]].flatten(),astat_aod['std'].data[iao[0],iao[1]].flatten())**2.0
+
+
+# In[215]:
+
+
+plt.figure()
+plt.plot(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['cnt'].data[iao[0],iao[1]].flatten(),'.')
+plt.ylabel('count')
+plt.xlabel('Std')
+pu.plot_lin(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['cnt'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
+plt.legend()
+
+
+# In[212]:
+
+
+plt.figure()
+plt.plot(astat_aod['cnt'].data[iao[0],iao[1]].flatten(),astat_aod['std'].data[iao[0],iao[1]].flatten(),'.')
+plt.xlabel('count')
+plt.ylabel('Std')
+pu.plot_lin(astat_aod['cnt'].data[iao[0],iao[1]].flatten(),astat_aod['std'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
+plt.legend()
+
+
 # ## Expand map to include MERRA-2
 
 # ### old style
@@ -6104,7 +6174,7 @@ mstat_aod = stats_2d(merra2ar['lat'],merra2ar['lon'],merra2ar['aod'],fl=flalt,da
 
 # ### From the interpolated MERRA-2
 
-# In[315]:
+# In[205]:
 
 
 merraint.keys()
