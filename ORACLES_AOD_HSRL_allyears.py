@@ -94,16 +94,70 @@ fp
 
 # ## Load the 2016 data
 
-# In[10]:
+# In[9]:
 
 
-fp6 = fp+'data_other/HSRL/'
+fp6 = fp+'data_other/HSRL/R8/'
 
 
-# In[7]:
+# In[29]:
 
 
 f6_hsrl = os.listdir(fp6)
+
+
+# In[30]:
+
+
+f6_hsrl
+
+
+# In[31]:
+
+
+hf = hs.h5py.File(fp6+f6_hsrl[0])
+
+
+# In[32]:
+
+
+hf.keys()
+
+
+# In[45]:
+
+
+hf['DataProducts']['cloud_top_height'].attrs.items()
+
+
+# In[46]:
+
+
+hf['DataProducts']['532_ext'].attrs.items()
+
+
+# In[40]:
+
+
+cldscr_532 = hf['DataProducts']['532_bsr_cloud_screened']
+
+
+# In[55]:
+
+
+cldscr_532.attrs.items()
+
+
+# In[14]:
+
+
+hf['DataProducts'].keys()
+
+
+# In[34]:
+
+
+hf
 
 
 # In[8]:
@@ -148,6 +202,13 @@ s6['s20160819'].keys()
 
 
 # ### Plot the results
+
+# In[54]:
+
+
+plt.figure()
+plt.plot(hf['DataProducts']['532_ext'][::50,:].T,hf['DataProducts']['Altitude'].value.T,'.')
+
 
 # In[278]:
 
