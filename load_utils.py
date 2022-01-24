@@ -160,8 +160,14 @@ def load_ict(fname,return_header=False,make_nan=True):
         sep = None
         num2skip = int(first.strip().split(sep)[0])
     header = lines[0:num2skip]
-    factor = list(map(float,header[10].strip().split(sep)))
-    missing = list(map(float,header[11].strip().split(sep)))
+    try:
+        factor = list(map(float,header[10].strip().split(sep)))
+    except ValueError: #for when there are comments on the line
+        factor = list(map(float,header[10].split(';')[0].strip().split(sep)))
+    try:
+        missing = list(map(float,header[11].strip().split(sep)))
+    except ValueError:
+        missing = list(map(float,header[11].split(';')[0].strip().split(sep)))
     f.close()
     if any([i!=1 for i in factor]):
         print('Some Scaling factors are not equal to one, Please check the factors:')
