@@ -40,10 +40,10 @@
 
 # # Prepare python environment
 
-# In[230]:
+# In[6]:
 
 
-nomap = True
+nomap = False
 import numpy as np
 import Sp_parameters as Sp
 import load_utils as lu
@@ -61,16 +61,16 @@ if not nomap:
     get_ipython().magic(u'matplotlib notebook')
 
 
-# In[232]:
+# In[2]:
 
 
 name = 'FOG2FIRE'
-vv = 'v2'
+vv = 'v3'
 fp = getpath(name)
 yy = '2020'
 
 
-# In[314]:
+# In[3]:
 
 
 import argparse
@@ -82,7 +82,7 @@ parser.add_argument('-f','--fires',help='if set, run the fires calcs',action='st
 parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
 
 
-# In[344]:
+# In[4]:
 
 
 in_ = vars(parser.parse_known_args(['-y','2020','-f'])[0])
@@ -91,7 +91,7 @@ run_fire = in_.get('fires',False)
 yy = in_.get('year').strip()
 
 
-# In[345]:
+# In[5]:
 
 
 print(in_)
@@ -99,7 +99,7 @@ print(in_)
 
 # # Plan out the regions
 
-# In[41]:
+# In[7]:
 
 
 if not nomap:
@@ -136,35 +136,47 @@ lbls = ['Socal Coast','Socal land','Central coast','Central Sierras',
         'Norcal coast','Northern Sierras','Oregon Coast','Oregon mountains']
 
 
-# In[49]:
+# In[31]:
 
 
 regions = {'ocean':[[[32.5,-131],[35.5,-121.5]],[[35.5,-131.0],[38.5,-123.5]], [[38.5,-131.0],[42.0,-125.0]],[[42.0,-131.0],[47.0,-125.0]]],
            'coast':[[[32.5,-121.5],[35.5,-117.0]],[[35.5,-123.5],[38.5,-120.8]], [[38.5,-125.0],[42.0,-122.0]],[[42.0,-125.0],[47.0,-122.0]]],
-           'land':[[[32.5,-117.0],[35.5,-114.0]],[[35.5,-120.8],[38.5,-115.0]],[[38.5,-122.0],[42.0,-118.0]],[[42.0,-122.0],[47.0,-115.0]]]
+           'land':[[[32.5,-117.0],[35.5,-114.0]],[[35.5,-120.8],[38.5,-115.0]],[[38.5,-122.0],[42.0,-118.0]],[[42.0,-122.0],[47.0,-115.0]]],
+           'points':[[[32.5,-117.22],[33.6,-116.7]],[[34.02,-118.18],[34.5,-116.63]],[[34.35,-120.7],[35.08,-118.7]],
+                     [[35.37,-121.97],[36.6,-120.69]],[[35.6,-120.01],[38.43,-118.23]],[[36.9,-122.56],[37.68,-121.56]],
+                     [[38.24,-121.25],[40.09,-119.92]],[[38.45,-123.98],[40.39,-122.23]],[[40.0,-122.57],[41.73,-120.37]],
+                     [[40.77,-124.0],[42.0,-122.54]],[[42.05,-124.51],[43.68,-123.10]],[[43.95,-122.92],[42.82,-120.82]],
+                     [[44.04,-124.15],[46.10,-122.92]],[[46.97,-124.87],[48.40,-122.58]],[[46.52,-122.69],[48.59,-120.65]]]
           }
 
 lbls_rg = {'ocean':['SoCal','Central','NorCal','Oregon'],
            'coast':['SoCal','Central','NorCal','Oregon'],
-           'land':['SoCal','Central Sierras','Northern Sierras','Oregon mountains']
+           'land':['SoCal','Central Sierras','Northern Sierras','Oregon mountains'],
+           'points':['San Diego','San Bernardino','Los Padres',
+                     'Big Sur','Sierra','Santa Cruz',
+                     'Eldorado','Mendocino','Lassen-Shasta',
+                     'Klamath','Rogue','Mt Hood',
+                     'Portland','Olympic','Mt. Baker-Rainier']
           }
-ls = {'ocean':':','coast':'-','land':'--'}
+ls = {'ocean':':','coast':'-','land':'--','points':'-.'}
 
 
-# In[56]:
+# In[32]:
 
 
 if not nomap:
-    fig, ax = plt.subplots(1,1)
-    m = make_map(ax)
+    fig, ax = plt.subplots(1,2,figsize=(9,4))
+    m = make_map(ax[0])
+    ax[0].set_prop_cycle(color=[plt.cm.gist_ncar(k) for k in np.linspace(0, 1, len(i_rg[0]))])
     for re in regions:
         for i,r in enumerate(regions[re]):
             m.plot([r[0][1],r[1][1],r[1][1],r[0][1],r[0][1]],[r[1][0],r[1][0],r[0][0],r[0][0],r[1][0]],
-                   latlon=True,label=re+'-'+lbls_rg[re][i],lw=4,ls=ls[re])
-    plt.legend(bbox_to_anchor=[1.0,0.7])
-    plt.tight_layout(rect=[0.1,-0.4,0.95,1.5])
+                   latlon=True,label=re+'-'+lbls_rg[re][i],lw=2,ls=ls[re])
+    ax[0].legend(bbox_to_anchor=[1.0,0.95],ncol=2,loc=2)
+    #plt.tight_layout(rect=[0.1,-0.4,0.95,1.5])
+    ax[1].set_visible(False)
 
-    plt.savefig(fp+'plots/Map_regions.png',dpi=400,transparent=True)
+    plt.savefig(fp+'plots/Map_regions_{}.png'.format(vv),dpi=400,transparent=True)
 
 
 # # Load files
