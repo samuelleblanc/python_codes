@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[3]:
+# In[2]:
 
 
 import numpy as np
@@ -56,7 +56,7 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[13]:
+# In[3]:
 
 
 name = 'KFire'
@@ -420,7 +420,7 @@ hdf2['PixelLongitude'][xup]
 # For fires at 800°C, 1073K, peak wavelength is 2700 nm  
 # For a peak wavelength of 2100 nm, temperature should be 1379K -> which is right in the ballpark for forest fire temperatures
 
-# In[152]:
+# In[4]:
 
 
 h = 6.626e-34
@@ -434,20 +434,23 @@ def planck(wav, T):
     return intensity
 
 
-# In[153]:
+# In[7]:
 
 
 wavelengths = np.arange(1e-9, 3e-6, 1e-9) 
 intensity2100 = planck(wavelengths, 2100.)
 intensity2700 = planck(wavelengths, 2700.)
+intensity1200 = planck(wavelengths, 1200.)
 
 
-# In[157]:
+# In[12]:
 
 
 plt.figure()
-plt.plot(wavelengths,intensity2100,'.b',label='2100 nm')
-plt.plot(wavelengths,intensity2700,'.r',label='2700 nm')
+plt.plot(wavelengths,intensity2100,'.b',label='2100 K')
+plt.plot(wavelengths,intensity2700,'.r',label='2700 K')
+plt.plot(wavelengths,intensity1200,'.g',label='1200 K')
+#plt.yscale('log')
 plt.legend(frameon=False)
 plt.grid()
 plt.xlabel('Wavelength [m]')
