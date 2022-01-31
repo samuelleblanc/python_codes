@@ -23,8 +23,6 @@
 #     - load_utils.py
 #     - matplotlib
 #     - numpy
-#     - Sp_parameters
-#     - write_utils
 #     - path_utils
 #     - hdf5storage
 #     - scipy
@@ -45,9 +43,7 @@
 
 
 import numpy as np
-import Sp_parameters as Sp
 import load_utils as lu
-import write_utils as wu
 from path_utils import getpath
 import hdf5storage as hs
 import scipy.io as sio
@@ -160,6 +156,30 @@ nav['Time'][ifl]/3600.0
 
 
 time = [nav['Time'][ifl[0]]/3600.0,nav['Time'][ifl[-1]]/3600.0]
+
+
+# ## Plot out the altitude
+
+# In[208]:
+
+
+plt.figure()
+plt.plot(nav['Time']/3600.0,nav['GPS_ALT'],'.')
+plt.axvspan(time[0],time[1],alpha=0.4,color='grey',label='Spiral')
+plt.xlabel('Time [h]')
+plt.ylabel('Altitude [feet]')
+
+
+# In[214]:
+
+
+plt.figure()
+plt.plot(nav['Time']/3600.0,nav['FMS_LAT'],'.')
+plt.axvspan(time[0],time[1],alpha=0.4,color='grey',label='Spiral')
+plt.xlabel('time [h]')
+plt.ylabel('Latitude [$^\circ$]')
+plt.xlim(18.3,19.1)
+plt.ylim(79.0,80.25)
 
 
 # ## Load CAR
