@@ -70,7 +70,7 @@ fp = getpath(name)
 yy = '2020'
 
 
-# In[3]:
+# In[34]:
 
 
 import argparse
@@ -83,17 +83,17 @@ parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
 parser.add_argument('-m','--modis',nargs='?',help='MYD or MOD for Terra or Aqua',default='MOD')
 
 
-# In[4]:
+# In[35]:
 
 
-in_ = vars(parser.parse_known_args(['-y','2020','-f'])[0])
+in_ = vars(parser.parse_known_args()[0])
 run_cloud = in_.get('cloud',False)
 run_fire = in_.get('fires',False)
 yy = in_.get('year').strip()
 modis = in_.get('modis').strip()
 
 
-# In[5]:
+# In[36]:
 
 
 print(in_)
