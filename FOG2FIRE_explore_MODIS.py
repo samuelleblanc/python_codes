@@ -40,10 +40,10 @@
 
 # # Prepare python environment
 
-# In[6]:
+# In[33]:
 
 
-nomap = False
+nomap = True
 import numpy as np
 import Sp_parameters as Sp
 import load_utils as lu
@@ -80,6 +80,7 @@ parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('-c','--cloud',help='if set, calc the cloud',action='store_true')
 parser.add_argument('-f','--fires',help='if set, run the fires calcs',action='store_true')
 parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
+parser.add_argument('-m','--modis',nargs='?',help='MYD or MOD for Terra or Aqua',default='MOD')
 
 
 # In[4]:
@@ -89,6 +90,7 @@ in_ = vars(parser.parse_known_args(['-y','2020','-f'])[0])
 run_cloud = in_.get('cloud',False)
 run_fire = in_.get('fires',False)
 yy = in_.get('year').strip()
+modis = in_.get('modis').strip()
 
 
 # In[5]:
@@ -96,6 +98,9 @@ yy = in_.get('year').strip()
 
 print(in_)
 
+
+# Web link to download the MODIS cloud files  
+# https://ladsweb.modaps.eosdis.nasa.gov/search/order/3/MOD06_L2--61/2004-01-01..2004-12-31/D/-125,47,-115,32.5
 
 # # Plan out the regions
 
@@ -188,7 +193,7 @@ if not nomap:
 
 if run_cloud:
     print('listdir')
-    lc_all = os.listdir(fp+'MYD06/')
+    lc_all = os.listdir(fp+'{}06/{}/'.format(modis,yy))
     lc = [o for o in lc_all if 'A'+yy in o]
     lc.sort()
     nfiles = len(lc)
@@ -207,7 +212,7 @@ if run_cloud:
         if not l.endswith('hdf'): continue
         print('loading file: {}/{}, {}'.format(i,nfiles,l))
         try:
-            cld,cld_dict = lu.load_hdf(fp+'MYD06/'+l,values=vals,verbose=False)
+            cld,cld_dict = lu.load_hdf(fp+'{}06/{}/'.format(modis,yy)+l,values=vals,verbose=False)
             cld['surf_temp'] = (cld['surf_temp']+15000)*0.00999999977648258
             clds.append(cld)
         except:
