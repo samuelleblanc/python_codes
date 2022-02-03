@@ -619,6 +619,107 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
 # In[ ]:
 
 
+def load_hdf_withsub(datfile,values=None,verbose=True):
+    """
+    Name:
+
+        load_hdf_withsub
+    
+    Purpose:
+
+        Specialized hdf loading function when you already have the names of the subdatasets
+    
+    Calling Sequence:
+
+        hdf_dat,hdf_dict = load_hdf_withsub(datfile,Values=None,verbose=True) 
+    
+    Input: 
+  
+        datfile name (hdf files)
+        values: needs to be a tuple of 2 element tuples (first element name of variable, second name of subdata record)
+                replace the sudata record name datfile with {}
+                example: modis_values=(('CF','HDF4_SDS:UNKNOWN:"{}":36'),
+                                       ('lat','HDF4_SDS:UNKNOWN:"{}":0'))
+                                       
+    Output:
+
+        hdf_dat dictionary with the names of values saved, with associated dictionary values
+        hdf_dicts : metadata for each of the variables
+    
+    Keywords: 
+    
+        verbose: if true (default), then everything is printed. if false, nothing is printed
+    
+    Dependencies:
+
+        gdal
+        numpy
+        gc: for clearing the garbage
+    
+    Required files:
+   
+        dat files
+    
+    Example:
+
+        ...
+        
+    Modification History:
+    
+        Written (v1.0): Samuel LeBlanc, 2022-02-20, Santa Cruz, CA
+                        - based on load_hdf. Modified for use with gdal 3.3
+                        
+    """
+    import numpy as np
+    from osgeo import gdal  
+    
+    hdf = dict()
+    hdf_dicts = dict()
+    if verbose:
+        print('Running through data values')
+    for i,j in values:
+        sds = gdal.Open(j.format(datfile))
+        hdf_dicts[i] = sds.GetMetadata()
+        hdf[i] = np.array(sds.ReadAsArray())
+        if not hdf[i].any():
+            import pdb; pdb.set_trace()
+        try:
+            bad_points = np.where(hdf[i] == float(hdf_dicts[i]['_FillValue']))
+            makenan = True
+        except KeyError:
+            makenan = False
+        except ValueError:
+            makenan = False
+            print('*** FillValue not used to replace NANs, will have to do manually ***')
+        try:
+            scale = float(hdf_dicts[i]['scale_factor'])
+            offset = float(hdf_dicts[i]['add_offset'])
+            # print 'MODIS array: %s, type: %s' % (i, modis[i].dtype)
+            if scale.is_integer():
+               scale = int(scale)
+               makenan = False
+            if scale != 1 and offset == 0:
+               hdf[i] = hdf[i]*scale+offset
+        except:
+            if issubclass(hdf[i].dtype.type, np.integer):
+                makenan = False
+        if makenan:
+            try:
+                hdf[i][bad_points] = np.nan
+            except ValueError:
+                print('*** Can not replace NaN into variable: {}, for the bad points {} ***'.format(i,bad_points))
+                
+        if verbose:
+            print('{}'.format(float(tuple(i[0] for i in values).index(i))/len(values)*100.))
+    if verbose:
+        print(list(hdf.keys()))
+    del sds
+    return hdf,hdf_dicts
+
+
+# In[ ]:
+
+
 def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
     """
     Name:
