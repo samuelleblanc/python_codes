@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[33]:
+# In[37]:
 
 
 nomap = True
@@ -61,7 +61,7 @@ if not nomap:
     get_ipython().magic(u'matplotlib notebook')
 
 
-# In[2]:
+# In[38]:
 
 
 name = 'FOG2FIRE'
@@ -70,7 +70,7 @@ fp = getpath(name)
 yy = '2020'
 
 
-# In[34]:
+# In[39]:
 
 
 import argparse
@@ -83,7 +83,7 @@ parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
 parser.add_argument('-m','--modis',nargs='?',help='MYD or MOD for Terra or Aqua',default='MOD')
 
 
-# In[35]:
+# In[40]:
 
 
 in_ = vars(parser.parse_known_args()[0])
@@ -93,7 +93,7 @@ yy = in_.get('year').strip()
 modis = in_.get('modis').strip()
 
 
-# In[36]:
+# In[41]:
 
 
 print(in_)
@@ -101,6 +101,16 @@ print(in_)
 
 # Web link to download the MODIS cloud files  
 # https://ladsweb.modaps.eosdis.nasa.gov/search/order/3/MOD06_L2--61/2004-01-01..2004-12-31/D/-125,47,-115,32.5
+
+# In[92]:
+
+
+from osgeo import gdal
+if gdal.__version__ > '3.2':
+    load_special = True
+else:
+    load_special = False
+
 
 # # Plan out the regions
 
@@ -125,7 +135,7 @@ if not nomap:
     make_map()
 
 
-# In[43]:
+# In[42]:
 
 
 rgs = [[[32.5,-121.5],[35.5,-117.0]],
@@ -141,7 +151,7 @@ lbls = ['Socal Coast','Socal land','Central coast','Central Sierras',
         'Norcal coast','Northern Sierras','Oregon Coast','Oregon mountains']
 
 
-# In[31]:
+# In[43]:
 
 
 regions = {'ocean':[[[32.5,-131],[35.5,-121.5]],[[35.5,-131.0],[38.5,-123.5]], [[38.5,-131.0],[42.0,-125.0]],[[42.0,-131.0],[47.0,-125.0]]],
@@ -188,7 +198,7 @@ if not nomap:
 
 # ## Load the Cloud files
 
-# In[62]:
+# In[107]:
 
 
 if run_cloud:
@@ -198,11 +208,38 @@ if run_cloud:
     lc.sort()
     nfiles = len(lc)
     ifile = 0
-    vals = (('CF',160),('CF_night',162),('CF_day',164),('cld_top',143),('scan_time',126),
-            ('sza',127),('surf_temp',140),('lat',124),('lon',125),('QA',235),('cld_mask',234))
+    
+    if load_special:
+        vals = (('CF','HDF4_SDS:UNKNOWN:"{}":36'),
+             ('CF_night','HDF4_SDS:UNKNOWN:"{}":38'),
+             ('CF_day','HDF4_SDS:UNKNOWN:"{}":40'),
+             ('cld_top','HDF4_SDS:UNKNOWN:"{}":19'),
+             ('scan_time','HDF4_SDS:UNKNOWN:"{}":2'),
+             ('sza','HDF4_SDS:UNKNOWN:"{}":3'),
+             ('surf_temp','HDF4_SDS:UNKNOWN:"{}":16'),
+             ('lat','HDF4_SDS:UNKNOWN:"{}":0'),
+             ('lon','HDF4_SDS:UNKNOWN:"{}":1'),
+             ('QA','HDF4_SDS:UNKNOWN:"{}":111'),
+             ('cld_mask','HDF4_SDS:UNKNOWN:"{}":110'))
+    else:
+        vals = (('CF',160),('CF_night',162),('CF_day',164),('cld_top',143),('scan_time',126),
+                ('sza',127),('surf_temp',140),('lat',124),('lon',125),('QA',235),('cld_mask',234))
 
 
-# In[136]:
+# In[103]:
+
+
+load_special = True
+
+
+# In[110]:
+
+
+import imp
+imp.reload(lu)
+
+
+# In[96]:
 
 
 if run_cloud:
@@ -212,18 +249,14 @@ if run_cloud:
         if not l.endswith('hdf'): continue
         print('loading file: {}/{}, {}'.format(i,nfiles,l))
         try:
-            cld,cld_dict = lu.load_hdf(fp+'{}06/{}/'.format(modis,yy)+l,values=vals,verbose=False)
+            if load_special:
+                cld,cld_dict = lu.load_hdf_withsub(fp+'{}06/{}/'.format(modis,yy)+l,values=vals,verbose=False)
+            else:
+                cld,cld_dict = lu.load_hdf(fp+'{}06/{}/'.format(modis,yy)+l,values=vals,verbose=False)
             cld['surf_temp'] = (cld['surf_temp']+15000)*0.00999999977648258
             clds.append(cld)
         except:
             pass
-
-
-# In[73]:
-
-
-if run_cloud:
-    cld_dict['CF']
 
 
 # In[80]:
