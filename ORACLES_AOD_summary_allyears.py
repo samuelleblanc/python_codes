@@ -319,6 +319,214 @@ hsrl = hs.loadmat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears.mat')
 hsrl.keys()
 
 
+# # Calculate the relationship between AOD 550 nm and others
+
+# For Kerry Meyer, 
+# 
+# From email (Jan 20, 2020):" calculate spectral AOD at the channels I use (0.47, 0.55, 0.67, 0.86, 1.24, 2.1µm). "
+
+# ## Save for 2016
+
+# In[62]:
+
+
+kma6 = dict()
+
+
+# In[63]:
+
+
+kma6[u'AOD0470_rel'] = ar6['AOD0470'][ar6['flac']]/ar6['AOD0550'][ar6['flac']]
+kma6[u'AOD0550_abs'] = ar6['AOD0550'][ar6['flac']]
+kma6[u'AOD0675_rel'] = ar6['AOD0675'][ar6['flac']]/ar6['AOD0550'][ar6['flac']]
+kma6[u'AOD0865_rel'] = ar6['AOD0865'][ar6['flac']]/ar6['AOD0550'][ar6['flac']]
+kma6[u'AOD1236_rel'] = ar6['AOD1236'][ar6['flac']]/ar6['AOD0550'][ar6['flac']]
+
+
+# In[64]:
+
+
+len(kma6['AOD0470_rel'])
+
+
+# In[65]:
+
+
+kma6[u'lat'] = ar6['Latitude'][ar6['flac']]
+kma6[u'lon'] = ar6['Longitude'][ar6['flac']]
+kma6[u'alt'] = ar6['GPS_Alt'][ar6['flac']]
+
+
+# In[59]:
+
+
+days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
+       '20160910','20160912','20160914','20160918','20160920','20160924','20160925','20160927','20160930']
+ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
+ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
+                          int((ar6['Start_UTC'][i]-float(int(ar6['Start_UTC'][i])))*60)) for i,d in enumerate(ar6['daysd'])]
+ar6['ndtimes'] = np.array(ar6['ndtime'])
+
+
+# In[66]:
+
+
+kma6[u'doy'] = np.array([ad.timetuple().tm_yday+(ad.hour+(ad.minute+ad.second/60.0)/60.0)/24.0 for ad in ar6['ndtimes'][ar6['flac']]])
+
+
+# In[67]:
+
+
+kma6.keys()
+
+
+# In[74]:
+
+
+kma6[u'details'] = '''
+This is a combined product from all 4STAR 2016 ORACLES. The AOD are quality flagged, and only for the above cloud ACAOD. 
+Based on the R3 ict files.
+AODXXXX_rel - represent the ratio of AOD of the wavelength XXXX (in nm) to the AOD 550 nm
+AOD0550_abs - the absolute value of AOD
+lon - Longitude
+lat - Latitude
+alt - GPS Altitude (meters)
+doy - fractional day
+
+Produced by Samuel LeBlanc on {}
+'''.format(datetime.now())
+
+
+# In[75]:
+
+
+hs.savemat(fp+'ORACLES2016_4STAR_ACAOD_relative_to_550.mat',kma6)
+
+
+# ## Save for 2017
+
+# In[76]:
+
+
+kma7 = dict()
+kma7[u'AOD0470_rel'] = ar7['AOD0470'][ar7['flac']]/ar7['AOD0550'][ar7['flac']]
+kma7[u'AOD0550_abs'] = ar7['AOD0550'][ar7['flac']]
+kma7[u'AOD0675_rel'] = ar7['AOD0675'][ar7['flac']]/ar7['AOD0550'][ar7['flac']]
+kma7[u'AOD0865_rel'] = ar7['AOD0865'][ar7['flac']]/ar7['AOD0550'][ar7['flac']]
+kma7[u'AOD1236_rel'] = ar7['AOD1236'][ar7['flac']]/ar7['AOD0550'][ar7['flac']]
+kma7[u'lat'] = ar7['Latitude'][ar7['flac']]
+kma7[u'lon'] = ar7['Longitude'][ar7['flac']]
+kma7[u'alt'] = ar7['GPS_Alt'][ar7['flac']]
+
+
+# In[77]:
+
+
+days7 = ['20170801','20170802','20170807','20170809', '20170812','20170813','20170815','20170817','20170818','20170819','20170821',
+        '20170824','20170826','20170828','20170830','20170831','20170902','20170903','20170904']
+ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
+ar7['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar7['Start_UTC'][i]),
+                          int((ar7['Start_UTC'][i]-float(int(ar7['Start_UTC'][i])))*60)) for i,d in enumerate(ar7['daysd'])]
+ar7['ndtimes'] = np.array(ar7['ndtime'])
+
+
+# In[78]:
+
+
+kma7[u'doy'] = np.array([ad.timetuple().tm_yday+(ad.hour+(ad.minute+ad.second/60.0)/60.0)/24.0 for ad in ar7['ndtimes'][ar7['flac']]])
+
+
+# In[90]:
+
+
+kma7[u'details'] = '''
+This is a combined product from all 4STAR 2017 ORACLES. The AOD are quality flagged, and only for the above cloud ACAOD. 
+Based on the R1 ict files.
+AODXXXX_rel - represent the ratio of AOD of the wavelength XXXX (in nm) to the AOD 550 nm
+AOD0550_abs - the absolute value of AOD
+lon - Longitude
+lat - Latitude
+alt - GPS Altitude (meters)
+doy - fractional day
+
+Produced by Samuel LeBlanc on {}
+'''.format(datetime.now())
+
+
+# In[91]:
+
+
+kma7.keys()
+
+
+# In[92]:
+
+
+hs.savemat(fp+'ORACLES2017_4STAR_ACAOD_relative_to_550.mat',kma7)
+
+
+# ## Save for 2018
+
+# In[84]:
+
+
+kma8 = dict()
+kma8[u'AOD0470_rel'] = ar8['AOD0470'][ar8['flac']]/ar8['AOD0550'][ar8['flac']]
+kma8[u'AOD0550_abs'] = ar8['AOD0550'][ar8['flac']]
+kma8[u'AOD0675_rel'] = ar8['AOD0675'][ar8['flac']]/ar8['AOD0550'][ar8['flac']]
+kma8[u'AOD0865_rel'] = ar8['AOD0865'][ar8['flac']]/ar8['AOD0550'][ar8['flac']]
+kma8[u'AOD1236_rel'] = ar8['AOD1236'][ar8['flac']]/ar8['AOD0550'][ar8['flac']]
+kma8[u'lat'] = ar8['Latitude'][ar8['flac']]
+kma8[u'lon'] = ar8['Longitude'][ar8['flac']]
+kma8[u'alt'] = ar8['GPS_Alt'][ar8['flac']]
+
+
+# In[85]:
+
+
+days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','20181003','20181005','20181007','20181010','20181012',
+        '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
+ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
+ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC'][i]),
+                          int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
+ar8['ndtimes'] = np.array(ar8['ndtime'])
+
+
+# In[86]:
+
+
+kma8[u'doy'] = np.array([ad.timetuple().tm_yday+(ad.hour+(ad.minute+ad.second/60.0)/60.0)/24.0 for ad in ar8['ndtimes'][ar8['flac']]])
+
+
+# In[87]:
+
+
+kma8[u'details'] = '''
+This is a combined product from all 4STAR 2018 ORACLES. The AOD are quality flagged, and only for the above cloud ACAOD. 
+Based on the R1 ict files.
+AODXXXX_rel - represent the ratio of AOD of the wavelength XXXX (in nm) to the AOD 550 nm
+AOD0550_abs - the absolute value of AOD
+lon - Longitude
+lat - Latitude
+alt - GPS Altitude (meters)
+doy - fractional day
+
+Produced by Samuel LeBlanc on {}
+'''.format(datetime.now())
+
+
+# In[88]:
+
+
+kma8.keys()
+
+
+# In[89]:
+
+
+hs.savemat(fp+'ORACLES2018_4STAR_ACAOD_relative_to_550.mat',kma8)
+
+
 # # Now plot the data together
 
 # In[25]:
