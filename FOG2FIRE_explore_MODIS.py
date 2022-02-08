@@ -5,10 +5,15 @@
 # Purpose:
 # 
 #     Explore some MODIS cloud fraction and subsequent fire counts
+#     Adding of SMAP moisture content
+#       
+#     This program is to be run on folders of data downloaded (hdf) of MODIS cloud fraction, fire counts, and SMAP moisture
+#     It compiles the regional trends, and saves as .npy file format for further processing (for example      
+#     FOG2FIRE_cloud_fire_relationship).
 # 
 # Input:
 # 
-#     None
+#     see argument list for running in command line directly
 # 
 # Output:
 # 
@@ -26,16 +31,18 @@
 #     - Sp_parameters
 #     - write_utils
 #     - path_utils
-#     - hdf5storage
 #     - scipy
 # 
 # Needed Files:
 #   - MYD06 and MYD14 hdf files
-# 
+#   - MOD06 files (for updated version)
+#   - SMAP_L2_SM_SP h5 files
+#   
 # Modification History:
 # 
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2021-05-11
-#     Modified:
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2022-02-08
+#             - adding SMAP moisture content compilation
 # 
 
 # # Prepare python environment
@@ -49,7 +56,6 @@ import Sp_parameters as Sp
 import load_utils as lu
 import write_utils as wu
 from path_utils import getpath
-import hdf5storage as hs
 import scipy.io as sio
 import matplotlib.pyplot as plt
 
