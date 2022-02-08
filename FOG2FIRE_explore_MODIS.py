@@ -70,7 +70,7 @@ fp = getpath(name)
 yy = '2020'
 
 
-# In[39]:
+# In[116]:
 
 
 import argparse
@@ -79,21 +79,23 @@ long_description = """    Quantify the cloud fraction and or the number of fire 
 parser = argparse.ArgumentParser(description=long_description)
 parser.add_argument('-c','--cloud',help='if set, calc the cloud',action='store_true')
 parser.add_argument('-f','--fires',help='if set, run the fires calcs',action='store_true')
+parser.add_argument('-s','--smap',help='if set, run the smap soil moisture calcs',action='store_true')
 parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
 parser.add_argument('-m','--modis',nargs='?',help='MYD or MOD for Terra or Aqua',default='MOD')
 
 
-# In[40]:
+# In[123]:
 
 
 in_ = vars(parser.parse_known_args()[0])
 run_cloud = in_.get('cloud',False)
 run_fire = in_.get('fires',False)
+run_smap = in_.get('smap',False)
 yy = in_.get('year').strip()
 modis = in_.get('modis').strip()
 
 
-# In[41]:
+# In[124]:
 
 
 print(in_)
@@ -102,7 +104,7 @@ print(in_)
 # Web link to download the MODIS cloud files  
 # https://ladsweb.modaps.eosdis.nasa.gov/search/order/3/MOD06_L2--61/2004-01-01..2004-12-31/D/-125,47,-115,32.5
 
-# In[92]:
+# In[119]:
 
 
 from osgeo import gdal
@@ -135,7 +137,7 @@ if not nomap:
     make_map()
 
 
-# In[42]:
+# In[120]:
 
 
 rgs = [[[32.5,-121.5],[35.5,-117.0]],
@@ -151,7 +153,7 @@ lbls = ['Socal Coast','Socal land','Central coast','Central Sierras',
         'Norcal coast','Northern Sierras','Oregon Coast','Oregon mountains']
 
 
-# In[43]:
+# In[121]:
 
 
 regions = {'ocean':[[[32.5,-131],[35.5,-121.5]],[[35.5,-131.0],[38.5,-123.5]], [[38.5,-131.0],[42.0,-125.0]],[[42.0,-131.0],[47.0,-125.0]]],
@@ -226,19 +228,6 @@ if run_cloud:
                 ('sza',127),('surf_temp',140),('lat',124),('lon',125),('QA',235),('cld_mask',234))
 
 
-# In[103]:
-
-
-load_special = True
-
-
-# In[110]:
-
-
-import imp
-imp.reload(lu)
-
-
 # In[96]:
 
 
@@ -308,6 +297,45 @@ if run_fire:
     fires
 
 
+# ## Load the SMAP soil moisture files
+
+# Loading files from SMAP:  
+# https://nsidc.org/data/SPL2SMP/versions/8
+# 
+# Chan, S., R. Bindlish, P. E. O'Neill, E. G. Njoku, T. Jackson, A. Colliander, F. Chen, M. Burgin, S. Dunbar, J. R. Piepmeier, S. Yueh, D. Entekhabi, M. Cosh, T. Caldwell, J. Walker, A. Berg, T. Rowlandson, A. Pacheco, H. McNairn, M. Thibeault, J. Martinez-Fernandez, A. González-Zamora, D. Bosch, P. Starks, D. Goodrich, J. Prueger, M. Palecki, E. E. Small, M. Zreda, J. Calvet, W. T. Crow, and Y. Kerr. 2016. Assessment of the SMAP passive soil moisture product, IEEE Transactions on Geoscience and Remote Sensing. 54. 4994–5007. https://doi.org/10.1109/TGRS.2016.2561938
+#   
+# and   
+#   
+# O'Neill, P. E., S. Chan, E. G. Njoku, T. Jackson, R. Bindlish, and J. Chaubell. 2021. SMAP L2 Radiometer Half-Orbit 36 km EASE-Grid Soil Moisture, Version 8. [Indicate subset used]. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. doi: https://doi.org/10.5067/LPJ8F0TAK6E0. [Accessed 2022-02-08]. (SMAP_L2_SM_P_36065_D)
+
+# In[161]:
+
+
+print('listdir')
+lc_all = os.listdir(fp+'SMAP/{}/'.format(yy))
+lc = [o for o in lc_all if (yy in o) and (o.endswith('h5'))]
+lc.sort()
+nfiles = len(lc)
+ifile = 0
+
+
+# In[162]:
+
+
+if run_smap:
+    vals = (('lat',20),('lon',22),('QA',24),('soil_moist',32),('veg_wat',48),('time',36))
+    smaps = []
+    smaps_time = []
+    print('loading of smap files : {}'.format(nfiles))
+    for i,l in enumerate(lc):
+        print('loading file: {}/{}, {}'.format(i,nfiles,l))
+        sma,sma_dict = lu.load_hdf(fp+'SMAP/{}/'.format(yy)+l,verbose=False,values=vals,i_subdata=0)
+        sma['soil_moist'][sma['soil_moist']<-9990.0] = np.nan
+        smaps_time.append(datetime(2000,1,1)+timedelta(seconds=sma['time'][0,0]))
+        smaps.append(sma)
+    smaps_time = np.array(smaps_time)
+
+
 # ## Define stats and get from regions
 
 # In[154]:
@@ -320,7 +348,7 @@ if run_cloud:
     time = np.array(time)
 
 
-# In[349]:
+# In[163]:
 
 
 def stats(lon,lat,data,rg):
@@ -428,18 +456,39 @@ if run_fire:
                 fire_counts[re]['mean'][ifile,i],fire_counts[re]['median'][ifile,i],                fire_counts[re]['std'][ifile,i],fire_counts[re]['num'][ifile,i] =                   stats(fires[ifile]['FP_longitude'],fires[ifile]['FP_latitude'],fires[ifile]['FP_power'],r)
 
 
+# ## Define stats for SMAP
+
+# In[165]:
+
+
+if run_smap:
+    print('doing SMAP soil moisture')
+    soil_moist = {}
+    for re in regions:
+        nre = len(regions[re])
+        soil_moist[re] = {u'mean':np.zeros((nfiles,nre))+np.nan,
+                  u'median':np.zeros((nfiles,nre))+np.nan,
+                  u'std':np.zeros((nfiles,nre))+np.nan,
+                  u'num':np.zeros((nfiles,nre))+np.nan}
+        for i,r in enumerate(regions[re]):
+            for ifile in range(nfiles):
+                soil_moist[re]['mean'][ifile,i],soil_moist[re]['median'][ifile,i],                soil_moist[re]['std'][ifile,i],soil_moist[re]['num'][ifile,i] =                   stats(smaps[ifile]['lon'],smaps[ifile]['lat'],smaps[ifile]['soil_moist'],r)
+
+
 # # Prep for saving
 
-# In[351]:
+# In[166]:
 
 
 if run_cloud:
     data = {'CF':cf,'surf_temp':surf_temp,'sza':sza,'cld_top':cld_top,'time':time,'regions':regions,'lbls_rg':lbls_rg}
 if run_fire:
     data = {'FP':fire_counts,'time':time_fires,'regions':regions,'lbls_rg':lbls_rg}
+if run_smap:
+    data = {'SM':soil_moist,'time':smaps_time,'regions':regions,'lbls_rg':lbls_rg}
 
 
-# In[352]:
+# In[167]:
 
 
 import write_utils as wu
@@ -449,8 +498,9 @@ data = wu.iterate_dict_unicode(data)
 # In[354]:
 
 
-if run_cloud: fsuff = 'MYD06'
+if run_cloud: fsuff = '{}06'.format(modis)
 if run_fire: fsuff = 'MYD14' 
+if run_smap: fsuff = 'SMAP'
 print('Saving file to '+fp+'{}_{}_{}.npy'.format(fsuff,yy,vv))
 np.save(fp+'{}_{}_{}.npy'.format(fsuff,yy,vv),data,allow_pickle=True)
 
