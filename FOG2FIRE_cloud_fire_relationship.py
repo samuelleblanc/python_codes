@@ -80,16 +80,16 @@ f.sort()
 f
 
 
-# In[39]:
+# In[171]:
 
 
 years = ['2002','2003','2004','2005','2006','2007','2008','2009',
-         '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
+         '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021']
 
 
 # ## Load the clouds
 
-# In[41]:
+# In[172]:
 
 
 cld = []
@@ -102,7 +102,7 @@ for y in years:
     cld.append(c)
 
 
-# In[42]:
+# In[173]:
 
 
 cld[1].keys()
@@ -131,7 +131,7 @@ fir[1].keys()
 
 # ## Load the soil moisture
 
-# In[115]:
+# In[183]:
 
 
 sma = []
@@ -397,7 +397,7 @@ cld[i]['time'][0].minute
 
 # ## Plot out the CF time series
 
-# In[47]:
+# In[175]:
 
 
 for j in range(4):
@@ -409,7 +409,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[134]:
+# In[176]:
 
 
 cld[i]['lbls_rg']
@@ -417,7 +417,7 @@ cld[i]['lbls_rg']
 
 # ### Compare singular cloud fraction and soil moisture for particular regions
 
-# In[166]:
+# In[184]:
 
 
 plt.figure()
@@ -432,7 +432,7 @@ plt.plot([0],[0],'+',label='Soil Moisture',c='tab:blue')
 ax = plt.gca()
 axx = plt.gca().twinx()
 axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+',label='Soil Moisture',c='tab:blue')
-for i in [15,16,17]:
+for i in [14,15,16,17,18,19]:
     doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
     doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
     ax.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label=years[i])
@@ -450,7 +450,19 @@ ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
 plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
 
 
-# In[169]:
+# In[181]:
+
+
+years[i]
+
+
+# In[182]:
+
+
+sma[i]
+
+
+# In[185]:
 
 
 plt.figure()
@@ -465,7 +477,7 @@ plt.plot([0],[0],'+',label='Soil Moisture',c='tab:blue')
 ax = plt.gca()
 axx = plt.gca().twinx()
 axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+',label='Soil Moisture',c='tab:blue')
-for i in [15,16,17]:
+for i in [14,15,16,17,18,19]:
     doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
     doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
     ax.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label=years[i])
@@ -482,6 +494,16 @@ ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
 
 plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019_zoom.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
 
+
+# For analysis of the soil miosture compared to cloud fraction. 
+# Sent to Emma Yates, Laura Iraci, Ju-Mee Rui on 2022-02-07  
+# 
+# 
+# Hi, 
+#   
+# I decided to take a look at possible connections between the cloud fraction on the west coast and the soil moisture. I wanted to see if that could be applicable to help forecast in the subseasonal scales. I used the MODIS Terra (10:30 am) cloud fraction, and the SMAP Soil Moisture (from the passive Radiometer). I looked at various regions in the west coast, but unlike what I expected, there seems to be an inverse correlation between the cumulative difference in mean cloud fraction and the soil moisture. See attached here for 3 years of regionally averaged daily values (one for the los padres forest, and another for the general Northern California coast - north of San Fran) . It's a bit messy, but I think that goes against my idea of applying to the A.50 call, with a reimagination of my previous FOG2FIRE proposal.  
+#   
+# I'm not exactly sure what is happening here and why a disappearance of clouds lead to more soil moisture (mostly at the surface), but it looks like the seasonal features are the strongest.   
 
 # ### Compare multiple regions cloud fraction and fire counts
 
