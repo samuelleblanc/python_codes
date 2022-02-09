@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[32]:
 
 
 import numpy as np
@@ -56,23 +56,23 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[2]:
+# In[33]:
 
 
 from scipy.interpolate import UnivariateSpline
 
 
-# In[3]:
+# In[34]:
 
 
 name = 'FOG2FIRE'
-vv = 'v1'
+vv = 'v3'
 fp = getpath(name)
 
 
 # # Load files
 
-# In[4]:
+# In[38]:
 
 
 f = os.listdir(fp)
@@ -80,7 +80,7 @@ f.sort()
 f
 
 
-# In[5]:
+# In[39]:
 
 
 years = ['2002','2003','2004','2005','2006','2007','2008','2009',
@@ -89,20 +89,20 @@ years = ['2002','2003','2004','2005','2006','2007','2008','2009',
 
 # ## Load the clouds
 
-# In[6]:
+# In[41]:
 
 
 cld = []
 for y in years:
     try:
-        c = np.load(fp+'MYD06_{}_{}.npy'.format(y,vv),allow_pickle=True,fix_imports=True,encoding='latin1')
+        c = np.load(fp+'MOD06_{}_{}.npy'.format(y,vv),allow_pickle=True,fix_imports=True,encoding='latin1')
         c = c.item()
     except FileNotFoundError:
         c = {}
     cld.append(c)
 
 
-# In[7]:
+# In[42]:
 
 
 cld[1].keys()
@@ -110,7 +110,7 @@ cld[1].keys()
 
 # ## Load the fire counts
 
-# In[8]:
+# In[43]:
 
 
 fir = []
@@ -123,27 +123,42 @@ for y in years:
     fir.append(i)
 
 
-# In[9]:
+# In[44]:
 
 
 fir[1].keys()
 
 
+# ## Load the soil moisture
+
+# In[115]:
+
+
+sma = []
+for y in years:
+    try:
+        s = np.load(fp+'SMAP_{}_{}.npy'.format(y,vv),allow_pickle=True,fix_imports=True,encoding='latin1')
+        s = s.item()
+    except FileNotFoundError:
+        s = {}
+    sma.append(s)
+
+
 # # Plot out data
 
-# In[78]:
+# In[48]:
 
 
 cld[1]['CF'].keys()
 
 
-# In[79]:
+# In[49]:
 
 
 cld[1]['CF']['coast'].keys()
 
 
-# In[80]:
+# In[50]:
 
 
 cld[1]['CF']['coast']['mean'].shape
@@ -151,7 +166,7 @@ cld[1]['CF']['coast']['mean'].shape
 
 # ## Make smoothing and plotting functions
 
-# In[13]:
+# In[51]:
 
 
 def smooth(x,y,w):
@@ -162,19 +177,19 @@ def smooth(x,y,w):
     return fx(x)
 
 
-# In[14]:
+# In[52]:
 
 
 from scipy.signal import savgol_filter
 
 
-# In[15]:
+# In[53]:
 
 
 import statsmodels.api as sm
 
 
-# In[16]:
+# In[54]:
 
 
 def smooth_l(x,y,w):
@@ -185,7 +200,7 @@ def smooth_l(x,y,w):
     return fx[:,0],fx[:,1]
 
 
-# In[17]:
+# In[55]:
 
 
 def non_uniform_savgol(x, y, window, polynom):
@@ -299,7 +314,7 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-# In[18]:
+# In[56]:
 
 
 def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
@@ -349,7 +364,7 @@ def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
     return smoothed
 
 
-# In[19]:
+# In[57]:
 
 
 def smooth_s(x,y,w=25,p=4):
@@ -363,7 +378,7 @@ def smooth_s(x,y,w=25,p=4):
     return x[igood],yp
 
 
-# In[20]:
+# In[58]:
 
 
 def smooth_g(x,y,s=0.1):
@@ -374,7 +389,7 @@ def smooth_g(x,y,s=0.1):
     return x[igood],yp
 
 
-# In[21]:
+# In[59]:
 
 
 cld[i]['time'][0].minute
@@ -382,7 +397,7 @@ cld[i]['time'][0].minute
 
 # ## Plot out the CF time series
 
-# In[22]:
+# In[47]:
 
 
 for j in range(4):
@@ -393,6 +408,82 @@ for j in range(4):
                     cld[i]['CF'][c]['dev'] = np.zeros_like(cld[i]['CF'][c]['mean']) 
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
+
+# In[134]:
+
+
+cld[i]['lbls_rg']
+
+
+# ### Compare singular cloud fraction and soil moisture for particular regions
+
+# In[166]:
+
+
+plt.figure()
+i = 17
+j = 2
+
+rg = 'coast'
+doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
+plt.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label='Cloud Fraction')
+plt.plot([0],[0],'+',label='Soil Moisture',c='tab:blue')
+ax = plt.gca()
+axx = plt.gca().twinx()
+axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+',label='Soil Moisture',c='tab:blue')
+for i in [15,16,17]:
+    doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
+    ax.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label=years[i])
+    axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+')
+    
+ax.legend()
+#plt.xlim(datetime(2019,1,1),datetime(2020,1,1))
+
+ax.set_xlabel('Day of year')
+ax.set_ylabel('Cumulative change in Cloud Fraction (MODIS Terra)')
+axx.set_ylabel('Soil Moisture [cm$^3_{{H20}}$/cm$^3$] (SMAP)')
+
+ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
+
+plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
+
+
+# In[169]:
+
+
+plt.figure()
+i = 17
+j = 2
+
+rg = 'coast'
+doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
+plt.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label='Cloud Fraction')
+plt.plot([0],[0],'+',label='Soil Moisture',c='tab:blue')
+ax = plt.gca()
+axx = plt.gca().twinx()
+axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+',label='Soil Moisture',c='tab:blue')
+for i in [15,16,17]:
+    doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in sma[i]['time']]
+    ax.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label=years[i])
+    axx.plot(doys,sma[i]['SM'][rg]['mean'][:,j],'+')
+    
+ax.legend()
+ax.set_xlim(160,260)
+
+ax.set_xlabel('Day of year')
+ax.set_ylabel('Cumulative change in Cloud Fraction (MODIS Terra)')
+axx.set_ylabel('Soil Moisture [cm$^3_{{H20}}$/cm$^3$] (SMAP)')
+
+ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
+
+plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019_zoom.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
+
+
+# ### Compare multiple regions cloud fraction and fire counts
 
 # In[23]:
 
