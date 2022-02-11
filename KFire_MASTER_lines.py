@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[14]:
 
 
 import numpy as np
@@ -56,7 +56,7 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[3]:
+# In[15]:
 
 
 name = 'KFire'
@@ -66,7 +66,7 @@ fp = getpath(name)
 
 # # Load files
 
-# In[37]:
+# In[16]:
 
 
 os.listdir(fp+'MASTER/')
@@ -74,13 +74,13 @@ os.listdir(fp+'MASTER/')
 
 # ## 2020 western diversity temp
 
-# In[22]:
+# In[17]:
 
 
 hdf,hdf_dict = lu.load_hdf(fp+'MASTER/MASTERL1B_2190500_03_20201013_1804_1829_V01.hdf',all_values=True,i_subdata=0)
 
 
-# In[25]:
+# In[18]:
 
 
 hdf_dict['CalibratedData']
@@ -88,13 +88,13 @@ hdf_dict['CalibratedData']
 
 # ## 2016 flights
 
-# In[38]:
+# In[19]:
 
 
 hdf2,hdf2_dict = lu.load_hdf(fp+'MASTER/MASTERL1B_1662900_12_20160617_2204_2219_V01.hdf',all_values=True,i_subdata=0)
 
 
-# In[39]:
+# In[20]:
 
 
 hdf2_dict['DataSetHeader']
@@ -104,20 +104,20 @@ hdf2_dict['DataSetHeader']
 
 # ## 2020 data
 
-# In[26]:
+# In[21]:
 
 
 hdf['CalibratedData'].shape
 
 
-# In[28]:
+# In[22]:
 
 
 plt.figure()
 plt.pcolor(hdf['PixelLongitude'],hdf['PixelLatitude'],hdf['CalibratedData'][6,:,:]-hdf['CalibratedData'][5,:,:])
 
 
-# In[31]:
+# In[23]:
 
 
 plt.figure()
@@ -127,13 +127,13 @@ plt.yscale('log')
 
 # ## 2016 data
 
-# In[34]:
+# In[24]:
 
 
 hdf2['CalibratedData'].shape
 
 
-# In[51]:
+# In[25]:
 
 
 fig = plt.figure()
@@ -147,14 +147,14 @@ plt.pcolor(hdf2['PixelLongitude'],hdf2['PixelLatitude'],hdf2['CalibratedData'][6
 #plt.show()
 
 
-# In[40]:
+# In[26]:
 
 
 plt.figure()
 plt.pcolor(hdf2['PixelLongitude'],hdf2['PixelLatitude'],hdf2['CalibratedData'][6,:,:]-hdf2['CalibratedData'][5,:,:])
 
 
-# In[42]:
+# In[27]:
 
 
 plt.figure()
@@ -162,7 +162,7 @@ plt.pcolor(hdf2['PixelLongitude'],hdf2['PixelLatitude'],hdf2['CalibratedData'][6
 plt.colorbar()
 
 
-# In[44]:
+# In[28]:
 
 
 plt.figure()
@@ -170,7 +170,7 @@ plt.hist(hdf2['CalibratedData'][6,:,:].flatten()-hdf2['CalibratedData'][5,:,:].f
 plt.yscale('log')
 
 
-# In[45]:
+# In[29]:
 
 
 plt.figure()
@@ -186,7 +186,7 @@ plt.yscale('log')
 #  - lon: -120.025440
 #  - lat: 34.51126
 
-# In[52]:
+# In[30]:
 
 
 lat_region = [34.507,34.515]
@@ -195,32 +195,32 @@ lat_pnt = 34.51126
 lon_pnt = -120.02544
 
 
-# In[56]:
+# In[31]:
 
 
 i_pnt = np.unravel_index(np.argmin(pow(lon_pnt-hdf2['PixelLongitude'],2)+pow(lat_pnt-hdf2['PixelLatitude'],2)),hdf2['PixelLatitude'].shape)
 
 
-# In[57]:
+# In[32]:
 
 
 i_pnt, hdf2['PixelLongitude'][i_pnt], hdf2['PixelLatitude'][i_pnt] 
 
 
-# In[59]:
+# In[33]:
 
 
 i_rg = np.where((hdf2['PixelLongitude']>lon_region[0]) & (hdf2['PixelLongitude']<lon_region[1]) &
          (hdf2['PixelLatitude']>lat_region[0]) & (hdf2['PixelLatitude']<lat_region[1]))
 
 
-# In[62]:
+# In[34]:
 
 
 hdf2.keys()
 
 
-# In[201]:
+# In[35]:
 
 
 wvl = np.array([0.466,0.506,0.546,0.586,0.660,0.716,0.756,0.804,0.872,0.912,0.952,1.6,1.656,1.712,1.766,1.818,1.876,1.924,1.974,
@@ -228,38 +228,38 @@ wvl = np.array([0.466,0.506,0.546,0.586,0.660,0.716,0.756,0.804,0.872,0.912,0.95
        5.105,5.255,7.78,8.17,8.61,9.04,9.66,10.08,10.58,11.25,12.11,12.86])
 
 
-# In[202]:
+# In[36]:
 
 
 isort = np.argsort(wvl)
 
 
-# In[203]:
+# In[37]:
 
 
 isort
 
 
-# In[204]:
+# In[38]:
 
 
 scale = [float(r) for r in hdf2_dict['CalibratedData']['scale_factor'].split(', ')]
 rad = np.array([hdf2['CalibratedData'][i,:,:]*s for i,s in enumerate(scale)])
 
 
-# In[205]:
+# In[39]:
 
 
 rad.shape
 
 
-# In[98]:
+# In[40]:
 
 
 import matplotlib.ticker as ticker
 
 
-# In[102]:
+# In[41]:
 
 
 def myLogFormat(y,pos):
@@ -271,7 +271,7 @@ def myLogFormat(y,pos):
     return formatstring.format(y)
 
 
-# In[119]:
+# In[42]:
 
 
 fig = plt.figure()
@@ -288,7 +288,7 @@ ax.xaxis.set_major_formatter(ticker.FuncFormatter(myLogFormat))
 plt.title('MASTER flight over Santa Barbara fire - 2016-06-17')
 
 
-# In[130]:
+# In[43]:
 
 
 fig = plt.figure()
@@ -305,7 +305,7 @@ ax.xaxis.set_major_formatter(ticker.FuncFormatter(myLogFormat))
 plt.title('MASTER flight over Santa Barbara fire region - 2016-06-17')
 
 
-# In[134]:
+# In[44]:
 
 
 SSI_str = '''2002.396
@@ -361,13 +361,13 @@ SSI_str = '''2002.396
 SSI = np.array([float(s) for s in SSI_str.split('\n')])
 
 
-# In[137]:
+# In[45]:
 
 
 refl =  np.array([rad[i,:,:]/s for i,s in enumerate(SSI)])
 
 
-# In[148]:
+# In[46]:
 
 
 fig = plt.figure()
@@ -379,7 +379,7 @@ plt.xticks([0.45,0.6,0.766,1.0,1.6,2.1,4.2,12.0])
 plt.ylim([0,1])
 #plt.set_scientific(False)
 plt.xlabel('Wavelength [$\mu$m]')
-plt.ylabel('Reflectance [unit]'.format(hdf2_dict['CalibratedData']['units']))
+plt.ylabel('Reflectance [{}]'.format(hdf2_dict['CalibratedData']['units']))
 plt.grid()
 ax = plt.gca()
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(myLogFormat))
@@ -387,6 +387,42 @@ plt.title('MASTER flight over Santa Barbara fire region - 2016-06-17')
 scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.gist_ncar)
 scalarmap.set_array(np.linspace(0, 1, len(i_rg[0])))
 plt.colorbar(scalarmap)
+
+
+# In[149]:
+
+
+prefix = '**drurun**'
+
+
+# In[152]:
+
+
+b = ['matlab'.format(prefix),'-nodisplay','-batch',"{}"]
+
+
+# In[155]:
+
+
+from pathlib2 import Path
+
+
+# In[157]:
+
+
+pa = Path(fp+'plot.png')
+
+
+# In[172]:
+
+
+pa.parent.absolute().as_posix()
+
+
+# In[154]:
+
+
+'{}'.format(prefix)+b
 
 
 # In[150]:
@@ -413,6 +449,111 @@ plt.plot(hdf2['PixelLongitude'][xup2],hdf2['PixelLatitude'][xup2],'x',color='ora
 hdf2['PixelLongitude'][xup]
 
 
+# ## Make spectra plot without the water vapor absorption
+
+# In[49]:
+
+
+isort
+
+
+# In[56]:
+
+
+len(refl[:,i_rg[0],i_rg[1]][1,:])
+
+
+# In[82]:
+
+
+isort_v2 = [ 0,  1,  2,  3,  4,  5,  6,  7,  8, 
+            #9, 10, 
+            11, 12, 13, 14,
+            #15, 16, 17, 
+            18, 
+            #19, 
+            20, 21, 22, 
+            #23, 24, 26, 
+            27, 28, 
+            #29, 30, 31, 
+            #25, 
+            32, 
+            #33, 34, 35, 36, 37, 38
+            39, 
+            #40, 
+            41, 42, 43, 44, 45, 46, 47, 48, 49]
+
+
+# In[85]:
+
+
+plt.figure()
+plt.plot(wvl[isort_v2],refl[:,i_rg[0],i_rg[1]][isort_v2,600],'.-')
+plt.xscale('log')
+plt.xticks([0.45,0.6,0.766,1.0,1.6,2.1,4.2,12.0])
+plt.ylim([0,35])
+plt.grid()
+ax = plt.gca()
+ax.xaxis.set_major_formatter(ticker.FuncFormatter(myLogFormat))
+plt.xlabel('Wavelength [$\mu$m]')
+plt.ylabel('Reflectance [{}]'.format(hdf2_dict['CalibratedData']['units']))
+plt.title('MASTER flight over Santa Barbara fire region - 2016-06-17')
+
+
+# In[86]:
+
+
+from scipy.optimize import curve_fit
+
+
+# In[126]:
+
+
+h = 6.626e-34
+c = 3.0e+8
+k = 1.38e-23
+
+def planck_norm(wav, T,norm):
+    wav = wav/1000000.0
+    a = 2.0*h*c**2
+    b = h*c/(wav*k*T)
+    intensity = a/ ( (wav**5) * (np.exp(b) - 1.0) )
+    return intensity/norm
+
+
+# In[113]:
+
+
+ifin = np.isfinite(refl[:,i_rg[0],i_rg[1]][isort_v2,600])
+
+
+# In[141]:
+
+
+refl[:,i_rg[0],i_rg[1]].shape
+
+
+# In[146]:
+
+
+popts = []
+pcovs = []
+temps = []
+for i in range(1370):
+    popt, pcov = curve_fit(planck_norm, wvl[isort_v2][ifin],
+                           refl[:,i_rg[0],i_rg[1]][isort_v2,i][ifin],p0=[300.0,10000000000.0])
+    popts.append(popt)
+    pcovs.append(pcov)
+    temps.append(popt[0])
+
+
+# In[136]:
+
+
+plt.figure()
+plt.plot(wvl[isort_v2][ifin],planck_norm( wvl[isort_v2][ifin],300.0,10000000000.0),'.-')
+
+
 # ## Make planck balckbody calculations
 
 # From estimates of Wien's displacement
@@ -420,7 +561,7 @@ hdf2['PixelLongitude'][xup]
 # For fires at 800°C, 1073K, peak wavelength is 2700 nm  
 # For a peak wavelength of 2100 nm, temperature should be 1379K -> which is right in the ballpark for forest fire temperatures
 
-# In[4]:
+# In[87]:
 
 
 h = 6.626e-34
@@ -434,7 +575,7 @@ def planck(wav, T):
     return intensity
 
 
-# In[7]:
+# In[48]:
 
 
 wavelengths = np.arange(1e-9, 3e-6, 1e-9) 
@@ -469,6 +610,8 @@ wvl[isort][9]
 
 wvl[9]
 
+
+# ## Get the true color comparisons
 
 # In[170]:
 
