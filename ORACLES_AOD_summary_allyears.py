@@ -85,6 +85,12 @@ fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
 fp
 
 
+# In[73]:
+
+
+vv = 'v1'
+
+
 # # Load files
 
 # ## Load the 2016 data
@@ -1487,14 +1493,14 @@ for i,a in enumerate(aodnames):
 
 # ## Set the region and times
 
-# In[33]:
+# In[61]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[34]:
+# In[62]:
 
 
 ar6['flq'] = ar6['flac'] & (ar6['Latitude']>lat1) & (ar6['Latitude']<lat2) & (ar6['Longitude']>lon1) & (ar6['Longitude']<lon2) & (ar6['qual_flag']==0)& (ar6['AOD0501']<1.5)
@@ -1502,7 +1508,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[35]:
+# In[63]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -1513,7 +1519,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[36]:
+# In[64]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -1521,7 +1527,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[37]:
+# In[65]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1532,7 +1538,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[38]:
+# In[66]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -1540,7 +1546,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[39]:
+# In[67]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -2226,12 +2232,6 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
             transparent=True,dpi=500)
 
 
-# In[ ]:
-
-
-
-
-
 # # Get the ACAOD gaps
 
 # ## Set up the function and variables
@@ -2247,10 +2247,16 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     discontinuity_iend_long =  index[disc_flacaod_long]
     
     ldelta_alt,ldelta_lon,ldelta_lat,ldelta_lon_days,ldelta_lat_days,ldelta_aod,ldelta_ang = [],[],[],[],[],[],[]
+    aero_base_alt,aero_base_ind,meas_ind = [],[],[]
+    
     for i,start in enumerate(discontinuity_istart_long):
         try:
             ma = np.nanmax(alt[start:discontinuity_iend_long[i]])
             mi = np.nanmin(alt[start:discontinuity_iend_long[i]])
+            mai = np.nanargmax(alt[start:discontinuity_iend_long[i]])
+            mii = np.nanargmin(alt[start:discontinuity_iend_long[i]])
+            aero_base_ind.append(start+mai)
+            meas_ind.append(start+mii)
             ldelta_alt.append(ma-mi)
             ldelta_lon.append(np.nanmean(lon[start:discontinuity_iend_long[i]]))
             ldelta_lat.append(np.nanmean(lat[start:discontinuity_iend_long[i]]))
@@ -2258,7 +2264,9 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
             ldelta_ang.append(np.nanmean(ang[start:discontinuity_iend_long[i]]))
             ldelta_lat_days.append(np.unique(days[start:discontinuity_iend_long[i]]))
             ldelta_lon_days.append(np.unique(days[start:discontinuity_iend_long[i]]))
+            aero_base_alt.append(ma)
         except:
+            print('Problem at i:{}'.format(i))
             pass
     ldelta_alt = np.array(ldelta_alt)
     ldelta_lon = np.array(ldelta_lon)
@@ -2267,14 +2275,18 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     ldelta_ang = np.array(ldelta_ang)
     ldelta_lat_days = np.array(ldelta_lat_days)
     ldelta_lon_days = np.array(ldelta_lon_days)
+    aero_base_alt = np.array(aero_base_alt)
+    aero_base_ind = np.array(aero_base_ind)
+    meas_ind = np.array(meas_ind)
     
     d = {'dalt':ldelta_alt,'dlon':ldelta_lon,'dlat':ldelta_lat,'dlat_ndays':ldelta_lat_days,'dlon_ndays':ldelta_lon_days,
-         'daod':ldelta_aod,'dang':ldelta_ang}
+         'daod':ldelta_aod,'dang':ldelta_ang,'aero_base_alt':aero_base_alt,'aero_base_index':aero_base_ind,
+         'meas_low_index':meas_ind}
     
     return d
 
 
-# In[83]:
+# In[49]:
 
 
 ar6['fl_acaod_noQA'] = ar6['flag_acaod']==1
@@ -2282,7 +2294,7 @@ ii_flacaod6 = np.where(ar6['fl_acaod_noQA'])[0]
 ii_flacaod6[0]
 
 
-# In[84]:
+# In[30]:
 
 
 ar7['fl_acaod_noQA'] = ar7['flag_acaod']==1
@@ -2290,7 +2302,7 @@ ii_flacaod7 = np.where(ar7['fl_acaod_noQA'])[0]
 ii_flacaod7[0]
 
 
-# In[85]:
+# In[31]:
 
 
 ar8['fl_acaod_noQA'] = ar8['flag_acaod']==1
@@ -2298,7 +2310,7 @@ ii_flacaod8 = np.where(ar8['fl_acaod_noQA'])[0]
 ii_flacaod8[0]
 
 
-# In[86]:
+# In[83]:
 
 
 gap6 = get_gap(ii_flacaod6,ar6['GPS_Alt'],ar6['Latitude'],ar6['Longitude'],ar6['days'],ar6['AOD0501'],ar6['AOD_angstrom_470_865'])
@@ -2306,7 +2318,69 @@ gap7 = get_gap(ii_flacaod7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7['
 gap8 = get_gap(ii_flacaod8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
+# In[ ]:
+
+
+
+
+
+# In[51]:
+
+
+gap6.keys()
+
+
+# In[86]:
+
+
+gap6['aero_base_UTC'] = ar6[u'Start_UTC'][gap6['aero_base_index']]
+gap6['meas_low_UTC'] = ar6[u'Start_UTC'][gap6['meas_low_index']]
+
+
 # In[87]:
+
+
+gap6['aero_base_day'] = ar6['ndtimes'][gap6['aero_base_index']]
+gap6['meas_low_day'] = ar6['ndtimes'][gap6['meas_low_index']]
+
+
+# In[70]:
+
+
+gap7['aero_base_UTC'] = ar7[u'Start_UTC'][gap7['aero_base_index']]
+gap7['meas_low_UTC'] = ar7[u'Start_UTC'][gap7['meas_low_index']]
+gap7['aero_base_day'] = ar7['ndtimes'][gap7['aero_base_index']]
+gap7['meas_low_day'] = ar7['ndtimes'][gap7['meas_low_index']]
+
+
+# In[71]:
+
+
+gap8['aero_base_UTC'] = ar8[u'Start_UTC'][gap8['aero_base_index']]
+gap8['meas_low_UTC'] = ar8[u'Start_UTC'][gap8['meas_low_index']]
+gap8['aero_base_day'] = ar8['ndtimes'][gap8['aero_base_index']]
+gap8['meas_low_day'] = ar8['ndtimes'][gap8['meas_low_index']]
+
+
+# ### Save the gap data
+
+# In[88]:
+
+
+len(gap6['aero_base_UTC']),len(gap6['aero_base_alt'])
+
+
+# In[89]:
+
+
+np.save(fp+'ORACLES2016_gap_{}.npy'.format(vv),gap6,allow_pickle=True)
+np.save(fp+'ORACLES2017_gap_{}.npy'.format(vv),gap7,allow_pickle=True)
+np.save(fp+'ORACLES2018_gap_{}.npy'.format(vv),gap8,allow_pickle=True)
+
+
+# ### bin out the gaps
+
+# In[22]:
 
 
 def make_bined_x(x,alt,days,fl,bins=[]):
@@ -2326,7 +2400,7 @@ def make_bined_x(x,alt,days,fl,bins=[]):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[88]:
+# In[23]:
 
 
 i6 = np.isfinite(gap6['dalt'])
@@ -2334,13 +2408,13 @@ i7 = np.isfinite(gap7['dalt'])
 i8 = np.isfinite(gap8['dalt'])
 
 
-# In[89]:
+# In[24]:
 
 
 bins = np.linspace(0.5,-24.5,26)
 
 
-# In[90]:
+# In[25]:
 
 
 bgap6_alt,bgap6_lat,bgap6_num,bgap6_ndays = make_bined_x(gap6['dalt'],
