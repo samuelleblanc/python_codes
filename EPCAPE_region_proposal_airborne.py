@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[23]:
+# In[1]:
 
 
 import numpy as np
@@ -56,7 +56,7 @@ import os
 import cartopy.crs as ccrs
 
 
-# In[7]:
+# In[2]:
 
 
 name = 'EPCAPE'
@@ -64,10 +64,16 @@ vv = 'v1'
 fp = getpath(name)
 
 
-# In[8]:
+# In[3]:
 
 
 fp
+
+
+# In[8]:
+
+
+np.nanargmax([0,1,2,1,np.nan])
 
 
 # # Load files
@@ -128,10 +134,4 @@ ax.annotate('Port of\nLong Beach',[-118.216903,33.753972],transform=cc,c='tab:bl
 ax.scatter(-118.216903,33.753972,transform=cc,marker='x',c='tab:blue')
 ax.set_title('Average May to July wind flow at 925 mb [NCEP 1980-2020]')
 plt.savefig(fp+'/map_MaytoJuly_wind_NCEP.png',dpi=600,transparent=True)
-
-
-# In[ ]:
-
-
-
 
