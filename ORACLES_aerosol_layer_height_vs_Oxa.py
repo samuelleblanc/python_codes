@@ -533,7 +533,7 @@ gap8['aero_base_alt']
 np.append(np.append(oxa_meas[i_lowa],oxa_meas7[i_lowa7]),oxa_meas8[i_lowa8])
 
 
-# In[110]:
+# In[116]:
 
 
 plt.figure()
@@ -588,7 +588,7 @@ plt.legend()
 plt.xlabel('Depth of Oxygen-A [sum of optical depth deviation]')
 plt.ylabel('Aerosol layer base height [m]')
 plt.xlim(0,200000)
-plt.title('ORACLES [2016-17-18]\nAerosol height, Ox-A, and AOD from 4STAR\n[measured between 850 mb to 930 mb]')
+plt.title('ORACLES 2016[.], 2017[+], and 2018[^]\nAerosol height and Ox-A depth from 4STAR\n[measured between 850 mb to 930 mb]')
 plt.savefig(fp+'ORACLES_all_OXa_vs_aero_alt_{}.png'.format(vv),dpi=600,transparent=True)
 
 
