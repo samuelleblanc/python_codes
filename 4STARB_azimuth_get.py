@@ -122,6 +122,8 @@ def interp_spline(xold, yold, ynew):
     return uv(ynew)
 
 
+# ## plot AOD vs azimuth
+
 # In[83]:
 
 
@@ -142,6 +144,8 @@ for i,wvl in enumerate([350.0,470.0,500.0,675.0,850.0,950.0,1020.0,1240.0,1640.0
     plt.grid()
     plt.savefig(fpo+'plots/4STARB_AOD_AZIMUTH_{:04.0f}.png'.format(wvl),dpi=600,transparent=True)
 
+
+# ## Ratio of AOD to the mean (as percentage)
 
 # In[91]:
 
@@ -166,6 +170,8 @@ for i,wvl in enumerate([350.0,470.0,500.0,675.0,850.0,950.0,1020.0,1240.0,1640.0
     plt.savefig(fpo+'plots/4STARB_AOD_ratio_AZIMUTH_{:04.0f}.png'.format(wvl),dpi=600,transparent=True)
 
 
+# ## plot the rates (each wavelength will be different)
+
 # In[84]:
 
 
@@ -187,8 +193,51 @@ for i,wvl in enumerate([350.0,470.0,500.0,675.0,850.0,950.0,1020.0,1240.0,1640.0
     #plt.savefig(fpo+'plots/4STARB_rate_AZIMUTH_{:04.0f}.png'.format(wvl),dpi=600,transparent=True)
 
 
-# In[ ]:
+# ## Add the binned splines
+
+# In[92]:
 
 
+import scipy.stats as st
+import scipy.interpolate as si
 
+
+# In[93]:
+
+
+def calc_binspline(aod,alt,dz,su=0.0006):
+    'Function that calculates the extinction coefficient profile'
+    nbin = int((np.nanmax(alt)-np.nanmin(alt))/dz)
+    aod_bin, dz_bin_edge, ibin = st.binned_statistic(alt,aod,bins=nbin)
+    dz_bin = np.array([(dz_bin_edge[iz+1]+ddz)/2.0 for iz,ddz in enumerate(dz_bin_edge[0:-1])])
+    if any(np.isfinite(aod_bin)):
+        aodc_fx = si.UnivariateSpline(dz_bin[np.isfinite(aod_bin)],aod_bin[np.isfinite(aod_bin)],s=su)
+        #extc_fx = aodc.derivative()
+        aodc = aodc_fx(dz_bin)
+    else:
+        aodc = dz_bin*np.nan
+    return aodc,dz_bin
+
+
+# In[101]:
+
+
+az = np.arange(-560,560,30)
+for i,wvl in enumerate([350.0,470.0,500.0,675.0,850.0,950.0,1020.0,1240.0,1640.0]):
+    plt.figure()
+    iw = np.argmin(abs(wave-wvl/1000.0))
+    print(iw,wvl)
+    for k in days:
+        flt = (dat[k]['utc']>time_lims[k][0]) & (dat[k]['utc']<time_lims[k][1]) & (np.isfinite(dat[k]['tau'][:,iw]))             & (dat[k]['tau'][:,iw]>aod_lims[i][0])  & (dat[k]['tau'][:,iw]<aod_lims[i][1])
+        p = plt.plot(dat[k]['azi'][flt],dat[k]['tau'][flt,iw],'.',label=k)
+        #plt.plot(az,interp_spline(dat[k]['azi'][flt],dat[k]['tau'][flt,iw],az),'-',c=p[0].get_c())
+        spli,azbin = calc_binspline(dat[k]['tau'][flt,iw],dat[k]['azi'][flt][:,0],60.0)
+        plt.plot(azbin,spli,'-',c=p[0].get_c())
+    plt.xlabel('Azimuth degree')
+    plt.ylabel('AOD {:3.1f} nm'.format(wvl))
+    plt.ylim(aod_lims[i])
+    plt.legend(frameon=True)
+    plt.title('4STARB azimuth dependence {:4.1f} nm'.format(wvl)) 
+    plt.grid()
+    #plt.savefig(fpo+'plots/4STARB_AOD_AZIMUTH_{:04.0f}.png'.format(wvl),dpi=600,transparent=True)
 
