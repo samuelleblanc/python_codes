@@ -36,11 +36,14 @@
 # History:
 # 
 #     Written: Samuel LeBlanc,Santa Cruz, CA, 2018-12-03
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2022-02-28
+#              - added the fire counts to the elevation map
+#              - updated to use newest HSRL versions
 #     
 
 # # Prepare python environment
 
-# In[1]:
+# In[18]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -64,7 +67,7 @@ import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 
 
-# In[2]:
+# In[19]:
 
 
 import scipy.stats as st
@@ -72,36 +75,36 @@ from mpl_toolkits.basemap import Basemap
 import pandas as pd
 
 
-# In[3]:
+# In[20]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[4]:
+# In[21]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
 fp
 
 
-# In[73]:
+# In[23]:
 
 
-vv = 'v1'
+vv = 'v2'
 
 
 # # Load files
 
 # ## Load the 2016 data
 
-# In[5]:
+# In[6]:
 
 
 ar6 = hs.loadmat(fp+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
 
 
-# In[6]:
+# In[7]:
 
 
 ar6['flac'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)
@@ -109,7 +112,7 @@ ar6['flacr'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&(ar6['fl_routine'])
 ar6['flaco'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&~(ar6['fl_routine'])
 
 
-# In[7]:
+# In[8]:
 
 
 ar6['flr'] = (ar6['qual_flag']==0) & (ar6['fl_routine'])
@@ -119,13 +122,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # ## Load the 2017 data
 
-# In[8]:
+# In[9]:
 
 
 ar7 = hs.loadmat(fp+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
 
 
-# In[9]:
+# In[10]:
 
 
 ar7['flac'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)
@@ -133,7 +136,7 @@ ar7['flacr'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&(ar7['fl_routine'])
 ar7['flaco'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&~(ar7['fl_routine'])
 
 
-# In[10]:
+# In[11]:
 
 
 ar7['flr'] = (ar7['qual_flag']==0) & (ar7['fl_routine'])
@@ -143,13 +146,13 @@ ar7['fl'] = (ar7['qual_flag']==0)
 
 # ## Load the 2018 data
 
-# In[11]:
+# In[12]:
 
 
 ar8 = hs.loadmat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv='R1'))
 
 
-# In[12]:
+# In[13]:
 
 
 ar8['flac'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)  
@@ -157,7 +160,7 @@ ar8['flacr'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&(ar8['fl_routine']
 ar8['flaco'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&~(ar8['fl_routine']) 
 
 
-# In[13]:
+# In[14]:
 
 
 ar8['flr'] = (ar8['qual_flag']==0) & (ar8['fl_routine'])
@@ -218,61 +221,55 @@ ar8['fl'] = (ar8['qual_flag']==0)
 #     FLOAT - a floating-point grid will be created.
 # 
 
-# In[14]:
+# In[143]:
 
 
 elev_pd = pd.read_csv(fp+'surface_elevation/so_africa_dem_nohead.dat',delimiter=' ',header=None)
 
 
-# In[37]:
-
-
-elev_pd
-
-
-# In[15]:
+# In[144]:
 
 
 elev = elev_pd.to_numpy()
 
 
-# In[16]:
+# In[145]:
 
 
 elev.shape
 
 
-# In[17]:
+# In[146]:
 
 
 elev_lat = np.arange(-0.0083333,-35,-0.0083333)
 
 
-# In[18]:
+# In[147]:
 
 
 elev_lat.shape
 
 
-# In[19]:
+# In[148]:
 
 
 elev_lon = np.arange(5.0,43.0,0.00833333)
 
 
-# In[20]:
+# In[149]:
 
 
 elev_lon.shape
 
 
-# In[116]:
+# In[150]:
 
 
 elev_lon[2200]
 
 
-# In[126]:
+# In[151]:
 
 
 plt.figure(figsize=(6,6))
@@ -283,20 +280,20 @@ plt.ylabel('Latitude [$^\\circ$]')
 plt.savefig(fp+'plot/SA_Surface_elevation.png',dpi=600,transparent=True)
 
 
-# In[48]:
+# In[152]:
 
 
 elev[elev <0] = np.nan
 
 
-# In[55]:
+# In[153]:
 
 
 strip_elev = np.nanmax(elev[:,0:2200],axis=1)
 mean_elev = np.nanmean(elev[:,0:2200],axis=1)
 
 
-# In[56]:
+# In[154]:
 
 
 plt.figure()
@@ -311,15 +308,134 @@ plt.figure()
 plt.plot(mean_elev,elev_lat)
 
 
+# ## Load the fire counts
+
+# In[32]:
+
+
+import load_utils as lu
+
+
+# In[27]:
+
+
+fh = os.listdir(fp+'fire/')
+
+
+# In[30]:
+
+
+fh = [hh for hh in fh if hh.endswith('hdf')]
+fh.sort()
+
+
+# In[135]:
+
+
+fi_geo = {}
+
+
+# In[140]:
+
+
+nfh = len(fh)
+fi_2016,fi_2017,fi_2018 = [],[],[]
+fi_doy_2016,fi_doy_2017,fi_doy_2018 = [],[],[]
+for jj,ffh in enumerate(fh):
+    print('{}/ total {}'.format(jj,nfh))
+    grid = ffh.split('.')[2]
+    if grid in fi_geo.keys():
+        get_geo = False
+    else:
+        get_geo = True
+    fi,fi_dict = lu.load_hdf(fp+'fire/'+ffh,all_values=True,i_subdata=0,get_geo=get_geo,verbose=False)
+    if grid in fi_geo.keys():
+        fi['FireMask_lat'] = fi_geo[grid]['FireMask_lat']
+        fi['FireMask_lon'] = fi_geo[grid]['FireMask_lon']
+    else:
+        fi_geo[grid] = {}
+        fi_geo[grid]['FireMask_lat'] = fi['FireMask_lat']
+        fi_geo[grid]['FireMask_lon'] = fi['FireMask_lon']
+        nul = fi.pop('QA_lon',None)
+        nul = fi.pop('QA_lat',None)
+    doy = float(ffh.split('.')[1][-3:])
+    if '2016' in ffh.split('.')[1]:
+        fi_2016.append(fi)
+        fi_doy_2016.append(doy)
+    if '2017' in ffh.split('.')[1]:
+        fi_2017.append(fi)
+        fi_doy_2017.append(doy)
+    if '2018' in ffh.split('.')[1]:
+        fi_2018.append(fi)
+        fi_doy_2018.append(doy)
+
+
+# In[142]:
+
+
+print(fi_dict['FireMask']['legend'])
+
+
+# ### Relate fire counts to surface elevation
+
+# In[183]:
+
+
+from scipy.interpolate import RectBivariateSpline, interp2d
+
+
+# In[157]:
+
+
+fi = fi_2016[1]
+
+
+# In[158]:
+
+
+fi.keys()
+
+
+# In[163]:
+
+
+elev_lat.shape, elev_lon.shape, elev.shape
+
+
+# In[186]:
+
+
+elev_fx = interp2d(np.flip(elev_lat),elev_lon,np.flip(elev,axis=1),kind='linear')
+
+
+# In[185]:
+
+
+elev_fx(fi['FireMask_lat'].flatten(),fi['FireMask_lon'].flatten())
+
+
+# In[156]:
+
+
+for fi in fi_2016:
+    np.argmin(sqrt((fi['FireMask_lat']-elev_lat)**2+(fi['FireMask_lon']-elev_lon)**2))
+
+
 # ## Load HSRL bins
 
-# In[69]:
+# In[15]:
 
 
-hsrl = hs.loadmat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears.mat')
+vhsrl = 'v2'
 
 
-# In[70]:
+# In[16]:
+
+
+hsrl = hs.loadmat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears_{}.mat'.format(vhsrl))
+
+
+# In[17]:
 
 
 hsrl.keys()
@@ -363,7 +479,7 @@ kma6[u'lon'] = ar6['Longitude'][ar6['flac']]
 kma6[u'alt'] = ar6['GPS_Alt'][ar6['flac']]
 
 
-# In[59]:
+# In[25]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -425,7 +541,7 @@ kma7[u'lon'] = ar7['Longitude'][ar7['flac']]
 kma7[u'alt'] = ar7['GPS_Alt'][ar7['flac']]
 
 
-# In[77]:
+# In[26]:
 
 
 days7 = ['20170801','20170802','20170807','20170809', '20170812','20170813','20170815','20170817','20170818','20170819','20170821',
@@ -436,7 +552,7 @@ ar7['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar7['Start_UTC
 ar7['ndtimes'] = np.array(ar7['ndtime'])
 
 
-# In[78]:
+# In[27]:
 
 
 kma7[u'doy'] = np.array([ad.timetuple().tm_yday+(ad.hour+(ad.minute+ad.second/60.0)/60.0)/24.0 for ad in ar7['ndtimes'][ar7['flac']]])
@@ -487,7 +603,7 @@ kma8[u'lon'] = ar8['Longitude'][ar8['flac']]
 kma8[u'alt'] = ar8['GPS_Alt'][ar8['flac']]
 
 
-# In[85]:
+# In[28]:
 
 
 days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','20181003','20181005','20181007','20181010','20181012',
@@ -1508,7 +1624,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[63]:
+# In[29]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -1519,7 +1635,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[64]:
+# In[30]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -1527,7 +1643,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[65]:
+# In[31]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1538,7 +1654,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[66]:
+# In[32]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -1546,7 +1662,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[67]:
+# In[33]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -2236,7 +2352,7 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
 
 # ## Set up the function and variables
 
-# In[82]:
+# In[15]:
 
 
 def get_gap(index,alt,lat,lon,days,aod,ang):
@@ -2286,7 +2402,7 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     return d
 
 
-# In[49]:
+# In[16]:
 
 
 ar6['fl_acaod_noQA'] = ar6['flag_acaod']==1
@@ -2294,7 +2410,7 @@ ii_flacaod6 = np.where(ar6['fl_acaod_noQA'])[0]
 ii_flacaod6[0]
 
 
-# In[30]:
+# In[17]:
 
 
 ar7['fl_acaod_noQA'] = ar7['flag_acaod']==1
@@ -2302,7 +2418,7 @@ ii_flacaod7 = np.where(ar7['fl_acaod_noQA'])[0]
 ii_flacaod7[0]
 
 
-# In[31]:
+# In[18]:
 
 
 ar8['fl_acaod_noQA'] = ar8['flag_acaod']==1
@@ -2310,7 +2426,7 @@ ii_flacaod8 = np.where(ar8['fl_acaod_noQA'])[0]
 ii_flacaod8[0]
 
 
-# In[83]:
+# In[19]:
 
 
 gap6 = get_gap(ii_flacaod6,ar6['GPS_Alt'],ar6['Latitude'],ar6['Longitude'],ar6['days'],ar6['AOD0501'],ar6['AOD_angstrom_470_865'])
@@ -2324,27 +2440,27 @@ gap8 = get_gap(ii_flacaod8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['
 
 
 
-# In[51]:
+# In[20]:
 
 
 gap6.keys()
 
 
-# In[86]:
+# In[21]:
 
 
 gap6['aero_base_UTC'] = ar6[u'Start_UTC'][gap6['aero_base_index']]
 gap6['meas_low_UTC'] = ar6[u'Start_UTC'][gap6['meas_low_index']]
 
 
-# In[87]:
+# In[34]:
 
 
 gap6['aero_base_day'] = ar6['ndtimes'][gap6['aero_base_index']]
 gap6['meas_low_day'] = ar6['ndtimes'][gap6['meas_low_index']]
 
 
-# In[70]:
+# In[35]:
 
 
 gap7['aero_base_UTC'] = ar7[u'Start_UTC'][gap7['aero_base_index']]
@@ -2353,7 +2469,7 @@ gap7['aero_base_day'] = ar7['ndtimes'][gap7['aero_base_index']]
 gap7['meas_low_day'] = ar7['ndtimes'][gap7['meas_low_index']]
 
 
-# In[71]:
+# In[36]:
 
 
 gap8['aero_base_UTC'] = ar8[u'Start_UTC'][gap8['aero_base_index']]
@@ -2364,13 +2480,13 @@ gap8['meas_low_day'] = ar8['ndtimes'][gap8['meas_low_index']]
 
 # ### Save the gap data
 
-# In[88]:
+# In[37]:
 
 
 len(gap6['aero_base_UTC']),len(gap6['aero_base_alt'])
 
 
-# In[89]:
+# In[38]:
 
 
 np.save(fp+'ORACLES2016_gap_{}.npy'.format(vv),gap6,allow_pickle=True)
