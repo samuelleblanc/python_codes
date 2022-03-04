@@ -269,7 +269,7 @@ elev_lon.shape
 elev_lon[2200]
 
 
-# In[151]:
+# In[239]:
 
 
 plt.figure(figsize=(6,6))
@@ -384,41 +384,185 @@ print(fi_dict['FireMask']['legend'])
 from scipy.interpolate import RectBivariateSpline, interp2d
 
 
-# In[157]:
+# In[227]:
 
 
-fi = fi_2016[1]
+elevm = np.ma.array(elev,mask=~np.isfinite(elev))
 
 
-# In[158]:
+# In[245]:
 
 
-fi.keys()
+elev_fx = interp2d(elev_lon,elev_lat,elevm.filled(0),kind='linear',bounds_error=False)
 
 
-# In[163]:
-
-
-elev_lat.shape, elev_lon.shape, elev.shape
-
-
-# In[186]:
-
-
-elev_fx = interp2d(np.flip(elev_lat),elev_lon,np.flip(elev,axis=1),kind='linear')
-
-
-# In[185]:
-
-
-elev_fx(fi['FireMask_lat'].flatten(),fi['FireMask_lon'].flatten())
-
-
-# In[156]:
+# In[252]:
 
 
 for fi in fi_2016:
-    np.argmin(sqrt((fi['FireMask_lat']-elev_lat)**2+(fi['FireMask_lon']-elev_lon)**2))
+    fi['elev'] = elev_fx(fi['FireMask_lon'][:,0],fi['FireMask_lat'][0,:])
+
+
+# In[248]:
+
+
+for fi in fi_2017:
+    fi['elev'] = elev_fx(fi['FireMask_lon'][:,0],fi['FireMask_lat'][0,:])
+
+
+# In[249]:
+
+
+for fi in fi_2018:
+    fi['elev'] = elev_fx(fi['FireMask_lon'][:,0],fi['FireMask_lat'][0,:])
+
+
+# ### Calculate the average height of fires per latitude
+
+# In[317]:
+
+
+lat_bins = np.linspace(0.5,-24.5,26)
+center_lat = np.array([(la+lat_bins[i+1])/2.0 for i,la in enumerate(lat_bins[:-1])])
+
+
+# In[311]:
+
+
+fires_elev_perlat_2016  = []
+fires_num_perlat_2016  = []
+for i,la in enumerate(lat_bins[:-1]):
+    la1,la2 = la,lat_bins[i+1]
+    e2016 = []
+    for fi in fi_2016:
+        ig = (fi['FireMask_lat']>la2) & (fi['FireMask_lat']<la1) & (fi['FireMask']>6)
+        e2016.extend(fi['elev'][ig])
+    fires_elev_perlat_2016.append(e2016)
+    fires_num_perlat_2016.append(len(e2016))
+
+
+# In[312]:
+
+
+fires_elev_perlat_2017  = []
+fires_num_perlat_2017  = []
+for i,la in enumerate(lat_bins[:-1]):
+    la1,la2 = la,lat_bins[i+1]
+    e2017 = []
+    for fi in fi_2017:
+        ig = (fi['FireMask_lat']>la2) & (fi['FireMask_lat']<la1) & (fi['FireMask']>6)
+        e2017.extend(fi['elev'][ig])
+    fires_elev_perlat_2017.append(e2017)
+    fires_num_perlat_2017.append(len(e2017))
+
+
+# In[313]:
+
+
+fires_elev_perlat_2018  = []
+fires_num_perlat_2018  = []
+for i,la in enumerate(lat_bins[:-1]):
+    la1,la2 = la,lat_bins[i+1]
+    e2018 = []
+    for fi in fi_2018:
+        ig = (fi['FireMask_lat']>la2) & (fi['FireMask_lat']<la1) & (fi['FireMask']>6)
+        e2018.extend(fi['elev'][ig])
+    fires_elev_perlat_2018.append(e2018)
+    fires_num_perlat_2018.append(len(e2018))
+
+
+# In[314]:
+
+
+fires_num_perlat_2016
+
+
+# In[406]:
+
+
+plt.figure(figsize=(5,8))
+gr = plt.cm.RdPu
+bl = plt.cm.YlGn
+br = plt.cm.Blues
+
+bp6 = plt.boxplot(fires_elev_perlat_2016,positions=center_lat-0.15,vert=False,
+                 showfliers=False,widths=0.2,showmeans=True,patch_artist=True)
+set_box_whisker_color(gr,bp6,fires_num_perlat_2016)
+bp8 = plt.boxplot(fires_elev_perlat_2018,positions=center_lat+0.15,vert=False,
+                 showfliers=False,widths=0.2,showmeans=True,patch_artist=True)
+set_box_whisker_color(br,bp8,fires_num_perlat_2018)
+bp7 = plt.boxplot(fires_elev_perlat_2017,positions=center_lat,vert=False,
+                 showfliers=False,widths=0.2,showmeans=True,patch_artist=True)
+set_box_whisker_color(bl,bp7,fires_num_perlat_2017)
+
+plt.xlabel('Surface elevation of fires [m]')
+plt.ylabel('Latitude [$^\\circ$]')
+plt.title('Elevation of fires during ORACLES')
+
+plt.legend([bp6['boxes'][5],bp7['boxes'][18],bp8['boxes'][18],bp6['means'][0],bp6['medians'][0],bp6['boxes'][0],
+            bp6['whiskers'][0]],
+           ['2016','2017','2018','Mean','Median','25\% - 75\%','min-max'],
+           frameon=False,loc=1,numpoints=1)
+
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(fires_num_perlat_2016)
+scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+scalarmapbl.set_array(fires_num_perlat_2016)
+scalarmapbr = plt.cm.ScalarMappable(cmap=br)
+scalarmapbr.set_array(fires_num_perlat_2016)
+
+cbaxesgr = plt.gcf().add_axes([0.60, 0.43, 0.015, 0.2])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr)
+cbg.outline.set_visible(False)
+cbaxesbl = plt.gcf().add_axes([0.62, 0.43, 0.015, 0.2])
+cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl)
+cbb.outline.set_visible(False)
+cbaxesbr = plt.gcf().add_axes([0.64, 0.43, 0.015, 0.2])
+cbr = plt.colorbar(scalarmapbr,cax=cbaxesbr)
+cbr.outline.set_visible(False)
+cbg.set_ticks([0,10000,20000,30000,40000,50000]),cbg.set_ticklabels(['','','','',''])
+cbb.set_ticks([0,10000,20000,30000,40000,50000]),cbb.set_ticklabels(['','','','',''])
+cbr.set_ticks([0,10000,20000,30000,40000,50000])
+cbaxesgr.yaxis.set_ticks_position('right'),cbaxesbl.yaxis.set_ticks_position('right'),cbaxesbr.yaxis.set_ticks_position('right')
+cbaxesgr.spines['right'].set_visible(False), cbaxesbl.spines['left'].set_visible(False)
+cbaxesbr.text(8.0,0.5,'Number of fires',rotation=-90,verticalalignment='center')
+
+
+plt.tight_layout()
+
+plt.savefig(fp+'plot_all/ORACLES_fire_elevation_average.png',
+            transparent=True,dpi=500)
+
+
+# In[407]:
+
+
+mean_fire_elev6 = [aaa.get_data()[0][0] for aaa in bp6['means']]
+mean_fire_elev7 = [aaa.get_data()[0][0] for aaa in bp7['means']]
+mean_fire_elev8 = [aaa.get_data()[0][0] for aaa in bp8['means']]
+
+
+# In[408]:
+
+
+median_fire_elev6 = [aaa.get_data()[0][0] for aaa in bp6['medians']]
+median_fire_elev7 = [aaa.get_data()[0][0] for aaa in bp7['medians']]
+median_fire_elev8 = [aaa.get_data()[0][0] for aaa in bp8['medians']]
+
+
+# In[427]:
+
+
+plt.figure()
+plt.plot(mean_fire_elev6,center_lat,'.-',color='tab:red',label='2016')
+plt.plot(mean_fire_elev7,center_lat,'.-',color='tab:green',label='2017')
+plt.plot(mean_fire_elev8,center_lat,'.-',color='tab:blue',label='2018')
+plt.xlabel('Mean surface elevation of fires [m]')
+plt.ylabel('Latitude [$^\\circ$]')
+plt.title('Elevation of fires during ORACLES')
+plt.legend(frameon=False)
+plt.savefig(fp+'plot_all/ORACLES_fire_elevation_average_line.png',
+            transparent=True,dpi=500)
 
 
 # ## Load HSRL bins
@@ -1064,7 +1208,7 @@ ar8['fl_QA_angs'] = ar8['fl_QA'] & (ar8['AOD0501']>0.1)
 ar8['fl_QA_angs_aca'] = ar8['flac'] & (ar8['AOD0501']>0.1) & (ar8['GPS_Alt']>300.0)
 
 
-# In[25]:
+# In[306]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70):
@@ -1078,7 +1222,7 @@ def make_bined_alt(x,alt,days,fl,n=70):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[101]:
+# In[307]:
 
 
 def set_box_whisker_color(cl,bp,binned_ndays,binmax=None,a=0.6):
@@ -1609,14 +1753,14 @@ for i,a in enumerate(aodnames):
 
 # ## Set the region and times
 
-# In[61]:
+# In[359]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[62]:
+# In[360]:
 
 
 ar6['flq'] = ar6['flac'] & (ar6['Latitude']>lat1) & (ar6['Latitude']<lat2) & (ar6['Longitude']>lon1) & (ar6['Longitude']<lon2) & (ar6['qual_flag']==0)& (ar6['AOD0501']<1.5)
@@ -1624,7 +1768,7 @@ ar7['flq'] = ar7['flac'] & (ar7['Latitude']>lat1) & (ar7['Latitude']<lat2) & (ar
 ar8['flq'] = ar8['flac'] & (ar8['Latitude']>lat1) & (ar8['Latitude']<lat2) & (ar8['Longitude']>lon1) & (ar8['Longitude']<lon2) & (ar8['qual_flag']==0)& (ar8['AOD0501']<1.5)
 
 
-# In[29]:
+# In[361]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -1635,7 +1779,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[30]:
+# In[362]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -1643,7 +1787,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[31]:
+# In[363]:
 
 
 ar6['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -1654,7 +1798,7 @@ ar8['ndtime'] = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])]
 
 
-# In[32]:
+# In[364]:
 
 
 ar6['ndtimes'] = np.array(ar6['ndtime'])
@@ -1662,7 +1806,7 @@ ar7['ndtimes'] = np.array(ar7['ndtime'])
 ar8['ndtimes'] = np.array(ar8['ndtime'])
 
 
-# In[33]:
+# In[365]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -2352,7 +2496,7 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_3map_stats_difference_R1.png',
 
 # ## Set up the function and variables
 
-# In[15]:
+# In[349]:
 
 
 def get_gap(index,alt,lat,lon,days,aod,ang):
@@ -2402,7 +2546,7 @@ def get_gap(index,alt,lat,lon,days,aod,ang):
     return d
 
 
-# In[16]:
+# In[350]:
 
 
 ar6['fl_acaod_noQA'] = ar6['flag_acaod']==1
@@ -2410,7 +2554,7 @@ ii_flacaod6 = np.where(ar6['fl_acaod_noQA'])[0]
 ii_flacaod6[0]
 
 
-# In[17]:
+# In[351]:
 
 
 ar7['fl_acaod_noQA'] = ar7['flag_acaod']==1
@@ -2418,7 +2562,7 @@ ii_flacaod7 = np.where(ar7['fl_acaod_noQA'])[0]
 ii_flacaod7[0]
 
 
-# In[18]:
+# In[352]:
 
 
 ar8['fl_acaod_noQA'] = ar8['flag_acaod']==1
@@ -2426,7 +2570,7 @@ ii_flacaod8 = np.where(ar8['fl_acaod_noQA'])[0]
 ii_flacaod8[0]
 
 
-# In[19]:
+# In[353]:
 
 
 gap6 = get_gap(ii_flacaod6,ar6['GPS_Alt'],ar6['Latitude'],ar6['Longitude'],ar6['days'],ar6['AOD0501'],ar6['AOD_angstrom_470_865'])
@@ -2434,33 +2578,39 @@ gap7 = get_gap(ii_flacaod7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7['
 gap8 = get_gap(ii_flacaod8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[ ]:
-
-
-
-
-
-# In[20]:
+# In[354]:
 
 
 gap6.keys()
 
 
-# In[21]:
+# In[428]:
+
+
+ar6['flo'].shape
+
+
+# In[429]:
+
+
+ar6['Start_UTC'].shape
+
+
+# In[355]:
 
 
 gap6['aero_base_UTC'] = ar6[u'Start_UTC'][gap6['aero_base_index']]
 gap6['meas_low_UTC'] = ar6[u'Start_UTC'][gap6['meas_low_index']]
 
 
-# In[34]:
+# In[366]:
 
 
 gap6['aero_base_day'] = ar6['ndtimes'][gap6['aero_base_index']]
 gap6['meas_low_day'] = ar6['ndtimes'][gap6['meas_low_index']]
 
 
-# In[35]:
+# In[367]:
 
 
 gap7['aero_base_UTC'] = ar7[u'Start_UTC'][gap7['aero_base_index']]
@@ -2469,13 +2619,24 @@ gap7['aero_base_day'] = ar7['ndtimes'][gap7['aero_base_index']]
 gap7['meas_low_day'] = ar7['ndtimes'][gap7['meas_low_index']]
 
 
-# In[36]:
+# In[368]:
 
 
 gap8['aero_base_UTC'] = ar8[u'Start_UTC'][gap8['aero_base_index']]
 gap8['meas_low_UTC'] = ar8[u'Start_UTC'][gap8['meas_low_index']]
 gap8['aero_base_day'] = ar8['ndtimes'][gap8['aero_base_index']]
 gap8['meas_low_day'] = ar8['ndtimes'][gap8['meas_low_index']]
+
+
+# In[431]:
+
+
+gap6['flo'] = ar6['flo'][gap6['aero_base_index']]
+gap7['flo'] = ar7['flo'][gap7['aero_base_index']]
+gap8['flo'] = ar8['flo'][gap8['aero_base_index']]
+gap6['flr'] = ar6['flr'][gap6['aero_base_index']]
+gap7['flr'] = ar7['flr'][gap7['aero_base_index']]
+gap8['flr'] = ar8['flr'][gap8['aero_base_index']]
 
 
 # ### Save the gap data
@@ -2496,7 +2657,7 @@ np.save(fp+'ORACLES2018_gap_{}.npy'.format(vv),gap8,allow_pickle=True)
 
 # ### bin out the gaps
 
-# In[22]:
+# In[433]:
 
 
 def make_bined_x(x,alt,days,fl,bins=[]):
@@ -2516,7 +2677,7 @@ def make_bined_x(x,alt,days,fl,bins=[]):
     return binned_ang,binned_alt,binned_num,binned_ndays
 
 
-# In[23]:
+# In[370]:
 
 
 i6 = np.isfinite(gap6['dalt'])
@@ -2524,13 +2685,13 @@ i7 = np.isfinite(gap7['dalt'])
 i8 = np.isfinite(gap8['dalt'])
 
 
-# In[24]:
+# In[371]:
 
 
 bins = np.linspace(0.5,-24.5,26)
 
 
-# In[25]:
+# In[372]:
 
 
 bgap6_alt,bgap6_lat,bgap6_num,bgap6_ndays = make_bined_x(gap6['dalt'],
@@ -2541,9 +2702,38 @@ bgap8_alt,bgap8_lat,bgap8_num,bgap8_ndays = make_bined_x(gap8['dalt'],
                                                            gap8['dlat'],gap8['dlat_ndays'],i8,bins=bins)
 
 
+# In[434]:
+
+
+io6 = np.isfinite(gap6['dalt']) & gap6['flo']
+io7 = np.isfinite(gap7['dalt']) & gap7['flo']
+io8 = np.isfinite(gap8['dalt']) & gap8['flo']
+
+ir6 = np.isfinite(gap6['dalt']) & gap6['flr']
+ir7 = np.isfinite(gap7['dalt']) & gap7['flr']
+ir8 = np.isfinite(gap8['dalt']) & gap8['flr']
+
+
+# In[435]:
+
+
+bgapo6_alt,bgapo6_lat,bgapo6_num,bgapo6_ndays = make_bined_x(gap6['dalt'],
+                                                           gap6['dlat'],gap6['dlat_ndays'],io6,bins=bins)
+bgapo7_alt,bgapo7_lat,bgapo7_num,bgapo7_ndays = make_bined_x(gap7['dalt'],
+                                                           gap7['dlat'],gap7['dlat_ndays'],io7,bins=bins)
+bgapo8_alt,bgapo8_lat,bgapo8_num,bgapo8_ndays = make_bined_x(gap8['dalt'],
+                                                           gap8['dlat'],gap8['dlat_ndays'],io8,bins=bins)
+bgapr6_alt,bgapr6_lat,bgapr6_num,bgapr6_ndays = make_bined_x(gap6['dalt'],
+                                                           gap6['dlat'],gap6['dlat_ndays'],ir6,bins=bins)
+bgapr7_alt,bgapr7_lat,bgapr7_num,bgapr7_ndays = make_bined_x(gap7['dalt'],
+                                                           gap7['dlat'],gap7['dlat_ndays'],ir7,bins=bins)
+bgapr8_alt,bgapr8_lat,bgapr8_num,bgapr8_ndays = make_bined_x(gap8['dalt'],
+                                                           gap8['dlat'],gap8['dlat_ndays'],ir8,bins=bins)
+
+
 # ### Redo or separating routine and others
 
-# In[91]:
+# In[436]:
 
 
 ar6['fl_acaod_noQAr'] = (ar6['flag_acaod']==1) & (ar6['fl_routine'])
@@ -2560,7 +2750,7 @@ gapr7 = get_gap(ii_flacaodr7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapr8 = get_gap(ii_flacaodr8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[92]:
+# In[437]:
 
 
 ir6 = np.isfinite(gapr6['dalt'])
@@ -2568,7 +2758,7 @@ ir7 = np.isfinite(gapr7['dalt'])
 ir8 = np.isfinite(gapr8['dalt'])
 
 
-# In[93]:
+# In[438]:
 
 
 bgapr6_alt,bgapr6_lat,bgapr6_num,bgapr6_ndays = make_bined_x(gapr6['dalt'],
@@ -2579,7 +2769,7 @@ bgapr8_alt,bgapr8_lat,bgapr8_num,bgapr8_ndays = make_bined_x(gapr8['dalt'],
                                                            gapr8['dlat'],gapr8['dlat_ndays'],ir8,bins=bins)
 
 
-# In[94]:
+# In[439]:
 
 
 ar6['fl_acaod_noQAo'] = (ar6['flag_acaod']==1) & (~ar6['fl_routine'])
@@ -2596,7 +2786,7 @@ gapo7 = get_gap(ii_flacaodo7,ar7['GPS_Alt'],ar7['Latitude'],ar7['Longitude'],ar7
 gapo8 = get_gap(ii_flacaodo8,ar8['GPS_Alt'],ar8['Latitude'],ar8['Longitude'],ar8['days'],ar8['AOD0501'],ar8['AOD_angstrom_470_865'])
 
 
-# In[95]:
+# In[440]:
 
 
 io6 = np.isfinite(gapo6['dalt'])
@@ -2604,7 +2794,7 @@ io7 = np.isfinite(gapo7['dalt'])
 io8 = np.isfinite(gapo8['dalt'])
 
 
-# In[96]:
+# In[441]:
 
 
 bgapo6_alt,bgapo6_lat,bgapo6_num,bgapo6_ndays = make_bined_x(gapo6['dalt'],
@@ -2759,6 +2949,151 @@ plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_surf_elev.png',
             transparent=True,dpi=500)
 
 
+# In[386]:
+
+
+plt.figure(figsize=(5,8))
+gr = plt.cm.RdPu
+bl = plt.cm.YlGn
+br = plt.cm.Blues
+
+ax0 = plt.gca()
+
+bp6 = plt.boxplot(bgap6_alt,positions=np.array(bgap6_lat)+0.2,vert=False,
+                 showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
+set_box_whisker_color(gr,bp6,bgap6_ndays)
+mean_gap6 = [x.get_data()[0][0] for x in bp6['means']]
+plt.plot([x.get_data()[0][0] for x in bp6['means']],[x.get_data()[1][0] for x in bp6['means']],'r-')
+
+bp7 = plt.boxplot(bgap7_alt,positions=np.array(bgap7_lat)-0.2,vert=False,widths=0.4,
+                  showfliers=False,showmeans=True,patch_artist=True)
+set_box_whisker_color(bl,bp7,bgap7_ndays)
+plt.plot([x.get_data()[0][0] for x in bp7['means']],[x.get_data()[1][0] for x in bp7['means']],'g-')
+mean_gap7 = [x.get_data()[0][0] for x in bp7['means']]
+bp8 = plt.boxplot(bgap8_alt,positions=np.array(bgap8_lat),vert=False,
+                 showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
+set_box_whisker_color(br,bp8,bgap8_ndays)
+plt.plot([x.get_data()[0][0] for x in bp8['means']],[x.get_data()[1][0] for x in bp8['means']],'b-')
+mean_gap8 = [x.get_data()[0][0] for x in bp8['means']]
+pse = plt.plot(strip_elev,elev_lat,'-k',label='Surface elevation',alpha=0.7)
+pse6 = plt.plot(mean_fire_elev6,center_lat,'.--',color='tab:red',label='2016')
+pse7 = plt.plot(mean_fire_elev7,center_lat,'.--',color='tab:green',label='2017')
+pse8 = plt.plot(mean_fire_elev8,center_lat,'.--',color='tab:blue',label='2018')
+
+plt.xlabel('Gap Extent [m]')
+plt.ylabel('Latitude [$^{{\circ}}$]')
+plt.legend([bp6['boxes'][5],bp7['boxes'][18],bp8['boxes'][18],bp6['means'][0],bp6['medians'][0],bp6['boxes'][0],
+            bp6['whiskers'][0],pse[0],pse6[0],pse7[0],pse8[0]],
+           ['2016','2017','2018','Mean','Median','25% - 75%','min-max','Surface\nelevation','Mean fire\nelev 2016',
+            'Mean fire\nelev 2017','Mean fire\nelev 2018'],
+           frameon=False,loc=1,numpoints=1)
+
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(bgap6_ndays)
+scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+scalarmapbl.set_array(bgap6_ndays)
+scalarmapbr = plt.cm.ScalarMappable(cmap=br)
+scalarmapbr.set_array(bgap6_ndays)
+
+cbaxesgr = plt.gcf().add_axes([0.67, 0.27, 0.015, 0.2])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr)
+cbg.outline.set_visible(False)
+cbaxesbl = plt.gcf().add_axes([0.69, 0.27, 0.015, 0.2])
+cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl)
+cbb.outline.set_visible(False)
+cbaxesbr = plt.gcf().add_axes([0.71, 0.27, 0.015, 0.2])
+cbr = plt.colorbar(scalarmapbr,cax=cbaxesbr)
+cbr.outline.set_visible(False)
+cbg.set_ticks([0,3,6,9,12,15]),cbg.set_ticklabels(['','','','',''])
+cbb.set_ticks([0,3,6,9,12,15]),cbb.set_ticklabels(['','','','',''])
+cbr.set_ticks([0,3,6,9,12,15])
+cbaxesgr.yaxis.set_ticks_position('right'),cbaxesbl.yaxis.set_ticks_position('right'),cbaxesbr.yaxis.set_ticks_position('right')
+cbaxesgr.spines['right'].set_visible(False), cbaxesbl.spines['left'].set_visible(False)
+cbaxesbr.text(4.0,0.5,'Days sampled',rotation=-90,verticalalignment='center')
+
+ax0.set_title('Gap extent through the years')
+plt.tight_layout()
+
+plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_surf_elev_perfire.png',
+            transparent=True,dpi=500)
+
+
+# In[459]:
+
+
+lat_bins
+
+
+# In[460]:
+
+
+binned_elev = []
+for i,la1 in enumerate(lat_bins[:-1]):
+    ia = (elev_lat<la1) & (elev_lat>lat_bins[i+1])
+    binned_elev.append(np.nanmean(strip_elev[ia]))
+binned_elev = np.array(binned_elev)
+
+
+# In[419]:
+
+
+i6 = np.isfinite(np.flip(mean_gap6)) & np.isfinite(mean_fire_elev6)
+r6 = np.corrcoef(np.flip(mean_gap6)[i6],np.array(mean_fire_elev6)[i6])[0,1]
+i7 = np.isfinite(np.flip(mean_gap7)) & np.isfinite(mean_fire_elev7)
+r7 = np.corrcoef(np.flip(mean_gap7)[i7],np.array(mean_fire_elev7)[i7])[0,1]
+i8 = np.isfinite(np.flip(mean_gap8)) & np.isfinite(mean_fire_elev8)
+r8 = np.corrcoef(np.flip(mean_gap8)[i8],np.array(mean_fire_elev8)[i8])[0,1]
+
+
+# In[420]:
+
+
+r6,r7,r8
+
+
+# In[421]:
+
+
+i6 = np.isfinite(np.flip(mean_gap6)) & np.isfinite(median_fire_elev6)
+rm6 = np.corrcoef(np.flip(mean_gap6)[i6],np.array(median_fire_elev6)[i6])[0,1]
+i7 = np.isfinite(np.flip(mean_gap7)) & np.isfinite(median_fire_elev7)
+rm7 = np.corrcoef(np.flip(mean_gap7)[i7],np.array(median_fire_elev7)[i7])[0,1]
+i8 = np.isfinite(np.flip(mean_gap8)) & np.isfinite(median_fire_elev8)
+rm8 = np.corrcoef(np.flip(mean_gap8)[i8],np.array(median_fire_elev8)[i8])[0,1]
+
+
+# In[422]:
+
+
+rm6,rm7,rm8
+
+
+# In[462]:
+
+
+i6 = np.isfinite(np.flip(mean_gap6)) & np.isfinite(binned_elev)
+rb6 = np.corrcoef(np.flip(mean_gap6)[i6],np.array(binned_elev)[i6])[0,1]
+i7 = np.isfinite(np.flip(mean_gap7)) & np.isfinite(binned_elev)
+rb7 = np.corrcoef(np.flip(mean_gap7)[i7],np.array(binned_elev)[i7])[0,1]
+i8 = np.isfinite(np.flip(mean_gap8)) & np.isfinite(binned_elev)
+rb8 = np.corrcoef(np.flip(mean_gap8)[i8],np.array(binned_elev)[i8])[0,1]
+rb6,rb7,rb8
+
+
+# In[423]:
+
+
+plt.figure()
+plt.plot(np.flip(mean_gap6),median_fire_elev6,'.',color='tab:red',label='2016')
+plt.plot(np.flip(mean_gap7),median_fire_elev7,'.',color='tab:green',label='2017')
+plt.plot(np.flip(mean_gap8),median_fire_elev8,'.',color='tab:blue',label='2018')
+plt.xlabel('Mean gap extent [m]')
+plt.ylabel('Median fire elevation [m]')
+plt.legend(frameon=False)
+plt.savefig(fp+'plot_all/ORACLES_gap_vs_fireelev.png',
+            transparent=True,dpi=500)
+
+
 # In[170]:
 
 
@@ -2790,7 +3125,7 @@ plt.legend([bp6['boxes'][5],bp7['boxes'][18],bp8['boxes'][18],bp6['means'][0],bp
 
 # ### Subset the gaps for near coast / vs far
 
-# In[257]:
+# In[444]:
 
 
 plt.figure(figsize=(5,8))
@@ -2814,6 +3149,16 @@ bp8 = plt.boxplot(bgapo8_alt,positions=np.array(bgapo8_lat),vert=False,
                  showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
 set_box_whisker_color(br,bp8,bgapo8_ndays)
 plt.plot([x.get_data()[0][0] for x in bp8['means']],[x.get_data()[1][0] for x in bp8['means']],'b-')
+
+
+meanc_gap6 = [x.get_data()[0][0] for x in bp6['means']]
+meanc_gap7 = [x.get_data()[0][0] for x in bp7['means']]
+meanc_gap8 = [x.get_data()[0][0] for x in bp8['means']]
+
+pse = plt.plot(strip_elev,elev_lat,'-k',label='Surface elevation',alpha=0.7)
+pse6 = plt.plot(mean_fire_elev6,center_lat,'.--',color='tab:red',label='2016')
+pse7 = plt.plot(mean_fire_elev7,center_lat,'.--',color='tab:green',label='2017')
+pse8 = plt.plot(mean_fire_elev8,center_lat,'.--',color='tab:blue',label='2018')
 
 plt.xlabel('Gap Extent [m]')
 plt.ylabel('Latitude [$^{{\circ}}$]')
@@ -2852,7 +3197,99 @@ plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_coast.png',
             transparent=True,dpi=500)
 
 
-# In[258]:
+# In[449]:
+
+
+i6 = np.isfinite(np.flip(meanc_gap6)) & np.isfinite(median_fire_elev6)
+rm6 = np.corrcoef(np.flip(meanc_gap6)[i6],np.array(median_fire_elev6)[i6])[0,1]
+i7 = np.isfinite(np.flip(meanc_gap7)) & np.isfinite(median_fire_elev7)
+rm7 = np.corrcoef(np.flip(meanc_gap7)[i7],np.array(median_fire_elev7)[i7])[0,1]
+i8 = np.isfinite(np.flip(meanc_gap8)) & np.isfinite(median_fire_elev8)
+rm8 = np.corrcoef(np.flip(meanc_gap8)[i8],np.array(median_fire_elev8)[i8])[0,1]
+
+
+# In[450]:
+
+
+rm6,rm7,rm8
+
+
+# In[443]:
+
+
+plt.figure()
+plt.plot(np.flip(meanc_gap6),median_fire_elev6,'.',color='tab:red',label='2016')
+plt.plot(np.flip(meanc_gap7),median_fire_elev7,'.',color='tab:green',label='2017')
+plt.plot(np.flip(meanc_gap8),median_fire_elev8,'.',color='tab:blue',label='2018')
+plt.xlabel('Mean gap extent [m]')
+plt.ylabel('Median fire elevation [m]')
+plt.legend(frameon=False)
+plt.savefig(fp+'plot_all/ORACLES_coastalgap_vs_fireelev.png',
+            transparent=True,dpi=500)
+
+
+# In[451]:
+
+
+from scipy.interpolate import interp1d
+
+
+# In[454]:
+
+
+elev_fs = interp1d(elev_lat,strip_elev,fill_value='extrapolate')
+
+
+# In[455]:
+
+
+new_elev = elev_fs(center_lat)
+
+
+# In[456]:
+
+
+plt.figure()
+plt.plot(np.flip(meanc_gap6),new_elev,'.',color='tab:red',label='2016')
+plt.plot(np.flip(meanc_gap7),new_elev,'.',color='tab:green',label='2017')
+plt.plot(np.flip(meanc_gap8),new_elev,'.',color='tab:blue',label='2018')
+plt.xlabel('Mean gap extent [m]')
+plt.ylabel('Mean Surface elevation [m]')
+plt.legend(frameon=False)
+plt.savefig(fp+'plot_all/ORACLES_coastalgap_vs_surfelev.png',
+            transparent=True,dpi=500)
+
+
+# In[457]:
+
+
+i6 = np.isfinite(np.flip(meanc_gap6)) & np.isfinite(new_elev)
+re6 = np.corrcoef(np.flip(meanc_gap6)[i6],np.array(new_elev)[i6])[0,1]
+i7 = np.isfinite(np.flip(meanc_gap7)) & np.isfinite(new_elev)
+re7 = np.corrcoef(np.flip(meanc_gap7)[i7],np.array(new_elev)[i7])[0,1]
+i8 = np.isfinite(np.flip(meanc_gap8)) & np.isfinite(new_elev)
+re8 = np.corrcoef(np.flip(meanc_gap8)[i8],np.array(new_elev)[i8])[0,1]
+
+
+# In[458]:
+
+
+re6,re7,re8
+
+
+# In[463]:
+
+
+i6 = np.isfinite(np.flip(meanc_gap6)) & np.isfinite(binned_elev)
+re6 = np.corrcoef(np.flip(meanc_gap6)[i6],np.array(binned_elev)[i6])[0,1]
+i7 = np.isfinite(np.flip(meanc_gap7)) & np.isfinite(binned_elev)
+re7 = np.corrcoef(np.flip(meanc_gap7)[i7],np.array(binned_elev)[i7])[0,1]
+i8 = np.isfinite(np.flip(meanc_gap8)) & np.isfinite(binned_elev)
+re8 = np.corrcoef(np.flip(meanc_gap8)[i8],np.array(binned_elev)[i8])[0,1]
+re6,re7,re8
+
+
+# In[464]:
 
 
 plt.figure(figsize=(5,8))
@@ -2876,6 +3313,10 @@ bp8 = plt.boxplot(bgapr8_alt,positions=np.array(bgapr8_lat),vert=False,
                  showfliers=False,widths=0.4,showmeans=True,patch_artist=True)
 set_box_whisker_color(br,bp8,bgapr8_ndays)
 plt.plot([x.get_data()[0][0] for x in bp8['means']],[x.get_data()[1][0] for x in bp8['means']],'b-')
+
+meano_gap6 = [x.get_data()[0][0] for x in bp6['means']]
+meano_gap7 = [x.get_data()[0][0] for x in bp7['means']]
+meano_gap8 = [x.get_data()[0][0] for x in bp8['means']]
 
 plt.xlabel('Gap Extent [m]')
 plt.ylabel('Latitude [$^{{\circ}}$]')
@@ -2912,6 +3353,18 @@ plt.tight_layout()
 
 plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_lat_oceanic.png',
             transparent=True,dpi=500)
+
+
+# In[467]:
+
+
+i6 = np.isfinite(np.flip(meano_gap6)) & np.isfinite(binned_elev)
+re6 = np.corrcoef(np.flip(meano_gap6)[i6],np.array(binned_elev)[i6])[0,1]
+i7 = np.isfinite(np.flip(meano_gap7)) & np.isfinite(binned_elev)
+re7 = np.corrcoef(np.flip(meano_gap7)[i7],np.array(binned_elev)[i7])[0,1]
+i8 = np.isfinite(np.flip(meano_gap8)) & np.isfinite(binned_elev)
+re8 = np.corrcoef(np.flip(meano_gap8)[i8],np.array(binned_elev)[i8])[0,1]
+re6,re7,re8
 
 
 # ## compare gap distance to AOD
