@@ -212,7 +212,7 @@ def data2figpoints(x,dx,fig,ax1):
     return left,bottom,width,height
 
 
-# In[1]:
+# In[3]:
 
 
 def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
@@ -261,7 +261,13 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
                 dat = odr.RealData(xn,yn,sy=y_err[mask]) 
             else:
                 dat = odr.RealData(xn,yn)
-        outa = odr.ODR(dat,model,beta0=[1.0,0.5]).run()
+        try:
+            from linfit import linfit
+            c,cm = linfit(xn,yn)
+            p = np.array([c[1],c[0]])
+        except:
+            p = [1.0,0.5]
+        outa = odr.ODR(dat,model,beta0=p).run()
         print(outa.cov_beta)
         perr = np.sqrt(np.diag(outa.cov_beta))
         p = outa.beta
@@ -280,6 +286,23 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
             results = sm.OLS(yn,Xn).fit()
         p = results.params
         perr = results.bse
+    elif use_method=='york':
+        from plotting_utils import bivariate_fit
+        try:
+            from linfit import linfit
+            c,cm = linfit(xn,yn)
+            p = np.array([c[1],c[0]])
+        except:
+            p = [1.0,0.5]
+        if not any(x_err):
+            raise('x_err must be set for york fit')
+        if not any(y_err):
+            raise('y_err must be set for york fit')
+        ri = np.corrcoef(x_err[mask],y_err[mask])[0,1]**2
+        a_bivar, b_bivar, S, cov = bivariate_fit(xn,yn,x_err[mask],y_err[mask],b0=p[1],ri=ri)
+        p = [a_bivar,b_bivar]
+        cerr = np.sqrt(np.diag(cov))
+        perr = np.array([cerr[1],cerr[0]]) 
     else:
         print('Method: %s is not a valid choice' % use_method)
         return
@@ -754,4 +777,131 @@ def match_ygrid(ax1,ax2,ticks):
         a = (ti[1]-ti[0])/(ticks[1]-ticks[0])
         dy = a*ticks[0]-ti[0]
         ax2.set_ylim((y0+dy)/a,(y1+dy)/a)
+
+
+# In[1]:
+
+
+def bivariate_fit(xi, yi, dxi, dyi, ri=0.0, b0=1.0, maxIter=1e6):
+    """Make a linear bivariate fit to xi, yi data using York et al. (2004).
+
+    This is an implementation of the line fitting algorithm presented in:
+    York, D et al., Unified equations for the slope, intercept, and standard
+    errors of the best straight line, American Journal of Physics, 2004, 72,
+    3, 367-375, doi = 10.1119/1.1632486
+
+    See especially Section III and Table I. The enumerated steps below are
+    citations to Section III
+
+    Parameters:
+      xi, yi      x and y data points
+      dxi, dyi    errors for the data points xi, yi
+      ri          correlation coefficient for the weights
+      b0          initial guess b
+      maxIter     float, maximum allowed number of iterations
+
+    Returns:
+      a           y-intercept, y = a + bx
+      b           slope
+      S           goodness-of-fit estimate
+      sigma_a     standard error of a
+      sigma_b     standard error of b
+
+    Usage:
+    [a, b] = bivariate_fit( xi, yi, dxi, dyi, ri, b0, maxIter)
+
+    """
+    import numpy as np
+    # (1) Choose an approximate initial value of b
+    b = b0
+
+    # (2) Determine the weights wxi, wyi, for each point.
+    wxi = 1.0 / dxi**2.0
+    wyi = 1.0 / dyi**2.0
+
+    alphai = (wxi * wyi)**0.5
+    b_diff = 999.0
+
+    # tolerance for the fit, when b changes by less than tol for two
+    # consecutive iterations, fit is considered found
+    tol = 1.0e-8
+
+    # iterate until b changes less than tol
+    iIter = 1
+    while (abs(b_diff) >= tol) & (iIter <= maxIter):
+
+        b_prev = b
+
+        # (3) Use these weights wxi, wyi to evaluate Wi for each point.
+        Wi = (wxi * wyi) / (wxi + b**2.0 * wyi - 2.0*b*ri*alphai)
+
+        # (4) Use the observed points (xi ,yi) and Wi to calculate x_bar and
+        # y_bar, from which Ui and Vi , and hence betai can be evaluated for
+        # each point
+        x_bar = np.sum(Wi * xi) / np.sum(Wi)
+        y_bar = np.sum(Wi * yi) / np.sum(Wi)
+
+        Ui = xi - x_bar
+        Vi = yi - y_bar
+
+        betai = Wi * (Ui / wyi + b*Vi / wxi - (b*Ui + Vi) * ri / alphai)
+
+        # (5) Use Wi, Ui, Vi, and betai to calculate an improved estimate of b
+        b = np.sum(Wi * betai * Vi) / np.sum(Wi * betai * Ui)
+
+        # (6) Use the new b and repeat steps (3), (4), and (5) until successive
+        # estimates of b agree within some desired tolerance tol
+        b_diff = b - b_prev
+
+        iIter += 1
+
+    # (7) From this final value of b, together with the final x_bar and y_bar,
+    # calculate a from
+    a = y_bar - b * x_bar
+
+    # Goodness of fit
+    S = np.sum(Wi * (yi - b*xi - a)**2.0)
+
+    # (8) For each point (xi, yi), calculate the adjusted values xi_adj
+    xi_adj = x_bar + betai
+
+    # (9) Use xi_adj, together with Wi, to calculate xi_adj_bar and thence ui
+    xi_adj_bar = np.sum(Wi * xi_adj) / np.sum(Wi)
+    ui = xi_adj - xi_adj_bar
+
+    # (10) From Wi , xi_adj_bar and ui, calculate sigma_b, and then sigma_a
+    # (the standard uncertainties of the fitted parameters)
+    sigma_b = np.sqrt(1.0 / np.sum(Wi * ui**2))
+    sigma_a = np.sqrt(1.0 / np.sum(Wi) + xi_adj_bar**2 * sigma_b**2)
+
+    # calculate covariance matrix of b and a (York et al., Section II)
+    cov = -xi_adj_bar * sigma_b**2
+    # [[var(b), cov], [cov, var(a)]]
+    cov_matrix = np.array(
+        [[sigma_b**2, cov], [cov, sigma_a**2]])
+
+    if iIter <= maxIter:
+        return a, b, S, cov_matrix
+    else:
+        print("bivariate_fit.py exceeded maximum number of iterations, " +
+              "maxIter = {:}".format(maxIter))
+        return np.nan, np.nan, np.nan, np.nan
+
+
+# In[5]:
+
+
+def stats_label(x,y,fmt='2.2f'):
+    'To make labels consistently of the relationship between two variables'
+    from sklearn.metrics import mean_squared_error, mean_absolute_error
+    import scipy.stats as st
+    import numpy as np
+    
+    fl = np.isfinite(x) & np.isfinite(y)
+    
+    r = st.spearmanr(x,y,nan_policy='omit')
+    rmse = mean_squared_error(x[fl],y[fl],squared=True)
+    mae = mean_absolute_error(x[fl],y[fl])
+    
+    return 'R$_{{spearman}}$={:{fmt}}\nRMSE={:{fmt}}\nMAE={:{fmt}}'.format(r.correlation,rmse,mae,fmt=fmt)
 
