@@ -57,10 +57,11 @@ import os
 import glob
 
 
-# In[227]:
+# In[361]:
 
 
 from datetime import datetime,timedelta
+import scipy.stats as st
 
 
 # In[61]:
@@ -369,6 +370,7 @@ plt.legend()
 
 
 import plotting_utils as pu
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
 # In[343]:
@@ -377,14 +379,144 @@ import plotting_utils as pu
 fl = np.isfinite(fullpd['o3_du']) & np.isfinite(fullpd['o3DU'])
 
 
-# In[360]:
+# In[364]:
+
+
+r = st.spearmanr(fullpd['o3_du'],fullpd['o3DU'],nan_policy='omit')
+
+
+# In[367]:
+
+
+r.correlation
+
+
+# In[372]:
+
+
+rmse = mean_squared_error(fullpd['o3_du'][fl],fullpd['o3DU'][fl],squared=True)
+rmse
+
+
+# In[375]:
+
+
+mae = mean_absolute_error(fullpd['o3_du'][fl],fullpd['o3DU'][fl])
+mae
+
+
+# In[451]:
+
+
+import importlib
+importlib.reload(pu)
+
+
+# In[387]:
+
+
+from Sp_parameters import doublenanmask, nanmasked
+from scipy import odr
+from linfit import linfit
+
+
+# In[388]:
+
+
+x = fullpd['o3_du']
+y = fullpd['o3DU']
+x_err = fullpd['unc_o3_du']
+y_err = fullpd['o3resiDU']
+
+
+# In[389]:
+
+
+xn,yn,mask = doublenanmask(x,y,return_mask=True)
+
+
+# In[390]:
+
+
+model = odr.Model(lin)
+dat = odr.RealData(xn,yn,sx=x_err[mask],sy=y_err[mask])
+
+
+# In[391]:
+
+
+c,cm = linfit(xn,yn)
+p = np.array([c[1],c[0]])
+
+
+# In[417]:
+
+
+imask = mask & (y_err>0)
+
+
+# In[435]:
+
+
+ri = np.corrcoef(x_err[imask],y_err[imask])[0,1]
+
+
+# In[442]:
+
+
+a_bivar, b_bivar, S, cov = pu.bivariate_fit(xn,yn,x_err[imask],y_err[imask],b0=p[1],ri=ri**2)
+
+
+# In[443]:
+
+
+a_bivar
+
+
+# In[444]:
+
+
+b_bivar
+
+
+# In[445]:
+
+
+S
+
+
+# In[449]:
+
+
+np.sqrt(cov[1,1])*b_bivar
+
+
+# In[441]:
 
 
 plt.figure()
+plt.errorbar(fullpd['o3_du'],fullpd['o3DU'],xerr=fullpd['unc_o3_du'],yerr=fullpd['o3resiDU'],marker='.',ls='')
 plt.plot(fullpd['o3_du'],fullpd['o3DU'],'.',
-         label='all data\nR={:1.3f}'.format(np.corrcoef(fullpd['o3_du'][fl],fullpd['o3DU'][fl])[0,1]))
+         label='all data\nR$_{{spearman}}$={:1.3f}\nRMSE={:1.3f}\nMAE={:1.3f}'.format(r.correlation,rmse,mae))
 plt.plot([0,500],[0,500],'--',color='lightgrey',label='1:1')
-pu.plot_lin(fullpd['o3_du'],fullpd['o3DU'])
+pu.plot_lin(fullpd['o3_du'],fullpd['o3DU'],x_err=fullpd['unc_o3_du'],y_err=fullpd['o3resiDU'],use_method='york')
+plt.legend()
+plt.ylabel('4STAR Ozone [DU]')
+plt.xlabel('Pandora Ozone [DU]')
+plt.ylim(200,400)
+plt.xlim(200,400)
+plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_O3.png',dpi=600,transparent=True)
+
+
+# In[401]:
+
+
+plt.figure()
+plt.errorbar(fullpd['o3_du'],fullpd['o3DU'],xerr=fullpd['unc_o3_du'],yerr=fullpd['o3resiDU'],marker='.',ls='')
+plt.plot(fullpd['o3_du'],fullpd['o3DU'],'.',
+         label='all data\nR$_{{spearman}}$={:1.3f}\nRMSE={:1.3f}\nMAE={:1.3f}'.format(r.correlation,rmse,mae))
+plt.plot([0,500],[0,500],'--',color='lightgrey',label='1:1')
+pu.plot_lin(fullpd['o3_du'],fullpd['o3DU'],x_err=fullpd['unc_o3_du'],y_err=fullpd['o3resiDU'],use_method='york')
 plt.legend()
 plt.ylabel('4STAR Ozone [DU]')
 plt.xlabel('Pandora Ozone [DU]')
@@ -451,6 +583,23 @@ plt.plot(fullpdn['no2_du'],fullpdn['no2DU'],'.',
          label='all data\nR={:1.3f}'.format(np.corrcoef(fullpdn['no2_du'][fln],fullpdn['no2DU'][fln])[0,1]))
 plt.plot([0,10],[0,10],'--',color='lightgrey',label='1:1')
 pu.plot_lin(fullpdn['no2_du'],fullpdn['no2DU'])
+plt.legend()
+plt.ylabel('4STAR NO2 [DU]')
+plt.xlabel('Pandora NO2 [DU]')
+plt.ylim(0,10)
+plt.xlim(0,10)
+
+plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
+
+
+# In[453]:
+
+
+plt.figure()
+plt.plot(fullpdn['no2_du'],fullpdn['no2DU'],'.',
+         label='all data\n'+pu.stats_label(fullpdn['no2_du'],fullpdn['no2DU']))
+plt.plot([0,10],[0,10],'--',color='lightgrey',label='1:1')
+pu.plot_lin(fullpdn['no2_du'],fullpdn['no2DU'],x_err=fullpdn['unc_no2_du'],y_err=fullpdn['no2resiDU'],use_method='york')
 plt.legend()
 plt.ylabel('4STAR NO2 [DU]')
 plt.xlabel('Pandora NO2 [DU]')
