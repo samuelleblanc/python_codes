@@ -117,8 +117,8 @@ def print_to_file(output_file, string_list,append=False,fifo=False):
             p = open(output_file,'a')
         else:
             p = open(output_file,'w')
-    except Exception,e:
-        print 'Problem with accessing file, return Exception: ',e
+    except Exception as e:
+        print( 'Problem with accessing file, return Exception: ',e)
         return
 
     if fifo:
@@ -212,8 +212,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
         if not append_directly_below:
             try:
                 output = file(output_file,'w')
-            except Exception,e:
-                print 'Problem with accessing file, return Exception: ',e
+            except Exception as e:
+                print( 'Problem with accessing file, return Exception: ',e)
                 return
             if verbose:
                 print('..printing to file: %s' % output_file)
@@ -223,8 +223,8 @@ def write_cloud_file(output_file,tau,ref,zbot,ztop,verbose=False,append_directly
         else:
             try:
                 output = file(output_file,'a')
-            except Exception,e:
-                print 'Problem with accessing file, return Exception: ',e
+            except Exception as e:
+                print( 'Problem with accessing file, return Exception: ',e)
                 return
             output.write('%4.4f\t%4.5f\t%3.2f\n' % (zbot,lwc,ref))
         output.close() 
@@ -317,8 +317,8 @@ def write_aerosol_file_explicit(output_file,z_arr,ext,ssa,asy,wvl_arr,verbose=Fa
     if use_old:
         try:
             output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print( 'Problem with accessing file, return Exception: ',e)
             return
         if verbose:
             print('..printing to file: %s' % output_file)
@@ -439,8 +439,8 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
     if use_old:
         try:
             output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print('Problem with accessing file, return Exception: ',e)
             return
         if verbose:
             print('..printing to explicit aerosol wavelength defined file: %s' % output_file)
@@ -549,8 +549,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
         if not append_directly_below:
             try:
                 output = file(output_file,'w')
-            except Exception,e:
-                print 'Problem with accessing file, return Exception: ',e
+            except Exception as e:
+                print('Problem with accessing file, return Exception: ',e)
                 return
             if verbose:
                 print('..printing to file: %s' % output_file)
@@ -562,8 +562,8 @@ def write_cloud_file_moments(output_file,tau,ref,zbot,ztop,moms_dict=None,
         else:
             try:
                 output = file(output_file,'a')
-            except Exception,e:
-                print 'Problem with accessing file, return Exception: ',e
+            except Exception as e:
+                print('Problem with accessing file, return Exception: ',e)
                 return
             if verbose:
                 print('..printing to file: %s' % output_file)
@@ -649,13 +649,13 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
         
     if not wvl_range:
         wvl_range = [min(wvl),max(wvl)]
-    if verbose: print '... wvl_range:',wvl_range[0],wvl_range[1]
+    if verbose: print( '... wvl_range:',wvl_range[0],wvl_range[1])
         
     if use_old:
         try:
             output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print('Problem with accessing file, return Exception: ',e)
             return
         if verbose:
             print('..printing to cloud moments properties wavelength defined file: %s' % output_file)
@@ -674,13 +674,13 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
                         st = '%f\t%f\t%1.6f\t%s \n' %                                 (wv,ext[iw],ssa[iw],
                                   " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
                         an = len(moments[iw][0,0:int(nmom[iw])])-1
-                        print 'trying to reduce size', len(st), an
+                        print( 'trying to reduce size', len(st), an)
                         while len(st)>1000000:
                             df = int((len(st)-1000000)/10)
                             an = an-df-10
                             st = '%f\t%f\t%1.6f\t%s \n' %                                 (wv,ext[iw],ssa[iw],
                                   " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:an])]))
-                            print 'in size reduction', len(st),an
+                            print( 'in size reduction', len(st),an)
                     output.write(st)
                     #output.write('%f\t%f\t%1.6f\t%s \n' % 
                     #             (wv,ext[iw],ssa[iw],
@@ -705,13 +705,13 @@ def write_cloud_file_moments_wvl(output_file,wvl,ext,ssa,moments,nmom,verbose=Fa
                     st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
                               " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:int(nmom[iw])])]))
                     an = len(moments[iw][0,0:int(nmom[iw])])-1
-                    print 'trying to reduce size', len(st), an
+                    print( 'trying to reduce size', len(st), an)
                     while len(st)>1000000:
                         df = int((len(st)-1000000)/10)
                         an = an-df-10
                         st = '%f\t%f\t%1.6f\t%s \n' %                             (wv,ext[iw],ssa[iw],
                               " ".join(['{:1.4g}'.format(x/(2.0*i+1.0)) for i,x in enumerate(moments[iw][0,0:an])]))
-                        print 'in size reduction', len(st),an
+                        print( 'in size reduction', len(st),an)
                 out_string.append(st)
         
         process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
@@ -772,15 +772,15 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False,fifo=False,use_old
     if use_old:
         try:
             output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print('Problem with accessing file, return Exception: ',e)
             return
         if verbose:
             print('..printing to albedo wavelength defined file: %s' % output_file)
         output.write('# wvl[nm]    alb[unitless] \n')
         for iw,w in enumerate(wvl):
             if not w>100.0:
-                print '** Possible error with wavelenght, values below 100 nm, check units **'
+                print( '** Possible error with wavelenght, values below 100 nm, check units **')
             output.write('%f\t%f\n' % (w,alb[iw]))
         output.close()
     else:
@@ -788,7 +788,7 @@ def write_albedo_file(output_file,wvl=[],alb=[],verbose=False,fifo=False,use_old
         out_string.append('# wvl[nm]    alb[unitless] \n')
         for iw,w in enumerate(wvl):
             if not w>100.0:
-                print '** Possible error with wavelenght, values below 100 nm, check units **'
+                print( '** Possible error with wavelenght, values below 100 nm, check units **')
             out_string.append('%f\t%f\n' % (w,alb[iw]))
         process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
         
@@ -847,15 +847,15 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     """
     import numpy as np
     if verbose:
-        print '..Getting the moments and extinction coefficients from the moms_dict of cloud properties'
+        print( '..Getting the moments and extinction coefficients from the moms_dict of cloud properties')
     
     if not moms_dict:
         import sys
         if sys.platform=='win32':
-            fdict = 'C:/Users/sleblan2/Research/4STAR/rtm_dat/mie_hi.out'
+            fdict = u'C:/Users/sleblan2/Research/4STAR/rtm_dat/mie_hi.out'
         else:
-            fdict = '/u/sleblan2/4STAR/rtm_dat/mie_hi.out'
-        print 'No moments dict defined, loading defaults: '+fdict
+            fdict = u'/u/sleblan2/4STAR/rtm_dat/mie_hi.out'
+        print( 'No moments dict defined, loading defaults: '+fdict)
         import scipy.io as sio
         moms_dict = sio.idl.read(fdict)
     ir = np.argmin(abs(moms_dict['ref']-ref))
@@ -1048,20 +1048,20 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     from Run_libradtran import write_cloud_file_moments
     
     if use_old:
-        if return_string: print '** return_string option not enabled with use_old **'
+        if return_string: print( '** return_string option not enabled with use_old **')
         try:
             output = file(output_file,'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print('Problem with accessing file, return Exception: ',e)
             return
-        if verbose: print 'Opening input file %s' % output_file
+        if verbose: print( 'Opening input file %s' % output_file)
 
     if make_base:
         if fp_base_file:
             if use_old: base = file(fp_base_file,'w')
             include_base = True
         else:
-            print 'Problem: No fp_base_file set, please set before running'
+            print('Problem: No fp_base_file set, please set before running')
             return
     else:
         if fp_base_file:
@@ -1069,7 +1069,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             include_base = False    
                 
-    if verbose: print '..setting the dicts to defaults'
+    if verbose: print('..setting the dicts to defaults')
     source = merge_dicts({'dat_path':'/u/sleblan2/libradtran/libRadtran-2.0-beta/data/',
                           'source':'solar',
                           'wvl_range':[250.0,500.0],
@@ -1084,7 +1084,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
     if source.get('source')=='solar':
         source['source'] = 'solar '+source['dat_path']+'solar_flux/kurudz_1.0nm.dat per_nm'
 
-    if verbose: print '..write out general default values'
+    if verbose: print('..write out general default values')
     if use_old:
         if make_base:
             if source['run_fuliou']:
@@ -1106,7 +1106,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         if include_base:
             output.write('include %s\n' % fp_base_file)
 
-        if verbose: print '..write out source dict values'
+        if verbose: print( '..write out source dict values')
         if make_base:
             if source['integrate_values']:
                 if source['run_fuliou']:
@@ -1132,11 +1132,11 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             if source['wvl_range'][0]>source['wvl_range'][1]:
                 if verbose:
-                    print 'wvl_range was set inverse, inversing'
+                    print( 'wvl_range was set inverse, inversing')
                 source['wvl_range'] = list(reversed(source['wvl_range'])) 
             if source['wvl_range'][0]<250:
                 if verbose:
-                    print 'wvl_range starting too low, setting to 250 nm'
+                    print( 'wvl_range starting too low, setting to 250 nm')
                 source['wvl_range'][0] = 250.0
             output.write('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
 
@@ -1153,7 +1153,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
 
 
 
-        if verbose: print '..write out the albedo values'
+        if verbose: print( '..write out the albedo values')
         if albedo['create_albedo_file']:
             albedo['albedo_file'] = output_file+'_alb'
             write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'],use_old=use_old)
@@ -1165,7 +1165,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             output.write('albedo %f\n' % albedo['albedo'])
 
-        if verbose: print '..write out the geo values'
+        if verbose: print( '..write out the geo values')
         output.write('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
         if geo.get('lat'):
             output.write("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
@@ -1179,7 +1179,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                          %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
 
         if 'ext' in aero:
-            if verbose: print '..write out the aerosol parameters'
+            if verbose: print('..write out the aerosol parameters')
             if aero.get('disort_phase'):
                 dd = 'phase'
             else:
@@ -1200,16 +1200,16 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             output.write('aerosol_file explicit %s\n' % aero['file_name'])
 
         if 'tau' in cloud:
-            if verbose: print '..write out the cloud properties'
+            if verbose: print( '..write out the cloud properties')
             if not cloud.get('link_to_mom_file'):
                 if not cloud.get('file_name'):
                     cloud['file_name'] = output_file+'_cloud'
             if cloud['phase']=='ic':
-                if verbose: print '..Ice cloud'
+                if verbose: print( '..Ice cloud')
                 output.write('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
                 output.write('ic_properties baum_v36 interpolate\n')
             elif cloud['phase']=='wc':
-                if verbose: print '..Liquid water cloud'
+                if verbose: print( '..Liquid water cloud')
                 output.write('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
                 output.write('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
             else:
@@ -1250,7 +1250,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         
         if include_base: out_string.append('include %s\n' % fp_base_file)
         
-        if verbose: print '..write out source dict values'
+        if verbose: print( '..write out source dict values')
         if source['integrate_values']:
             if source['run_fuliou']:
                 base_string.append('output_process sum\n')
@@ -1265,11 +1265,11 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             if source['wvl_range'][0]>source['wvl_range'][1]:
                 if verbose:
-                    print 'wvl_range was set inverse, inversing'
+                    print( 'wvl_range was set inverse, inversing')
                 source['wvl_range'] = list(reversed(source['wvl_range'])) 
             if source['wvl_range'][0]<250:
                 if verbose:
-                    print 'wvl_range starting too low, setting to 250 nm'
+                    print( 'wvl_range starting too low, setting to 250 nm')
                 source['wvl_range'][0] = 250.0
             base_string.append('wavelength %f %f\n' % (source['wvl_range'][0],source['wvl_range'][1]))
 
@@ -1280,7 +1280,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             base_string.append('phi 130.0\n')
             base_string.append('phi0 130.0\n')
         
-        if verbose: print '..write out the albedo values'
+        if verbose: print( '..write out the albedo values')
         if albedo['create_albedo_file']:
             albedo['albedo_file'] = output_file+'_alb'
             write_albedo_file(albedo['albedo_file'],albedo['alb_wvl'],albedo['alb'],use_old=use_old,fifo=fifo)
@@ -1292,7 +1292,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
         else:
             out_string.append('albedo %f\n' % albedo['albedo'])
         
-        if verbose: print '..write out the geo values'
+        if verbose: print( '..write out the geo values')
         out_string.append('zout %s \n' % " ".join([str(x) for x in geo['zout']]))
         if geo.get('lat'):
             out_string.append("latitude %s %f\n" % ('S' if geo['lat']<0 else 'N',abs(geo['lat'])))
@@ -1304,7 +1304,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                          %(geo['year'],geo['month'],geo['day'],geo['hour'],geo['minute'],geo['second']))
         
         if 'ext' in aero:
-            if verbose: print '..write out the aerosol parameters'
+            if verbose: print( '..write out the aerosol parameters')
             if aero.get('disort_phase'):
                 dd = 'phase'
             else:
@@ -1321,16 +1321,16 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             out_string.append('aerosol_file explicit %s\n' % aero['file_name'])
             
         if 'tau' in cloud:
-            if verbose: print '..write out the cloud properties'
+            if verbose: print( '..write out the cloud properties')
             if not cloud.get('link_to_mom_file'):
                 if not cloud.get('file_name'):
                     cloud['file_name'] = output_file+'_cloud'
             if cloud['phase']=='ic':
-                if verbose: print '..Ice cloud'
+                if verbose: print( '..Ice cloud')
                 out_string.append('ic_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
                 out_string.append('ic_properties baum_v36 interpolate\n')
             elif cloud['phase']=='wc':
-                if verbose: print '..Liquid water cloud'
+                if verbose: print( '..Liquid water cloud')
                 out_string.append('wc_file %s %s\n' % ('moments' if cloud['write_moments_file'] else '1D',cloud['file_name']))
                 out_string.append('wc_properties mie %s\n' %('interpolate' if not source['run_fuliou'] else ' '))
             else:
@@ -1359,7 +1359,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                                          verbose=verbose,append_directly_below=True,use_old=use_old,fifo=fifo)
         
         if make_base:
-            if return_string: print '** Cant have both make_base and return_string enabled... Making files and not returning string'
+            if return_string: print('** Cant have both make_base and return_string enabled... Making files and not returning string')
             process_wrapper_file_print(fp_base_file,base_string,append=False,fifo=fifo)
             process_wrapper_file_print(output_file,out_string,append=False,fifo=fifo)
         elif return_string:
@@ -1368,7 +1368,7 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             base_string.extend(out_string)
             process_wrapper_file_print(output_file,base_string,append=False,fifo=fifo)
                 
-    if verbose: print 'Finished printing main input file: Closing file'   
+    if verbose: print( 'Finished printing main input file: Closing file'   )
 
 
 # In[178]:
@@ -1544,7 +1544,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',
                     'theta':np.swapaxes(mie_trm.variables['theta'].data[:,:,0,:],0,1)}
             pmom['file_name'] = [fp_rtm+'wc_trm_longmie.cdf']
         else:
-            print 'Not a correct option for source: select either solar, solar_sub, or thermal'
+            print( 'Not a correct option for source: select either solar, solar_sub, or thermal')
             return None
     elif cloudtype =='ic':
         ic = sio.loadmat(fp_rtm+'ic.pmom.ghm.baum.mat')
@@ -1559,7 +1559,7 @@ def make_pmom_inputs(fp_rtm='C:/Users/sleblan2/Research/4STAR/rtm_dat/',
         pmom['nmom'] = np.zeros_like(pmom['pmom'])-1
         pmom['file_name'] = [fp_rtm+'ic.pmom.ghm.baum.mat']
     else:
-        print 'Not a correct cloudtype value: either wc or ic'
+        print( 'Not a correct cloudtype value: either wc or ic')
         return None
     return pmom
 
@@ -1680,7 +1680,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
     
     for mmm in mmmlist: #['DJF','MAM','JJA','SON']:
         fpm = fp+'Input_to_DARF_{mmm}_{vv}.mat'.format(mmm=mmm,vv=version)
-        print 'in %s months, getting mat file: %s' % (mmm,fpm)
+        print( 'in %s months, getting mat file: %s' % (mmm,fpm))
         input_mmm = sio.loadmat(fpm,mat_dtype=True)['data_input_darf']
         if mmm=='DJF':
             geo['month'] = 1
@@ -1697,10 +1697,10 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
             
         try:
             file_list = file(fp_out+'AAC_list_file_{m}_{v}{lbl}.sh'.format(m=mmm,v=version,lbl=std_label),'w')
-        except Exception,e:
-            print 'Problem with accessing file, return Exception: ',e
+        except Exception as e:
+            print( 'Problem with accessing file, return Exception: ',e)
             return
-        print 'Starting list file'
+        print( 'Starting list file')
         fp_out2 = fp_out+mmm+std_label+'/'
         if not os.path.exists(fp_out2):
             os.mkdir(fp_out2)
@@ -1712,19 +1712,19 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
         make_base = True
 
         fpa = fp_alb+'MCD43GF_geo_shortwave_%03i_2007.hdf' % doy
-        print 'Getting albedo files: '+fpa
+        print( 'Getting albedo files: '+fpa)
         try:
             alb_geo,alb_geo_dict = lm.load_hdf_sd(fpa)
-            print 'done loading albedo files'
+            print( 'done loading albedo files')
             alb_geo_sub = np.nanmean(np.nanmean(alb_geo['MCD43GF_CMG'].reshape([48,21600/48,75,43200/75]),3),1)
         except:
             alb_geo = lm.load_hdf_raster1(fpa)
-            print 'done loading albedo files using raster 1'
+            print( 'done loading albedo files using raster 1')
             alb_geo_sub = np.nanmean(np.nanmean(alb_geo.reshape([48,21600/48,75,43200/75]),3),1)        
         alb_geo_lat = np.linspace(90,-90,num=48)
         alb_geo_lon = np.linspace(-180,180,num=75)
         
-        print 'Running through the files'
+        print( 'Running through the files')
         for ilat,lat in enumerate(input_mmm['MODIS_lat'][0,0]):
             if start_lat:
                 if not ilat>=start_lat:
@@ -1737,7 +1737,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                 # set the aerosol values
                 aero['wvl_arr'] = input_mmm['MOC_wavelengths'][0,0][0,:]*1000.0
                 aero['ext'] = np.abs(input_mmm['MOC_ext_mean'][0,0][ilat,ilon,:]) # is in AOD units, not ext, but since it is for 1 km, does not matter
-                print 'ext:',stdfac_dict['ext'],aero['ext'][9],stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,9])/1000.0
+                print( 'ext:',stdfac_dict['ext'],aero['ext'][9],stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,9])/1000.0)
                 aero['ext'] = aero['ext']+stdfac_dict['ext']*np.abs(input_mmm['MOC_ext_std'][0,0][ilat,ilon,:])/1000.0 #convert  per Mm to per km
                 aero['ext'][aero['ext']<0.0] = 0.0
                 if aero_clear:
@@ -1827,7 +1827,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
                         cloud['link_to_mom_file'] = True
                     if not aero['link_to_mom_file']:
                         aero['link_to_mom_file'] = True
-                    print mmm,ilat,ilon,HH
+                    print( mmm,ilat,ilon,HH)
         del alb_geo
         del input_mmm
         file_list.close()
@@ -1836,7 +1836,7 @@ def build_aac_input(fp,fp_alb,fp_out,fp_pmom=None,fp_uvspec='/u/sleblan2/libradt
 # In[43]:
 
 
-def read_libradtran(fp,zout=[0,3,100],num_rad=0):
+def read_libradtran(fp,zout=[0,3,100],num_rad=0,use_mystic=False):
     """
     Purpose:
     
@@ -1849,6 +1849,7 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
         fp: full path of file to read
         zout: array of zout values
         num_rad: to load radiance set to number of zenith angle directions (defaults to none)
+        use_mystic: to load radiance only from mystic (defaults to False)
         
     Outputs:
     
@@ -1884,6 +1885,8 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
         Written: Samuel LeBlanc, 2015-07-13, Santa Cruz, CA
         Modified: Samuel LeBlanc, 2015-10-14, NASA Ames, Santa Cruz, CA
                   - added handling of radiance values
+        Modified: Samuel LeBlanc, 2022-03-22, Santa Cruz, CA
+                  - added reading in of mystic values (no oputput of direct,diffuse iradiances)
         
     """
     #import os
@@ -1898,45 +1901,51 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0):
             arr_len += 3*(num_rad-1)
     else:
         arr_len = 7
+    if use_mystic: arr_len = num_rad
     dat = np.fromfile(fp,sep=' ')
     if len(dat)==0 :
         raise IOError('File {} empty'.format(fp))
     try:
-        dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
+        dat = dat.reshape(int(len(dat)/arr_len/zout_len),zout_len,arr_len)
     except ValueError:
         arr_len = 5
-        dat = dat.reshape(len(dat)/arr_len/zout_len,zout_len,arr_len)
-    try:
+        dat = dat.reshape(int(len(dat)/arr_len/zout_len),zout_len,arr_len)
+    if use_mystic:
         output = {'wvl':dat[:,0,0].squeeze(),
                   'zout':zout,
-                  'direct_down':dat[:,:,1].squeeze(),
-                  'diffuse_down':dat[:,:,2].squeeze(),
-                  'diffuse_up':dat[:,:,3].squeeze(),
-                  'int_dir_dn':dat[:,:,4].squeeze(),
-                  'int_dif_dn':dat[:,:,5].squeeze(),
-                  'int_dif_up':dat[:,:,6].squeeze()}
-    except:
-        output = {'wvl':dat[:,0,0].squeeze(),
-                  'zout':zout,
-                  'direct_down':dat[:,:,1].squeeze(),
-                  'diffuse_down':dat[:,:,2].squeeze(),
-                  'diffuse_up':dat[:,:,3].squeeze()}
+                  'rad':dat[:,:,1:].squeeze()}        
+    else:
         try:
-             output['int_tot'] = dat[:,:,4].squeeze()
+            output = {'wvl':dat[:,0,0].squeeze(),
+                      'zout':zout,
+                      'direct_down':dat[:,:,1].squeeze(),
+                      'diffuse_down':dat[:,:,2].squeeze(),
+                      'diffuse_up':dat[:,:,3].squeeze(),
+                      'int_dir_dn':dat[:,:,4].squeeze(),
+                      'int_dif_dn':dat[:,:,5].squeeze(),
+                      'int_dif_up':dat[:,:,6].squeeze()}
         except:
-            output['int_tot'] = np.NaN
-    if num_rad:
-        output['rad'] = dat[:,:,10].squeeze()
-        output['rad_avg'] = dat[:,:,9].squeeze()
-        output['phi'] = dat[0,0,7]
-        output['umu'] = np.array([dat[0,0,8]])
-        if num_rad>1:
-            output['rad'] = output['rad'][...,np.newaxis]
-            output['rad_avg'] = output['rad_avg'][...,np.newaxis]
-        for i in range(num_rad-1):
-            output['umu'] = np.append(output['umu'],dat[0,0,11+i*3])
-            output['rad'][:,:,:,i+1] = dat[:,:,13+i*3]
-            output['rad_avg'][:,:,:,i+1] = dat[:,:,12+i*3]
+            output = {'wvl':dat[:,0,0].squeeze(),
+                      'zout':zout,
+                      'direct_down':dat[:,:,1].squeeze(),
+                      'diffuse_down':dat[:,:,2].squeeze(),
+                      'diffuse_up':dat[:,:,3].squeeze()}
+            try:
+                 output['int_tot'] = dat[:,:,4].squeeze()
+            except:
+                output['int_tot'] = np.NaN
+        if num_rad:
+            output['rad'] = dat[:,:,10].squeeze()
+            output['rad_avg'] = dat[:,:,9].squeeze()
+            output['phi'] = dat[0,0,7]
+            output['umu'] = np.array([dat[0,0,8]])
+            if num_rad>1:
+                output['rad'] = output['rad'][...,np.newaxis]
+                output['rad_avg'] = output['rad_avg'][...,np.newaxis]
+            for i in range(num_rad-1):
+                output['umu'] = np.append(output['umu'],dat[0,0,11+i*3])
+                output['rad'][:,:,:,i+1] = dat[:,:,13+i*3]
+                output['rad_avg'][:,:,:,i+1] = dat[:,:,12+i*3]
     return output
 
 
@@ -2047,7 +2056,7 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
                 except IOError:
                     #print 'File not found skip: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
                     if iutc==0:
-                        print file_out_sol
+                        print( file_out_sol)
                     continue
                 except ValueError:
                     #print 'Problem with file: lat%02i_lon%02i_%s_HH%02i' %(ilat,ilon,mmm,iutc)
@@ -2062,7 +2071,7 @@ def read_aac(fp_out,fp_mat,mmm=None,read_sol=True,read_thm=True):
                 if read_thm:
                     output['LW_irr_dn_utc'][:,ilat,ilon,iutc] = thm['direct_down']+thm['diffuse_down']
                     output['LW_irr_up_utc'][:,ilat,ilon,iutc] = thm['diffuse_up']
-            print mmm,ilat,ilon
+            print( mmm,ilat,ilon)
             output['SW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['SW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
             output['SW_irr_up_avg'][:,ilat,ilon] = np.mean(output['SW_irr_up_utc'][:,ilat,ilon,:],axis=1)
             output['LW_irr_dn_avg'][:,ilat,ilon] = np.mean(output['LW_irr_dn_utc'][:,ilat,ilon,:],axis=1)
@@ -2081,14 +2090,14 @@ def combine_wvl(dat1,dat2):
     dat = dat1
     try: 
         if not (dat1['phi']==dat2['phi']):
-            print '*** Possible problem, the two arrays do not match in phi'
+            print( '*** Possible problem, the two arrays do not match in phi')
     except: 
         pass
     if not (dat1['zout']==dat2['zout']):
-        print '*** Possible problem, the two arrays do not match in zout'
+        print( '*** Possible problem, the two arrays do not match in zout')
     try:
         if not (dat1['umu']==dat2['umu']):
-            print '*** Possible problem, the two arrays do not match in umu'
+            print( '*** Possible problem, the two arrays do not match in umu')
     except:
         pass
     try:
@@ -2171,7 +2180,7 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[0],tau=tau[0],sza=sza[0],phase=phase[0],iwvl=0)),
                                   zout=zout,num_rad=numrad)
     except:
-        print 'trying backup first run on file:'+fp_out
+        print( 'trying backup first run on file:'+fp_out)
         dat1 = RL.read_libradtran(os.path.join(fp_out,fmt.format(ref=ref[-1],tau=tau[-1],sza=sza[-1],phase=phase[-1],iwvl=0)),
                                   zout=zout,num_rad=numrad)
     if split_wvl:
@@ -2218,7 +2227,7 @@ def read_lut(fp_out,zout=None,tau=[None],ref=[None],sza=[None],
                     output['irr_up'][ip,:,:,ir,it,iz] = dat1['diffuse_up']
                     output['irr_dn'][ip,:,:,ir,it,iz] = dat1['direct_down']+dat1['diffuse_down']
                     output['irr_dn_diff'][ip,:,:,ir,it,iz] = dat1['diffuse_down']
-                    print s,t,r
+                    print( s,t,r)
     return output               
 #'lut_sza%02i_tau%06.2f_ref%04.1f'
 #'lut_sza%02i_ref%02.1f_tau%03.1f'
@@ -2330,24 +2339,24 @@ def read_24h_aac(d):
         try:
             sol = RL.read_libradtran(file_out_sol,zout=zout)
         except IOError:
-            print 'File {} not found skip'.format(file_out_sol) 
+            print( 'File {} not found skip'.format(file_out_sol) )
             if HH==0:
-                print file_out_sol
+                print( file_out_sol)
             continue
         except ValueError:
-            print 'Problem with file: {}'.format(file_out_sol)
+            print( 'Problem with file: {}'.format(file_out_sol))
             output['SW_irr_dn_utc'][:,HH] = np.nan
             output['SW_irr_up_utc'][:,HH] = np.nan
                     
         try:
             thm = RL.read_libradtran(file_out_thm,zout=zout)
         except IOError:
-            print 'File {} not found skip'.format(file_out_thm) 
+            print( 'File {} not found skip'.format(file_out_thm) )
             if HH==0:
-                print file_out_thm
+                print( file_out_thm)
             continue
         except ValueError:
-            print 'Problem with file: {}'.format(file_out_thm)
+            print( 'Problem with file: {}'.format(file_out_thm))
             output['LW_irr_dn_utc'][:,HH] = np.nan
             output['LW_irr_up_utc'][:,HH] = np.nan
             
@@ -2377,28 +2386,28 @@ if __name__=='__main__':
     z_arr = np.array([3,4])
     wvl_arr = np.array([350.,500.,650.])
 
-    write_aerosol_file_explicit('C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
+    write_aerosol_file_explicit(r'C:\Users\sleblan2\libradtran/aero.inp',z_arr,ext,ssa,asy,wvl_arr,verbose=True)
 
 
 # In[49]:
 
 
 if __name__=='__main__':
-    write_cloud_file('C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
+    write_cloud_file(r'C:\Users\sleblan2\libradtran\cloud.inp',10,10,2,3,verbose=True)
 
 
 # In[57]:
 
 
 if __name__=='__main__':
-    write_albedo_file('C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
+    write_albedo_file(r'C:\Users\sleblan2\libradtran/alb.inp',[500.0,600.0],[0.5,0.6],verbose=True)
 
 
 # In[109]:
 
 
 if __name__=='__main__':
-    write_input_aac('C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
+    write_input_aac(r'C:\Users\sleblan2\libradtran/test_input.inp',geo={'zout':[0,3,100],'wvl_range':[202,5600]},aero={},cloud={'tau':10,'ref':10,'phase':'wc','ztop':3,'zbot':2},source={},
                     verbose=True)
 
 
@@ -2466,14 +2475,14 @@ if __name__=='__main__':
 
 
 if __name__=='__main__':
-    write_input_aac('C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
+    write_input_aac(r'C:\Users\sleblan2\libradtran/test_input_aac.inp',geo=geo,aero=aero,cloud=cloud,source=source,albedo=albedo,verbose=True)
 
 
 # In[39]:
 
 
 if __name__=='__main__':
-    fp = 'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
+    fp = r'C:\Users\sleblan2/Research/libradtran/testing_new/AAC_input_lat06_lon19_DJF_HH17_sol.out'
 
     import pandas as pd
 
