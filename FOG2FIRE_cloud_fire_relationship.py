@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[32]:
+# In[1]:
 
 
 import numpy as np
@@ -56,13 +56,19 @@ get_ipython().magic(u'matplotlib notebook')
 import os
 
 
-# In[33]:
+# In[20]:
+
+
+import pandas as pd
+
+
+# In[2]:
 
 
 from scipy.interpolate import UnivariateSpline
 
 
-# In[34]:
+# In[3]:
 
 
 name = 'FOG2FIRE'
@@ -72,7 +78,7 @@ fp = getpath(name)
 
 # # Load files
 
-# In[38]:
+# In[4]:
 
 
 f = os.listdir(fp)
@@ -80,7 +86,7 @@ f.sort()
 f
 
 
-# In[171]:
+# In[5]:
 
 
 years = ['2002','2003','2004','2005','2006','2007','2008','2009',
@@ -89,7 +95,7 @@ years = ['2002','2003','2004','2005','2006','2007','2008','2009',
 
 # ## Load the clouds
 
-# In[172]:
+# In[6]:
 
 
 cld = []
@@ -102,7 +108,7 @@ for y in years:
     cld.append(c)
 
 
-# In[173]:
+# In[7]:
 
 
 cld[1].keys()
@@ -110,28 +116,42 @@ cld[1].keys()
 
 # ## Load the fire counts
 
-# In[43]:
+# In[8]:
 
 
+vy = 'v2'
 fir = []
 for y in years:
     try:
-        i = np.load(fp+'MYD14_{}_{}.npy'.format(y,vv),allow_pickle=True,fix_imports=True,encoding='latin1')
+        i = np.load(fp+'MYD14_{}_{}.npy'.format(y,vy),allow_pickle=True,fix_imports=True,encoding='latin1')
         i = i.item()
     except FileNotFoundError:
         i = {}
     fir.append(i)
 
 
-# In[44]:
+# In[9]:
 
 
 fir[1].keys()
 
 
+# In[10]:
+
+
+print(fir[0]['time'][0])
+
+
+# In[11]:
+
+
+for ffi in fir:
+    print(ffi['time'][0],' - to - ',ffi['time'][-1])
+
+
 # ## Load the soil moisture
 
-# In[183]:
+# In[12]:
 
 
 sma = []
@@ -146,19 +166,19 @@ for y in years:
 
 # # Plot out data
 
-# In[48]:
+# In[13]:
 
 
 cld[1]['CF'].keys()
 
 
-# In[49]:
+# In[14]:
 
 
 cld[1]['CF']['coast'].keys()
 
 
-# In[50]:
+# In[15]:
 
 
 cld[1]['CF']['coast']['mean'].shape
@@ -166,7 +186,7 @@ cld[1]['CF']['coast']['mean'].shape
 
 # ## Make smoothing and plotting functions
 
-# In[51]:
+# In[13]:
 
 
 def smooth(x,y,w):
@@ -177,19 +197,19 @@ def smooth(x,y,w):
     return fx(x)
 
 
-# In[52]:
+# In[14]:
 
 
 from scipy.signal import savgol_filter
 
 
-# In[53]:
+# In[15]:
 
 
 import statsmodels.api as sm
 
 
-# In[54]:
+# In[16]:
 
 
 def smooth_l(x,y,w):
@@ -200,7 +220,7 @@ def smooth_l(x,y,w):
     return fx[:,0],fx[:,1]
 
 
-# In[55]:
+# In[17]:
 
 
 def non_uniform_savgol(x, y, window, polynom):
@@ -314,7 +334,7 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-# In[56]:
+# In[18]:
 
 
 def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
@@ -364,7 +384,7 @@ def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
     return smoothed
 
 
-# In[57]:
+# In[19]:
 
 
 def smooth_s(x,y,w=25,p=4):
@@ -378,7 +398,7 @@ def smooth_s(x,y,w=25,p=4):
     return x[igood],yp
 
 
-# In[58]:
+# In[20]:
 
 
 def smooth_g(x,y,s=0.1):
@@ -389,15 +409,9 @@ def smooth_g(x,y,s=0.1):
     return x[igood],yp
 
 
-# In[59]:
-
-
-cld[i]['time'][0].minute
-
-
 # ## Plot out the CF time series
 
-# In[175]:
+# In[17]:
 
 
 for j in range(4):
@@ -409,7 +423,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[176]:
+# In[18]:
 
 
 cld[i]['lbls_rg']
@@ -507,6 +521,39 @@ plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019_zoom.png'.f
 
 # ### Compare multiple regions cloud fraction and fire counts
 
+# In[19]:
+
+
+plt.figure()
+i = 17
+j = 2
+
+rg = 'coast'
+doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+plt.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label='Cloud Fraction')
+plt.plot([0],[0],'+',label='Fire counts',c='tab:blue')
+ax = plt.gca()
+axx = plt.gca().twinx()
+axx.plot(doys,fir[i]['FP'][rg]['num'][:,j],'+',label='Fire counts',c='tab:blue')
+for i in range(1,19):
+    doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+    ax.plot(doyc,cld[i]['CF'][rg]['dev'][:,j],'.',label=years[i])
+    axx.plot(doys,fir[i]['FP'][rg]['num'][:,j],'+')
+    
+ax.legend()
+#plt.xlim(datetime(2019,1,1),datetime(2020,1,1))
+
+ax.set_xlabel('Day of year')
+ax.set_ylabel('Cumulative change in Cloud Fraction (MODIS Terra)')
+axx.set_ylabel('Number of Fire counts (MODIS Aqua)')
+
+ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
+
+#plt.savefig(fp+'Cloud_fraction_vs_fire_count_{}_{}_2017_2018_2019.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
+
+
 # In[23]:
 
 
@@ -549,6 +596,98 @@ for j in range(4):
     ax[1].set_title('Coast')
     ax[2].set_title('Land')
     plt.tight_layout()
+
+
+# ## Get some statistics for fire and cloudiness
+
+# In[87]:
+
+
+#fir_times = [{}] # timing stats that indicate max, above background timing, and threhold limits for each year.
+background_maxdoy = 100.0 # upper time limit for background number of fires
+for i in range(1,19):
+    fir[i]['thresholds'] = {}
+    fir[i]['doy'] = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+    for rg in fir[i]['FP'].keys():
+        fir[i]['thresholds'][rg] = np.zeros((11,len(fir[i]['lbls_rg'][rg])))+np.nan
+        for j,l in enumerate(fir[i]['lbls_rg'][rg]):
+            def doy_at(x):
+                try:
+                    i_sub = np.where(np.array(fir[i]['FP'][rg]['num'][:,j])>x)[0][0]
+                    return fir[i]['doy'][i_sub]
+                except:
+                    return np.nan
+            back = np.nanmax(fir[i]['FP'][rg]['num'][np.array(fir[i]['doy'])<background_maxdoy,j])
+            above_back = doy_at(back) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>back)[0][0]]
+            above_back_plus = doy_at(back*1.2) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>back*1.2)[0][0]]
+            above_20 = doy_at(20.0) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>20.0)[0][0]]
+            above_50 = doy_at(50.0)
+            above_mean = doy_at(np.nanmean(fir[i]['FP'][rg]['num'][:,j]))
+            above_median = doy_at(np.nanmedian(fir[i]['FP'][rg]['num'][:,j]) )
+            above_75p = doy_at(np.nanpercentile(fir[i]['FP'][rg]['num'][:,j],75.0))
+            above_90p = doy_at(np.nanpercentile(fir[i]['FP'][rg]['num'][:,j],90.0))
+            above_99p = doy_at(np.nanpercentile(fir[i]['FP'][rg]['num'][:,j],99.0))
+            above_995p = doy_at(np.nanpercentile(fir[i]['FP'][rg]['num'][:,j],99.5))
+            maxt = fir[i]['doy'][np.nanargmax(fir[i]['FP'][rg]['num'][:,j])]
+            
+            fir[i]['thresholds'][rg][0,j] = above_back
+            fir[i]['thresholds'][rg][1,j] = above_back_plus
+            fir[i]['thresholds'][rg][2,j] = above_20
+            fir[i]['thresholds'][rg][3,j] = above_50
+            fir[i]['thresholds'][rg][4,j] = above_mean
+            fir[i]['thresholds'][rg][5,j] = above_median
+            fir[i]['thresholds'][rg][6,j] = above_75p
+            fir[i]['thresholds'][rg][7,j] = above_90p
+            fir[i]['thresholds'][rg][8,j] = above_99p
+            fir[i]['thresholds'][rg][9,j] = above_995p
+            fir[i]['thresholds'][rg][10,j] = maxt
+                            
+            
+
+
+# In[ ]:
+
+
+#fir_times = [{}] # timing stats that indicate max, above background timing, and threhold limits for each year.
+background_maxdoy = 100.0 # upper time limit for background number of fires
+for i in range(1,19):
+    cld[i]['thresholds'] = {}
+    cld[i]['doy'] = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    for rg in cld[i]['CF'].keys():
+        cld[i]['thresholds'][rg] = np.zeros((11,len(cld[i]['lbls_rg'][rg])))+np.nan
+        for j,l in enumerate(cld[i]['lbls_rg'][rg]):
+            def doy_at(x):
+                try:
+                    i_sub = np.argmin(abs(cld[i]['CF'][rg]['mean'][:,j])-x))
+                    return cld[i]['doy'][i_sub]
+                except:
+                    return np.nan
+            back = np.nanmax(cld[i]['CF'][rg]['mean'][np.array(cld[i]['doy'])<background_maxdoy,j])
+            above_back = doy_at(back) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>back)[0][0]]
+            above_back_plus = doy_at(back*1.2) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>back*1.2)[0][0]]
+            above_20 = doy_at(20.0) #fir[i]['doy'][np.where(fir[i]['FP'][rg]['num'][:,j]>20.0)[0][0]]
+            above_50 = doy_at(50.0)
+            above_mean = doy_at(np.nanmean(cld[i]['CF'][rg]['mean'][:,j]))
+            above_median = doy_at(np.nanmedian(cld[i]['CF'][rg]['mean'][:,j]) )
+            above_75p = doy_at(np.nanpercentile(cld[i]['CF'][rg]['mean'][:,j],75.0))
+            above_90p = doy_at(np.nanpercentile(cld[i]['CF'][rg]['mean'][:,j],90.0))
+            above_99p = doy_at(np.nanpercentile(cld[i]['CF'][rg]['mean'][:,j],99.0))
+            above_995p = doy_at(np.nanpercentile(cld[i]['CF'][rg]['mean'][:,j],99.5))
+            maxt = fir[i]['doy'][np.nanargmax(cld[i]['CF'][rg]['mean'][:,j])]
+            
+            cld[i]['thresholds'][rg][0,j] = above_back
+            cld[i]['thresholds'][rg][1,j] = above_back_plus
+            cld[i]['thresholds'][rg][2,j] = above_20
+            cld[i]['thresholds'][rg][3,j] = above_50
+            cld[i]['thresholds'][rg][4,j] = above_mean
+            cld[i]['thresholds'][rg][5,j] = above_median
+            cld[i]['thresholds'][rg][6,j] = above_75p
+            cld[i]['thresholds'][rg][7,j] = above_90p
+            cld[i]['thresholds'][rg][8,j] = above_99p
+            cld[i]['thresholds'][rg][9,j] = above_995p
+            cld[i]['thresholds'][rg][10,j] = maxt
+                            
+            
 
 
 # ## CF Histogram for each region
@@ -806,8 +945,323 @@ for j in range(4):
     plt.tight_layout()
 
 
-# In[ ]:
+# # Build timeseries using pandas
+
+# In[37]:
 
 
+i = 17
+j = 2
 
+rg = 'coast'
+
+fire_doy = []
+cloud_doy = []
+fire_time = []
+cloud_time = []
+cloud_cumdev = []
+fir_counts = []
+
+for i in range(1,19):
+    doyc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    doys = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+    fire_doy = np.append(fire_doy,doys)
+    cloud_doy = np.append(cloud_doy,doyc)
+    fire_time = np.append(fire_time,fir[i]['time'])
+    cloud_time = np.append(cloud_time,cld[i]['time'])
+    cloud_cumdev = np.append(cloud_cumdev,cld[i]['CF'][rg]['dev'][:,j])
+    fir_counts = np.append(fir_counts,fir[i]['FP'][rg]['num'][:,j])
+
+
+# In[34]:
+
+
+len(fire_doy),len(fir_counts),len(cloud_cumdev),len(cloud_doy)
+
+
+# In[112]:
+
+
+fire = pd.DataFrame(data=fir_counts)
+fire['time'] = pd.to_datetime(fire_time)
+fire['counts'] = fir_counts
+fire.set_index('time', inplace = True)
+
+
+# In[113]:
+
+
+cloud = pd.DataFrame(data=cloud_cumdev)
+cloud['time'] = pd.to_datetime(cloud_time)
+cloud['cumdev'] = cloud_cumdev
+cloud.set_index('time', inplace = True)
+
+
+# In[128]:
+
+
+df = pd.concat([cloud, fire]).sort_index().interpolate().reindex(fire.index)
+del df[0]
+
+
+# In[129]:
+
+
+df.keys()
+
+
+# In[130]:
+
+
+df
+
+
+# In[140]:
+
+
+df.dropna(inplace=True)
+dfd = df.resample('D').mean()
+dfd.interpolate(inplace=True)
+
+
+# In[138]:
+
+
+df.plot()
+
+
+# In[150]:
+
+
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+
+# In[148]:
+
+
+result_cloud = seasonal_decompose(dfd['cumdev'])
+result_cloud.plot()
+
+
+# In[149]:
+
+
+result_fire = seasonal_decompose(dfd['counts'])
+result_fire.plot()
+
+
+# In[154]:
+
+
+fig, ax = plt.subplots(figsize = (4,2))
+
+plot_acf(dfd['cumdev'], ax = ax)
+
+plt.show()
+
+
+# In[156]:
+
+
+fig, ax = plt.subplots(figsize = (4,2))
+
+plot_acf(dfd['counts'], ax = ax)
+
+plt.show()
+
+
+# ## Use DARTS
+
+# In[158]:
+
+
+from darts import TimeSeries
+import darts.models as dmo
+import darts.metrics as dme
+
+
+# In[183]:
+
+
+def plot_backtest(series, forecast, model_name,idx=-144):
+    series[idx:].plot(label='Actual Values')
+    forecast[idx:].plot(label= 'Forecast')
+    plt.title(model_name)
+    plt.show()
+    
+def print_metrics(series, forecast, model_name):
+    mae_ = dme.mae(series, forecast)
+    rmse_ = dme.rmse(series, forecast)
+    try:
+        mape_ = dme.mape(series, forecast)
+        smape_ = dme.smape(series, forecast)
+    except ValueError:
+        mape_ = np.nan
+        smape_ = np.nan
+        
+    r2_score_ = dme.r2_score(series, forecast)
+    
+    dict_ = {'MAE': mae_, 'RMSE': rmse_,
+             'MAPE': mape_, 'SMAPE': smape_, 
+             'R2': r2_score_}
+    
+    df = pd.DataFrame(dict_, index = [model_name])
+    
+    return(df.round(decimals = 2))  
+
+
+# In[195]:
+
+
+dfd.keys()
+
+
+# In[200]:
+
+
+fir = pd.DataFrame(dfd['counts'])
+cld = pd.DataFrame(dfd['cumdev'])
+
+
+# In[201]:
+
+
+series_fire = TimeSeries.from_dataframe(fir)
+series_cld = TimeSeries.from_dataframe(cld)
+
+start = pd.Timestamp('010103')
+df_metrics = pd.DataFrame()
+
+
+# In[289]:
+
+
+series_cld_tr,_ = series_cld.split_before(0.75)
+
+
+# In[202]:
+
+
+series_train,_ = series_fire.split_before(0.75)
+nfore = len(_)
+ntrain = len(series_train)
+
+
+# In[207]:
+
+
+def eval_model(model, past_covariates=None, future_covariates=None,nfore=1645):
+    # Past and future covariates are optional because they won't always be used in our tests
+    
+    # We backtest the model on the last 20% of the flow series, with a horizon of 10 steps:
+    backtest = model.historical_forecasts(series=series_fire, 
+                                          past_covariates=past_covariates,
+                                          future_covariates=future_covariates,
+                                          start=0.75, 
+                                          retrain=False,
+                                          verbose=True, 
+                                          forecast_horizon=nfore)
+    
+    series_fire[-len(backtest)-100:].plot()
+    backtest.plot(label='backtest (n={:3.0f})'.format(nfore))
+    
+    met = print_metrics(series_fire,backtest,model.model_params['model'])
+    return met
+
+
+# ### No covariate
+
+# In[240]:
+
+
+import logging
+
+
+# In[283]:
+
+
+brnn_no_cov = dmo.BlockRNNModel(input_chunk_length=30, 
+                            output_chunk_length=10, 
+                            n_rnn_layers=2,batch_size=64)
+
+
+# In[284]:
+
+
+brnn_no_cov.fit(series_train, 
+                epochs=25, 
+                verbose=True)
+
+
+# In[285]:
+
+
+backtest = brnn_no_cov.historical_forecasts(series=series_fire, retrain=False,
+                                          verbose=True,                                             
+                                          forecast_horizon=300,start=0.75)
+
+
+# In[255]:
+
+
+plt.figure()
+eval_model(brnn_no_cov,nfore=nfore-50)
+
+
+# In[287]:
+
+
+plt.figure()
+series_fire.plot()
+series_train.plot(label='training counts')
+backtest.plot(label='forecast')
+
+
+# ### Add covariate
+
+# In[288]:
+
+
+brnn_wi_cov = dmo.BlockRNNModel(input_chunk_length=30, 
+                             output_chunk_length=10, 
+                             n_rnn_layers=2)
+
+
+# In[291]:
+
+
+brnn_wi_cov.fit(series_train, 
+                 past_covariates=series_cld_tr, 
+                 epochs=50, 
+                 verbose=True)
+
+
+# In[312]:
+
+
+backtest_wi = brnn_wi_cov.historical_forecasts(series=series_fire, retrain=False,
+                                          verbose=True, past_covariates=series_cld,                                     
+                                          forecast_horizon=10,start=0.75)
+
+
+# In[314]:
+
+
+plt.figure()
+
+series_fire.plot(label='original fire counts')
+backtest_wi.plot(label='backtest fire counts')
+
+
+# In[315]:
+
+
+backtest_wi.values()[backtest_wi.values()<0] = 0.0
+
+
+# In[316]:
+
+
+print_metrics(series_fire,backtest_wi,brnn_wi_cov.model_params['model'])
 
