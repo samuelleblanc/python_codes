@@ -235,12 +235,12 @@ if run_matlab:
         if not f.instname in ['4STAR','4STARB']: # only for 4STARs for now.
             continue
             
-        mfile = make_temp_mfile(in_directory+'temp.m',filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
+        mfile = make_temp_mfile(in_directory+'temp_{}_{}.m'.format(f.instname,daystr),filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
 
+        pmfile = Path(mfile)
         if verbose: 
-            print( ' '.join(['{}matlab'.format(prefix),'-nodisplay','-batch',"{}".format(Path(mfile).stem)]))
+            print( ' '.join(['{}matlab'.format(prefix),'-nodisplay','-batch',"{}".format(pmfile.stem)]))
         if not dry_run:
-            pmfile = Path(mfile)
             os.chdir(str(pmfile.parent))
             process = subprocess.Popen(['matlab','-nodisplay','-batch',"{}".format(pmfile.stem)],
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
