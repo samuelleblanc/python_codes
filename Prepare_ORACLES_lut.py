@@ -47,7 +47,7 @@
 
 # # Prepare the python environment
 
-# In[2]:
+# In[1]:
 
 
 import numpy as np
@@ -57,13 +57,13 @@ import Run_libradtran as RL
 reload(RL)
 
 
-# In[3]:
+# In[2]:
 
 
 from load_utils import load_from_json
 
 
-# In[68]:
+# In[3]:
 
 
 if os.sys.platform == 'win32':
@@ -80,9 +80,18 @@ else:
     raise Exception
 
 
+# In[4]:
+
+
+fp = '/data/sam/ORACLES/'
+fp_rtm = '/scratch/rtm/'
+fp_uvspec = '/home/sam/libradtran/libRadtran-2.0.2/bin/uvspec'
+fp_rtmdat = '/scratch/rtm/dat/' #'/u/sleblan2/4STAR/rtm_dat/'
+
+
 # # Setup the variables used to create the lut
 
-# In[17]:
+# In[5]:
 
 
 vv = 'v5_midaod'
@@ -90,7 +99,7 @@ mu = np.arange(1.02,3.4,0.15)
 mu.shape
 
 
-# In[18]:
+# In[6]:
 
 
 sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
@@ -98,7 +107,7 @@ sza = np.round(np.arccos(1.0/mu)*180.0/np.pi)
 print(sza)
 
 
-# In[108]:
+# In[7]:
 
 
 tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
@@ -107,33 +116,33 @@ tau = np.array([0.1,0.2,0.5,0.75,1.0,1.5,2.0,3.0,4.0,5.0,
 ref = np.append(np.append(np.arange(1,15),np.arange(15,30,2)),np.ceil(np.arange(30,61,2.5)))
 
 
-# In[109]:
+# In[8]:
 
 
 ref
 
 
-# In[112]:
+# In[9]:
 
 
 print(ref.shape)
 print(tau.shape)
 
 
-# In[ ]:
+# In[10]:
 
 
 pmom = RL.make_pmom_inputs(fp_rtm=fp_rtmdat,source='solar',deltascale=True)
 
 
-# In[ ]:
+# In[11]:
 
 
 aero = load_from_json(fp+'aero_file_v4.txt')
 aero['ext'] = aero['ext']*0.5/aero['ext'][0,3]
 
 
-# In[70]:
+# In[12]:
 
 
 #geo = {'lat':-22.979,
@@ -169,7 +178,7 @@ albedo = {'create_albedo_file':True,
           'wind_speed':5.0}
 
 
-# In[60]:
+# In[13]:
 
 
 RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
@@ -177,21 +186,21 @@ RL.print_version_details(fp+'ORACLES_lut_%s.txt'%vv,vv,geo=geo,
                          tau=tau,ref=ref,sza=sza,cloud_pmom_file=fp_rtmdat+'mie_hi_delta.mat')
 
 
-# In[71]:
+# In[14]:
 
 
 fp_in = os.path.join(fp_rtm,'input','%s_ORACLES'%vv)
 fp_out = os.path.join(fp_rtm,'output','%s_ORACLES'%vv)
 
 
-# In[82]:
+# In[15]:
 
 
 f_slit_vis = os.path.join(fp_rtm,'4STAR_vis_slit_1nm.dat')
 f_slit_nir = os.path.join(fp_rtm,'4STAR_nir_slit_1nm.dat')
 
 
-# In[72]:
+# In[16]:
 
 
 if not os.path.exists(fp_in):
@@ -200,14 +209,14 @@ if not os.path.exists(fp_out):
     os.makedirs(fp_out)
 
 
-# In[79]:
+# In[19]:
 
 
 f_list = open(os.path.join(fp,'run','ORACLES_list_%s.sh'%vv),'w')
 print f_list.name
 
 
-# In[ ]:
+# In[20]:
 
 
 for s in sza:
@@ -247,8 +256,8 @@ for s in sza:
                 f_list.write(fp_uvspec+' < '+os.path.join(fp_in,fname1)+' > '+os.path.join(fp_out,fname1)+'\n')     
                 albedo['create_albedo_file'] = False
             print s,t,r
-#        break
-#    break
+        break
+    break
 
 
 # In[ ]:

@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Info
@@ -827,4 +827,10 @@ plt.plot(fmf['tauf'][fmf['iq']],s['GPS_Alt'][fmf['iq']],'g.')
 
 
 fp
+
+
+# In[ ]:
+
+
+
 
