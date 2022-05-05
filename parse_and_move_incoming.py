@@ -178,7 +178,9 @@ if data_raw_found:
             if fa_tmp.campaign.find('rooftop') >= 0:
                 aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
                 if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
-
+            if fa_tmp.campaign.find('MLO') >= 0:
+                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Mauna_Loa',path=str(fa_tmp.newpath),version=3)
+                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
 
 # In[66]:
 
@@ -238,11 +240,19 @@ if run_matlab:
         mfile = make_temp_mfile(in_directory+'temp_{}_{}.m'.format(f.instname,daystr),filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
 
         pmfile = Path(mfile)
+        def which(pgm):
+            path=os.getenv('PATH')
+            for p in path.split(os.path.pathsep):
+                p=os.path.join(p,pgm)
+                if os.path.exists(p) and os.access(p,os.X_OK):
+                    return p
+
+        mat_path = which('matlab')
         if verbose: 
-            print( ' '.join(['{}matlab'.format(prefix),'-nodisplay','-batch',"{}".format(pmfile.stem)]))
+            print( ' '.join(['{}{}'.format(prefix,mat_path),'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)]))
         if not dry_run:
             os.chdir(str(pmfile.parent))
-            process = subprocess.Popen(['matlab','-nodisplay','-batch',"{}".format(pmfile.stem)],
+            process = subprocess.Popen([mat_path,'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)],
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
             while True:
@@ -258,6 +268,14 @@ if run_matlab:
                 
             if rc==0:
                 os.remove(mfile)
+            else:
+                print(process.stderr.readline())
+                print('ERROR with matlab')
+                if not f.newfile.exists():
+                     print(' ***  file {} has not been created'.format(str(f.newfile)))
+                if not fs.newfile.exists():
+                     print(' ***  file {} has not been created'.format(str(fs.newfile)))
+                     nmats = nmats-1
 
 
 # In[68]:
