@@ -447,7 +447,7 @@ def write_aerosol_file_explicit_wvl(output_file,wvl_arr,ext,ssa,asy,verbose=Fals
         output.write('# wvl[nm]    ext[km^-1]   ssa[unitless]  legendre_moments\n')
         for iw,wvl in enumerate(wvl_arr):
             if expand_hg:
-                asys = [asy[iw]**n for n in range(100)]
+                asys = [(2.0*n+1.0)*asy[iw]**n for n in range(100)]
                 st = '%f\t%f\t%1.6f\t' % (wvl,ext[iw],ssa[iw])
                 stt = st+'\t'.join(map(str,asys))+'\n'
                 output.write(stt)
@@ -872,7 +872,7 @@ def get_cloud_ext_ssa_moms(ref,lwc,moms_dict=None,verbose=False):
     return ext,moms_dict['ssa'][ir,:],wvl,moms_dict['pmom'][ir,:],nmom
 
 
-# In[1]:
+# In[2]:
 
 
 def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
@@ -1150,8 +1150,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             output.write('umu -1.0\n')
             output.write('phi 130.0\n')
             output.write('phi0 130.0\n')
-
-
+        if any(source.get('umu',[])):
+            output.write('umu {}\n'.format(' '.join(['{:2.8f}'.format(u) for u in source['umu']])))
+            output.write('phi {:3.2f}\n'.format(source.get('phi',130.0)))
+            output.write('phi0 {:3.2f}\n'.format(source.get('phi0',130.0)))
 
         if verbose: print( '..write out the albedo values')
         if albedo['create_albedo_file']:
@@ -1235,6 +1237,14 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                     if not cloud.get('link_to_mom_file'):
                         write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
                                          verbose=verbose,append_directly_below=True,use_old=use_old)
+                        
+                    
+        if 'mystic' in solver:
+            source['mc_basename'] = source.get('mc_basename','mc_{}'.format(output_file))
+            output.write('mc_vroom\n')
+            output.write('mc_basename {}\n'.format(source['mc_basename']))
+            if source.get('mc_rad_alpha'):
+                output.write('mc_rad_alpha {}\n'.format(source['mc_rad_alpha']))
         output.close()
         if make_base:
             base.close()
@@ -1279,6 +1289,10 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
             base_string.append('umu -1.0\n')
             base_string.append('phi 130.0\n')
             base_string.append('phi0 130.0\n')
+        if any(source.get('umu',[])):
+            base_string.append('umu {}\n'.format(' '.join(['{:2.8f}'.format(u) for u in source['umu']])))
+            base_string.append('phi {:3.2f}\n'.format(source.get('phi',130.0)))
+            base_string.append('phi0 {:3.2f}\n'.format(source.get('phi0',130.0)))
         
         if verbose: print( '..write out the albedo values')
         if albedo['create_albedo_file']:
@@ -1357,6 +1371,13 @@ def write_input_aac(output_file,geo={},aero={},cloud={},source={},albedo={},
                     if not cloud.get('link_to_mom_file'):
                         write_cloud_file(cloud['file_name'],10,10,cloud['zbot']-1.0,cloud['zbot'],
                                          verbose=verbose,append_directly_below=True,use_old=use_old,fifo=fifo)
+        
+        if 'mystic' in solver:
+            source['mc_basename'] = source.get('mc_basename','mc_{}'.format(output_file))
+            out_string.append('mc_vroom\n')
+            out_string.append('mc_basename {}\n'.format(source['mc_basename']))
+            if source.get('mc_rad_alpha'):
+                out_string.append('mc_rad_alpha {}\n'.format(source['mc_rad_alpha'])) 
         
         if make_base:
             if return_string: print('** Cant have both make_base and return_string enabled... Making files and not returning string')
@@ -1901,7 +1922,9 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0,use_mystic=False):
             arr_len += 3*(num_rad-1)
     else:
         arr_len = 7
-    if use_mystic: arr_len = num_rad
+    if use_mystic: 
+        if fp.endswith('rad.spc'): arr_len = 5
+        elif fp.endswith('flx.spc'): arr_len = 10
     dat = np.fromfile(fp,sep=' ')
     if len(dat)==0 :
         raise IOError('File {} empty'.format(fp))
@@ -1911,9 +1934,19 @@ def read_libradtran(fp,zout=[0,3,100],num_rad=0,use_mystic=False):
         arr_len = 5
         dat = dat.reshape(int(len(dat)/arr_len/zout_len),zout_len,arr_len)
     if use_mystic:
-        output = {'wvl':dat[:,0,0].squeeze(),
-                  'zout':zout,
-                  'rad':dat[:,:,1:].squeeze()}        
+        if fp.endswith('rad.spc'):  
+            output = {'wvl':dat[:,0,0].squeeze(),
+                      'zout':zout,
+                      'rad':dat[:,:,4].squeeze()}
+        elif fp.endswith('flx.spc'):
+            output = {'wvl':dat[:,0,0].squeeze(),
+                      'zout':zout,
+                      'direct_down':dat[:,:,4].squeeze(),
+                      'diffuse_down':dat[:,:,5].squeeze(),
+                      'diffuse_up':dat[:,:,6].squeeze(),
+                      'actinic_dir_dn':dat[:,:,7].squeeze(),
+                      'actinic_dif_dn':dat[:,:,8].squeeze(),
+                      'actinic_dif_up':dat[:,:,9].squeeze()}
     else:
         try:
             output = {'wvl':dat[:,0,0].squeeze(),
