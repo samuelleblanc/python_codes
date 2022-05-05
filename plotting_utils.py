@@ -616,11 +616,11 @@ def subset_bins(vals,val_lim,lims):
     return bins
 
 
-# In[2]:
+# In[1]:
 
 
 def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, ax=None,vert=True,fliers_off=False,
-                 tick_labels=True,**kwargs):
+                 tick_labels=True,return_bp=False,mean_marker='s',**kwargs):
     """Compile the functions to make a box plot
     
     vals: values to box
@@ -630,6 +630,8 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
     y:?
     vert: (default True) if True, return vertical boxes, false for horizontal boxes
     fliers_off: (default False) if True, turns off the plotting of the outliers
+    return_bp: (default False) returns the boxplot links if True
+    mean_marker: (default 's') the marker for the mean point 
     """
 
     import matplotlib.pyplot as plt
@@ -658,10 +660,10 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
     v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in range(len(bo['means']))]
     if vert:
         mean = [a.get_ydata()[0] for a in bo['means']]
-        ax.plot(pos, mean,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+        ax.plot(pos, mean,mean_marker+'-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
     else:
         mean = [a.get_xdata()[0] for a in bo['means']]
-        ax.plot( mean,pos,'s-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+        ax.plot( mean,pos,mean_marker+'-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
         
     
     #plt.gca().xaxis.set_major_locator(AutoLocator())
@@ -682,7 +684,10 @@ def make_boxplot(vals,val_lim,lims,pos,color='green',label=None,y=0,alpha=1.0, a
         else: 
             ax.set_yticks([])
             ax.set_yticklabels([])
-    return mean
+    if return_bp:
+        return mean, bo
+    else:
+        return mean
 
 
 # In[ ]:
