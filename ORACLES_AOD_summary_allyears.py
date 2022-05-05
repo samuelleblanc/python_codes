@@ -43,7 +43,7 @@
 
 # # Prepare python environment
 
-# In[18]:
+# In[1]:
 
 
 get_ipython().magic(u'config InlineBackend.rc = {}')
@@ -67,7 +67,7 @@ import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 
 
-# In[19]:
+# In[2]:
 
 
 import scipy.stats as st
@@ -75,20 +75,20 @@ from mpl_toolkits.basemap import Basemap
 import pandas as pd
 
 
-# In[20]:
+# In[3]:
 
 
 get_ipython().magic(u'matplotlib notebook')
 
 
-# In[21]:
+# In[4]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
 fp
 
 
-# In[23]:
+# In[5]:
 
 
 vv = 'v2'
@@ -101,7 +101,7 @@ vv = 'v2'
 # In[6]:
 
 
-ar6 = hs.loadmat(fp+'/aod_ict/v8/R3/all_aod_ict_R3_2016.mat')
+ar6 = hs.loadmat(fp+'/aod_ict/R4/all_aod_ict_R4_2016.mat')
 
 
 # In[7]:
