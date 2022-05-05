@@ -86,7 +86,7 @@ f.sort()
 f
 
 
-# In[5]:
+# In[424]:
 
 
 years = ['2002','2003','2004','2005','2006','2007','2008','2009',
@@ -95,7 +95,7 @@ years = ['2002','2003','2004','2005','2006','2007','2008','2009',
 
 # ## Load the clouds
 
-# In[6]:
+# In[425]:
 
 
 cld = []
@@ -108,7 +108,7 @@ for y in years:
     cld.append(c)
 
 
-# In[7]:
+# In[426]:
 
 
 cld[1].keys()
@@ -116,7 +116,7 @@ cld[1].keys()
 
 # ## Load the fire counts
 
-# In[8]:
+# In[438]:
 
 
 vy = 'v2'
@@ -130,19 +130,19 @@ for y in years:
     fir.append(i)
 
 
-# In[9]:
+# In[439]:
 
 
 fir[1].keys()
 
 
-# In[10]:
+# In[440]:
 
 
 print(fir[0]['time'][0])
 
 
-# In[11]:
+# In[441]:
 
 
 for ffi in fir:
@@ -411,7 +411,7 @@ def smooth_g(x,y,s=0.1):
 
 # ## Plot out the CF time series
 
-# In[17]:
+# In[434]:
 
 
 for j in range(4):
@@ -947,7 +947,13 @@ for j in range(4):
 
 # # Build timeseries using pandas
 
-# In[37]:
+# In[431]:
+
+
+cld[1]['lbls_rg']
+
+
+# In[450]:
 
 
 i = 17
@@ -973,13 +979,32 @@ for i in range(1,19):
     fir_counts = np.append(fir_counts,fir[i]['FP'][rg]['num'][:,j])
 
 
-# In[34]:
+# In[451]:
+
+
+i = 17
+j = 2
+
+rg = 'ocean'
+
+cloud_doyoc = []
+cloud_timeoc = []
+cloud_cumdevoc = []
+
+for i in range(1,19):
+    doycoc = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in cld[i]['time']]
+    cloud_doyoc = np.append(cloud_doy,doyc)
+    cloud_timeoc = np.append(cloud_time,cld[i]['time'])
+    cloud_cumdevoc = np.append(cloud_cumdev,cld[i]['CF'][rg]['dev'][:,j])
+
+
+# In[452]:
 
 
 len(fire_doy),len(fir_counts),len(cloud_cumdev),len(cloud_doy)
 
 
-# In[112]:
+# In[465]:
 
 
 fire = pd.DataFrame(data=fir_counts)
@@ -988,35 +1013,46 @@ fire['counts'] = fir_counts
 fire.set_index('time', inplace = True)
 
 
-# In[113]:
+# In[470]:
+
+
+del  fire[0]
+
+
+# In[476]:
 
 
 cloud = pd.DataFrame(data=cloud_cumdev)
-cloud['time'] = pd.to_datetime(cloud_time)
+cloud['timecl'] = pd.to_datetime(cloud_time)
 cloud['cumdev'] = cloud_cumdev
-cloud.set_index('time', inplace = True)
+cloud.set_index('timecl', inplace = True)
+del cloud[0]
 
 
-# In[128]:
+# In[477]:
 
 
-df = pd.concat([cloud, fire]).sort_index().interpolate().reindex(fire.index)
-del df[0]
+cloudoc = pd.DataFrame(data=cloud_cumdevoc)
+cloudoc['timeoc'] = pd.to_datetime(cloud_timeoc)
+cloudoc['cumdevoc'] = cloud_cumdevoc
+cloudoc.set_index('timeoc', inplace = True)
+del cloudoc[0]
 
 
-# In[129]:
+# In[492]:
 
 
-df.keys()
+df = pd.concat([cloud, cloudoc, fire]).sort_index().interpolate()
+df = df.reindex(df.index)
 
 
-# In[130]:
+# In[493]:
 
 
 df
 
 
-# In[140]:
+# In[494]:
 
 
 df.dropna(inplace=True)
@@ -1024,13 +1060,13 @@ dfd = df.resample('D').mean()
 dfd.interpolate(inplace=True)
 
 
-# In[138]:
+# In[495]:
 
 
 df.plot()
 
 
-# In[150]:
+# In[496]:
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -1073,7 +1109,7 @@ plt.show()
 
 # ## Use DARTS
 
-# In[158]:
+# In[497]:
 
 
 from darts import TimeSeries
@@ -1081,7 +1117,7 @@ import darts.models as dmo
 import darts.metrics as dme
 
 
-# In[183]:
+# In[498]:
 
 
 def plot_backtest(series, forecast, model_name,idx=-144):
@@ -1111,36 +1147,39 @@ def print_metrics(series, forecast, model_name):
     return(df.round(decimals = 2))  
 
 
-# In[195]:
+# In[499]:
 
 
 dfd.keys()
 
 
-# In[200]:
+# In[500]:
 
 
-fir = pd.DataFrame(dfd['counts'])
-cld = pd.DataFrame(dfd['cumdev'])
+firs = pd.DataFrame(dfd['counts'])
+clds = pd.DataFrame(dfd['cumdev'])
+cldo = pd.DataFrame(dfd['cumdevoc'])
 
 
-# In[201]:
+# In[501]:
 
 
-series_fire = TimeSeries.from_dataframe(fir)
-series_cld = TimeSeries.from_dataframe(cld)
+series_fire = TimeSeries.from_dataframe(firs)
+series_cld = TimeSeries.from_dataframe(clds)
+series_cldoc = TimeSeries.from_dataframe(cldo)
 
 start = pd.Timestamp('010103')
 df_metrics = pd.DataFrame()
 
 
-# In[289]:
+# In[502]:
 
 
 series_cld_tr,_ = series_cld.split_before(0.75)
+series_cldoc_tr,_ = series_cldoc.split_before(0.75)
 
 
-# In[202]:
+# In[503]:
 
 
 series_train,_ = series_fire.split_before(0.75)
@@ -1220,7 +1259,7 @@ backtest.plot(label='forecast')
 
 # ### Add covariate
 
-# In[288]:
+# In[504]:
 
 
 brnn_wi_cov = dmo.BlockRNNModel(input_chunk_length=30, 
@@ -1228,24 +1267,24 @@ brnn_wi_cov = dmo.BlockRNNModel(input_chunk_length=30,
                              n_rnn_layers=2)
 
 
-# In[291]:
+# In[506]:
 
 
 brnn_wi_cov.fit(series_train, 
-                 past_covariates=series_cld_tr, 
+                 past_covariates=series_cld_tr.stack(series_cldoc_tr), 
                  epochs=50, 
                  verbose=True)
 
 
-# In[312]:
+# In[507]:
 
 
 backtest_wi = brnn_wi_cov.historical_forecasts(series=series_fire, retrain=False,
-                                          verbose=True, past_covariates=series_cld,                                     
+                                          verbose=True, past_covariates=series_cld.stack(series_cldoc),                                     
                                           forecast_horizon=10,start=0.75)
 
 
-# In[314]:
+# In[508]:
 
 
 plt.figure()
@@ -1254,14 +1293,362 @@ series_fire.plot(label='original fire counts')
 backtest_wi.plot(label='backtest fire counts')
 
 
-# In[315]:
+# In[509]:
+
+
+def get_start_fire(series_fire,threshold_val=5,month_start=6):
+    years = series_fire.time_index.year.unique()
+    fir_start = []
+    for y in years:
+        mean_start = np.mean(series_fire.values()[(series_fire.time_index.year==y) & (series_fire.time_index.month<=month_start)])
+        
+        ij = (series_fire.time_index.year==y) & (series_fire.values() > mean_start*1.4)[:,0] & (series_fire.time_index.month>=month_start)
+        if any(ij):
+            fir_start.append(series_fire.get_timestamp_at_point(np.where(ij)[0][0]))
+        else:
+            fir_start.append(0)
+    return fir_start
+
+
+# In[510]:
+
+
+fir_start = get_start_fire(series_fire)
+
+
+# In[511]:
+
+
+fir_start_for = get_start_fire(backtest_wi)
+
+
+# In[512]:
+
+
+fir_start
+
+
+# In[513]:
+
+
+fir_start_for
+
+
+# In[514]:
 
 
 backtest_wi.values()[backtest_wi.values()<0] = 0.0
 
 
-# In[316]:
+# In[515]:
 
 
 print_metrics(series_fire,backtest_wi,brnn_wi_cov.model_params['model'])
+
+
+# ### covariates with TCN model
+
+# In[518]:
+
+
+tcn_wi_cov = dmo.TCNModel(input_chunk_length=30, 
+                             output_chunk_length=10)
+
+
+# In[520]:
+
+
+tcn_wi_cov.fit(series_train, 
+                 past_covariates=series_cld_tr.stack(series_cldoc_tr), 
+                 epochs=100, 
+                 verbose=True)
+
+
+# In[521]:
+
+
+backtest_wi_tcn = tcn_wi_cov.historical_forecasts(series=series_fire, retrain=False,
+                                          verbose=True, past_covariates=series_cld.stack(series_cldoc),                                     
+                                          forecast_horizon=10,start=0.75)
+
+
+# In[529]:
+
+
+plt.figure()
+
+series_fire.plot(label='original fire counts')
+backtest_wi_tcn.plot(label='backtest fire counts')
+plt.title('TCN forecast model')
+
+
+# In[ ]:
+
+
+
+
+
+# In[560]:
+
+
+series_fire['counts'].values()
+
+
+# In[563]:
+
+
+plt.figure()
+plt.hist(series_fire['counts'].values(),bins=50)
+plt.yscale('log')
+
+
+# In[523]:
+
+
+fir_start_fortcn = get_start_fire(backtest_wi_tcn)
+
+
+# In[527]:
+
+
+fir_start_fortcn
+
+
+# In[528]:
+
+
+fir_start
+
+
+# In[526]:
+
+
+print_metrics(series_fire,backtest_wi_tcn,'TCN')
+
+
+# ## Build binary time series of fire events
+
+# In[599]:
+
+
+month_start=6
+mean_start = np.max(series_fire.values()[series_fire.time_index.month<=month_start])
+num_bins,bins_rg = np.histogram(series_fire.values(),bins=200)
+ij = (series_fire.values() > bins_rg[2])[:,0] & (series_fire.time_index.month>=month_start)
+
+
+# In[595]:
+
+
+num_bins,bins_rg = np.histogram(series_fire.values(),bins=200)
+
+
+# In[598]:
+
+
+bins_rg[2]
+
+
+# In[591]:
+
+
+mean_start
+
+
+# In[601]:
+
+
+plt.figure()
+series_fire.plot()
+#series_fire['counts'][ij].plot()
+plt.plot(series_fire.time_index[ij],np.where(ij)[0]*0+3.0,'x')
+
+
+# In[676]:
+
+
+bools = series_fire.values()
+bools[ij,0] = 1.0
+bools[~ij,0] = 0.0
+
+
+# In[687]:
+
+
+bools_df = pd.DataFrame(data=bools)
+bools_df['time'] = series_fire.time_index
+bools_df['isfire'] = bools
+bools_df.set_index('time', inplace = True)
+del bools_df[0]
+
+
+# In[688]:
+
+
+sfb = TimeSeries.from_dataframe(bools_df)
+
+
+# In[689]:
+
+
+sfb.components
+
+
+# In[690]:
+
+
+series_fire_bool.stack(sfb)
+
+
+# In[692]:
+
+
+plt.figure()
+sfb.plot()
+
+
+# #### Train binary model
+
+# In[695]:
+
+
+series_train_bool,_ = sfb.split_before(0.75)
+nfore = len(_)
+ntrain = len(series_train_bool)
+
+
+# In[694]:
+
+
+tcn_wi_cov2 = dmo.TCNModel(input_chunk_length=40, 
+                             output_chunk_length=20)
+
+
+# In[696]:
+
+
+tcn_wi_cov2.fit(series_train_bool, 
+                 past_covariates=series_cld_tr.stack(series_cldoc_tr), 
+                 epochs=50, 
+                 verbose=True)
+
+
+# In[697]:
+
+
+backtest_wi_tcn2 = tcn_wi_cov2.historical_forecasts(series=sfb, retrain=False,
+                                          verbose=True, past_covariates=series_cld.stack(series_cldoc),                                     
+                                          forecast_horizon=20,start=0.5)
+
+
+# In[698]:
+
+
+plt.figure()
+
+sfb.plot(label='original fire binary')
+backtest_wi_tcn2.plot(label='backtest fire binary')
+plt.title('TCN binary forecast model')
+
+
+# In[702]:
+
+
+rf_wi_cov = dmo.RandomForest(lags=60,lags_past_covariates=20)
+
+
+# In[705]:
+
+
+rf_wi_cov.fit(series_train_bool, 
+                 past_covariates=series_cld_tr.stack(series_cldoc_tr))
+
+
+# In[706]:
+
+
+backtest_wi_rf = rf_wi_cov.historical_forecasts(series=sfb, retrain=False,
+                                          verbose=True, past_covariates=series_cld.stack(series_cldoc),                                     
+                                          forecast_horizon=20,start=0.5)
+
+
+# In[708]:
+
+
+plt.figure()
+
+sfb.plot(label='original fire binary')
+backtest_wi_rf.plot(label='backtest fire binary')
+plt.title('Random Forest binary forecast model')
+
+
+# In[709]:
+
+
+print_metrics(sfb,backtest_wi_rf,'Random Forest')
+
+
+# In[735]:
+
+
+lags = list(np.arange(-30,-1,1))
+
+
+# In[736]:
+
+
+lags
+
+
+# In[740]:
+
+
+rf_wi_cov2 = dmo.RandomForest(lags=[-90,-60,-50,-40,-30,-25,-20,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1],
+                              lags_past_covariates=[-60,-50,-40,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1],
+                              n_estimators=100)
+
+
+# In[746]:
+
+
+rf_wi_cov2 = dmo.RandomForest(lags=20,
+                              lags_past_covariates=20,
+                              n_estimators=100)
+
+
+# In[747]:
+
+
+rf_wi_cov2.fit(series_train_bool, 
+                 past_covariates=series_cld_tr.stack(series_cldoc_tr))
+
+
+# In[749]:
+
+
+backtest_wi_rf2 = rf_wi_cov2.historical_forecasts(series=sfb, retrain=False,
+                                          verbose=True, past_covariates=series_cld.stack(series_cldoc),                                     
+                                          forecast_horizon=20,start=0.75)
+
+
+# In[750]:
+
+
+plt.figure()
+
+sfb.plot(label='original fire binary')
+backtest_wi_rf2.plot(label='backtest fire binary')
+plt.title('Random Forest binary forecast model')
+
+
+# In[751]:
+
+
+a
+
+
+# In[ ]:
+
+
+
 
