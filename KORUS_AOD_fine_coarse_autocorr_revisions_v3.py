@@ -296,25 +296,25 @@ fmf['tauc'].shape, ar['GPS_Alt'].shape
 
 # ## Load GOCI AOD files
 
-# In[45]:
+# In[157]:
 
 
 gl = os.listdir(fp+'data_other/GOCI')
 
 
-# In[46]:
+# In[158]:
 
 
 gl.sort()
 
 
-# In[47]:
+# In[159]:
 
 
 goci = []
 
 
-# In[48]:
+# In[160]:
 
 
 for l in gl:
@@ -325,25 +325,25 @@ for l in gl:
     goci.append(g_tmp)  
 
 
-# In[49]:
+# In[161]:
 
 
 len(goci)
 
 
-# In[50]:
+# In[162]:
 
 
 np.nanmax(goci[0]['t']),np.nanmean(goci[0]['t']),np.nanmin(goci[0]['t'])
 
 
-# In[51]:
+# In[163]:
 
 
 g_dict
 
 
-# In[52]:
+# In[164]:
 
 
 goci_doy = []
@@ -355,7 +355,7 @@ for i,l in enumerate(gl):
 goci_doy = np.array(goci_doy)
 
 
-# In[53]:
+# In[165]:
 
 
 for og in goci:
@@ -365,13 +365,13 @@ for og in goci:
 
 # ### Build collcation of goci data to 4STAR
 
-# In[54]:
+# In[166]:
 
 
 ig4 = Sp.find_closest(goci_doy,ar['doys'])
 
 
-# In[55]:
+# In[167]:
 
 
 ig4
@@ -387,31 +387,31 @@ plt.plot(ar['doys'],'x',label='4star')
 plt.legend()
 
 
-# In[57]:
+# In[168]:
 
 
 bad_ig4 = abs(goci_doy[ig4]-ar['doys'])>(1.0/24.0)
 
 
-# In[58]:
+# In[169]:
 
 
 sum(bad_ig4)/float(len(ig4)), len(np.where(bad_ig4)[0]), len(ig4)
 
 
-# In[59]:
+# In[170]:
 
 
 ar['doys']%1.0
 
 
-# In[60]:
+# In[171]:
 
 
 goci[0].keys()
 
 
-# In[61]:
+# In[172]:
 
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[],'aod_f':[],'aod_c':[]}
@@ -444,43 +444,43 @@ for k in goci2ar.keys():
     goci2ar[k] = np.array(goci2ar[k])
 
 
-# In[62]:
+# In[173]:
 
 
 igoci, len(goci2ar['aod']), goci2ar['aod'][2000], len(np.unique(ig4))
 
 
-# In[63]:
+# In[174]:
 
 
 imeas = np.where(ig4==8)[0]
 
 
-# In[64]:
+# In[175]:
 
 
 len(imeas)
 
 
-# In[65]:
+# In[176]:
 
 
 np.argmin((goci[8]['lon']-ar['Longitude'][imeas[0]])**2.0+(goci[8]['lat']-ar['Latitude'][imeas[0]])**2.0)
 
 
-# In[66]:
+# In[177]:
 
 
 goci[8]['lon'].flatten()[94639],goci[8]['lat'].flatten()[94639]
 
 
-# In[67]:
+# In[178]:
 
 
 ar['Longitude'][imeas[0]],ar['Latitude'][imeas[0]]
 
 
-# In[68]:
+# In[179]:
 
 
 plt.figure()
@@ -493,7 +493,7 @@ plt.xlabel('GOCI interpolated to 4STAR number of points')
 plt.ylabel('GOCI AE')
 
 
-# In[69]:
+# In[182]:
 
 
 goci2ar['aod'][bad_ig4] = np.nan
@@ -504,7 +504,7 @@ goci2ar['fmf'][bad_ig4] = np.nan
 goci2ar['CF'][bad_ig4] = np.nan
 
 
-# In[70]:
+# In[183]:
 
 
 len(goci2ar['aod_c']), len(goci2ar['aod'])
@@ -512,7 +512,7 @@ len(goci2ar['aod_c']), len(goci2ar['aod'])
 
 # ### Flag for over ocean
 
-# In[71]:
+# In[184]:
 
 
 from global_land_mask import globe
@@ -523,38 +523,38 @@ from global_land_mask import globe
 #Geophysical Data Center, 325 Broadway, Boulder, Colorado 80303, U.S.A, https://repository.library.noaa.gov/view/noaa/13424
 
 
-# In[99]:
+# In[185]:
 
 
 is_in_ocean_good = globe.is_ocean(goci2ar['lat'][fl], goci2ar['lon'][fl])
 
 
-# In[101]:
+# In[186]:
 
 
 is_in_ocean = np.full(goci2ar['lat'].shape,False)
 is_in_ocean[fl] = is_in_ocean_good
 
 
-# In[81]:
+# In[187]:
 
 
 goci2ar['lat'][fl].shape
 
 
-# In[82]:
+# In[188]:
 
 
 goci2ar['lat'].shape
 
 
-# In[102]:
+# In[189]:
 
 
 is_in_ocean.shape
 
 
-# In[105]:
+# In[190]:
 
 
 is_in_ocean
@@ -5511,7 +5511,7 @@ autocor_c.shape
 
 # ## Map out the level legs and numbers
 
-# In[155]:
+# In[198]:
 
 
 
@@ -6240,7 +6240,7 @@ nbins = 18
 
 # ## Make a map of 4STAR AOD
 
-# In[193]:
+# In[194]:
 
 
 flalt = ar['fl'] & (ar['GPS_Alt']<1000.0)
@@ -6532,7 +6532,7 @@ np.diff(gstat_aod['xs']),np.diff(gstat_aod['ys'])
 
 # ## Combine maps into one figure 
 
-# In[382]:
+# In[200]:
 
 
 fig,ax = plt.subplots(3,2,figsize=(11,14.5))
@@ -6645,20 +6645,20 @@ mstat_ae = stats_2d(merraint['lat'],merraint['lon'],merraint['ae_alt'],days=merr
                      bins=nbins,rg=rg,verbose=True,fl=mer_flalt)
 
 
-# In[ ]:
+# In[195]:
 
 
-gstat_ae = stats_2d(goci2ar['lat'],goci2ar['lon'],goci2ar['ae'],fl=flalt,days=ar['days'],
+gstat_ae = stats_2d(goci2ar['lat'],goci2ar['lon'],goci2ar['AE'],fl=flalt,days=ar['days'],
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[ ]:
+# In[196]:
 
 
 iao = np.where((gstat_ae['cnt'].data>0.0) & (gstat_ae['std'].data<2.1))
 
 
-# In[ ]:
+# In[202]:
 
 
 fig,ax = plt.subplots(3,2,figsize=(11,14.5))
@@ -6670,7 +6670,7 @@ m = make_map(ax=ax1)
 m.shadedrelief(alpha=0.4)
 
 ym,xm = m(astat_ae['ym'],astat_ae['xm'])
-p = ax1.pcolor(ym,xm,astat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+p = ax1.pcolor(ym,xm,astat_ae['mean'],vmin=0.0,vmax=2.1,cmap='plasma')
 
 ax1.set_title('4STAR - Mean AE$')
 cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
@@ -6682,7 +6682,7 @@ m2.shadedrelief(alpha=0.4)
 y2,x2 = m2(astat_ae['ys'][iao[1]],astat_ae['xs'][iao[0]])
 p2 = ax2.scatter(y2,x2,8.0+(astat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
                 c=astat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
 ax2.set_title('4STAR - Standard Deviation AE$')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
@@ -6700,7 +6700,7 @@ m = make_map(ax=ax1)
 m.shadedrelief(alpha=0.4)
 
 ym,xm = m(mstat_ae['ym'],mstat_ae['xm'])
-p = ax1.pcolor(ym,xm,mstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+p = ax1.pcolor(ym,xm,mstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='plasma')
 
 ax1.set_title('MERRA2 - Mean AE')
 cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
@@ -6712,7 +6712,7 @@ m2.shadedrelief(alpha=0.4)
 y2,x2 = m2(mstat_ae['ys'][iao[1]],mstat_ae['xs'][iao[0]])
 p2 = ax2.scatter(y2,x2,8.0+(mstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
                 c=mstat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
 ax2.set_title('MERRA2 - Standard Deviation AE')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
@@ -6731,7 +6731,7 @@ m = make_map(ax=ax1)
 m.shadedrelief(alpha=0.4)
 
 ym,xm = m(gstat_ae['ym'],gstat_ae['xm'])
-p = ax1.pcolor(ym,xm,gstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+p = ax1.pcolor(ym,xm,gstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='plasma')
 
 ax1.set_title('GOCI YAER - Mean AE')
 cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
@@ -6743,7 +6743,7 @@ m2.shadedrelief(alpha=0.4)
 y2,x2 = m2(gstat_ae['ys'][iao[1]],gstat_ae['xs'][iao[0]])
 p2 = ax2.scatter(y2,x2,8.0+(gstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
                 c=gstat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
 ax2.set_title('GOCI YAER - Standard Deviation AE')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
@@ -6757,7 +6757,13 @@ pu.sub_note('l)',ax=ax2,out=True)
 plt.tight_layout(pad=1.12,h_pad=1.8,w_pad=3.0,rect=(0.05,0,1,1))
 
 plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.png'.format(vv),dpi=600,transparent=True)
-#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.eps'.format(vv),dpi=600,transparent=True)
-#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.svg'.format(vv),dpi=600,transparent=True)
-#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.pdf'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.eps'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.svg'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.pdf'.format(vv),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 
