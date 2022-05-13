@@ -54,7 +54,7 @@
 
 # # Prepare python environment
 
-# In[9]:
+# In[2]:
 
 
 #%config InlineBackend.rc = {}
@@ -79,7 +79,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[10]:
+# In[3]:
 
 
 import map_utils as mu
@@ -89,32 +89,32 @@ import math
 import sys
 
 
-# In[11]:
+# In[4]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[12]:
+# In[5]:
 
 
 from matplotlib.ticker import ScalarFormatter,FormatStrFormatter
 
 
-# In[13]:
+# In[6]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[14]:
+# In[7]:
 
 
 fp = getpath('KORUS')
 
 
-# In[15]:
+# In[8]:
 
 
 vv = 'v4'
@@ -126,74 +126,74 @@ vv = 'v4'
 
 # ## Load 4STAR AOD ict files
 
-# In[16]:
+# In[38]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[17]:
+# In[39]:
 
 
 ka = ar.keys()
 ka.sort()
 
 
-# In[18]:
+# In[40]:
 
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
 
-# In[19]:
+# In[41]:
 
 
 fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 
-# In[20]:
+# In[42]:
 
 
 fl_ci.sum()
 
 
-# In[21]:
+# In[43]:
 
 
 len(fl_ci)*1.0/60.0/60.0
 
 
-# In[22]:
+# In[44]:
 
 
 fl_ci.sum()/float(len(fl_ci))
 
 
-# In[23]:
+# In[45]:
 
 
 ar['fl_QA'].sum()*1.0/60.0/60.0
 
 
-# In[24]:
+# In[46]:
 
 
 ar['qual_flag'].sum()
 
 
-# In[25]:
+# In[47]:
 
 
 nwl = ka[0:17]
 
 
-# In[26]:
+# In[48]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
-# In[27]:
+# In[49]:
 
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
@@ -202,7 +202,7 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614']
 
 
-# In[28]:
+# In[50]:
 
 
 doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
@@ -212,14 +212,14 @@ ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
 
 # ### Get good data
 
-# In[29]:
+# In[51]:
 
 
 fl1 = ar['days']==ar['days'][0]
 fl1.shape
 
 
-# In[30]:
+# In[52]:
 
 
 fl = (ar['qual_flag']==0) & (np.isfinite(ar['AOD0501'])) 
@@ -228,7 +228,7 @@ fl1.shape
 
 # ### Calculate average uncertainty
 
-# In[38]:
+# In[56]:
 
 
 for k in ka:
@@ -238,37 +238,37 @@ for k in ka:
 
 # ### Calculate the Angstrom Exponent
 
-# In[36]:
+# In[53]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[37]:
+# In[54]:
 
 
 aodrr.shape
 
 
-# In[38]:
+# In[55]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[39]:
+# In[57]:
 
 
 iangsf = np.isfinite(angs) & ar['fl'] & (ar['GPS_Alt']<500.0)
 
 
-# In[40]:
+# In[58]:
 
 
 np.nanmean(angs[iangsf])
 
 
-# In[41]:
+# In[59]:
 
 
 np.nanstd(angs[iangsf])
@@ -276,19 +276,19 @@ np.nanstd(angs[iangsf])
 
 # ### Calculate the fine mode fraction
 
-# In[42]:
+# In[60]:
 
 
 fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
 
 
-# In[43]:
+# In[61]:
 
 
 fmf.keys()
 
 
-# In[44]:
+# In[62]:
 
 
 fmf['tauc'].shape, ar['GPS_Alt'].shape
@@ -2133,7 +2133,7 @@ with open(fp+'KORUS_level_legs_{}.dat'.format(vv),'w') as fo:
 
 # ### read the files
 
-# In[172]:
+# In[142]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2_interp_v2/')
@@ -2141,7 +2141,7 @@ ml = [ m for m in ml if m.endswith('nc4')]
 ml.sort()
 
 
-# In[173]:
+# In[143]:
 
 
 mei, mei_dict = [],[]
@@ -2158,13 +2158,13 @@ for m in ml:
         mei_species.append('tot')
 
 
-# In[ ]:
+# In[144]:
 
 
 mei[8]['alt'] = np.array([np.flip(np.cumsum(np.flip(dz))) for dz in mei[8]['delz']])
 
 
-# In[ ]:
+# In[145]:
 
 
 merraint = {'aod':mei[8]['tau'],'isotime':mei[8]['isotime'],'lat':mei[8]['latitude'],'lon':mei[8]['longitude'],
@@ -2179,20 +2179,20 @@ for v in [0,1,2]:
     merraint['aod_spectra'][v,:,:] =       np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
 
 
-# In[ ]:
+# In[146]:
 
 
 merraint['time'] = np.array([datetime.strptime(t,'%Y-%m-%dT%H:%M:%S') for t in merraint['isotime']])
 merraint['doy'] = np.array([t.timetuple().tm_yday+(t.hour+(t.minute+t.second/60.0)/60.0)/24.0 for t in merraint['time']])
 
 
-# In[ ]:
+# In[147]:
 
 
 m_w = np.array([470.0,500.0,870.0])
 
 
-# In[ ]:
+# In[148]:
 
 
 merraint['ae'] = np.zeros_like(merraint['aod'])+np.nan
@@ -2214,7 +2214,7 @@ dvals['alt'][0]
 merraint['doy'][0:11]
 
 
-# In[183]:
+# In[149]:
 
 
 merraint['alt'].shape, merraint['aod'].shape
@@ -2300,7 +2300,7 @@ for i,dv in enumerate(dvals['doys']):
 
 # ### Build the limits of the autocorrelation
 
-# In[38]:
+# In[67]:
 
 
 # for met times
@@ -2310,7 +2310,7 @@ dt3 = ['20160523','20160531']
 dt4 = ['20160601','20160607']
 
 
-# In[39]:
+# In[68]:
 
 
 t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
@@ -2319,14 +2319,14 @@ t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
 
 
-# In[40]:
+# In[69]:
 
 
 # limits of DOY for each of the met times
 t1,t2,t3,t4
 
 
-# In[41]:
+# In[70]:
 
 
 #altitude limits in m
@@ -2337,7 +2337,7 @@ z3 = [3000.0, 15000.0]
 
 # ## Alternate calculations (lower mem)
 
-# In[34]:
+# In[71]:
 
 
 min_num = 100 # minimum number of points to be considered valid
@@ -2348,13 +2348,13 @@ corr_ks = [0.08,0.12, 0.18,0.27,0.4,0.6,0.9,1.35,2.0,3.0,5.0,7.5, 10.0, 15.0, 25
 #          35.0,65.0,100.0,150.0,200.0,350.0] 
 
 
-# In[200]:
+# In[72]:
 
 
 dvals['doys'][0][0], dvals['alt'][0][0]
 
 
-# In[314]:
+# In[73]:
 
 
 k = 2.0
@@ -3704,19 +3704,19 @@ hs.savemat(fp+'KORUS_fine_coarse_autocorr_dvals_{}.mat'.format(vv),dat_u)
 
 # ### load autocorr and monte carlo calc
 
-# In[170]:
+# In[24]:
 
 
 dat_u = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_dvals_{}.mat'.format(vv))
 
 
-# In[173]:
+# In[25]:
 
 
 dat_u.keys()
 
 
-# In[174]:
+# In[26]:
 
 
 corr_ks = dat_u['corr_ks']
@@ -3724,10 +3724,33 @@ dvals = dat_u['dvals']
 itypes = dat_u['itypes']
 
 
-# In[175]:
+# In[27]:
 
 
 autocorr_mean = dat_u['autocorr_mean']
+
+
+# ### plot the sampling altitude
+
+# In[30]:
+
+
+alts = []
+for a in dvals['alt']:
+    alts.append(np.nanmean(a))
+
+
+# In[36]:
+
+
+plt.figure()
+plt.hist(alts,bins=30)
+
+
+# In[33]:
+
+
+np.mean(alts),np.median(alts),np.max(alts),np.min(alts)
 
 
 # In[176]:
@@ -3735,6 +3758,8 @@ autocorr_mean = dat_u['autocorr_mean']
 
 percentile_autocorr(autocorr_mean['AE'][0,0:],0.85)
 
+
+# ### get value of percentile of the autocorr
 
 # In[177]:
 
@@ -4948,7 +4973,7 @@ plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical.png',
 ar['doys']
 
 
-# In[76]:
+# In[74]:
 
 
 ar['fl_QA_angs'] = ar['fl'] & (ar['AOD0501']>0.05) 
@@ -5057,14 +5082,14 @@ plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical_met_{}.svg'.format(vv),
 
 # ## Analyse the Fine mode fraction
 
-# In[50]:
+# In[75]:
 
 
 ar['fl_QA_low'] = ar['fl_QA'] & (ar['GPS_Alt']<500.0)
 ar['fl_QA_mid'] = ar['fl_QA'] & (ar['GPS_Alt']>2000.0) & (ar['GPS_Alt']<5000.0) 
 
 
-# In[51]:
+# In[76]:
 
 
 ar['fl_QA_fmf'] = ar['fl_QA'] & (np.isfinite(fmf['tauf'])) & (np.isfinite(fmf['tauc']))
@@ -5534,7 +5559,7 @@ plt.savefig(fp+'plot/KORUS_map_QA_{}.png'.format('v2'),dpi=600,transparent=True)
 
 # ## Plot the AOD histogram by met
 
-# In[164]:
+# In[77]:
 
 
 ar['fl_QA_met1'] = ar['fl'] & (ar['doys']> t1[0]) & (ar['doys']< t1[1])
@@ -5636,20 +5661,20 @@ np.nanmean(ae[met1_aodl]),np.nanmean(ae[met1_aodh]),np.nanmean(ae[met1_aod]),np.
 
 # ## Plot the AOD spectra by met
 
-# In[33]:
+# In[63]:
 
 
 aod_names = sorted([a for a in ar.keys() if ('AOD' in a) and not ('UNC' in a)])
 
 
-# In[34]:
+# In[64]:
 
 
 wvl = np.array([380,452,501,520,532,550,606,620,675,781,865,1020,1040,1064,1236,1559,1627])
 wvl_bins = np.append(wvl[0]-10,wvl+10)
 
 
-# In[166]:
+# In[84]:
 
 
 ars = []
@@ -5851,7 +5876,7 @@ plt.savefig(fp+'plot/KORUS_AOD_spectra_hist_bymet_{}_rev.svg'.format(vv))
 
 # ## AOD spectra by altitude
 
-# In[133]:
+# In[86]:
 
 
 ar['fl_8'] = ar['GPS_Alt']>8000
@@ -5864,7 +5889,7 @@ ar['fl_0.5'] = (ar['GPS_Alt']<=500) & ar['fl_QA']
 ar['fl_1.0'] = (ar['GPS_Alt']<=1000) & ar['fl_QA']
 
 
-# In[134]:
+# In[87]:
 
 
 fls = {'fl':[],'fl_8':[],'fl_2_8':[],'fl_1_2':[],'fl_1.5_2':[],'fl_1_1.5':[],'fl_0.5_1':[],'fl_0.5':[]}
@@ -5880,7 +5905,7 @@ wvls = np.array(wvls)
 wvlsn = wvls.reshape(wvls.size)
 
 
-# In[137]:
+# In[90]:
 
 
 fig,ax = plt.subplots(1,2,figsize=(9,4))
@@ -5920,7 +5945,7 @@ ax[0].set_ylabel('AOD')
 ax[0].grid()
 
 
-# In[138]:
+# In[91]:
 
 
 ae_mean = {}
@@ -5934,7 +5959,7 @@ ae_mean = {}
 [ae_mean['8'],nul],cm = linfit(np.log10(wvl[1:-5]),-np.log10(aod_mean['8'][1:-5]))
 
 
-# In[140]:
+# In[92]:
 
 
 n,bins,p = plt.hist(ar['GPS_Alt'][ar['fl']],bins=30,range=(0,10000))
@@ -6026,15 +6051,147 @@ plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.eps'.format(vv),dpi=600,transpa
 plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.svg'.format(vv),dpi=600,transparent=True)
 
 
-# In[74]:
+# In[93]:
 
 
 len(arsn[fls['fl_0.5']])/17.0, len(arsn[fls['fl_0.5_1']])/17.0,len(arsn[fls['fl_1_2']])/17.0,len(arsn[fls['fl_2_8']])/17.0,len(arsn[fls['fl_8']])/17.0
 
 
+# In[137]:
+
+
+fig,ax = plt.subplots(1,3,figsize=(11,4))
+ax[0].plot(wvlsn[fls['fl_0.5']][0:10],arsn[fls['fl_0.5']][0:10],'.',alpha=0)
+ax[0].set_yscale('log')
+ax[0].set_xscale('log')
+we = 10
+pu.make_boxplot(arsn[fls['fl']],wvlsn[fls['fl']],wvl_bins,wvl,y=1,alpha=0.5,widths=we,patch_artist=True,
+                label='All data, AE={:1.2f}'.format(ae_mean['all']),fliers_off=True,color='b',ax=ax[0],mean_marker='.')
+pu.make_boxplot(arsn[fls['fl_0.5']],wvlsn[fls['fl_0.5']],wvl_bins,wvl+15,y=1,alpha=0.5,
+                label='Below 0.5 km, AE={:1.2f}'.format(ae_mean['05']),widths=we,patch_artist=True,
+                fliers_off=True,color='k',ax=ax[0],mean_marker='.')
+pu.make_boxplot(arsn[fls['fl_0.5_1']],wvlsn[fls['fl_0.5_1']],wvl_bins,wvl+12,y=1,alpha=0.5,
+                label='0.5 km to 1 km, AE={:1.2f}'.format(ae_mean['05_1']),widths=we,patch_artist=True,
+                fliers_off=True,color='y',ax=ax[0],mean_marker='.')
+pu.make_boxplot(arsn[fls['fl_1_2']],wvlsn[fls['fl_1_2']],wvl_bins,wvl+9,y=1,alpha=0.5,
+                label='1 km to 2 km, AE={:1.2f}'.format(ae_mean['1_2']),widths=we,patch_artist=True,
+                fliers_off=True,color='m',ax=ax[0],mean_marker='.')
+#pu.make_boxplot(arsn[fls['fl_1.5_2']],wvlsn[fls['fl_1.5_2']],wvl_bins,wvl+6,y=1,alpha=0.5,
+#                label='1.5 km to 2 km, AE={:1.2f}'.format(ae_mean['15_2']),
+#                fliers_off=True,color='c',ax=ax[0])
+pu.make_boxplot(arsn[fls['fl_2_8']],wvlsn[fls['fl_2_8']],wvl_bins,wvl+6,y=1,alpha=0.5,
+                label='2 km to 8 km, AE={:1.2f}'.format(ae_mean['2_8']),widths=we,patch_artist=True,
+                fliers_off=True,color='r',ax=ax[0],mean_marker='.')
+pu.make_boxplot(arsn[fls['fl_8']],wvlsn[fls['fl_8']],wvl_bins,wvl+3,y=1,alpha=0.5,widths=we,patch_artist=True,
+                label='Above 8 km, AE={:1.2f}'.format(ae_mean['8']),fliers_off=True,color='g',ax=ax[0],mean_marker='.')
+
+ax[0].legend(frameon=True, loc=1,bbox_to_anchor=(1.1,1.15))
+ax[0].set_xticks([350,400,500,600,700,800,1000,1200,1600])
+ax[0].xaxis.set_major_formatter(ScalarFormatter())
+ax[0].yaxis.set_major_formatter(ScalarFormatter())
+ax[0].xaxis.set_minor_formatter(FormatStrFormatter(''))
+ax[0].set_xlim(350,1750)
+ax[0].set_ylim([0.005,9.0])
+ax[0].set_yticks([0.01,0.1,0.3,1.0])
+ax[0].set_xlabel('Wavelength [nm]')
+ax[0].set_ylabel('AOD')
+ax[0].grid()
+
+ax[1].plot(ar['AOD0501'][ar['fl']][0:10],ar['GPS_Alt'][ar['fl']][0:10],'.',alpha=0.0,color='w')
+wed = 90
+maodp,bpaod = pu.make_boxplot(ar['AOD0380'][ar['fl']],ar['GPS_Alt'][ar['fl']],bins,pos+50.0,widths=wed,
+                             patch_artist=True,return_bp=True,
+                color='blue',alpha=0.5,y=0,vert=False,label='380 nm',fliers_off=True,ax=ax[1],mean_marker='.')
+pu.make_boxplot(ar['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],bins,pos,widths=wed,patch_artist=True,
+                color='green',alpha=0.5,y=0,vert=False,label='501 nm',fliers_off=True,ax=ax[1],mean_marker='.')
+pu.make_boxplot(ar['AOD0865'][ar['fl']],ar['GPS_Alt'][ar['fl']],bins,pos-50.0,widths=wed,patch_artist=True,
+                color='red',alpha=0.5,y=0,vert=False,label='865 nm',fliers_off=True,ax=ax[1],mean_marker='.')
+lg_op = ax[1].legend(frameon=True)
+hand,lglbl = lg_op.axes.get_legend_handles_labels()
+hand.append(bpaod['boxes'][0])
+hand.append(bpaod['whiskers'][0])
+lglbl.append('25%-75%')
+lglbl.append('min-max')
+lg_op._legend_box = None
+lg_op._init_legend_box(hand, lglbl)
+lg_op._set_loc(lg_op._loc)
+lg_op.set_title(lg_op.get_title().get_text())
+
+lg_oph = lg_op.legendHandles
+lg_oph[3].set_height(3)
+
+ax[1].set_xlim(0,1.2)
+ax[1].set_ylim(0,10000)
+ax[1].set_yticks([0,1000,2000,4000,6000,8000,10000])
+ax[1].set_yticklabels([0,1,2,4,6,8,10])
+ax[1].set_xlabel('AOD')
+ax[1].set_ylabel('GPS Altitude [km]')
+#ax[1].yaxis.set_major_formatter(ScalarFormatter())
+ax[1].yaxis.set_minor_formatter(FormatStrFormatter(''))
+#plt.title('KORUS-AQ average AOD profile from 4STAR')
+ax[1].grid()
+
+ax[2].hist([ar['GPS_Alt'],np.array(alts)],bins=30,label=['Number of \nmeasurements','Number of \nlevel legs'],
+           orientation='horizontal',color=['tab:blue','tab:orange'])
+ax[2].axhline(np.nanmean(ar['GPS_Alt']),color='tab:blue',lw=3,alpha=0.3,label='Mean Alt')
+ax[2].axhline(np.nanmedian(ar['GPS_Alt']),color='tab:blue',ls='--',lw=3,alpha=0.3,label='Median Alt')
+ax[2].grid()
+ax[2].set_xlabel('Number of measurements',color='tab:blue')
+ax[2].set_ylabel('GPS Altitude [km]')
+ax[2].set_ylim(0,10000)
+ax[2].set_yticks([0,1000,2000,4000,6000,8000,10000])
+ax[2].set_yticklabels([0,1,2,4,6,8,10])
+
+
+axy = ax[2].twiny()
+axy.hist([[],np.array(alts)],bins=30,label=['Number of \nmeasurements','Number of \nlevel legs'],
+           orientation='horizontal',color=['tab:blue','tab:orange'])
+axy.axhline(np.nanmean(alts),color='tab:orange',lw=3,alpha=0.3,label='Mean Alt')
+axy.axhline(np.nanmedian(alts),color='tab:orange',ls='--',lw=3,alpha=0.3,label='Median Alt')
+
+axy.set_xlabel('Number of level legs',color='tab:orange')
+
+#axy.legend(frameon=True)
+handles, labels = axy.get_legend_handles_labels()
+order = [3,2,0,1]
+axy.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+
+pu.sub_note('a)',ax[0],out=True)
+pu.sub_note('b)',ax[1],out=True)
+pu.sub_note('c)',ax[2],out=True,dx=-0.2)
+fig.subplots_adjust(left=0.07, bottom=None, right=0.98, top=None, wspace=None, hspace=None)
+
+plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.png'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.pdf'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.eps'.format(vv),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.svg'.format(vv),dpi=600,transparent=True)
+
+
+# In[116]:
+
+
+fig,ax = plt.subplots(1,3,figsize=(12,4))
+ax[2].hist([ar['GPS_Alt']/1000.0,np.array(alts)/1000.0],bins=30,label=['All measurements','Level flight legs'],
+           orientation='horizontal',color=['tab:blue','tab:orange'])
+ax[2].axhline(np.nanmean(ar['GPS_Alt'])/1000.0,color='tab:blue',lw=3,alpha=0.3,label='Mean')
+ax[2].axhline(np.nanmedian(ar['GPS_Alt'])/1000.0,color='tab:blue',ls='--',lw=3,alpha=0.3,label='Median')
+ax[2].grid()
+ax[2].set_xlabel('Number of measurements',color='tab:blue')
+ax[2].set_ylabel('GPS Altitude [km]')
+
+
+axy = ax[2].twiny()
+axy.hist([[],np.array(alts)/1000.0],bins=30,label=['All measurements','Level flight legs'],
+           orientation='horizontal',color=['tab:blue','tab:orange'])
+axy.axhline(np.nanmean(alts)/1000.0,color='tab:orange',lw=3,alpha=0.3,label='Mean')
+axy.axhline(np.nanmedian(alts)/1000.0,color='tab:orange',ls='--',lw=3,alpha=0.3,label='Median')
+axy.legend(frameon=True)
+axy.set_xlabel('Number of level legs',color='tab:orange')
+
+
 # # Spatial maps and time traces
 
-# In[189]:
+# In[138]:
 
 
 def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
@@ -6074,7 +6231,7 @@ def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
     return stat
 
 
-# In[190]:
+# In[139]:
 
 
 rg = [[32.5,38.5],[123.5,131.5]]
@@ -6091,7 +6248,7 @@ astat_aod = stats_2d(ar['Latitude'],ar['Longitude'],ar['AOD0501'],fl=flalt,days=
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[204]:
+# In[141]:
 
 
 flalta = ar['fl'] & (ar['GPS_Alt']<1000.0) & np.isfinite(angs)
@@ -6229,7 +6386,7 @@ mstat_aod = stats_2d(merra2ar['lat'],merra2ar['lon'],merra2ar['aod'],fl=flalt,da
 merraint.keys()
 
 
-# In[631]:
+# In[151]:
 
 
 merraint['aod_alt'] = []
@@ -6243,25 +6400,25 @@ merraint['ae_alt'] = np.array(merraint['ae_alt'][0:len(merraint['lat'])])
 merraint['alt_flt'] = np.array(merraint['alt_flt'][0:len(merraint['lat'])])
 
 
-# In[375]:
+# In[152]:
 
 
 mer_flalt = merraint['alt_flt']<1000.0
 
 
-# In[371]:
+# In[153]:
 
 
 merraint['aod_alt'].shape, merraint['lat'].shape
 
 
-# In[372]:
+# In[154]:
 
 
 merraint['alt'].shape
 
 
-# In[376]:
+# In[155]:
 
 
 mstat_aod = stats_2d(merraint['lat'],merraint['lon'],merraint['aod_alt'],days=merraint['doy'],
@@ -6479,8 +6636,128 @@ plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AOD_map_{}.png'.format(vv),dpi=600,t
 #plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AOD_map_{}.pdf'.format(vv),dpi=600,transparent=True)
 
 
+# ## Map the Angstrom Exponent
+
+# In[156]:
+
+
+mstat_ae = stats_2d(merraint['lat'],merraint['lon'],merraint['ae_alt'],days=merraint['doy'],
+                     bins=nbins,rg=rg,verbose=True,fl=mer_flalt)
+
+
 # In[ ]:
 
 
+gstat_ae = stats_2d(goci2ar['lat'],goci2ar['lon'],goci2ar['ae'],fl=flalt,days=ar['days'],
+                     bins=nbins,rg=rg,verbose=True)
 
+
+# In[ ]:
+
+
+iao = np.where((gstat_ae['cnt'].data>0.0) & (gstat_ae['std'].data<2.1))
+
+
+# In[ ]:
+
+
+fig,ax = plt.subplots(3,2,figsize=(11,14.5))
+ax = ax.flatten()
+#### 4STAR
+ax1,ax2 = ax[0],ax[1]
+
+m = make_map(ax=ax1)
+m.shadedrelief(alpha=0.4)
+
+ym,xm = m(astat_ae['ym'],astat_ae['xm'])
+p = ax1.pcolor(ym,xm,astat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+
+ax1.set_title('4STAR - Mean AE$')
+cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
+pu.sub_note('g)',ax=ax1,out=True)
+
+m2 = make_map(ax=ax2)
+m2.shadedrelief(alpha=0.4)
+
+y2,x2 = m2(astat_ae['ys'][iao[1]],astat_ae['xs'][iao[0]])
+p2 = ax2.scatter(y2,x2,8.0+(astat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+                c=astat_ae['std'].data[iao[0],iao[1]].flatten(),
+               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+ax2.set_title('4STAR - Standard Deviation AE$')
+cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
+
+sizes = [10,100,500,1500]
+labels = ['N={0}'.format(z) for z in sizes]
+points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+ax2.legend(points, labels, scatterpoints=1,frameon=True,
+           framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
+pu.sub_note('h)',ax=ax2,out=True)
+
+#### MERRA-2
+ax1,ax2 = ax[2],ax[3]
+
+m = make_map(ax=ax1)
+m.shadedrelief(alpha=0.4)
+
+ym,xm = m(mstat_ae['ym'],mstat_ae['xm'])
+p = ax1.pcolor(ym,xm,mstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+
+ax1.set_title('MERRA2 - Mean AE')
+cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
+pu.sub_note('i)',ax=ax1,out=True)
+
+m2 = make_map(ax=ax2)
+m2.shadedrelief(alpha=0.4)
+
+y2,x2 = m2(mstat_ae['ys'][iao[1]],mstat_ae['xs'][iao[0]])
+p2 = ax2.scatter(y2,x2,8.0+(mstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+                c=mstat_ae['std'].data[iao[0],iao[1]].flatten(),
+               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+ax2.set_title('MERRA2 - Standard Deviation AE')
+cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
+
+sizes = [10,100,500,1500]
+labels = ['N={0}'.format(z) for z in sizes]
+points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+ax2.legend(points, labels, scatterpoints=1,frameon=True,
+           framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
+pu.sub_note('j)',ax=ax2,out=True)
+
+
+#### GOCI
+ax1,ax2 = ax[4],ax[5]
+
+m = make_map(ax=ax1)
+m.shadedrelief(alpha=0.4)
+
+ym,xm = m(gstat_ae['ym'],gstat_ae['xm'])
+p = ax1.pcolor(ym,xm,gstat_ae['mean'],vmin=0.0,vmax=2.1,cmap='magma')
+
+ax1.set_title('GOCI YAER - Mean AE')
+cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
+pu.sub_note('k)',ax=ax1,out=True)
+
+m2 = make_map(ax=ax2)
+m2.shadedrelief(alpha=0.4)
+
+y2,x2 = m2(gstat_ae['ys'][iao[1]],gstat_ae['xs'][iao[0]])
+p2 = ax2.scatter(y2,x2,8.0+(gstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+                c=gstat_ae['std'].data[iao[0],iao[1]].flatten(),
+               marker='s',edgecolor='None',cmap='viridis',vmin=0,vmax=0.5)
+ax2.set_title('GOCI YAER - Standard Deviation AE')
+cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
+
+sizes = [10,100,500,1500]
+labels = ['N={0}'.format(z) for z in sizes]
+points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+ax2.legend(points, labels, scatterpoints=1,frameon=True,
+           framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
+pu.sub_note('l)',ax=ax2,out=True)
+
+plt.tight_layout(pad=1.12,h_pad=1.8,w_pad=3.0,rect=(0.05,0,1,1))
+
+plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.png'.format(vv),dpi=600,transparent=True)
+#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.eps'.format(vv),dpi=600,transparent=True)
+#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.svg'.format(vv),dpi=600,transparent=True)
+#plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.pdf'.format(vv),dpi=600,transparent=True)
 
