@@ -54,7 +54,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[1]:
 
 
 #%config InlineBackend.rc = {}
@@ -79,7 +79,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[3]:
+# In[2]:
 
 
 import map_utils as mu
@@ -89,32 +89,32 @@ import math
 import sys
 
 
-# In[4]:
+# In[3]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[5]:
+# In[4]:
 
 
 from matplotlib.ticker import ScalarFormatter,FormatStrFormatter
 
 
-# In[6]:
+# In[5]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[7]:
+# In[6]:
 
 
 fp = getpath('KORUS')
 
 
-# In[8]:
+# In[7]:
 
 
 vv = 'v4'
@@ -126,74 +126,74 @@ vv = 'v4'
 
 # ## Load 4STAR AOD ict files
 
-# In[38]:
+# In[8]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[39]:
+# In[9]:
 
 
 ka = ar.keys()
 ka.sort()
 
 
-# In[40]:
+# In[10]:
 
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
 
-# In[41]:
+# In[11]:
 
 
 fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 
-# In[42]:
+# In[12]:
 
 
 fl_ci.sum()
 
 
-# In[43]:
+# In[13]:
 
 
 len(fl_ci)*1.0/60.0/60.0
 
 
-# In[44]:
+# In[14]:
 
 
 fl_ci.sum()/float(len(fl_ci))
 
 
-# In[45]:
+# In[15]:
 
 
 ar['fl_QA'].sum()*1.0/60.0/60.0
 
 
-# In[46]:
+# In[16]:
 
 
 ar['qual_flag'].sum()
 
 
-# In[47]:
+# In[17]:
 
 
 nwl = ka[0:17]
 
 
-# In[48]:
+# In[18]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
-# In[49]:
+# In[19]:
 
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
@@ -202,7 +202,7 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614']
 
 
-# In[50]:
+# In[20]:
 
 
 doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
@@ -212,14 +212,14 @@ ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
 
 # ### Get good data
 
-# In[51]:
+# In[21]:
 
 
 fl1 = ar['days']==ar['days'][0]
 fl1.shape
 
 
-# In[52]:
+# In[22]:
 
 
 fl = (ar['qual_flag']==0) & (np.isfinite(ar['AOD0501'])) 
@@ -228,7 +228,7 @@ fl1.shape
 
 # ### Calculate average uncertainty
 
-# In[56]:
+# In[23]:
 
 
 for k in ka:
@@ -238,83 +238,663 @@ for k in ka:
 
 # ### Calculate the Angstrom Exponent
 
-# In[53]:
+# In[24]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[54]:
+# In[25]:
 
 
 aodrr.shape
 
 
-# In[55]:
+# In[26]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[57]:
+# In[27]:
 
 
 iangsf = np.isfinite(angs) & ar['fl'] & (ar['GPS_Alt']<500.0)
 
 
-# In[58]:
+# In[28]:
 
 
 np.nanmean(angs[iangsf])
 
 
-# In[59]:
+# In[29]:
 
 
 np.nanstd(angs[iangsf])
 
 
+# #### Calculate the variance in AOD for  angstrom uncertainty
+
+# In[30]:
+
+
+fl_aeunc = fl & (ar['GPS_Alt']>6000.0) & (ar['AOD0501']<0.07) & (ar['AOD0380']<0.5) & np.isfinite(aodrr[1:11,:]).all(axis=0)
+
+
+# In[33]:
+
+
+#subset to n number of legs by time
+aevv = {}
+for i in xrange(10): 
+    aevv[str(i+1)] = np.array(aodrr[i+1,:])
+ae_vals = get_segments_by_time(np.where(fl_aeunc)[0],ar['doys'],aevv,tsep=200.0/24.0/60.0/60.0)
+
+
+# In[34]:
+
+
+# normalize the distribution of each leg to have the same mean
+mean_aod_foraeunc = np.nanmean(aodrr[1:11,fl_aeunc],axis=1)
+ae_unc_norm = [[] for x in xrange(10)]
+
+for i in xrange(10):
+    tmp = []
+    for aa in ae_vals[str(i+1)]:
+        tmp.append((aa[np.isfinite(aa)]+mean_aod_foraeunc[i]-np.nanmean(aa)).tolist())
+    ae_unc_norm[i] = np.hstack(tmp)
+ae_unc_norm = np.array(ae_unc_norm)
+ae_unc_norm = ae_unc_norm[:,((ae_unc_norm<0.1)&(ae_unc_norm>0.0)).all(axis=0)]
+ae_unc_norm = ae_unc_norm[:,0::60] # have about N=1000
+ae_unc_norm.shape
+
+
+# In[35]:
+
+
+xn = 12
+#subset to n number of legs by time
+
+aevv2 = {}
+for i in xrange(xn): 
+    aevv2[str(i+1)] = np.array(aodrr[i+1,:])
+ae_vals2 = get_segments_by_time(np.where(fl_aeunc)[0],ar['doys'],aevv2,tsep=200.0/24.0/60.0/60.0)
+# normalize the distribution of each leg to have the same mean
+
+mean_aod_foraeunc2 = np.nanmean(aodrr[1:13,fl_aeunc],axis=1)
+ae_unc_norm2 = [[] for x in xrange(xn)]
+
+for i in xrange(xn):
+    tmp = []
+    for aa in ae_vals2[str(i+1)]:
+        tmp.append((aa[np.isfinite(aa)]+mean_aod_foraeunc2[i]-np.nanmean(aa)).tolist())
+    ae_unc_norm2[i] = np.hstack(tmp)
+ae_unc_norm2 = np.array(ae_unc_norm2)
+ae_unc_norm2 = ae_unc_norm2[:,((ae_unc_norm2<0.1)&(ae_unc_norm2>0.0)).all(axis=0)]
+ae_unc_norm2 = ae_unc_norm2[:,0::60] # have about N=1000
+ae_unc_norm2.shape
+
+
+# In[574]:
+
+
+fig,ax = plt.subplots(2,5)
+ax = ax.ravel()
+for i in xrange(10):
+    ax[i].hist(ae_unc_norm[i,:],bins=100)
+    ax[i].set_title(nwl[i+1])
+    ax[i].set_xlabel('AOD')
+    ax[i].set_ylabel('Counts')
+
+
+# In[36]:
+
+
+len(ae_unc_norm)
+
+
+# In[37]:
+
+
+# functionalize this pdf such that you can enter the AOD spectra val and its uncertainty to change the spread and mean
+def aod_sp_pdf(aod,unc,ae_unc_norm=ae_unc_norm):
+    'modifiy a spectra (aod) and uncertainty (unc)'
+    if len(aod) != len(ae_unc_norm): raise(ValueError,'aod spectra not the right length')
+    if len(unc) != len(ae_unc_norm): raise(ValueError,'unc spectra not the right length')
+    aod_n = np.array([aod[i] + (ae_unc_norm[i,:]-np.nanmean(ae_unc_norm[i,:]))*(unc[i]/np.nanstd(ae_unc_norm[i,:])) for i in xrange(len(aod))])
+    return aod_n
+    
+
+
+# In[38]:
+
+
+# test out a pdf creation
+aodrr_unc = np.array([ar['UNC'+n] for n in nwl])
+aod_n = aod_sp_pdf(aodrr[1:11,100],aodrr_unc[1:11,100])
+
+
+# In[582]:
+
+
+fig,ax = plt.subplots(2,5)
+ax = ax.ravel()
+for i in xrange(10):
+    ax[i].hist(aod_n[i,:],bins=100)
+    ax[i].set_title(nwl[i+1])
+    ax[i].set_xlabel('AOD')
+    ax[i].set_ylabel('Counts')
+
+
+# In[41]:
+
+
+# test out angstrom calc
+angs_n = su.calc_angs(aod_n[0,:],np.array(nm[1:11]),aod_n)
+
+
+# In[42]:
+
+
+np.nanstd(angs_n)
+
+
+# In[39]:
+
+
+# make for multiprocessing
+def angs_calc_multi(ia,aodrr=aodrr,aodrr_unc=aodrr_unc,fl=fl):
+    aa = aodrr[1:11,fl][:,ia]
+    unc = aodrr_unc[1:11,fl][:,ia]
+    aod_n = aod_sp_pdf(aa,unc)
+    try:
+        angs_n = su.calc_angs(aod_n[0,:],np.array(nm[1:11]),aod_n,bar_update=False)
+        angs_mean = np.nanmean(angs_n)
+        angs_std = np.nanstd(angs_n)
+    except:
+        angs_mean = np.nan
+        angs_std = np.nan
+    return angs_mean,angs_std
+
+
+# In[40]:
+
+
+from multiprocessing import Pool, cpu_count
+from tqdm.notebook import tqdm 
+import signal
+
+
+# In[41]:
+
+
+class KeyboardInterruptError(Exception): pass
+
+
+# In[42]:
+
+
+def worker_init(verbose=True):
+    # ignore the SIGINI in sub process, just print a log
+    def sig_int(signal_num, frame):
+        if verbose: 
+            print 'signal: %s' % signal_num
+        raise IOError
+    signal.signal(signal.SIGINT, sig_int)
+
+
+# In[ ]:
+
+
+p = Pool(20,worker_init)
+
+
+# In[44]:
+
+
+NN = len(aodrr[0,fl])
+angs_mean,angs_std = np.zeros((NN)),np.zeros((NN))
+with tqdm(total=NN) as pbar:
+    for i, outs in enumerate(p.imap_unordered(angs_calc_multi, range(NN))):
+        pbar.update()
+        angs_mean[i] = outs[0]
+        angs_std[i] = outs[1]
+
+
+# In[45]:
+
+
+angs[fl][0:40]
+
+
+# In[48]:
+
+
+angs_mean[0:40],angs_std[0:40]
+
+
+# In[47]:
+
+
+angs[fl].shape,angs_mean.shape
+
+
+# In[43]:
+
+
+if 'angs_mean' in locals().keys():
+    hs.savemat(fp+'KORUS_fine_coarse_angs_unc_{}.mat'.format(vv),{u'angs_mean':angs_mean,u'angs_std':angs_std})
+else:
+    dd = hs.loadmat(fp+'KORUS_fine_coarse_angs_unc_{}.mat'.format(vv))
+    angs_mean = dd['angs_mean']
+    angs_std = dd['angs_std']
+
+
+# In[50]:
+
+
+plt.figure()
+plt.plot(angs[fl],angs_std,'.')
+plt.xlabel('AE')
+plt.ylabel('AE uncertainty')
+
+
+# In[52]:
+
+
+plt.figure()
+plt.hist2d(angs[fl],angs_std,bins=30,range=[[-1,2.2],[0,0.8]])
+plt.xlabel('AE (angs)')
+plt.ylabel('AE error (angs_std)')
+plt.colorbar(label='Number of points')
+
+plt.figure()
+plt.hist2d(angs_mean,angs_std,bins=30,range=[[-1,2.2],[0,0.8]])
+plt.xlabel('AE (angs_mean)')
+plt.ylabel('AE error (angs_std)')
+plt.colorbar(label='Number of points')
+
+plt.figure()
+plt.hist2d(aodrr[2,fl],angs_std,bins=30,range=[[0,1.5],[0,0.8]])
+plt.xlabel('AOD 501 nm')
+plt.ylabel('AE error (angs_std)')
+plt.colorbar(label='Number of points')
+
+
 # ### Calculate the fine mode fraction
 
-# In[60]:
+# In[45]:
 
 
 fmf = su.sda(aodrr[1:13,:],np.array(nm[1:13])/1000.0)
 
 
-# In[61]:
+# In[46]:
 
 
 fmf.keys()
 
 
-# In[62]:
+# In[47]:
 
 
 fmf['tauc'].shape, ar['GPS_Alt'].shape
 
 
+# #### Quantify the fine mode fraction uncertainty similarly to AE
+
+# In[48]:
+
+
+# make for multiprocessing
+def fmf_calc_multi(ia,aodrr=aodrr,aodrr_unc=aodrr_unc,fl=fl):
+    aa = aodrr[1:13,fl][:,ia]
+    unc = aodrr_unc[1:13,fl][:,ia]
+    aod_n = aod_sp_pdf(aa,unc,ae_unc_norm=ae_unc_norm2[:,::10])
+    outs = {}
+    try:
+        fmf_n = su.sda(aod_n,np.array(nm[1:13])/1000.0,bar_update=False)
+        for k in ['tauc','tauf','eta']:
+            outs[k+'_mean'] = np.nanmean(fmf_n[k])
+            outs[k+'_std'] = np.nanstd(fmf_n[k])
+    except:
+        for k in ['tauc','tauf','eta']:
+            outs[k+'_mean'] = np.nan
+            outs[k+'_std'] = np.nan
+    return outs
+
+
+# In[49]:
+
+
+# test one pdf
+ou = fmf_calc_multi(0)
+print('multi tauc [mean,std,regular]',ou['tauc_mean'],ou['tauc_std'],fmf['tauc'][fl][0])
+print('multi eta [mean,std,regular]',ou['eta_mean'],ou['eta_std'],fmf['eta'][fl][0])
+
+
+# In[50]:
+
+
+p = Pool(22,worker_init)
+
+
+# In[51]:
+
+
+NN = len(aodrr[0,fl])
+tauc_mean,tauc_std = np.zeros((NN)),np.zeros((NN))
+tauf_mean,tauf_std = np.zeros((NN)),np.zeros((NN))
+eta_mean,eta_std = np.zeros((NN)),np.zeros((NN))
+with tqdm(total=NN) as pbar:
+    for i, outs in enumerate(p.imap_unordered(fmf_calc_multi, range(NN))):
+        pbar.update()
+        tauc_mean[i] = outs['tauc_mean']
+        tauf_mean[i] = outs['tauf_mean']
+        eta_mean[i] = outs['eta_mean']
+        
+        tauc_std[i] = outs['tauc_std']
+        tauf_std[i] = outs['tauf_std']
+        eta_std[i] = outs['eta_std']
+
+
+# In[52]:
+
+
+if 'eta_mean' in locals().keys():
+    hs.savemat(fp+'KORUS_fine_coarse_fmf_unc_{}.mat'.format(vv),
+               {u'tauc_mean':tauc_mean,u'tauf_mean':tauf_mean,u'eta_mean':eta_mean,
+               u'tauc_std':tauc_std,u'tauf_std':tauf_std,u'eta_std':eta_std})
+else:
+    dd = hs.loadmat(fp+'KORUS_fine_coarse_fmf_unc_{}.mat'.format(vv))
+    tauc_mean = dd['tauc_mean']
+    tauf_mean = dd['tauf_mean']
+    eta_mean = dd['eta_mean']
+    tauc_std = dd['tauc_std']
+    tauf_std = dd['tauf_std']
+    eta_std = dd['eta_std']
+
+
+# In[57]:
+
+
+plt.figure()
+plt.hist2d(tauc_mean,tauc_std,bins=30,range=[[0,0.5],[0,0.12]])
+plt.xlabel('AOD Coarse')
+plt.ylabel('Standard Deviation AOD Coarse')
+
+
+# In[58]:
+
+
+plt.figure()
+plt.hist2d(tauf_mean,tauf_std,bins=30,range=[[0,0.9],[0,0.12]])
+plt.xlabel('AOD Fine')
+plt.ylabel('Standard Deviation AOD Fine')
+
+
+# In[62]:
+
+
+plt.figure()
+plt.hist2d(eta_mean,eta_std,bins=30,range=[[0,1],[0,0.75]])
+plt.xlabel('Fine Mode Fraction')
+plt.ylabel('Standard Deviation Fine Mode Fraction')
+
+
+# ### Plot out errors of FMF and AE based on AOD
+
+# In[73]:
+
+
+aod_bins = np.arange(0,1.67,0.05)
+aod_bins
+
+
+# In[197]:
+
+
+def make_binned_byaod(x,aod,bn,flb,y=[]):
+    """Function to create binned data for a set range, usually for aod
+       - x is variable (prefiltered)
+       - aod is variable to bin with
+       - bn is bins
+       - flb is filter on aod
+       - y for an extra variable to average over those bins
+    """
+    import numpy as np
+    binned_ang,binned_aod,binned_num = [],[],[]
+    binned_extra = []
+    if not any(y): y = aod[flb]    
+    for i,b in enumerate(bn[:-1]):
+        flaa = (aod[flb]>=b) & (aod[flb]<bn[i+1]) & (np.isfinite(x))
+        binned_ang.append(x[flaa])
+        binned_aod.append(np.mean([b,bn[i+1]]))
+        binned_num.append(len(x[flaa]))
+        binned_extra.append(np.nanmean(y[flaa]))
+    return binned_ang,binned_aod,binned_num,binned_extra
+
+
+# In[198]:
+
+
+aod_unc_bins,baod,baodn,avg_angs_b = make_binned_byaod(aodrr_unc[2,fl],aodrr[2,:],aod_bins,fl,y=angs_mean)
+angs_bins,baod,baodn,avg_angs_b = make_binned_byaod(angs_std,aodrr[2,:],aod_bins,fl,y=angs_mean)
+tauc_bins,baod,baodn,avg_tauc_b = make_binned_byaod(tauc_std,aodrr[2,:],aod_bins,fl,y=tauc_mean)
+tauf_bins,baod,baodn,avg_tauf_b = make_binned_byaod(tauf_std,aodrr[2,:],aod_bins,fl,y=tauf_mean)
+eta_bins,baod,baodn,avg_eta_b = make_binned_byaod(eta_std,aodrr[2,:],aod_bins,fl,y=eta_mean)
+
+
+# In[171]:
+
+
+angs_mean.shape
+
+
+# In[182]:
+
+
+fl_a1 = fl & (ar['GPS_Alt']<1000.0)
+fl_a11 = ar['GPS_Alt'][fl]<1000.0
+aod_unc_binsa,baod,baodn,avg_angs_ba = make_binned_byaod(aodrr_unc[2,fl_a1],aodrr[2,:],aod_bins,fl_a1,y=angs_mean[fl_a11])
+angs_binsa,baod,baodn,avg_angs_ba = make_binned_byaod(angs_std[fl_a11],aodrr[2,:],aod_bins,fl_a1,y=angs_mean[fl_a11])
+tauc_binsa,baod,baodn,avg_tauc_ba = make_binned_byaod(tauc_std[fl_a11],aodrr[2,:],aod_bins,fl_a1,y=tauc_mean[fl_a11])
+tauf_binsa,baod,baodn,avg_tauf_ba = make_binned_byaod(tauf_std[fl_a11],aodrr[2,:],aod_bins,fl_a1,y=tauf_mean[fl_a11])
+eta_binsa,baod,baodn,avg_eta_ba = make_binned_byaod(eta_std[fl_a11],aodrr[2,:],aod_bins,fl_a1,y=eta_mean[fl_a11])
+
+
+# In[446]:
+
+
+fig,ax = plt.subplots(1,3,figsize=(9,3.5))
+dummy_n = np.array(baodn)*0.0+200.0
+dummy_n[-1] = 205.0
+bp = ax[0].boxplot(aod_unc_bins,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.03,showmeans=True,patch_artist=True)
+gr = plt.cm.autumn_r
+pu.set_box_whisker_color(gr,bp,dummy_n,whisker_color='grey')
+
+ax[0].set_ylabel('AOD$_{{501}}$ Uncertainty')
+ax[0].set_xlabel('AOD$_{{501}}$ bins')
+ax[0].set_xlim(0,1.6)
+ax[0].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[0].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[0].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[0].grid()
+ax[0].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+
+gr = plt.cm.winter
+bp = ax[1].boxplot(angs_bins,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.04,showmeans=True,patch_artist=True)
+ax[1].set_ylabel('Angstrom Exponent Standard Deviation')
+ax[1].set_xlabel('AOD$_{{501}}$ bins')
+pu.set_box_whisker_color(gr,bp,avg_angs_b,whisker_color='grey')
+
+ax[1].set_xlim(0,1.6)
+ax[1].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[1].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[1].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[1].grid()
+
+ax[1].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(avg_angs_b)
+cbaxesgr = fig.add_axes([0.52, 0.38, 0.01, 0.3])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr,label='Average AE')
+
+
+bp = ax[2].boxplot(eta_bins,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.07,showmeans=True,patch_artist=True)
+ax[2].set_ylabel('Fine Mode Fraction Standard Deviation')
+ax[2].set_xlabel('AOD$_{{501}}$ bins')
+gr = plt.cm.plasma
+pu.set_box_whisker_color(gr,bp,avg_eta_b)
+
+ax[2].set_xlim(0,1.6)
+ax[2].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[2].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[2].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[2].grid()
+
+ax[2].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(avg_eta_b)
+cbaxesgr = fig.add_axes([0.843, 0.38, 0.01, 0.3])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr,label='Average FMF')
+
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.18,dy=-0.08)
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.18,dy=-0.08)
+pu.sub_note('c)',ax=ax[2],out=True,dx=-0.18,dy=-0.08)
+
+plt.tight_layout()
+plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD.png',transparent=True,dpi=500)
+plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD.pdf',transparent=True,dpi=500)
+plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD.eps',transparent=True,dpi=500)
+
+
+# In[450]:
+
+
+fig,ax = plt.subplots(1,3,figsize=(9,3.5))
+dummy_n = np.array(baodn)*0.0+200.0
+dummy_n[-1] = 205.0
+bp = ax[0].boxplot(aod_unc_binsa,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.03,showmeans=True,patch_artist=True)
+gr = plt.cm.autumn_r
+pu.set_box_whisker_color(gr,bp,dummy_n,whisker_color='grey')
+
+ax[0].set_ylabel('AOD$_{{501}}$ Uncertainty')
+ax[0].set_xlabel('AOD$_{{501}}$ bins')
+ax[0].set_xlim(0,1.6)
+ax[0].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[0].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[0].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[0].grid()
+ax[0].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+
+gr = plt.cm.winter
+bp = ax[1].boxplot(angs_binsa,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.04,showmeans=True,patch_artist=True)
+ax[1].set_ylabel('Angstrom Exponent Standard Deviation')
+ax[1].set_xlabel('AOD$_{{501}}$ bins')
+pu.set_box_whisker_color(gr,bp,avg_angs_ba,whisker_color='grey')
+
+ax[1].set_xlim(0,1.6)
+ax[1].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[1].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[1].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[1].grid()
+
+ax[1].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(avg_angs_b)
+cbaxesgr = fig.add_axes([0.52, 0.38, 0.01, 0.3])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr,label='Average AE')
+
+
+bp = ax[2].boxplot(eta_binsa,positions=np.array(baod),vert=True,
+                   showfliers=False,widths=0.07,showmeans=True,patch_artist=True)
+ax[2].set_ylabel('Fine Mode Fraction Standard Deviation')
+ax[2].set_xlabel('AOD$_{{501}}$ bins')
+gr = plt.cm.plasma
+pu.set_box_whisker_color(gr,bp,avg_eta_ba)
+
+ax[2].set_xlim(0,1.6)
+ax[2].set_xticks([0,0.4,0.8,1.2,1.6])
+ax[2].set_xticks([0.2,0.6,1.0,1.4],minor=True)
+ax[2].set_xticklabels([0,0.4,0.8,1.2,1.6])
+ax[2].grid()
+
+ax[2].legend([bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['Mean','Median','25% - 75%','min-max'],
+               frameon=False,loc=1,numpoints=1)
+scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+scalarmapgr.set_array(avg_eta_b)
+cbaxesgr = fig.add_axes([0.843, 0.38, 0.01, 0.3])
+cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr,label='Average FMF')
+fig.suptitle('Below 1000 m')
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.18,dy=-0.08)
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.18,dy=-0.08)
+pu.sub_note('c)',ax=ax[2],out=True,dx=-0.18,dy=-0.08)
+
+
+plt.tight_layout()
+#plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD_lowalt.png',transparent=True,dpi=500)
+#plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD_lowalt.pdf',transparent=True,dpi=500)
+#plt.savefig(fp+'plot/KORUS_4STAR_AOD_AE_FMF_UNC_vsAOD_lowalt.eps',transparent=True,dpi=500)
+
+
+# In[451]:
+
+
+j=4
+np.nanmedian(eta_bins[j]),np.nanmedian(angs_bins[j]),np.nanmedian(aod_unc_bins[j]), baod[j], np.nanmedian(eta_binsa[j]),np.nanmedian(angs_binsa[j]),np.nanmedian(aod_unc_binsa[j]),
+
+
+# In[453]:
+
+
+np.percentile(aodrr[2,fl_a1],[5,10,15,25,37,50,66,75,85,90,95])
+
+
 # ## Load GOCI AOD files
 
-# In[157]:
+# In[232]:
 
 
 gl = os.listdir(fp+'data_other/GOCI')
 
 
-# In[158]:
+# In[233]:
 
 
 gl.sort()
 
 
-# In[159]:
+# In[234]:
 
 
 goci = []
 
 
-# In[160]:
+# In[235]:
+
+
+lu.load_hdf(fp+'data_other/GOCI/{}'.format(gl[1]))
+
+
+# In[236]:
 
 
 for l in gl:
@@ -325,25 +905,25 @@ for l in gl:
     goci.append(g_tmp)  
 
 
-# In[161]:
+# In[237]:
 
 
 len(goci)
 
 
-# In[162]:
+# In[238]:
 
 
 np.nanmax(goci[0]['t']),np.nanmean(goci[0]['t']),np.nanmin(goci[0]['t'])
 
 
-# In[163]:
+# In[239]:
 
 
 g_dict
 
 
-# In[164]:
+# In[240]:
 
 
 goci_doy = []
@@ -355,7 +935,7 @@ for i,l in enumerate(gl):
 goci_doy = np.array(goci_doy)
 
 
-# In[165]:
+# In[241]:
 
 
 for og in goci:
@@ -365,13 +945,13 @@ for og in goci:
 
 # ### Build collcation of goci data to 4STAR
 
-# In[166]:
+# In[242]:
 
 
 ig4 = Sp.find_closest(goci_doy,ar['doys'])
 
 
-# In[167]:
+# In[243]:
 
 
 ig4
@@ -387,31 +967,31 @@ plt.plot(ar['doys'],'x',label='4star')
 plt.legend()
 
 
-# In[168]:
+# In[244]:
 
 
 bad_ig4 = abs(goci_doy[ig4]-ar['doys'])>(1.0/24.0)
 
 
-# In[169]:
+# In[245]:
 
 
 sum(bad_ig4)/float(len(ig4)), len(np.where(bad_ig4)[0]), len(ig4)
 
 
-# In[170]:
+# In[246]:
 
 
 ar['doys']%1.0
 
 
-# In[171]:
+# In[247]:
 
 
 goci[0].keys()
 
 
-# In[172]:
+# In[248]:
 
 
 goci2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'AE':[],'fmf':[],'CF':[],'aod_f':[],'aod_c':[]}
@@ -444,37 +1024,37 @@ for k in goci2ar.keys():
     goci2ar[k] = np.array(goci2ar[k])
 
 
-# In[173]:
+# In[249]:
 
 
 igoci, len(goci2ar['aod']), goci2ar['aod'][2000], len(np.unique(ig4))
 
 
-# In[174]:
+# In[250]:
 
 
 imeas = np.where(ig4==8)[0]
 
 
-# In[175]:
+# In[251]:
 
 
 len(imeas)
 
 
-# In[176]:
+# In[252]:
 
 
 np.argmin((goci[8]['lon']-ar['Longitude'][imeas[0]])**2.0+(goci[8]['lat']-ar['Latitude'][imeas[0]])**2.0)
 
 
-# In[177]:
+# In[253]:
 
 
 goci[8]['lon'].flatten()[94639],goci[8]['lat'].flatten()[94639]
 
 
-# In[178]:
+# In[254]:
 
 
 ar['Longitude'][imeas[0]],ar['Latitude'][imeas[0]]
@@ -493,7 +1073,7 @@ plt.xlabel('GOCI interpolated to 4STAR number of points')
 plt.ylabel('GOCI AE')
 
 
-# In[182]:
+# In[274]:
 
 
 goci2ar['aod'][bad_ig4] = np.nan
@@ -504,7 +1084,7 @@ goci2ar['fmf'][bad_ig4] = np.nan
 goci2ar['CF'][bad_ig4] = np.nan
 
 
-# In[183]:
+# In[275]:
 
 
 len(goci2ar['aod_c']), len(goci2ar['aod'])
@@ -512,7 +1092,7 @@ len(goci2ar['aod_c']), len(goci2ar['aod'])
 
 # ### Flag for over ocean
 
-# In[184]:
+# In[461]:
 
 
 from global_land_mask import globe
@@ -523,38 +1103,38 @@ from global_land_mask import globe
 #Geophysical Data Center, 325 Broadway, Boulder, Colorado 80303, U.S.A, https://repository.library.noaa.gov/view/noaa/13424
 
 
-# In[185]:
+# In[462]:
 
 
 is_in_ocean_good = globe.is_ocean(goci2ar['lat'][fl], goci2ar['lon'][fl])
 
 
-# In[186]:
+# In[463]:
 
 
 is_in_ocean = np.full(goci2ar['lat'].shape,False)
 is_in_ocean[fl] = is_in_ocean_good
 
 
-# In[187]:
+# In[464]:
 
 
 goci2ar['lat'][fl].shape
 
 
-# In[188]:
+# In[465]:
 
 
 goci2ar['lat'].shape
 
 
-# In[189]:
+# In[466]:
 
 
 is_in_ocean.shape
 
 
-# In[190]:
+# In[467]:
 
 
 is_in_ocean
@@ -562,43 +1142,43 @@ is_in_ocean
 
 # ### Make daily regional averages to compare to flight subsets
 
-# In[554]:
+# In[255]:
 
 
 goci[0]['lat'].min(), goci[0]['lat'].max()
 
 
-# In[555]:
+# In[256]:
 
 
 goci[0]['lon'].min(), goci[0]['lon'].max()
 
 
-# In[556]:
+# In[257]:
 
 
 np.nanmin(ar['Latitude']),np.nanmax(ar['Latitude'])
 
 
-# In[557]:
+# In[258]:
 
 
 np.nanmin(ar['Longitude']),np.nanmax(ar['Longitude'])
 
 
-# In[558]:
+# In[259]:
 
 
 ar['doys']
 
 
-# In[559]:
+# In[260]:
 
 
 itransit = ar['days']!=19.0
 
 
-# In[560]:
+# In[261]:
 
 
 for da in np.unique(ar['days']):
@@ -608,7 +1188,7 @@ for da in np.unique(ar['days']):
             np.nanmin(ar['Longitude'][itr]),np.nanmax(ar['Longitude'][itr]))
 
 
-# In[561]:
+# In[262]:
 
 
 itr = (ar['days']!=19.0) &  np.isfinite(ar['Latitude']) &  np.isfinite(ar['Longitude'])
@@ -618,7 +1198,7 @@ print 'days: {}, lat range: {}, {}, lon range: {}, {}'.format(da,
 np.percentile(ar['Latitude'][itr],[5,10,25,75,90,95]),np.percentile(ar['Longitude'][itr],[5,10,25,75,90,95])
 
 
-# In[562]:
+# In[263]:
 
 
 j = 104
@@ -626,38 +1206,38 @@ j = 104
     goci[j]['lat'].min(), goci[j]['lat'].max(),goci[j]['lon'].min(), goci[j]['lon'].max())
 
 
-# In[563]:
+# In[264]:
 
 
 lat_rg = [33.8,37.6] # from percentiles of 4STAR data
 lon_rg = [124.3,129.4]
 
 
-# In[564]:
+# In[265]:
 
 
 goci[0]['lat'].shape
 
 
-# In[565]:
+# In[266]:
 
 
 igoci_rg = (goci[0]['lat']>lat_rg[0]) & (goci[0]['lat']<lat_rg[1]) & (goci[0]['lon']>lon_rg[0]) & (goci[0]['lon']<lon_rg[1])
 
 
-# In[566]:
+# In[267]:
 
 
 igoci_rg.any()
 
 
-# In[567]:
+# In[268]:
 
 
 goci[0]['lat'][igoci_rg].shape
 
 
-# In[568]:
+# In[269]:
 
 
 goci_time = {}
@@ -969,26 +1549,26 @@ plt.xlabel('Difference in AOD daily averages (regional to flight sampling)')
 # 
 # Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavg1_2d_aer_Nx: 2d,1-Hourly,Time-averaged,Single-Level,Assimilation,Aerosol Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), Accessed: 2020-09-17, 10.5067/KLICLTZ8EM9D
 
-# In[601]:
+# In[372]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2/aer')
 
 
-# In[602]:
+# In[373]:
 
 
 ml = [ m for m in ml if m.endswith('nc4')] 
 ml.sort()
 
 
-# In[603]:
+# In[374]:
 
 
 mtmp, mdict = lu.load_hdf_h5py(fp+'data_other/MERRA2/aer/'+ml[0])
 
 
-# In[604]:
+# In[375]:
 
 
 merra = []
@@ -1001,13 +1581,13 @@ for m in ml:
     merra.append(mtmp)
 
 
-# In[605]:
+# In[376]:
 
 
 len(merra),len(ml)
 
 
-# In[606]:
+# In[377]:
 
 
 mdict.keys()
@@ -1043,7 +1623,7 @@ merra[0]['time']/60.0/24.0
 merra[0]['time']
 
 
-# In[612]:
+# In[378]:
 
 
 delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
@@ -1051,13 +1631,13 @@ delta_time = (1.0-merra[0]['time'][-1]/60.0/24.0)/2.0
 
 # #### Collocate new version to 4STAR
 
-# In[613]:
+# In[379]:
 
 
 merra_doy = [datetime(int(l[-12:-8]),int(l[-8:-6]),int(l[-6:-4])).timetuple().tm_yday for l in ml]
 
 
-# In[614]:
+# In[380]:
 
 
 for m in merra:
@@ -1070,19 +1650,19 @@ for m in merra:
     m['aod_sulf'] = m['SUEXTTAU']
 
 
-# In[615]:
+# In[381]:
 
 
 im4 = Sp.find_closest(np.array(merra_doy),(ar['doys']+delta_time).astype(int))
 
 
-# In[616]:
+# In[382]:
 
 
 np.unique(im4)
 
 
-# In[617]:
+# In[383]:
 
 
 nmerra = len(merra)
@@ -1091,7 +1671,7 @@ nlon = len(merra[0]['lon'])
 ntime = len(merra[0]['time'])
 
 
-# In[618]:
+# In[384]:
 
 
 merra2ar = {'doys':[],'lat':[],'lon':[],'aod':[],'ae':[],'ind':[],
@@ -1305,7 +1885,7 @@ plt.savefig(fp+'plot/KORUS_MERRA_hist_daily_avgs_{}.png'.format(vv),dpi=600,tran
 
 # Created by Patricia Castellanos on 2021-06-01 (??)
 
-# In[67]:
+# In[280]:
 
 
 ml = os.listdir(fp+'data_other/MERRA2_interp_v2/')
@@ -1313,13 +1893,13 @@ ml = [ m for m in ml if m.endswith('nc4')]
 ml.sort()
 
 
-# In[68]:
+# In[281]:
 
 
 ml
 
 
-# In[69]:
+# In[282]:
 
 
 mei, mei_dict = [],[]
@@ -1336,13 +1916,13 @@ for m in ml:
         mei_species.append('tot')
 
 
-# In[70]:
+# In[283]:
 
 
 len(mei)
 
 
-# In[71]:
+# In[284]:
 
 
 for i,m in enumerate(mei):
@@ -1350,32 +1930,32 @@ for i,m in enumerate(mei):
         print(i,mei_species[i])
 
 
-# In[72]:
+# In[285]:
 
 
 len(mei)
 
 
-# In[73]:
+# In[286]:
 
 
 for i in range(18):
     print(i,mei_species[i],np.nanmean(mei[i]['tau']))
 
 
-# In[82]:
+# In[287]:
 
 
 mei_dict[8]['lev']
 
 
-# In[361]:
+# In[288]:
 
 
 mei[8]['alt'] = np.array([np.flip(np.cumsum(np.flip(dz))) for dz in mei[8]['delz']])
 
 
-# In[362]:
+# In[289]:
 
 
 merraint = {'aod':mei[8]['tau'],'isotime':mei[8]['isotime'],'lat':mei[8]['latitude'],'lon':mei[8]['longitude'],
@@ -1390,37 +1970,37 @@ for v in [0,1,2]:
     merraint['aod_spectra'][v,:,:] =       np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
 
 
-# In[124]:
+# In[290]:
 
 
 merraint['aod_spectra'].shape
 
 
-# In[125]:
+# In[291]:
 
 
 merraint['aod'].shape
 
 
-# In[126]:
+# In[292]:
 
 
 mei[1]['lev']
 
 
-# In[127]:
+# In[293]:
 
 
 merraint['aod'][0,:]
 
 
-# In[128]:
+# In[294]:
 
 
 from datetime import datetime
 
 
-# In[363]:
+# In[295]:
 
 
 merraint['time'] = np.array([datetime.strptime(t,'%Y-%m-%dT%H:%M:%S') for t in merraint['isotime']])
@@ -1429,39 +2009,39 @@ merraint['doy'] = np.array([t.timetuple().tm_yday+(t.hour+(t.minute+t.second/60.
 
 # #### Calculate the AE
 
-# In[364]:
+# In[296]:
 
 
 m_w = np.array([470.0,500.0,870.0])
 
 
-# In[365]:
+# In[297]:
 
 
 merraint['ae'] = np.zeros_like(merraint['aod'])+np.nan
 merraint['ae'].shape
 
 
-# In[366]:
+# In[298]:
 
 
 merraint['aod_spectra'].shape
 
 
-# In[ ]:
+# In[299]:
 
 
 for i,z in enumerate(merraint['lev']):
     merraint['ae'][:,i] = su.calc_angs(merraint['doy'],m_w,merraint['aod_spectra'][:,:,i])
 
 
-# In[368]:
+# In[300]:
 
 
 merraint['ae'][0,:]
 
 
-# In[369]:
+# In[301]:
 
 
 merraint['aod_spectra'].shape
@@ -1469,7 +2049,7 @@ merraint['aod_spectra'].shape
 
 # ### Match altitude and locations of 4STAR data
 
-# In[136]:
+# In[302]:
 
 
 merraint['pres'] = np.array([0.01,0.02,0.0327,0.0476,0.066,0.0893,0.1197,0.1595,0.2113,0.2785,0.3650,0.4758,
@@ -1480,40 +2060,40 @@ merraint['pres'] = np.array([0.01,0.02,0.0327,0.0476,0.066,0.0893,0.1197,0.1595,
                              820.0,835.0,850.0,865.0,880.0,895.0,910.0,925.0,940.0,955.0,970.0,985.0])
 
 
-# In[120]:
+# In[303]:
 
 
 p2z = lambda p: np.log(p/1013.25)/(-0.00012)  
 
 
-# In[135]:
+# In[304]:
 
 
 merraint['alt'] = p2z(merraint['pres']) #in meters above sea level
 merraint['alt']
 
 
-# In[411]:
+# In[305]:
 
 
 imatch = Sp.find_closest(merraint['doy'],ar['doys'])
 ibad = abs(merraint['doy'][imatch]-ar['doys']) > 5.0/(24.0*3600.0) #within 5 seconds
 
 
-# In[374]:
+# In[306]:
 
 
 ar_alt = np.ma.masked_array(ar['GPS_Alt'],mask=~np.isfinite(ar['GPS_Alt']))
 jalt = np.array([np.argmin(abs(merraint['alt']-a)) for a in ar_alt])
 
 
-# In[380]:
+# In[307]:
 
 
 merraint['aod'].shape
 
 
-# In[386]:
+# In[308]:
 
 
 merrasum = {}
@@ -1521,7 +2101,7 @@ for k in ['aod','aod_dust','aod_bc','aod_sulf','aod_sea','aod_oc','aod_spectra']
     merrasum[k] = np.array([np.cumsum(merraint[k][i,:]) for i in xrange(len(merraint[k][:,0]))])
 
 
-# In[413]:
+# In[309]:
 
 
 ma = {}
@@ -1541,10 +2121,19 @@ for k in ['aod','ae','aod_dust','lat','aod_bc','aod_sulf','aod_sea','aod_oc','lo
         ma[k][:,ibad] = np.nan
 
 
-# In[415]:
+# In[310]:
 
 
 ma['aod'].shape
+
+
+# In[312]:
+
+
+if 'merraint' in locals():
+    np.save(fp+'KORUS_MERRAint_{}.npy'.format(vv),merraint,allow_pickle=True)
+else:
+    merraint = np.load(fp+'KORUS_MERRAint_{}.mat'.format(vv),allow_pickle=True,fix_imports=True,encoding='latin1')
 
 
 # ## Load in situ extinction
@@ -1901,7 +2490,7 @@ plt.ylim(0,100)
 
 # ## Seperate each of the level legs into distinct segments
 
-# In[157]:
+# In[32]:
 
 
 def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=True):
@@ -2097,13 +2686,13 @@ hs.savemat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv),dvals)
 
 # ## Load from file
 
-# In[7]:
+# In[276]:
 
 
 dvals = hs.loadmat(fp+'KORUS_autocorr_dvals_{}.mat'.format(vv))
 
 
-# In[231]:
+# In[277]:
 
 
 dvals.keys(), len(dvals['dist']), dvals['dist'][0].shape
@@ -2300,7 +2889,7 @@ for i,dv in enumerate(dvals['doys']):
 
 # ### Build the limits of the autocorrelation
 
-# In[67]:
+# In[373]:
 
 
 # for met times
@@ -2310,7 +2899,7 @@ dt3 = ['20160523','20160531']
 dt4 = ['20160601','20160607']
 
 
-# In[68]:
+# In[374]:
 
 
 t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
@@ -2319,14 +2908,14 @@ t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
 
 
-# In[69]:
+# In[375]:
 
 
 # limits of DOY for each of the met times
 t1,t2,t3,t4
 
 
-# In[70]:
+# In[376]:
 
 
 #altitude limits in m
@@ -2337,7 +2926,7 @@ z3 = [3000.0, 15000.0]
 
 # ## Alternate calculations (lower mem)
 
-# In[71]:
+# In[372]:
 
 
 min_num = 100 # minimum number of points to be considered valid
@@ -2348,13 +2937,13 @@ corr_ks = [0.08,0.12, 0.18,0.27,0.4,0.6,0.9,1.35,2.0,3.0,5.0,7.5, 10.0, 15.0, 25
 #          35.0,65.0,100.0,150.0,200.0,350.0] 
 
 
-# In[72]:
+# In[377]:
 
 
 dvals['doys'][0][0], dvals['alt'][0][0]
 
 
-# In[73]:
+# In[378]:
 
 
 k = 2.0
@@ -2362,7 +2951,7 @@ dv = 0.20
 k*(1.0-dv), k*(1.0+dv)
 
 
-# In[201]:
+# In[206]:
 
 
 # This is the new way to prepare the autocorrelation arrays, 
@@ -2376,19 +2965,19 @@ for i,cd in enumerate(dvals['cumdist']):
     iis.append([np.where((mat_dist[i]>(k*(1.0-dv)))&(mat_dist[i]<(k*(1.0+dv)))) for ik,k in enumerate(corr_ks)])
 
 
-# In[202]:
+# In[208]:
 
 
 N = [len(cd) for i,cd in enumerate(dvals['cumdist'])] # number of points in each level leg
 
 
-# In[203]:
+# In[209]:
 
 
 alldist = np.hstack([dist for dist in dvals['dist']])
 
 
-# In[452]:
+# In[210]:
 
 
 plt.figure()
@@ -2398,20 +2987,20 @@ plt.xlabel('Distance from previous point [km]')
 plt.ylabel('Numbers of point')
 
 
-# In[204]:
+# In[211]:
 
 
 iis[0] # example array for indices that have varying lag for a given leg.
 
 
-# In[205]:
+# In[212]:
 
 
 dvals['doys_n'] = np.array([dvals['doys'][i][0] for i,cd in enumerate(dvals['cumdist'])])
 dvals['alt_n'] = np.array([dvals['alt'][i][0] for i,cd in enumerate(dvals['cumdist'])])
 
 
-# In[206]:
+# In[379]:
 
 
 itypes = [None]*8
@@ -2421,7 +3010,7 @@ itypes[0], = np.where((dvals['doys_n']>0.0) &
 #time types for alt <3km
 itypes[1], = np.where((dvals['doys_n'] > t1[0]) & (dvals['doys_n'] < t1[1]) &
                         (dvals['alt_n'] > z1[0]) & (dvals['alt_n'] < z2[1]))
-itypes[2], = np.where((dvals['doys_n'] > t2[0]) & (dvals['doys_n'] < t2[1]) &
+itypes[2], = np.where((dvals['doys_n'] > t2[0]) & (dvals['doys_n'] < t2[1 ]) &
                         (dvals['alt_n'] > z1[0]) & (dvals['alt_n'] < z2[1]))
 itypes[3], = np.where((dvals['doys_n'] > t3[0]) & (dvals['doys_n'] < t3[1]) &
                         (dvals['alt_n'] > z1[0]) & (dvals['alt_n'] < z2[1]))
@@ -2433,19 +3022,35 @@ itypes[6], = np.where((dvals['alt_n'] > z2[0]) & (dvals['alt_n'] < z2[1]))
 itypes[7], = np.where((dvals['alt_n'] > z3[0]) & (dvals['alt_n'] < z3[1]))
 
 
-# In[207]:
+# In[214]:
 
 
 z1,z2
 
 
-# In[208]:
+# In[215]:
 
 
 np.array(corr_ks)*(1.0-dv),np.array(corr_ks)*(1.0+dv),corr_ks
 
 
-# In[209]:
+# In[396]:
+
+
+for itt,ts in enumerate([t1,t2,t3,t4]):
+    to_it = np.where((dvals['doys_n'] > ts[0]) & (dvals['doys_n'] < ts[1]))
+    print('time met {}: ndays: {}'.format(itt+1,len(np.unique(np.around(dvals['doys_n'][to_it])))))
+
+
+# In[401]:
+
+
+for itt, zs in enumerate([z1,z2,z3]):
+    to_it = np.where((dvals['alt_n'] > zs[0]) & (dvals['alt_n'] < zs[1]))
+    print('alt range {}: ndays: {}'.format(itt+1,len(np.unique(np.around(dvals['doys_n'][to_it])))))
+
+
+# In[216]:
 
 
 # Spot check the distance indices represent the actual distance values in the each segment
@@ -2454,7 +3059,19 @@ for ik,k in enumerate(corr_ks):
     print k, dvals['cumdist'][j][iis[j][ik][0]]-dvals['cumdist'][j][iis[j][ik][1]]
 
 
-# In[210]:
+# In[222]:
+
+
+len(iis)
+
+
+# In[227]:
+
+
+iis[0]
+
+
+# In[217]:
 
 
 # tester for just one plus and minus lag distances in distribution for correlation calc.
@@ -2463,12 +3080,6 @@ ik = 1
 j = 0
 corrp = np.hstack([dvals[val][i][iis[i][ik][1]] for i,cd in enumerate(dvals['cumdist']) if i in itypes[j]])
 corrm = np.hstack([dvals[val][i][iis[i][ik][0]] for i,cd in enumerate(dvals['cumdist']) if i in itypes[j]])
-
-
-# In[211]:
-
-
-len(corrp),len(corrm)
 
 
 # In[212]:
@@ -2498,6 +3109,14 @@ corr_vals = ['AE','aod1040','fmf','aod0500']
 
 
 len(dvals['cumdist'])
+
+
+# ### quantify differences in values for iis distances
+
+# In[ ]:
+
+
+
 
 
 # ### Testing single runs before multiprocessing
@@ -2615,7 +3234,7 @@ autocorr_len_mc['AE'][0,6,:]
 
 # ### Functionalize for using multiprocessing
 
-# In[216]:
+# In[244]:
 
 
 from multiprocessing import Pool, cpu_count
@@ -2623,13 +3242,13 @@ from tqdm.notebook import tqdm
 import signal
 
 
-# In[217]:
+# In[245]:
 
 
 class KeyboardInterruptError(Exception): pass
 
 
-# In[218]:
+# In[246]:
 
 
 def worker_init(verbose=True):
@@ -2641,7 +3260,13 @@ def worker_init(verbose=True):
     signal.signal(signal.SIGINT, sig_int)
 
 
-# In[138]:
+# In[286]:
+
+
+dvals.keys()
+
+
+# In[240]:
 
 
 if (vv == 'v2') | (vv == 'v3') | (vv == 'v4'):
@@ -2661,19 +3286,22 @@ if (vv == 'v2') | (vv == 'v3') | (vv == 'v4'):
     
 
 
-# In[222]:
+# In[241]:
 
 
 autocorr = {}
 autocorr_len = {}
 
 
-# In[231]:
+# In[242]:
 
 
 def calc_autocorr(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=itypes,range_vals=range_vals):
-    dat = {'c':{},'l':{}}
+    dat = {'c':{},'l':{},'mean_diff':{},'std_diff':{},'median_diff':{}}
     dat['c'][val] = np.zeros((len(types),len(corr_ks)))+np.nan
+    dat['mean_diff'][val] = np.zeros((len(types),len(corr_ks)))+np.nan
+    dat['std_diff'][val] = np.zeros((len(types),len(corr_ks)))+np.nan
+    dat['median_diff'][val] = np.zeros((len(types),len(corr_ks)))+np.nan
     dat['l'][val] = np.zeros((len(types),len(corr_ks)))
     print val
     for ik,k in enumerate(corr_ks):
@@ -2698,6 +3326,9 @@ def calc_autocorr(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=ity
             top = (corrm-mpk)*(corrp-mmk) #[(v-mpk)*(corrp[iv]-mmk) for iv,v in enumerate(corrm)]
             #print val,ik,j,mmk,mpk,smk,spk,np.nansum(top)
             dat['c'][val][j,ik] = np.nansum(top)/((len(corrm)-1)*spk*smk)
+            dat['mean_diff'][val][j,ik] = np.nanmean(corrm-corrp)
+            dat['std_diff'][val][j,ik] = np.nanstd(corrm-corrp)
+            dat['median_diff'][val][j,ik] = np.nanmedian(corrm-corrp)
             dat['l'][val][j,ik] = len(corrm)
             if dat['l'][val][j,ik]<min_num:
                 dat['c'][val][j,ik] = np.nan
@@ -2705,7 +3336,7 @@ def calc_autocorr(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=ity
     return dat
 
 
-# In[232]:
+# In[243]:
 
 
 subsamp_ratio = 0.30
@@ -2752,23 +3383,29 @@ def calc_autocorr_mc(val,types=types,corr_ks=corr_ks,dvals=dvals,iis=iis,itypes=
     return dat
 
 
-# In[ ]:
+# In[247]:
 
 
 p = Pool(7,worker_init)
 
 
-# In[235]:
+# In[248]:
 
 
 autocorr = {}
 autocorr_len = {}
+mean_diff = {}
+median_diff = {}
+std_diff = {}
 with tqdm(total=len(corr_vals)) as pbar:
     for i, outs in tqdm(enumerate(p.imap_unordered(calc_autocorr, corr_vals))):
         pbar.update()
         k = outs['c'].keys()[0]
         autocorr[k] = outs['c'][k]
         autocorr_len[k] = outs['l'][k]
+        mean_diff[k] = outs['mean_diff'][k]
+        median_diff[k] = outs['median_diff'][k]
+        std_diff[k] = outs['std_diff'][k]
 
 
 # In[236]:
@@ -2792,6 +3429,21 @@ autocorr_mc['GOCI_fmf'].shape
 
 # ### Save
 
+# In[250]:
+
+
+import write_utils as wu
+
+
+# In[251]:
+
+
+## Save the non-montecarlo for mean, meidan and std differences
+dat_m = {u'autocorr':autocorr,u'autocorr_len':autocorr_len,u'mean_diff':mean_diff,u'median_diff':median_diff,u'std_diff':std_diff}
+dat_mm = wu.iterate_dict_unicode(dat_m)
+hs.savemat(fp+'KORUS_fine_coarse_autocorr_mean_med_std_{}.mat'.format(vv),dat_mm)
+
+
 # In[238]:
 
 
@@ -2801,7 +3453,6 @@ dat_c = {u'autocorr_mc':autocorr_mc,'autocorr_len_mc':autocorr_len_mc}
 # In[239]:
 
 
-import write_utils as wu
 dat_u = wu.iterate_dict_unicode(dat_c)
 
 
@@ -2811,39 +3462,54 @@ dat_u = wu.iterate_dict_unicode(dat_c)
 hs.savemat(fp+'KORUS_fine_coarse_autocorr_mc_{}.mat'.format(vv),dat_u)
 
 
+# In[225]:
+
+
+dat_mm = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_mean_med_std_{}.mat'.format(vv))
+mean_diff = dat_mm[u'mean_diff']
+std_diff = dat_mm[u'std_diff']
+median_diff = dat_mm[u'median_diff']
+
+
+# In[224]:
+
+
+dat_mm.keys()
+
+
 # ### Load the models
 
-# In[27]:
+# In[174]:
 
 
 dat_c = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_mc_{}.mat'.format(vv))
 
 
-# In[28]:
+# In[175]:
 
 
 dat_c.keys()
 
 
-# In[29]:
+# In[176]:
 
 
 autocorr_len_mc, autocorr_mc = dat_c['autocorr_len_mc'],dat_c['autocorr_mc']
 
 
-# In[30]:
+# In[177]:
 
 
 autocorr_mc.keys()
 
 
-# In[31]:
+# In[178]:
 
 
 autocorr_mc['aod0500'].shape
 
 
-# In[32]:
+# In[179]:
 
 
 autocorr_len_mc['aod0500'].shape
@@ -2879,6 +3545,110 @@ for val in corr_vals:
             autocorr_max[val][j,ik] = np.nanmax(autocorrs[val][j,ik,:])
             autocorr_d[val][j,ik] = autocorr_max[val][j,ik] - autocorr_min[val][j,ik]
             autocorr_mean[val][j,ik] = np.nanmean(autocorrs[val][j,ik,:])
+
+
+# ## Determine standard deviation, mean, and medians change with distance
+
+# In[280]:
+
+
+elements = ['AE','MERRA_AE','situ_ae','GOCI_AE'] 
+fig,ax = plt.subplots(len(elements),1,sharex=True,figsize=(5,9))
+for i,nl in enumerate(elements):
+    
+    ax[i].plot(corr_ks,mean_diff[nl][0],label='mean')
+    ax[i].plot(corr_ks,median_diff[nl][0],label='median')
+    ax[i].plot(corr_ks,std_diff[nl][0],label='std')
+    ax[i].legend(frameon=False)
+    if i>2: ax[i].set_xlabel('Lag Distance ($k$) [km]')
+    ax[i].set_ylabel('Diff (x$_{{j}}$-x$_{{j+k}}$)')
+    ax[i].set_title('{} for all of KORUS-AQ'.format(nl))
+    ax[i].grid()
+    ax[i].set_xscale('log')
+plt.tight_layout()
+plt.savefig(fp+'plot/KORUS_diff_AE_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[245]:
+
+
+di = {'aod90':[15,65,10,7.5],
+'aod85' : [35,100,65,10],
+'aode' : [160,250,160,100],
+'ae90' : [10,65,0.6,0.27],
+'ae85' : [15,65,7.5,0.9],
+'aee' : [100,160,100,65]} # value taken from below for the distance bin with the average percentile value.
+dikaod = ['aod90','aod85','aode']
+dikae = ['ae90','ae85','aee']
+
+
+# In[251]:
+
+
+elements = ['aod0500','MERRA_AOD','GOCI_AOD','situ_ext'] 
+for k in dikaod:
+    print('For values at {}'.format(k))
+    for n,d in enumerate(di[k]):
+        i = np.argmin(abs(np.array(corr_ks)-d))
+        if 'situ_ext' in elements[n]: 
+            fac=2.5/1000.0 
+        else: 
+            fac = 1.0
+        print('..{}: mean={}, median={}, std={}'.format(elements[n],mean_diff[elements[n]][0][i]*fac,
+                                                       median_diff[elements[n]][0][i]*fac,std_diff[elements[n]][0][i]*fac))
+        
+
+
+# In[247]:
+
+
+elements = ['AE','MERRA_AE','GOCI_AE','situ_ae'] 
+for k in dikae:
+    print('For values at {}'.format(k))
+    for n,d in enumerate(di[k]):
+        i = np.argmin(abs(np.array(corr_ks)-d))
+        print('..{}: mean={}, median={}, std={}'.format(elements[n],mean_diff[elements[n]][0][i],
+                                                       median_diff[elements[n]][0][i],std_diff[elements[n]][0][i],))
+
+
+# In[282]:
+
+
+elements = ['aod0500','MERRA_AOD','situ_ext','GOCI_AOD'] 
+fig,ax = plt.subplots(len(elements),1,sharex=True,figsize=(5,9))
+for i,nl in enumerate(elements):
+    
+    ax[i].plot(corr_ks,mean_diff[nl][0],label='mean')
+    ax[i].plot(corr_ks,median_diff[nl][0],label='median')
+    ax[i].plot(corr_ks,std_diff[nl][0],label='std')
+    ax[i].legend(frameon=False)
+    ax[i].set_ylabel('Diff (x$_{{j}}$-x$_{{j+k}}$)')
+    if i>2: ax[i].set_xlabel('Lag Distance ($k$) [km]')
+    ax[i].set_title('{} for all of KORUS-AQ'.format(nl))
+    ax[i].grid()
+    ax[i].set_xscale('log')
+plt.tight_layout()
+plt.savefig(fp+'plot/KORUS_diff_AOD_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[284]:
+
+
+elements = ['fmf','GOCI_fmf'] 
+fig,ax = plt.subplots(len(elements),1,sharex=True,figsize=(5,9))
+for i,nl in enumerate(elements):
+    
+    ax[i].plot(corr_ks,mean_diff[nl][0],label='mean')
+    ax[i].plot(corr_ks,median_diff[nl][0],label='median')
+    ax[i].plot(corr_ks,std_diff[nl][0],label='std')
+    ax[i].legend(frameon=False)
+    ax[i].set_ylabel('Diff (x$_{{j}}$-x$_{{j+k}}$)')
+    if i>len(elements)-2: ax[i].set_xlabel('Lag Distance ($k$) [km]')
+    ax[i].set_title('{} for all of KORUS-AQ'.format(nl))
+    ax[i].grid()
+    ax[i].set_xscale('log')
+plt.tight_layout()
+plt.savefig(fp+'plot/KORUS_diff_FMF_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # ## Load the Autocorrelations from Shinozuka & Redemann
@@ -3032,7 +3802,7 @@ corr_ks = np.array(corr_ks)
 
 # ### With the v3/v4 monte carlo based on segments instead of samples
 
-# In[35]:
+# In[182]:
 
 
 autocorr_mm = {}
@@ -3162,7 +3932,7 @@ for j in [0,1,2,3,4]:
     
 
 
-# In[321]:
+# In[195]:
 
 
 def percentile_autocorrv2(x,p,istart=1,iend=-1):
@@ -3178,11 +3948,65 @@ for j in [0,1,2,3,4]:
     att.append(percentile_autocorrv2(autocorr_mm['aod_fine'][j,:],0.85))
 
 
-# In[155]:
+# In[198]:
 
 
 for j in [0,1,2,3,4]:
-    print legend_list[j], percentile_autocorr(autocorr_mm['MERRA_AOD'][j,1:],0.85),percentile_autocorr(autocorr_mm['aod0500'][j,1:],0.85)
+    print legend_list[j], percentile_autocorrv2(autocorr_mm['MERRA_AOD'][j,:],0.85),percentile_autocorrv2(autocorr_mm['aod0500'][j,:],0.85)
+
+
+# In[215]:
+
+
+def print_autocorr(k,a,a_std,j,jj):
+    'k: keys string, a: autocorr array, a_std: autocorr array (standard deviation)'
+    p_e =  e_folding_autocorr(a[k][j,jj:],jj)
+    p_85 = percentile_autocorr(a[k][j,jj:],0.85,jj)
+    p_90 = percentile_autocorr(a[k][j,jj:],0.9,jj)
+    
+    p_eP =  e_folding_autocorr(a[k][j,jj:]+a_std[k][j,jj:],jj)
+    p_85P = percentile_autocorr(a[k][j,jj:]+a_std[k][j,jj:],0.85,jj)
+    p_90P = percentile_autocorr(a[k][j,jj:]+a_std[k][j,jj:],0.9,jj)
+    
+    p_eM =  e_folding_autocorr(a[k][j,jj:]-a_std[k][j,jj:],jj)
+    p_85M = percentile_autocorr(a[k][j,jj:]-a_std[k][j,jj:],0.85,jj)
+    p_90M = percentile_autocorr(a[k][j,jj:]-a_std[k][j,jj:],0.9,jj)
+    
+    
+    dP_eM = np.nanmax([p_e,p_eP,p_eM])
+    dP_85M = np.nanmax([p_85,p_85P,p_85M])
+    dP_90M = np.nanmax([p_90,p_90P,p_90M])
+    
+    dP_eP = np.nanmin([p_e,p_eP,p_eM])
+    dP_85P = np.nanmin([p_85,p_85P,p_85M])
+    dP_90P = np.nanmin([p_90,p_90P,p_90M])
+    
+    print '..{}: efolding={} [{},{}], 90%={} [{},{}], 85%={} [{},{}]'.format(k,p_e,dP_eP,dP_eM,p_90,dP_90P,dP_90M,p_85,dP_85P,dP_85M)
+    
+    return p_e,p_85,p_90
+
+
+# In[244]:
+
+
+jj = 2
+j = 0
+p_e,p_85,p_90 = [],[],[]
+print 'Type {}, AOD'.format(types[j])
+for k in ['aod0500','MERRA_AOD','GOCI_AOD','situ_ext']: 
+    pe,p85,p90 = print_autocorr(k,autocorr_mm,autocorr_dm,j,jj)
+    p_e.append(pe)
+    p_85.append(p85)
+    p_90.append(p90)
+print '... Averages: efolding={}, 90%={}, 85%={}'.format(np.nanmean(p_e),np.nanmean(p_90),np.nanmean(p_85))
+print 'Type {}, AE'.format(types[j])
+p_e,p_85,p_90 = [],[],[]
+for k in ['AE','MERRA_AE','GOCI_AE','situ_ae']:
+    pe,p85,p90 = print_autocorr(k,autocorr_mm,autocorr_dm,j,jj)
+    p_e.append(pe)
+    p_85.append(p85)
+    p_90.append(p90)
+print '... Averages: efolding={}, 90%={}, 85%={}'.format(np.nanmean(p_e),np.nanmean(p_90),np.nanmean(p_85))
 
 
 # ## Autocorrelation of extrinsic vs intrisic properties
@@ -3223,12 +4047,20 @@ ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
 ax[0].set_xscale('log')
 
 
-# In[13]:
+# In[185]:
 
 
 e_folding_autocorr = lambda x: corr_ks[np.argmin(abs(x[0]*np.exp(-1.0)-x))]
 percentile_autocorr = lambda x,p: corr_ks[np.argmin(abs(x[0]*p-x))]
 distance_autocorr = lambda x,p: corr_ks[np.argmin(abs(x-p))]
+
+
+# In[212]:
+
+
+e_folding_autocorr = lambda x,j: corr_ks[np.argmin(abs(x[0]*np.exp(-1.0)-x))+j]
+percentile_autocorr = lambda x,p,j: corr_ks[np.argmin(abs(x[0]*p-x))+j]
+distance_autocorr = lambda x,p,j: corr_ks[np.argmin(abs(x-p))+j]
 
 
 # In[111]:
@@ -3245,7 +4077,7 @@ kas = ['GOCI_AOD_c','GOCI_AOD_f','MERRA_AOD_bc','MERRA_AOD_dust','MERRA_AOD_oc',
        'aod_coarse','aod_fine']
 
 
-# In[106]:
+# In[192]:
 
 
 legend_list = ['All','Dynamic','Stagnation','Extreme\npollution','Blocking','0-1 km','1-3 km','3+ km']
@@ -3298,7 +4130,7 @@ for k in types:
 jj = 0
 for j,t in enumerate(types):
     print 'Type {}: label {}'.format(t,legend_list[j])
-    for k in kas:
+    for k in  :
         print '..{}: efolding={}, 90%={}, 85%={}'.format(k,
         e_folding_autocorr(autocorr_mean[k][j,jj:]),
         percentile_autocorr(autocorr_mean[k][j,jj:],0.9),percentile_autocorr(autocorr_mean[k][j,jj:],0.85))
@@ -3759,6 +4591,14 @@ np.mean(alts),np.median(alts),np.max(alts),np.min(alts)
 percentile_autocorr(autocorr_mean['AE'][0,0:],0.85)
 
 
+# ### Get the variation at different distances
+
+# In[ ]:
+
+
+
+
+
 # ### get value of percentile of the autocorr
 
 # In[177]:
@@ -4152,7 +4992,7 @@ ax[1].grid()
 plt.savefig(fp+'plot/KORUS_autocorr_AOD_AE_{}_sub.png'.format(vv+'b'),dpi=600,transparent=True)
 
 
-# In[286]:
+# In[184]:
 
 
 percentile_autocorr(np.nanmean(autocorr_mc['GOCI_AOD'][j,jj:,:],axis=1),0.85)
@@ -4295,7 +5135,7 @@ plt.subplots_adjust(top=0.7)
 
 # ## Plot the comparison of GOCI to 4STAR AOD
 
-# In[258]:
+# In[283]:
 
 
 plt.figure()
@@ -4306,7 +5146,7 @@ plt.ylabel('number of samples')
 plt.title('KORUS-AQ 4STAR sampling')
 
 
-# In[259]:
+# In[459]:
 
 
 plt.figure()
@@ -4325,7 +5165,7 @@ plt.legend()
 plt.title('All 4STAR samples below 0.5km with nearby GOCI')
 
 
-# In[108]:
+# In[468]:
 
 
 fla = ar['fl_QA'] & (ar['GPS_Alt']<500.0)
@@ -4377,7 +5217,28 @@ plt.title('All 4STAR samples below 0.5km with nearby GOCI')
 len(np.unique(goci2ar['lon'][flan]))
 
 
-# In[112]:
+# In[469]:
+
+
+nsub = len(np.unique(goci2ar['lon'][flan]))
+aod_star = np.zeros((nsub))
+aod_goci = np.zeros((nsub))
+ae_star = np.zeros((nsub))
+ae_goci = np.zeros((nsub))
+aod_star_std = np.zeros((nsub))
+ae_star_std = np.zeros((nsub))
+for j,la in enumerate(np.unique(goci2ar['lat'][flan])):
+    ipixel = np.where(goci2ar['lat'][flan]==la)[0]
+    aod_goci[j] = np.mean(goci2ar['aod'][flan][ipixel])
+    ae_goci[j] = np.mean(goci2ar['AE'][flan][ipixel])
+    aod_star[j] = np.mean(ar['AOD0501'][flan][ipixel])
+    ae_star[j] = np.mean(angs[flan][ipixel])
+    aod_star_std[j] = np.std(ar['AOD0501'][flan][ipixel])
+    ae_star_std[j] = np.std(angs[flan][ipixel])
+    
+
+
+# In[470]:
 
 
 nsub = len(np.unique(goci2ar['lon'][flan]))
@@ -4404,7 +5265,7 @@ for j,la in enumerate(np.unique(goci2ar['lat'][flan])):
     
 
 
-# In[113]:
+# In[471]:
 
 
 nsub = len(np.unique(goci2ar['lon'][fl_ocean_an]))
@@ -4430,7 +5291,7 @@ for j,la in enumerate(np.unique(goci2ar['lat'][fl_ocean_an])):
     fmf_star_std_o[j] = np.std(fmf['eta'][fl_ocean_an][ipixel])
 
 
-# In[114]:
+# In[474]:
 
 
 nsub = len(np.unique(goci2ar['lon'][fl_land_an]))
@@ -4490,7 +5351,64 @@ plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_{}.eps'.format('v2'))
 plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_{}.pdf'.format('v2'))
 
 
-# In[262]:
+# In[300]:
+
+
+aod_goci_unc = 0.061+0.184*aod_goci  #from Choi et al. 2018
+
+
+# In[323]:
+
+
+fig,ax = plt.subplots(1,2,figsize=(10,5))
+rbin = np.corrcoef(aod_star,aod_goci)[0,1]**2.0
+rmse = np.sqrt(np.nanmean((aod_star-aod_goci)**2.0))
+ax[0].plot(aod_star,aod_goci,'.',label='R$^2$ = {:1.3f}, RMSE= {:1.3f}'.format(rbin,rmse))
+ax[0].errorbar(aod_star,aod_goci,yerr=aod_goci_unc,linestyle='None',marker='None',elinewidth=0.2,ecolor='tab:blue',
+               label='GOCI UNC.\n[Choi et al., 2018]')
+ax[0].errorbar(aod_star,aod_goci,xerr=aod_star_std,linestyle='None',marker='None',elinewidth=0.2,ecolor='tab:orange',
+               label='4STAR Standard Dev.')
+
+ax[0].plot([0,1.5],[0,1.5],'--k',label='1:1')
+pu.plot_lin(np.ma.masked_invalid(aod_star),np.ma.masked_invalid(aod_goci),
+            x_err=np.ma.masked_invalid(aod_star_std),y_err=np.ma.masked_invalid(aod_goci_unc),
+            labels=True,shaded_ci=True,ci=95,ax=ax[0],use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+ax[0].legend()
+ax[0].set_xlim(0,1.5)
+ax[0].set_ylim(0,1.5)
+ax[0].set_xlabel('4STAR AOD averaged within GOCI pixel')
+ax[0].set_ylabel('GOCI AOD')
+ax[0].set_title('KORUS-AQ Average AOD below 0.5 km')
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.1)
+
+flae = np.isfinite(ae_star) & np.isfinite(ae_goci)
+rbinae = np.corrcoef(ae_star[flae],ae_goci[flae])[0,1]**2.0
+rmseae = np.sqrt(np.nanmean((ae_star[flae]-ae_goci[flae])**2.0))
+ax[1].plot(ae_star,ae_goci,'.',label='R$^2$ = {:1.3f}, RMSE= {:1.3f}'.format(rbinae,rmseae))
+ax[1].plot([0,2.0],[0,2.0],'--k',label='1:1')
+ax[1].errorbar(ae_star,ae_goci,yerr=ae_goci*0.184+0.061/2,linestyle='None',marker='None',elinewidth=0.2,ecolor='tab:blue',
+               label='GOCI UNC.\n[Choi et al., 2018]')
+ax[1].errorbar(ae_star,ae_goci,xerr=ae_star_std,linestyle='None',marker='None',elinewidth=0.2,ecolor='tab:orange',
+               label='4STAR Standard Dev.')
+pu.plot_lin(np.ma.masked_invalid(ae_star),np.ma.masked_invalid(ae_goci),
+            x_err=np.ma.masked_invalid(ae_star_std),y_err=np.ma.masked_invalid(ae_goci*0.184+0.061/2),
+            labels=True,shaded_ci=True,ci=95,ax=ax[1],use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+
+#pu.plot_lin(ae_star,ae_goci,x_err=ae_star_std,y_err=ae_goci*0.184+0.061/2,labels=True,shaded_ci=False,ci=95,ax=ax[1],use_method='york')
+ax[1].legend()
+ax[1].set_ylim(0.2,1.8)
+ax[1].set_xlim(0.2,1.8)
+ax[1].set_xlabel('4STAR AE averaged within GOCI pixel')
+ax[1].set_ylabel('GOCI AE')
+ax[1].set_title('KORUS-AQ Average AE below 0.5 km')
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.1)
+
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_york{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_york{}.eps'.format('v2'))
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_AE_york{}.pdf'.format('v2'))
+
+
+# In[287]:
 
 
 plt.figure()
@@ -4537,7 +5455,7 @@ plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE_{}.eps'.format('v2'),d
 plt.savefig(fp+'plot/KORUS_hist_diff_GOCI_vs_4STAR_AOD_AE_{}.pdf'.format('v2'),dpi=600,transparent=True)
 
 
-# In[126]:
+# In[475]:
 
 
 aod_fine_star = aod_star * fmf_star
@@ -4552,6 +5470,17 @@ aod_fine_star_l = aod_star_l * fmf_star_l
 aod_fine_goci_l = aod_goci_l * fmf_goci_l
 aod_coarse_star_l = aod_star_l * (1.0-fmf_star_l)
 aod_coarse_goci_l = aod_goci_l * (1.0-fmf_goci_l)
+
+
+# In[476]:
+
+
+aod_fine_star_std = aod_star_std * fmf_star
+aod_coarse_star_std = aod_star_std * (1.0-fmf_star)
+aod_fine_star_std_o = aod_star_std_o * fmf_star_o
+aod_coarse_star_std_o = aod_star_std_o * (1.0-fmf_star_o)
+aod_fine_star_std_l = aod_star_std_l * fmf_star_l
+aod_coarse_star_std_l = aod_star_std_l * (1.0-fmf_star_l)
 
 
 # In[151]:
@@ -4660,9 +5589,145 @@ plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_{}.eps'.format('v2'))
 plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_{}.pdf'.format('v2'))
 
 
+# In[478]:
+
+
+fig,ax = plt.subplots(2,2,figsize=(10,8))
+ax = ax.flatten()
+lfont=7
+fl_f = np.isfinite(aod_fine_star) & np.isfinite(aod_fine_goci)
+rbin = np.corrcoef(aod_fine_star[fl_f],aod_fine_goci[fl_f])[0,1]**2.0
+rmse = np.sqrt(np.nanmean((aod_fine_star[fl_f]-aod_fine_goci[fl_f])**2.0))
+ax[0].plot(aod_fine_star,aod_fine_goci,'.',label='All R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbin,rmse),color='grey')
+ax[0].errorbar(aod_fine_star,aod_fine_goci,xerr=aod_fine_star_std,yerr=0.061+0.184*aod_fine_goci,
+               marker='None',linestyle='None',elinewidth=0.2,color='grey')
+pu.plot_lin(np.ma.masked_invalid(aod_fine_star),np.ma.masked_invalid(aod_fine_goci),
+            x_err=np.ma.masked_invalid(aod_fine_star_std),y_err=np.ma.masked_invalid(0.061+0.184*aod_fine_goci),
+            labels=True,shaded_ci=True,ci=95,ax=ax[0],color='grey',use_method='york')
+
+fl_f_o = np.isfinite(aod_fine_star_o) & np.isfinite(aod_fine_goci_o)
+rbin_o = np.corrcoef(aod_fine_star_o[fl_f_o],aod_fine_goci_o[fl_f_o])[0,1]**2.0
+rmse_o = np.sqrt(np.nanmean((aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o])**2.0))
+ax[0].plot(aod_fine_star_o,aod_fine_goci_o,'.',label='Ocean R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbin_o,rmse_o),color='tab:blue')
+ax[0].errorbar(aod_fine_star_o,aod_fine_goci_o,xerr=aod_fine_star_std_o,yerr=0.061+0.184*aod_fine_goci_o,
+               marker='None',linestyle='None',elinewidth=0.2,color='tab:blue')
+pu.plot_lin(np.ma.masked_invalid(aod_fine_star_o),np.ma.masked_invalid(aod_fine_goci_o),
+            x_err=np.ma.masked_invalid(aod_fine_star_std_o),y_err=np.ma.masked_invalid(0.061+0.184*aod_fine_goci_o),
+            labels=True,shaded_ci=True,ci=95,ax=ax[0],color='tab:blue',use_method='york')
+
+fl_f_l = np.isfinite(aod_fine_star_l) & np.isfinite(aod_fine_goci_l)
+rbin_l = np.corrcoef(aod_fine_star_l[fl_f_l],aod_fine_goci_l[fl_f_l])[0,1]**2.0
+rmse_l = np.sqrt(np.nanmean((aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l])**2.0))
+ax[0].plot(aod_fine_star_l,aod_fine_goci_l,'.',label='Land R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbin_l,rmse_l),color='tab:orange')
+ax[0].errorbar(aod_fine_star_l,aod_fine_goci_l,xerr=aod_fine_star_std_l,yerr=0.061+0.184*aod_fine_goci_l,
+               marker='None',linestyle='None',elinewidth=0.2,color='tab:orange')
+pu.plot_lin(np.ma.masked_invalid(aod_fine_star_l),np.ma.masked_invalid(aod_fine_goci_l),
+            x_err=np.ma.masked_invalid(aod_fine_star_std_l),y_err=np.ma.masked_invalid(0.061+0.184*aod_fine_goci_l),
+            labels=True,shaded_ci=True,ci=95,ax=ax[0],color='tab:orange',use_method='york')
+
+
+ax[0].plot([0,1.0],[0,1.0],'--k',label='1:1')
+ax[0].legend(fontsize=lfont)
+ax[0].set_xlim(0,1.0)
+ax[0].set_ylim(0,1.0)
+ax[0].set_xlabel('4STAR Fine AOD averaged within GOCI pixel')
+ax[0].set_ylabel('GOCI Fine mode AOD')
+ax[0].set_title('KORUS-AQ Average Fine mode AOD')
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.14)
+
+fl_c = np.isfinite(aod_coarse_star) & np.isfinite(aod_coarse_goci)
+rbinc = np.corrcoef(aod_coarse_star[fl_c],aod_coarse_goci[fl_c])[0,1]**2.0
+rmsec = np.sqrt(np.nanmean((aod_coarse_star[fl_c]-aod_coarse_goci[fl_c])**2.0))
+ax[1].plot(aod_coarse_star,aod_coarse_goci,'.',label='All, R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbinc,rmsec),color='grey')
+ax[1].errorbar(aod_coarse_star,aod_coarse_goci,xerr=aod_coarse_star_std,yerr=0.061+0.184*aod_coarse_goci,
+               marker='None',linestyle='None',elinewidth=0.2,color='grey')
+pu.plot_lin(np.ma.masked_invalid(aod_coarse_star),np.ma.masked_invalid(aod_coarse_goci),
+            x_err=np.ma.masked_invalid(aod_coarse_star_std),y_err=np.ma.masked_invalid(0.061+0.184*aod_coarse_goci),
+            labels=True,shaded_ci=True,ci=95,ax=ax[1],color='grey',use_method='york')
+
+fl_c_o = np.isfinite(aod_coarse_star_o) & np.isfinite(aod_coarse_goci_o)
+rbinc_o = np.corrcoef(aod_coarse_star_o[fl_c_o],aod_coarse_goci_o[fl_c_o])[0,1]**2.0
+rmsec_o = np.sqrt(np.nanmean((aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o])**2.0))
+ax[1].plot(aod_coarse_star_o,aod_coarse_goci_o,'.',label='Ocean, R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbinc_o,rmsec_o),color='tab:blue')
+ax[1].errorbar(aod_coarse_star_o,aod_coarse_goci_o,xerr=aod_coarse_star_std_o,yerr=0.061+0.184*aod_coarse_goci_o,
+               marker='None',linestyle='None',elinewidth=0.2,color='tab:blue')
+pu.plot_lin(np.ma.masked_invalid(aod_coarse_star_o),np.ma.masked_invalid(aod_coarse_goci_o),
+            x_err=np.ma.masked_invalid(aod_coarse_star_std_o),y_err=np.ma.masked_invalid(0.061+0.184*aod_coarse_goci_o),
+            labels=True,shaded_ci=True,ci=95,ax=ax[1],color='tab:blue',use_method='york')
+
+fl_c_l = np.isfinite(aod_coarse_star_l) & np.isfinite(aod_coarse_goci_l)
+rbinc_l = np.corrcoef(aod_coarse_star_l[fl_c_l],aod_coarse_goci_l[fl_c_l])[0,1]**2.0
+rmsec_l = np.sqrt(np.nanmean((aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l])**2.0))
+ax[1].plot(aod_coarse_star_l,aod_coarse_goci_l,'.',label='Land, R$^2$={:1.3f}, RMSE={:1.3f}'.format(rbinc_l,rmsec_l),color='tab:orange')
+ax[1].errorbar(aod_coarse_star_l,aod_coarse_goci_l,xerr=aod_coarse_star_std_l,yerr=0.061+0.184*aod_coarse_goci_l,
+               marker='None',linestyle='None',elinewidth=0.2,color='tab:orange')
+pu.plot_lin(np.ma.masked_invalid(aod_coarse_star_l),np.ma.masked_invalid(aod_coarse_goci_l),
+            x_err=np.ma.masked_invalid(aod_coarse_star_std_l),y_err=np.ma.masked_invalid(0.061+0.184*aod_coarse_goci_l),
+            labels=True,shaded_ci=True,ci=95,ax=ax[1],color='tab:orange',use_method='york')
+
+ax[1].plot([0,0.8],[0,0.8],'--k',label='1:1')
+ax[1].legend(fontsize=lfont)
+ax[1].set_xlim(0,0.8)
+ax[1].set_ylim(0,0.8)
+ax[1].set_xlabel('4STAR coarse AOD averaged within GOCI pixel')
+ax[1].set_ylabel('GOCI coarse mode AOD')
+ax[1].set_title('KORUS-AQ Average Coarse mode AOD')
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.14)
+
+
+ax[2].hist(aod_fine_star[fl_f]-aod_fine_goci[fl_f],bins=50,normed=False,color='lightgrey')
+ax[2].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[2].axvline(np.nanmean(aod_fine_star[fl_f]-aod_fine_goci[fl_f]),ls='-',color='grey',alpha=0.6,lw=3,
+            label='All mean={:2.2f}'.format(np.nanmean(aod_fine_star[fl_f]-aod_fine_goci[fl_f])))
+ax[2].axvline(np.nanmedian(aod_fine_star[fl_f]-aod_fine_goci[fl_f]),ls='--',color='grey',alpha=0.6,lw=3,
+            label='All median={:2.2f}'.format(np.nanmedian(aod_fine_star[fl_f]-aod_fine_goci[fl_f])))
+
+ax[2].hist(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o],bins=50,normed=False,color='tab:blue',alpha=0.4)
+ax[2].axvline(np.nanmean(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o]),ls='-',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean mean={:2.2f}'.format(np.nanmean(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o])))
+ax[2].axvline(np.nanmedian(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o]),ls='--',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean median={:2.2f}'.format(np.nanmedian(aod_fine_star_o[fl_f_o]-aod_fine_goci_o[fl_f_o])))
+
+ax[2].hist(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l],bins=50,normed=False,color='tab:orange',alpha=0.4)
+ax[2].axvline(np.nanmean(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l]),ls='-',color='tab:orange',alpha=0.6,lw=3,
+            label='Land mean={:2.2f}'.format(np.nanmean(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l])))
+ax[2].axvline(np.nanmedian(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l]),ls='--',color='tab:orange',alpha=0.6,lw=3,
+            label='Land median={:2.2f}'.format(np.nanmedian(aod_fine_star_l[fl_f_l]-aod_fine_goci_l[fl_f_l])))
+ax[2].legend(fontsize=lfont)
+pu.sub_note('c)',ax=ax[2],out=True,dx=-0.14,dy=-0.1)
+
+ax[3].hist(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c],bins=50,normed=False,color='lightgrey')
+ax[3].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[3].axvline(np.nanmean(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c]),ls='-',color='grey',alpha=0.6,lw=3,
+            label='All mean={:2.2f}'.format(np.nanmean(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c])))
+ax[3].axvline(np.nanmedian(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c]),ls='--',color='grey',alpha=0.6,lw=3,
+            label='All median={:2.2f}'.format(np.nanmedian(aod_coarse_star[fl_c]-aod_coarse_goci[fl_c])))
+ax[3].hist(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o],bins=50,normed=False,color='tab:blue',alpha=0.4)
+ax[3].axvline(np.nanmean(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o]),ls='-',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean, mean={:2.2f}'.format(np.nanmean(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o])))
+ax[3].axvline(np.nanmedian(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o]),ls='--',color='tab:blue',alpha=0.6,lw=3,
+            label='Ocean, median={:2.2f}'.format(np.nanmedian(aod_coarse_star_o[fl_c_o]-aod_coarse_goci_o[fl_c_o])))
+ax[3].hist(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l],bins=50,normed=False,color='tab:orange',alpha=0.4)
+ax[3].axvline(np.nanmean(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l]),ls='-',color='tab:orange',alpha=0.6,lw=3,
+            label='Land, mean={:2.2f}'.format(np.nanmean(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l])))
+ax[3].axvline(np.nanmedian(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l]),ls='--',color='tab:orange',alpha=0.6,lw=3,
+            label='Land, median={:2.2f}'.format(np.nanmedian(aod_coarse_star_l[fl_c_l]-aod_coarse_goci_l[fl_c_l])))
+ax[3].legend(fontsize=lfont)
+ax[2].set_xlabel('Fine AOD difference (4STAR-GOCI)')
+ax[2].set_ylabel('Counts')
+ax[3].set_xlabel('Coarse AOD difference (4STAR-GOCI)')
+pu.sub_note('d)',ax=ax[3],out=True,dx=-0.14,dy=-0.1)
+
+plt.tight_layout()
+
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_york{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_york{}.eps'.format('v2'))
+plt.savefig(fp+'plot/KORUS_GOCI_vs_4STAR_AOD_fine_coarse_york{}.pdf'.format('v2'))
+
+
 # ## Compare MERRA2 AOD to 4STAR
 
-# In[264]:
+# In[385]:
 
 
 plt.figure()
@@ -4681,13 +5746,19 @@ plt.legend()
 plt.title('All 4STAR samples below 0.5km with nearby MERRA2 AOD')
 
 
-# In[273]:
+# In[370]:
 
 
 merra2ar.keys()
 
 
-# In[274]:
+# In[371]:
+
+
+merraint.keys()
+
+
+# In[386]:
 
 
 nsub = len(np.unique(merra2ar['ind'][flan]))
@@ -4839,6 +5910,79 @@ ax[1].set_ylabel('Normalized counts')
 plt.savefig(fp+'plot/KORUS_hist_diff_MERRA2_vs_4STAR_AOD_AE_2plt.png',dpi=600,transparent=True)
 
 
+# In[392]:
+
+
+fig,ax = plt.subplots(2,2,figsize=(10,8))
+ax = ax.flatten()
+
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
+rbinae = np.corrcoef(aod_star_m[flae],aod_merra[flae])[0,1]**2.0
+rmseae = np.sqrt(np.nanmean((aod_star_m[flae]-aod_merra[flae])**2.0))
+ax[0].plot(aod_star_m,aod_merra,'.',label='R$^2$={:1.3f}\nRMSE={:1.3f}'.format(rbinae,rmseae),color='tab:blue')
+ax[0].errorbar(aod_star_m,aod_merra,xerr=aod_star_m_std,color='tab:blue',marker='.',ls='None',elinewidth=0.4,label='4STAR std dev')
+ax[0].plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(np.ma.masked_invalid(aod_star_m),np.ma.masked_invalid(aod_merra),
+            x_err=np.ma.masked_invalid(aod_star_m_std),y_err=np.ma.masked_invalid(aod_merra*0.2),
+            labels=True,shaded_ci=True,ci=95,ax=ax[0],use_method='york')
+
+ax[0].legend()
+ax[0].set_ylim(0.0,1.5)
+ax[0].set_xlim(0.0,1.5)
+ax[0].set_xlabel('4STAR AOD averaged within MERRA pixel')
+ax[0].set_ylabel('MERRA2 AOD')
+#fig.suptitle('Average aerosol below 0.5 km during KORUS-AQ (May-June 2016)')
+
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+rbinae = np.corrcoef(ae_star_m[flae],ae_merra[flae])[0,1]**2.0
+rmseae = np.sqrt(np.nanmean((ae_star_m[flae]-ae_merra[flae])**2.0))
+ax[1].plot(ae_star_m,ae_merra,'.',label='R$^2$={:1.3f}\nRMSE={:1.3f}'.format(rbinae,rmseae),color='tab:blue')
+ax[1].errorbar(ae_star_m,ae_merra,xerr=ae_star_m_std,color='tab:blue',marker='.',ls='None',elinewidth=0.4,label='4STAR std dev')
+ax[1].plot([0,2.0],[0,2.0],'--k',label='1:1')
+pu.plot_lin(np.ma.masked_invalid(ae_star_m),np.ma.masked_invalid(ae_merra),
+            x_err=np.ma.masked_invalid(ae_star_m_std),y_err=np.ma.masked_invalid(ae_merra*0.2),
+            labels=True,shaded_ci=True,ci=95,ax=ax[1],use_method='york')
+ax[1].legend()
+ax[1].set_ylim(0.2,2.0)
+ax[1].set_xlim(0.2,2.0)
+ax[1].set_xlabel('4STAR AE averaged within MERRA pixel')
+ax[1].set_ylabel('MERRA2 AE')
+
+
+flae = np.isfinite(aod_star_m) & np.isfinite(aod_merra)
+ax[2].hist(aod_star_m[flae]-aod_merra[flae],bins=50,normed=True)
+ax[2].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[2].axvline(np.nanmean(aod_star_m[flae]-aod_merra[flae]),ls='-',color='darkblue',alpha=0.6,
+            label='mean={:2.2f}'.format(np.nanmean(aod_star_m[flae]-aod_merra[flae])),lw=3)
+ax[2].axvline(np.nanmedian(aod_star_m[flae]-aod_merra[flae]),ls='--',color='darkblue',alpha=0.6,
+            label='median={:2.2f}'.format(np.nanmedian(aod_star_m[flae]-aod_merra[flae])),lw=3)
+ax[2].legend()
+ax[2].set_xlabel('AOD difference (4STAR-MERRA2)')
+ax[2].set_ylabel('Normalized counts')
+
+flae = np.isfinite(ae_star_m) & np.isfinite(ae_merra)
+ax[3].hist(ae_star_m[flae]-ae_merra[flae],bins=50,normed=True)
+ax[3].axvline(0,ls='-',color='k',alpha=1,lw=0.5)
+ax[3].axvline(np.nanmean(ae_star_m[flae]-ae_merra[flae]),ls='-',color='darkblue',alpha=0.6,lw=3,
+            label='mean={:2.2f}'.format(np.nanmean(ae_star_m[flae]-ae_merra[flae])))
+ax[3].axvline(np.nanmedian(ae_star_m[flae]-ae_merra[flae]),ls='--',color='darkblue',alpha=0.6,lw=3,
+            label='median={:2.2f}'.format(np.nanmedian(ae_star_m[flae]-ae_merra[flae])))
+ax[3].legend()
+ax[3].set_xlabel('AE difference (4STAR-MERRA2)')
+ax[3].set_ylabel('Normalized counts')
+
+pu.sub_note('a)',ax=ax[0],out=True,dx=-0.2,dy=-0.04)
+pu.sub_note('b)',ax=ax[1],out=True,dx=-0.2,dy=-0.04)
+pu.sub_note('c)',ax=ax[2],out=True,dx=-0.2,dy=-0.04)
+pu.sub_note('d)',ax=ax[3],out=True,dx=-0.2,dy=-0.04)
+
+
+
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD_AE_splitplot_york{}.png'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD_AE_splitplot_york{}.pdf'.format('v2'),dpi=600,transparent=True)
+plt.savefig(fp+'plot/KORUS_MERRA2_vs_4STAR_AOD_AE_splitplot_york{}.eps'.format('v2'),dpi=600,transparent=True)
+
+
 # ## Now get the angstrom exponent and plot it vertically
 
 # In[212]:
@@ -4865,7 +6009,7 @@ aodrr.shape
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[79]:
+# In[404]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70,rg=None):
@@ -5284,7 +6428,7 @@ plt.savefig(fp+'plot/KORUS_4STAR_fine_mode_AOD_vertical.png',
 
 # ### Split fmf for met
 
-# In[293]:
+# In[402]:
 
 
 ar['fl_QA_fmf'] = ar['fl_QA'] & (np.isfinite(fmf['tauf'])) & (np.isfinite(fmf['tauc']))
@@ -5294,7 +6438,7 @@ ar['fl_QA_fmf_met3'] = ar['fl'] & (np.isfinite(fmf['tauf'])) & (np.isfinite(fmf[
 ar['fl_QA_fmf_met4'] = ar['fl'] & (np.isfinite(fmf['tauf'])) & (np.isfinite(fmf['tauc'])) & (ar['doys']> t4[0]) & (ar['doys']< t4[1])
 
 
-# In[ ]:
+# In[405]:
 
 
 beta,balte,bnume,bndayse = make_bined_alt(fmf['eta'],ar['GPS_Alt'],ar['days'],ar['fl_QA_fmf'],n=90)
@@ -5302,6 +6446,106 @@ beta1,balte1,bnume1,bndayse1 = make_bined_alt(fmf['eta'],ar['GPS_Alt'],ar['days'
 beta2,balte2,bnume2,bndayse2 = make_bined_alt(fmf['eta'],ar['GPS_Alt'],ar['days'],ar['fl_QA_fmf_met2'],n=90)
 beta3,balte3,bnume3,bndayse3 = make_bined_alt(fmf['eta'],ar['GPS_Alt'],ar['days'],ar['fl_QA_fmf_met3'],n=90)
 beta4,balte4,bnume4,bndayse4 = make_bined_alt(fmf['eta'],ar['GPS_Alt'],ar['days'],ar['fl_QA_fmf_met4'],n=90)
+
+
+# In[413]:
+
+
+reload(pu)
+
+
+# In[415]:
+
+
+bndayse1[0] = 9
+bndayse2[0] = 9
+bndayse3[0] = 9
+bndayse4[0] = 9
+bndayse[0] = 9
+
+
+# In[418]:
+
+
+plt.figure(figsize=(5.5,7.5))
+bp =plt.boxplot(beta,positions=np.array(balte)-25.0,vert=False,
+                showfliers=False,widths=90,showmeans=True,patch_artist=True)
+plt.xlabel('Fine Mode Fraction')
+plt.ylabel('Altitude [m]')
+
+rd = plt.cm.RdPu
+bl = plt.cm.Blues
+og = plt.cm.YlOrBr
+gr = plt.cm.Greens
+k = plt.cm.Greys
+
+pu.set_box_whisker_color(k,bp,bndayse,mean_color='grey',median_color='grey',face_alpha=0.6)
+    
+bp1 = plt.boxplot(beta1,positions=np.array(balte1)+00.0,vert=False,
+                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(rd,bp1,bndayse1,mean_color='tab:red',median_color='r',face_alpha=0.6)
+bp1['boxes'][0].set_color('grey')
+bp2 = plt.boxplot(beta2,positions=np.array(balte2)+25.0,vert=False,
+                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(bl,bp2,bndayse2,mean_color='tab:blue',median_color='b',face_alpha=0.6)
+bp3 = plt.boxplot(beta3,positions=np.array(balte3)+50.0,vert=False,
+                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(og,bp3,bndayse3,mean_color='tab:orange',median_color='y',face_alpha=0.6)
+bp4 = plt.boxplot(beta4,positions=np.array(balte4)+75.0,vert=False,
+                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(gr,bp4,bndayse4,mean_color='tab:green',median_color='g',face_alpha=0.6)
+
+ax = plt.gca()
+plt.title('KORUS-AQ FMF')
+plt.ylim(0,8000)
+plt.yticks([0,1000,2000,3000,4000,5000,6000,7000,8000])
+ax.set_yticklabels([0,1000,2000,3000,4000,5000,6000,7000,8000])
+plt.xlim(0.15,0.85)
+plt.grid()
+plt.legend([bp['boxes'][5],bp1['boxes'][15],bp2['boxes'][16],bp3['boxes'][7],bp4['boxes'][-4],
+            bp['means'][0],bp['medians'][0],bp['boxes'][-2],bp['whiskers'][0]],
+           ['All data','Dynamic','Stagnation','Extreme\npollution','Blocking','Mean','Median','25% - 75%','min-max'],
+           frameon=False,loc=1,numpoints=1)
+
+if False:
+    scalarmapgr = plt.cm.ScalarMappable(cmap=gr)
+    scalarmapgr.set_array(bndays)
+    scalarmapbl = plt.cm.ScalarMappable(cmap=bl)
+    scalarmapbl.set_array(bndays)
+    scalarmapk = plt.cm.ScalarMappable(cmap=k)
+    scalarmapk.set_array(bndays)
+    scalarmaprd = plt.cm.ScalarMappable(cmap=rd)
+    scalarmaprd.set_array(bndays)
+    scalarmapog = plt.cm.ScalarMappable(cmap=og)
+    scalarmapog.set_array(bndays)
+    cbaxesgr = plt.gcf().add_axes([0.83, 0.15, 0.015, 0.3])
+    cbg = plt.colorbar(scalarmapgr,cax=cbaxesgr)
+    cbaxesbl = plt.gcf().add_axes([0.87, 0.15, 0.015, 0.3])
+    cbb = plt.colorbar(scalarmapbl,cax=cbaxesbl)
+    cbaxesk = plt.gcf().add_axes([0.91, 0.15, 0.015, 0.3])
+    cbk = plt.colorbar(scalarmapk,cax=cbaxesk)
+    cbaxesog = plt.gcf().add_axes([0.85, 0.15, 0.015, 0.3])
+    cbo = plt.colorbar(scalarmapog,cax=cbaxesog)
+    cbaxesrd = plt.gcf().add_axes([0.89, 0.15, 0.015, 0.3])
+    cbr = plt.colorbar(scalarmaprd,cax=cbaxesrd)
+    cbg.set_ticks([0,3,6,9,12,15,18])
+    cbb.set_ticks([0,3,6,9,12,15,18]),cbb.set_ticklabels(['','','','','',''])
+    cbk.set_ticks([0,3,6,9,12,15,18]),cbk.set_ticklabels(['','','','','',''])
+    cbo.set_ticks([0,3,6,9,12,15,18]),cbo.set_ticklabels(['','','','','',''])
+    cbr.set_ticks([0,3,6,9,12,15,18]),cbr.set_ticklabels(['','','','','',''])
+    cbaxesgr.yaxis.set_ticks_position('left'),cbaxesbl.yaxis.set_ticks_position('left')
+    cbaxesgr.text(-6.0,0.5,'Days sampled',rotation=90,verticalalignment='center')
+
+plt.tight_layout()
+
+plt.savefig(fp+'plot/KORUS_4STAR_FMF_vertical_met_{}.png'.format(vv),
+            transparent=True,dpi=500)
+#plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical_met_{}.pdf'.format(vv),
+#            transparent=True,dpi=500)
+#plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical_met_{}.eps'.format(vv),
+#            transparent=True,dpi=500)
+#plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical_met_{}.svg'.format(vv),
+#            transparent=True,dpi=500)
 
 
 # ## Calculate the autocorrelation of the fine and coarse mode AOD
@@ -5442,7 +6686,7 @@ for i,c in enumerate(dfvals['autocor_e']): autocor_e[i,:len(c)]=c
 autocor_c_ma = np.ma.masked_array(autocor_c,mask=np.isnan(autocor_c))
 
 
-# In[157]:
+# In[63]:
 
 
 def make_binned(x,alt,fl,bn,flb):
@@ -5511,7 +6755,7 @@ autocor_c.shape
 
 # ## Map out the level legs and numbers
 
-# In[198]:
+# In[222]:
 
 
 
@@ -6191,7 +7435,7 @@ axy.set_xlabel('Number of level legs',color='tab:orange')
 
 # # Spatial maps and time traces
 
-# In[138]:
+# In[215]:
 
 
 def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
@@ -6231,7 +7475,7 @@ def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
     return stat
 
 
-# In[139]:
+# In[216]:
 
 
 rg = [[32.5,38.5],[123.5,131.5]]
@@ -6240,7 +7484,7 @@ nbins = 18
 
 # ## Make a map of 4STAR AOD
 
-# In[194]:
+# In[217]:
 
 
 flalt = ar['fl'] & (ar['GPS_Alt']<1000.0)
@@ -6248,7 +7492,7 @@ astat_aod = stats_2d(ar['Latitude'],ar['Longitude'],ar['AOD0501'],fl=flalt,days=
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[141]:
+# In[218]:
 
 
 flalta = ar['fl'] & (ar['GPS_Alt']<1000.0) & np.isfinite(angs)
@@ -6256,13 +7500,13 @@ astat_ae = stats_2d(ar['Latitude'],ar['Longitude'],angs,fl=flalta,days=ar['days'
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[194]:
+# In[219]:
 
 
 astat_aod.keys()
 
 
-# In[195]:
+# In[220]:
 
 
 iao = np.where((astat_aod['cnt'].data>0.0) & (astat_aod['std'].data<1.0))
@@ -6333,10 +7577,51 @@ plt.tight_layout(pad=1.12,h_pad=1.8,w_pad=3.0,rect=(0.05,0,1,1))
 plt.savefig(fp+'plot/KORUS_4STAR_AOD_map_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[230]:
+
+
+#fig = plt.figure(figsize=(11,4.5))
+fig,ax = plt.subplots(1,2,figsize=(11,4.5))
+ax1,ax2 = ax[0],ax[1]
+
+m = make_map(ax=ax1)
+m.shadedrelief(alpha=0.4)
+
+ym,xm = m(astat_aod['ym'],astat_aod['xm'])
+p = ax1.pcolor(ym,xm,astat_aod['mean'],vmin=0.0,vmax=0.8,cmap='magma')
+
+ax1.set_title('4STAR - Mean AOD$_{{501}}$')
+cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
+
+m2 = make_map(ax=ax2)
+m2.shadedrelief(alpha=0.4)
+
+y2,x2 = m2(astat_aod['ys'][iao[1]],astat_aod['xs'][iao[0]])
+p2 = ax2.scatter(y2,x2,5.0+(astat_aod['dcnt'].data[iao[0],iao[1]].flatten()*10),
+                c=astat_aod['std'].data[iao[0],iao[1]].flatten(),
+               marker='o',edgecolor='k',cmap='viridis',vmin=0,vmax=0.35)
+ax2.set_title('4STAR - Standard Deviation AOD$_{{501}}$')
+cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
+
+dsizes = [1,3,5,10,15]
+labels = ['days={0}'.format(z) for z in dsizes]
+points = [ax2.scatter([], [], s=5.0+(z*10), c='grey',marker='o',edgecolor='k') for z in dsizes]
+ax2.legend(points, labels, scatterpoints=1,frameon=True,
+           framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
+plt.tight_layout(pad=1.12,h_pad=1.8,w_pad=3.0,rect=(0.05,0,1,1))
+#plt.savefig(fp+'plot/KORUS_4STAR_AOD_map_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[225]:
+
+
+astat_aod['dcnt'].data[iao[0],iao[1]].flatten()
+
+
 # In[214]:
 
 
-np.corrcoef(astat_aod['cnt'].data[iao[0],iao[1]].flatten(),astat_aod['std'].data[iao[0],iao[1]].flatten())**2.0
+np.corrcoef(astat_aod['cnt'].data[iao[0],iao[1]].flatten(),astat_aod['std'].data[iao[0],iao[1]].flatten())
 
 
 # In[215]:
@@ -6347,6 +7632,17 @@ plt.plot(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['cnt'].data[ia
 plt.ylabel('count')
 plt.xlabel('Std')
 pu.plot_lin(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['cnt'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
+plt.legend()
+
+
+# In[353]:
+
+
+plt.figure()
+plt.plot(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['dcnt'].data[iao[0],iao[1]].flatten(),'.')
+plt.ylabel('days')
+plt.xlabel('Std')
+pu.plot_lin(astat_aod['std'].data[iao[0],iao[1]].flatten(),astat_aod['dcnt'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
 plt.legend()
 
 
@@ -6380,13 +7676,13 @@ mstat_aod = stats_2d(merra2ar['lat'],merra2ar['lon'],merra2ar['aod'],fl=flalt,da
 
 # ### From the interpolated MERRA-2
 
-# In[205]:
+# In[313]:
 
 
 merraint.keys()
 
 
-# In[151]:
+# In[314]:
 
 
 merraint['aod_alt'] = []
@@ -6400,25 +7696,25 @@ merraint['ae_alt'] = np.array(merraint['ae_alt'][0:len(merraint['lat'])])
 merraint['alt_flt'] = np.array(merraint['alt_flt'][0:len(merraint['lat'])])
 
 
-# In[152]:
+# In[315]:
 
 
 mer_flalt = merraint['alt_flt']<1000.0
 
 
-# In[153]:
+# In[316]:
 
 
 merraint['aod_alt'].shape, merraint['lat'].shape
 
 
-# In[154]:
+# In[317]:
 
 
 merraint['alt'].shape
 
 
-# In[155]:
+# In[318]:
 
 
 mstat_aod = stats_2d(merraint['lat'],merraint['lon'],merraint['aod_alt'],days=merraint['doy'],
@@ -6470,20 +7766,20 @@ plt.savefig(fp+'plot/KORUS_MERRA2_AOD_map_{}.png'.format(vv),dpi=600,transparent
 
 # ## Expand map to include GOCI
 
-# In[354]:
+# In[270]:
 
 
 goci2ar.keys()
 
 
-# In[355]:
+# In[271]:
 
 
 gstat_aod = stats_2d(goci2ar['lat'],goci2ar['lon'],goci2ar['aod'],fl=flalt,days=ar['days'],
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[356]:
+# In[272]:
 
 
 iao = np.where((gstat_aod['cnt'].data>0.0) & (gstat_aod['std'].data<1.0))
@@ -6638,32 +7934,39 @@ plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AOD_map_{}.png'.format(vv),dpi=600,t
 
 # ## Map the Angstrom Exponent
 
-# In[156]:
+# In[369]:
 
 
-mstat_ae = stats_2d(merraint['lat'],merraint['lon'],merraint['ae_alt'],days=merraint['doy'],
+dvals['doys_n'][0]
+
+
+# In[349]:
+
+
+mstat_ae = stats_2d(merraint['lat'],merraint['lon'],merraint['ae_alt'],days=np.around(merraint['doy']),
                      bins=nbins,rg=rg,verbose=True,fl=mer_flalt)
 
 
-# In[195]:
+# In[326]:
 
 
 gstat_ae = stats_2d(goci2ar['lat'],goci2ar['lon'],goci2ar['AE'],fl=flalt,days=ar['days'],
                      bins=nbins,rg=rg,verbose=True)
 
 
-# In[196]:
+# In[327]:
 
 
 iao = np.where((gstat_ae['cnt'].data>0.0) & (gstat_ae['std'].data<2.1))
 
 
-# In[202]:
+# In[362]:
 
 
 fig,ax = plt.subplots(3,2,figsize=(11,14.5))
 ax = ax.flatten()
 #### 4STAR
+iao = np.where((astat_ae['cnt'].data>0.0) & (astat_ae['std'].data<2.1))
 ax1,ax2 = ax[0],ax[1]
 
 m = make_map(ax=ax1)
@@ -6672,7 +7975,7 @@ m.shadedrelief(alpha=0.4)
 ym,xm = m(astat_ae['ym'],astat_ae['xm'])
 p = ax1.pcolor(ym,xm,astat_ae['mean'],vmin=0.0,vmax=2.1,cmap='plasma')
 
-ax1.set_title('4STAR - Mean AE$')
+ax1.set_title('4STAR - Mean AE')
 cb = plt.colorbar(p,extend='both',ax=ax1,pad=0.02)
 pu.sub_note('g)',ax=ax1,out=True)
 
@@ -6680,20 +7983,21 @@ m2 = make_map(ax=ax2)
 m2.shadedrelief(alpha=0.4)
 
 y2,x2 = m2(astat_ae['ys'][iao[1]],astat_ae['xs'][iao[0]])
-p2 = ax2.scatter(y2,x2,8.0+(astat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+p2 = ax2.scatter(y2,x2,5.0+(astat_ae['dcnt'].data[iao[0],iao[1]].flatten()*15.0),
                 c=astat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
-ax2.set_title('4STAR - Standard Deviation AE$')
+               marker='o',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
+ax2.set_title('4STAR - Standard Deviation AE')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
-sizes = [10,100,500,1500]
-labels = ['N={0}'.format(z) for z in sizes]
-points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+sizes = [1,3,5,10,15]
+labels = ['day{s}={0}'.format(z,s='s' if z>1 else '') for z in sizes]
+points = [ax2.scatter([], [], s=5.0+(z*15.0), c='grey',marker='o',edgecolor='None') for z in sizes]
 ax2.legend(points, labels, scatterpoints=1,frameon=True,
            framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
 pu.sub_note('h)',ax=ax2,out=True)
 
 #### MERRA-2
+iao = np.where((mstat_ae['cnt'].data>0.0) & (mstat_ae['std'].data<2.1))
 ax1,ax2 = ax[2],ax[3]
 
 m = make_map(ax=ax1)
@@ -6710,21 +8014,22 @@ m2 = make_map(ax=ax2)
 m2.shadedrelief(alpha=0.4)
 
 y2,x2 = m2(mstat_ae['ys'][iao[1]],mstat_ae['xs'][iao[0]])
-p2 = ax2.scatter(y2,x2,8.0+(mstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+p2 = ax2.scatter(y2,x2,5.0+(mstat_ae['dcnt'].data[iao[0],iao[1]].flatten()*15.0),
                 c=mstat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
+               marker='o',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
 ax2.set_title('MERRA2 - Standard Deviation AE')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
-sizes = [10,100,500,1500]
-labels = ['N={0}'.format(z) for z in sizes]
-points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+sizes = [1,3,5,10,15]
+labels = ['day{s}={0}'.format(z,s='s' if z>1 else '') for z in sizes]
+points = [ax2.scatter([], [], s=5.0+(z*15.0), c='grey',marker='o',edgecolor='None') for z in sizes]
 ax2.legend(points, labels, scatterpoints=1,frameon=True,
            framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
 pu.sub_note('j)',ax=ax2,out=True)
 
 
 #### GOCI
+iao = np.where((gstat_ae['cnt'].data>0.0) & (gstat_ae['std'].data<2.1))
 ax1,ax2 = ax[4],ax[5]
 
 m = make_map(ax=ax1)
@@ -6741,15 +8046,15 @@ m2 = make_map(ax=ax2)
 m2.shadedrelief(alpha=0.4)
 
 y2,x2 = m2(gstat_ae['ys'][iao[1]],gstat_ae['xs'][iao[0]])
-p2 = ax2.scatter(y2,x2,8.0+(gstat_ae['cnt'].data[iao[0],iao[1]].flatten()/25.0),
+p2 = ax2.scatter(y2,x2,5.0+(gstat_ae['dcnt'].data[iao[0],iao[1]].flatten()*15.0),
                 c=gstat_ae['std'].data[iao[0],iao[1]].flatten(),
-               marker='s',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
+               marker='o',edgecolor='None',cmap='winter',vmin=0,vmax=0.5)
 ax2.set_title('GOCI YAER - Standard Deviation AE')
 cb2 = plt.colorbar(p2,extend='max',ax=ax2,pad=0.02)
 
-sizes = [10,100,500,1500]
-labels = ['N={0}'.format(z) for z in sizes]
-points = [ax2.scatter([], [], s=8.0+(z/25.0), c='grey',marker='s',edgecolor='None') for z in sizes]
+sizes = [1,3,5,10,15]
+labels = ['day{s}={0}'.format(z,s='s' if z>1 else '') for z in sizes]
+points = [ax2.scatter([], [], s=5.0+(z*15.0), c='grey',marker='o',edgecolor='None') for z in sizes]
 ax2.legend(points, labels, scatterpoints=1,frameon=True,
            framealpha=0.8,handletextpad=0.1,labelspacing=0.1,borderpad=0.1,loc='lower right')
 pu.sub_note('l)',ax=ax2,out=True)
@@ -6760,6 +8065,37 @@ plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.png'.format(vv),dpi=600,tr
 plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.eps'.format(vv),dpi=600,transparent=True)
 plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.svg'.format(vv),dpi=600,transparent=True)
 plt.savefig(fp+'plot/KORUS_4STAR_MERRA_GOCI_AE_map_{}.pdf'.format(vv),dpi=600,transparent=True)
+
+
+# In[364]:
+
+
+iao = np.where((astat_ae['cnt'].data>0.0) & (astat_ae['std'].data<2.1))
+
+plt.figure()
+plt.plot(astat_ae['std'].data[iao[0],iao[1]].flatten(),astat_ae['dcnt'].data[iao[0],iao[1]].flatten(),'.')
+plt.ylabel('days')
+plt.xlabel('AE Std')
+pu.plot_lin(astat_ae['std'].data[iao[0],iao[1]].flatten(),astat_ae['dcnt'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
+plt.legend()
+
+plt.figure()
+plt.plot(astat_ae['std'].data[iao[0],iao[1]].flatten(),astat_ae['cnt'].data[iao[0],iao[1]].flatten(),'.')
+plt.ylabel('count')
+plt.xlabel('AE Std')
+pu.plot_lin(astat_ae['std'].data[iao[0],iao[1]].flatten(),astat_ae['cnt'].data[iao[0],iao[1]].flatten(),lblfmt='2.6f')
+plt.legend()
+
+
+# In[361]:
+
+
+iao = np.where((astat_ae['cnt'].data>0.0) & (astat_ae['std'].data<2.1))
+
+print('AE std and count',np.corrcoef(astat_ae['std'].data[iao[0],iao[1]].flatten(),
+                                      astat_ae['cnt'].data[iao[0],iao[1]].flatten())[0,1]**2.0)
+print('AE std and days',np.corrcoef(astat_ae['std'].data[iao[0],iao[1]].flatten(),
+                                      astat_ae['dcnt'].data[iao[0],iao[1]].flatten())[0,1]**2.0)
 
 
 # In[ ]:
