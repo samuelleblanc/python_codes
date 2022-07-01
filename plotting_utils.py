@@ -216,7 +216,7 @@ def data2figpoints(x,dx,fig,ax1):
 
 
 def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
-             shaded_ci=True,use_method='linfit',ax=None,lblfmt='2.2f',*args,**kwargs):
+             shaded_ci=True,use_method='linfit',ax=None,lblfmt='2.2f',label_prefix='',*args,**kwargs):
     """
     function to plot on top of previous a linear fit line, 
     with the line equation in legend.
@@ -235,8 +235,11 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
                    'linfit' (default) Use the linfit method from linfit module, when set, x_err and y_err are ignored
                    'odr' use the scipy ODR method to calculate the linear regression, with x_err and y_err abilities
                    'statsmodels' use the statsmodels method, Weighted least squares, with weighing of 1/y_err, x_err ignored
+                   'york' Use the bivariate_fit defined by York et al. (2004)
        ax: variable containing the axis to which to plot onto.
+       label_prefix
        any other input for matplotlib plot function can be passed via args or kwargs
+       
     Output:
         p coefficients (intercept, slope)
         perr values (error in intercept, error in slope)
@@ -248,6 +251,7 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
     if not ax:
         ax = plt.gca()
     xn,yn,mask = doublenanmask(x,y,return_mask=True)
+    if label_prefix: labels=True
     if use_method=='odr':
         from scipy import odr
         model = odr.Model(lin)
@@ -309,8 +313,8 @@ def plot_lin(x,y,x_err=[None],y_err=[None],color='b',labels=True,ci=0.95,
     xx = np.linspace(xn.min()-np.abs(xn.min()*0.1),xn.max()+np.abs(xn.max()*0.1))
     if labels:
         ax.plot(xx,lin(p,xx),color=color,
-                label='y=({:{fmt}}$\pm${:{fmt}})+\n({:{fmt}}$\pm${:{fmt}})x'.format(p[0],perr[0],p[1],perr[1],fmt=lblfmt),
-                *args,**kwargs)
+                label='{label_prefix}y=({:{fmt}}$\pm${:{fmt}})+\n({:{fmt}}$\pm${:{fmt}})x'.format(
+                        p[0],perr[0],p[1],perr[1],fmt=lblfmt,label_prefix=label_prefix),*args,**kwargs)
     else:
         ax.plot(xx,lin(p,xx),color=color,*args,**kwargs)
     if shaded_ci:
@@ -730,7 +734,7 @@ def sub_note(note,ax=None,out=False,dx=0.0,dy=0.0,fontsize=18):
 
 
 def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False,
-                          mean_color='darkgreen',whisker_color='pink',median_color='gold'):
+                          mean_color='darkgreen',whisker_color='pink',median_color='gold',face_alpha=1.0):
     'To change the color (cl=colormap) of box and whisker plots (bp=box_whisker plot artists) to denote the number of samples (binned_ndays=number of samples), if colors dont start at zero, set color_not_start_at_zero to True' 
     import numpy as np
     bndm = np.nanmax(binned_ndays)*1.0
@@ -744,7 +748,7 @@ def set_box_whisker_color(cl,bp,binned_ndays,color_not_start_at_zero=False,
         else:
             b.set_facecolor(cl(binned_ndays[j]*1.0/bndm))
             b.set_edgecolor(cl(binned_ndays[j]*1.0/bndm))
-        #b.set_alpha(0.4)
+        b.set_alpha(face_alpha)
     for j,b in enumerate(bp['means']):
         b.set_marker('.')
         b.set_color('None')
