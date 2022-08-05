@@ -54,7 +54,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 #%config InlineBackend.rc = {}
@@ -79,7 +79,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[2]:
+# In[3]:
 
 
 import map_utils as mu
@@ -89,32 +89,32 @@ import math
 import sys
 
 
-# In[3]:
+# In[4]:
 
 
 from linfit import linfit
 import Sun_utils as su
 
 
-# In[4]:
+# In[5]:
 
 
 from matplotlib.ticker import ScalarFormatter,FormatStrFormatter
 
 
-# In[5]:
+# In[6]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[6]:
+# In[7]:
 
 
 fp = getpath('KORUS')
 
 
-# In[7]:
+# In[8]:
 
 
 vv = 'v4'
@@ -126,74 +126,74 @@ vv = 'v4'
 
 # ## Load 4STAR AOD ict files
 
-# In[8]:
+# In[9]:
 
 
 ar = hs.loadmat(fp+'/aod_ict/all_aod_KORUS_R2_ict.mat')
 
 
-# In[9]:
+# In[10]:
 
 
 ka = ar.keys()
 ka.sort()
 
 
-# In[10]:
+# In[11]:
 
 
 ar['qual_flag'].sum()/float(len(ar['qual_flag']))
 
 
-# In[11]:
+# In[12]:
 
 
 fl_ci = (ar['qual_flag']==1.) & (ar['AOD0501']<1.0)
 
 
-# In[12]:
+# In[13]:
 
 
 fl_ci.sum()
 
 
-# In[13]:
+# In[14]:
 
 
 len(fl_ci)*1.0/60.0/60.0
 
 
-# In[14]:
+# In[15]:
 
 
 fl_ci.sum()/float(len(fl_ci))
 
 
-# In[15]:
+# In[16]:
 
 
 ar['fl_QA'].sum()*1.0/60.0/60.0
 
 
-# In[16]:
+# In[17]:
 
 
 ar['qual_flag'].sum()
 
 
-# In[17]:
+# In[18]:
 
 
 nwl = ka[0:17]
 
 
-# In[18]:
+# In[19]:
 
 
 nm = [380.0,452.0,501.0,520.0,532.0,550.0,606.0,620.0,675.0,781.0,865.0,1020.0,1040.0,1064.0,1236.0,1559.0,1627.0]
 
 
-# In[19]:
+# In[20]:
 
 
 days = ['20160501','20160503','20160504','20160506','20160510','20160511',
@@ -202,7 +202,7 @@ days = ['20160501','20160503','20160504','20160506','20160510','20160511',
         '20160609','20160614']
 
 
-# In[20]:
+# In[21]:
 
 
 doys = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in days]
@@ -212,14 +212,14 @@ ar['doys'] = fdoys[ar['days'].astype(int)]+ar['Start_UTC']/24.0
 
 # ### Get good data
 
-# In[21]:
+# In[22]:
 
 
 fl1 = ar['days']==ar['days'][0]
 fl1.shape
 
 
-# In[22]:
+# In[23]:
 
 
 fl = (ar['qual_flag']==0) & (np.isfinite(ar['AOD0501'])) 
@@ -228,7 +228,7 @@ fl1.shape
 
 # ### Calculate average uncertainty
 
-# In[23]:
+# In[24]:
 
 
 for k in ka:
@@ -238,37 +238,37 @@ for k in ka:
 
 # ### Calculate the Angstrom Exponent
 
-# In[24]:
+# In[25]:
 
 
 aodrr = np.array([ar[n] for n in nwl])
 
 
-# In[25]:
+# In[26]:
 
 
 aodrr.shape
 
 
-# In[26]:
+# In[27]:
 
 
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[27]:
+# In[28]:
 
 
 iangsf = np.isfinite(angs) & ar['fl'] & (ar['GPS_Alt']<500.0)
 
 
-# In[28]:
+# In[29]:
 
 
 np.nanmean(angs[iangsf])
 
 
-# In[29]:
+# In[30]:
 
 
 np.nanstd(angs[iangsf])
@@ -2889,7 +2889,7 @@ for i,dv in enumerate(dvals['doys']):
 
 # ### Build the limits of the autocorrelation
 
-# In[373]:
+# In[34]:
 
 
 # for met times
@@ -2899,7 +2899,7 @@ dt3 = ['20160523','20160531']
 dt4 = ['20160601','20160607']
 
 
-# In[374]:
+# In[35]:
 
 
 t1 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt1]
@@ -2908,14 +2908,14 @@ t3 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in
 t4 = [datetime(int(d[0:4]),int(d[4:6]),int(d[6:8])).timetuple().tm_yday for d in dt4]
 
 
-# In[375]:
+# In[36]:
 
 
 # limits of DOY for each of the met times
 t1,t2,t3,t4
 
 
-# In[376]:
+# In[37]:
 
 
 #altitude limits in m
@@ -2926,7 +2926,7 @@ z3 = [3000.0, 15000.0]
 
 # ## Alternate calculations (lower mem)
 
-# In[372]:
+# In[38]:
 
 
 min_num = 100 # minimum number of points to be considered valid
@@ -6009,7 +6009,7 @@ aodrr.shape
 angs = su.calc_angs(ar['Start_UTC'],np.array(nm[1:11]),aodrr[1:11,:])
 
 
-# In[404]:
+# In[33]:
 
 
 def make_bined_alt(x,alt,days,fl,n=70,rg=None):
@@ -6111,13 +6111,13 @@ plt.savefig(fp+'plot/KORUS_4STAR_Angstrom_fit_vertical.png',
 
 # ### Plot vertical angstrom exponent for different Met. regimes
 
-# In[75]:
+# In[31]:
 
 
 ar['doys']
 
 
-# In[74]:
+# In[39]:
 
 
 ar['fl_QA_angs'] = ar['fl'] & (ar['AOD0501']>0.05) 
@@ -6130,7 +6130,7 @@ ar['fl_QA_angs_met4'] = ar['fl'] & (ar['AOD0501']>0.05)  & (ar['doys']> t4[0]) &
 #                        (ar['Latitude']>36.9) & (ar['Longitude']<127.30) & (ar['Longitude']>126.60)
 
 
-# In[94]:
+# In[40]:
 
 
 bang,balt,bnum,bndays = make_bined_alt(angs,ar['GPS_Alt'],ar['days'],ar['fl_QA_angs'],n=30,rg=[0.0,8000.0])
@@ -6140,13 +6140,13 @@ bangm3,baltm3,bnumm3,bndaysm3 = make_bined_alt(angs,ar['GPS_Alt'],ar['days'],ar[
 bangm4,baltm4,bnumm4,bndaysm4 = make_bined_alt(angs,ar['GPS_Alt'],ar['days'],ar['fl_QA_angs_met4'],n=30,rg=[0.0,8000.0])
 
 
-# In[96]:
+# In[43]:
 
 
 plt.figure(figsize=(5.5,7.5))
 bp =plt.boxplot(bang,positions=np.array(balt)-25.0,vert=False,
                 showfliers=False,widths=90,showmeans=True,patch_artist=True)
-plt.xlabel('Angstrom from fit between 452 nm and 865 nm')
+plt.xlabel(u'Ångström from fit between 452 nm and 865 nm')
 plt.ylabel('Altitude [m]')
 
 rd = plt.cm.RdPu
@@ -6172,7 +6172,7 @@ bp4 = plt.boxplot(bangm4,positions=np.array(baltm4)+75.0,vert=False,
 pu.set_box_whisker_color(gr,bp4,bndaysm4,mean_color='tab:green',median_color='g')
 
 ax = plt.gca()
-plt.title('KORUS-AQ Angstrom Exponent')
+plt.title(u'KORUS-AQ Ångström Exponent (AE)')
 plt.ylim(0,8000)
 plt.yticks([0,1000,2000,3000,4000,5000,6000,7000,8000])
 ax.set_yticklabels([0,1000,2000,3000,4000,5000,6000,7000,8000])
@@ -6180,7 +6180,7 @@ plt.xlim(-0.1,2.5)
 plt.grid()
 plt.legend([bp['boxes'][5],bp1['boxes'][15],bp2['boxes'][16],bp3['boxes'][7],bp4['boxes'][-4],
             bp['means'][0],bp['medians'][0],bp['boxes'][-2],bp['whiskers'][0]],
-           ['All data','Dynamic','Stagnation','Extreme\npollution','Blocking','Mean','Median','25\% - 75\%','min-max'],
+           ['All data','Dynamic','Stagnation','Extreme\npollution','Blocking','Mean','Median','25% - 75%','min-max'],
            frameon=False,loc=1,numpoints=1)
 
 if False:
