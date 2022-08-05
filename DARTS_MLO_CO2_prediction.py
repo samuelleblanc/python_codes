@@ -68,7 +68,7 @@ logging.disable(logging.CRITICAL)
 
 
 from path_utils import getpath
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[4]:
@@ -130,6 +130,70 @@ result = seasonal_decompose(df)
 result.plot()
 
 plt.show()
+
+
+# In[10]:
+
+
+plt.figure()
+plt.plot(result.seasonal)
+
+
+# In[12]:
+
+
+import numpy, scipy.optimize
+
+def fit_sin(tt, yy):
+    '''Fit sin to the input time sequence, and return fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc"'''
+    tt = numpy.array(tt)
+    yy = numpy.array(yy)
+    ff = numpy.fft.fftfreq(len(tt), (tt[1]-tt[0]))   # assume uniform spacing
+    Fyy = abs(numpy.fft.fft(yy))
+    guess_freq = abs(ff[numpy.argmax(Fyy[1:])+1])   # excluding the zero frequency "peak", which is related to offset
+    guess_amp = numpy.std(yy) * 2.**0.5
+    guess_offset = numpy.mean(yy)
+    guess = numpy.array([guess_amp, 2.*numpy.pi*guess_freq, 0., guess_offset])
+
+    def sinfunc(t, A, w, p, c):  return A * numpy.sin(w*t + p) + c
+    popt, pcov = scipy.optimize.curve_fit(sinfunc, tt, yy, p0=guess)
+    A, w, p, c = popt
+    f = w/(2.*numpy.pi)
+    fitfunc = lambda t: A * numpy.sin(w*t + p) + c
+    return {"amp": A, "omega": w, "phase": p, "offset": c, "freq": f, "period": 1./f, "fitfunc": fitfunc, "maxcov": numpy.max(pcov), "rawres": (guess,popt,pcov)}
+
+
+# In[170]:
+
+
+fit_sin(result.seasonal.index.to_julian_date()-2436293.5,result.seasonal.to_numpy())
+
+
+# In[96]:
+
+
+plt.figure()
+plt.plot(result.trend)
+
+
+# In[164]:
+
+
+ppoly = numpy.polyfit(result.trend.index.to_julian_date().to_numpy()[6:-6]-2436293.5,result.trend.to_numpy()[6:-6],deg=2)
+
+
+# In[165]:
+
+
+ppoly
+
+
+# In[166]:
+
+
+plt.figure()
+plt.plot(result.seasonal.index,
+         numpy.polyval(ppoly,result.seasonal.index.to_julian_date().to_numpy()-2436293.5))
 
 
 # In[9]:
