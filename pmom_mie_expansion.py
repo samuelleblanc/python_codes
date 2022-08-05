@@ -50,14 +50,14 @@ import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 from path_utils import getpath
 
 
 # In[66]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[2]:
