@@ -46,7 +46,7 @@
 # In[1]:
 
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
+get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
 import matplotlib 
 import os
 matplotlib.rc_file(os.path.join(os.getcwd(),'file.rc'))
@@ -78,7 +78,7 @@ import pandas as pd
 # In[3]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[4]:
@@ -590,6 +590,37 @@ hsrl.keys()
 # For Kerry Meyer, 
 # 
 # From email (Jan 20, 2020):" calculate spectral AOD at the channels I use (0.47, 0.55, 0.67, 0.86, 1.24, 2.1µm). "
+
+# In[6]:
+
+
+ssa_average_pistone2019 = np.array([0.869,0.847,0.822,0.788,0.781])
+wvl_pistone2019 = np.array([400.0,500.0,675, 870, 995])
+
+
+# In[7]:
+
+
+from scipy.interpolate import interp1d
+
+
+# In[8]:
+
+
+wanted_wvls = [470, 550, 675, 865, 1236]
+
+
+# In[10]:
+
+
+ssa_fx = interp1d(wvl_pistone2019,ssa_average_pistone2019,bounds_error=False,fill_value='extrapolate')
+
+
+# In[11]:
+
+
+ssa_fx(wanted_wvls)
+
 
 # ## Save for 2016
 
