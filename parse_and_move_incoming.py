@@ -181,6 +181,9 @@ if data_raw_found:
             if fa_tmp.campaign.find('MLO') >= 0:
                 aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Mauna_Loa',path=str(fa_tmp.newpath),version=3)
                 if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+            if fa_tmp.campaign.find('SaSa') >= 0:
+                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='WFF_X-75_Sci_Obs',path=str(fa_tmp.newpath),version=3)
+                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
 
 # In[66]:
 
