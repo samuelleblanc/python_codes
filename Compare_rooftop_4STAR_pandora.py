@@ -41,7 +41,7 @@
 
 # # Prepare python environment
 
-# In[3]:
+# In[1]:
 
 
 import numpy as np
@@ -52,19 +52,21 @@ from path_utils import getpath
 import hdf5storage as hs
 import scipy.io as sio
 import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 import glob
 
 
-# In[361]:
+# In[2]:
 
 
 from datetime import datetime,timedelta
 import scipy.stats as st
+import pandas as pd
+import plotting_utils as pu
 
 
-# In[61]:
+# In[3]:
 
 
 import sys
@@ -74,7 +76,7 @@ else:
     from io import StringIO, BytesIO
 
 
-# In[9]:
+# In[4]:
 
 
 name = 'rooftop'
@@ -86,19 +88,20 @@ fp = getpath(name)
 
 # ## Load 4STAR gas summary
 
-# In[12]:
+# In[5]:
 
 
-files = glob.glob(fp + '/**/[!4STARB]*gas_summary*.mat', recursive=True)
+files = glob.glob(fp + '/gas_summary_v2_post202208/**/[!4STARB]*gas_summary*.mat', recursive=True)
 
 
-# In[13]:
+# In[6]:
 
 
+files.sort()
 files
 
 
-# In[22]:
+# In[7]:
 
 
 gas = {}
@@ -108,26 +111,26 @@ for f in files:
     gas[daystr] = g
 
 
-# In[25]:
+# In[8]:
 
 
-gas['20220208'].keys()
+gas['20210330'].keys()
 
 
-# In[159]:
+# In[9]:
 
 
-gas['20220208']['tUTC']
+gas['20210330']['tUTC']
 
 
-# In[186]:
+# In[10]:
 
 
 kg = list(gas.keys())
 kg.sort()
 
 
-# In[211]:
+# In[11]:
 
 
 s = {'day':[],'time':[],'tUTC':[],'no2DU':[],'no2resiDU':[],'o3DU':[],'o3resiDU':[]}
@@ -137,29 +140,107 @@ for d in kg:
     s['day'] = np.append(s['day'],[d]*len(gas[d][kk][:,0]))
 
 
-# In[266]:
+# In[12]:
 
 
 s['time'] = pd.to_datetime(s['day']).to_numpy() + [np.timedelta64(timedelta(hours=tt)) for tt in s['tUTC']]
 
 
-# In[267]:
+# In[13]:
 
 
 s['time']
+
+
+# In[14]:
+
+
+s['no2DU'] = s['no2DU']/10.0
+s['no2resiDU'] = s['no2resiDU']/10.0
+
+
+# ### Filter out bad data and back interpolate for easier handling
+
+# In[161]:
+
+
+ibad = (s['no2DU']<0.05) | (s['no2DU']>1.0) 
+
+
+# In[148]:
+
+
+from Sp_parameters import smooth
+
+
+# In[162]:
+
+
+s['no2DU'][ibad] = np.nan
+
+
+# In[163]:
+
+
+s_no2DU = smooth(s['no2DU'],1,nan=True,old=True)
+
+
+# In[164]:
+
+
+plt.figure()
+plt.plot(s_no2DU,'.')
+
+
+# ### Load previous 4STAR analysis
+
+# In[15]:
+
+
+files2 = glob.glob(fp + '/gas_summary_v1*/**/[!4STARB]*gas_summary*.mat', recursive=True)
+files2.sort()
+files2
+
+
+# In[16]:
+
+
+gas2 = {}
+for f in files2:
+    g2 = sio.loadmat(f)
+    daystr = f.replace('/','_').split('_')[-3]
+    gas2[daystr] = g2
+
+
+# In[17]:
+
+
+s2 = {'day':[],'time':[],'tUTC':[],'no2DU':[],'no2resiDU':[],'o3DU':[],'o3resiDU':[]}
+kg = list(gas2.keys())
+kg.sort()
+for d in kg:
+    for kk in ['tUTC','no2DU','no2resiDU','o3DU','o3resiDU']:
+        s2[kk] = np.append(s2[kk],gas2[d][kk][:,0])
+    s2['day'] = np.append(s2['day'],[d]*len(gas2[d][kk][:,0]))
+
+
+# In[18]:
+
+
+s2['time'] = pd.to_datetime(s2['day']).to_numpy() + [np.timedelta64(timedelta(hours=tt)) for tt in s2['tUTC']]
 
 
 # ## Load Pandora
 
 # ### load files from internet
 
-# In[26]:
+# In[19]:
 
 
 import requests
 
 
-# In[38]:
+# In[20]:
 
 
 url_base = 'http://data.pandonia-global-network.org/MountainViewCA/Pandora34s1/L2/'
@@ -168,7 +249,7 @@ url_NO2 = url_base+'Pandora34s1_MountainViewCA_L2Tot_rnvs1p1-7.txt'
 url_NO2_trop = url_base+'Pandora34s1_MountainViewCA_L2Trop_rnvh1p1-7.txt'
 
 
-# In[41]:
+# In[21]:
 
 
 ro3 = requests.get(url_O3,stream=True)
@@ -177,7 +258,7 @@ for chunk in ro3.iter_content(chunk_size=1024):
     fo3.append(chunk)
 
 
-# In[43]:
+# In[22]:
 
 
 rno2 = requests.get(url_NO2,stream=True)
@@ -188,21 +269,15 @@ for chunk in rno2.iter_content(chunk_size=1024):
 
 # ### convert files to something easier to handle
 
-# In[44]:
-
-
-import pandas as pd
-
-
 # #### Ozone
 
-# In[93]:
+# In[23]:
 
 
 o3data = BytesIO(b''.join(fo3))
 
 
-# In[132]:
+# In[24]:
 
 
 o3data.seek(0)
@@ -212,37 +287,46 @@ for i in range(66):
 print(*o3header,sep='\n')
 
 
-# In[143]:
+# In[25]:
 
 
-col_name = ['Time','doy_jan2000','measT','sza','saz','lza','laz','o3_du','unc_o3_du','m_o3','diff_corr','qa_o3','sumi2_dq1',
+col_name = ['Time','doy_jan2000','duration_time','sza','saz','lza','laz','o3_du','unc_o3_du','m_o3','diff_corr','qa_o3','sumi2_dq1',
             'sumi_dq2','so2_du','unc_so2_du','m_so2','diff_corr_so2','qa_no2','sumi2_so2_dq1','sumi2_so2_dq2',
             'fit_resi','resi_rms','expmeas_resi_rms','expinst_resi_rms','mean_val','Pres_mbar','dat_proc',
             'cal_version','cal_val_date','L2fit_QA','sumi2_L2fit_dq1','sumi2_L2fit_dq2','L1_QA','sumi2_L1_dq1',
             'sumi2_L1_dq2','effT_wav','resi_straylight','L1_wv_shift','wv_shift_fit','int','darkcount','pos_filter1','pos_filter2']
 
 
-# In[144]:
+# In[26]:
 
 
-for i,h in enumerate(o3header[21:]):
-    print(i,'\033[1m'+col_name[i]+'\033[0m',h)
+col_name_decription = {}
+j = 0
+header_start = False
+for i,h in enumerate(o3header):
+    if h.strip().startswith(b'----'): 
+        header_start = ~header_start
+        continue
+    if header_start:
+        print(j,'\033[1m'+col_name[j]+'\033[0m',h)
+        col_name_decription[col_name[j]] = h
+        j = j+1
 
 
-# In[145]:
+# In[27]:
 
 
 o3data.seek(0)
 pdo3 = pd.read_csv(o3data,encoding='unicode_escape',header=66,delimiter=' ',names=col_name)
 
 
-# In[146]:
+# In[28]:
 
 
 pdo3
 
 
-# In[147]:
+# In[29]:
 
 
 pdo3['datetime'] = pd.to_datetime(pdo3['Time'])
@@ -250,13 +334,13 @@ pdo3['datetime'] = pd.to_datetime(pdo3['Time'])
 
 # #### NO2
 
-# In[149]:
+# In[30]:
 
 
 no2data = BytesIO(b''.join(fno2))
 
 
-# In[152]:
+# In[31]:
 
 
 no2data.seek(0)
@@ -266,37 +350,46 @@ for i in range(59):
 print(*no2header,sep='\n')
 
 
-# In[154]:
+# In[32]:
 
 
-col_name_no2 = ['Time','doy_jan2000','measT','sza','saz','lza','laz',
+col_name_no2 = ['Time','doy_jan2000','duration_time','sza','saz','lza','laz',
                 'no2_du','unc_no2_du','m_no2','diff_corr_no2','qa_no2','sumi2_no2_dq1','sumi_no2_dq2',
                 'fit_resi','resi_rms','expmeas_resi_rms','expinst_resi_rms','mean_val','Pres_mbar','dat_proc',
             'cal_version','cal_val_date','L2fit_QA','sumi2_L2fit_dq1','sumi2_L2fit_dq2','L1_QA','sumi2_L1_dq1',
             'sumi2_L1_dq2','effT_wav','resi_straylight','L1_wv_shift','wv_shift_fit','int','darkcount','pos_filter1','pos_filter2']
 
 
-# In[155]:
+# In[33]:
 
 
-for i,h in enumerate(no2header[21:]):
-    print('\033[1m'+col_name_no2[i]+'\033[0m',h)
+col_name_no2_decription = {}
+j = 0
+header_start = False
+for i,h in enumerate(no2header):
+    if h.strip().startswith(b'----'): 
+        header_start = ~header_start
+        continue
+    if header_start:
+        print(j,'\033[1m'+col_name_no2[j]+'\033[0m',h)
+        col_name_no2_decription[col_name_no2[j]] = h
+        j = j+1
 
 
-# In[156]:
+# In[34]:
 
 
 no2data.seek(0)
 pdno2 = pd.read_csv(no2data,encoding='unicode_escape',header=59,delimiter=' ',names=col_name_no2)
 
 
-# In[157]:
+# In[35]:
 
 
 pdno2['datetime'] = pd.to_datetime(pdno2['Time'])
 
 
-# In[158]:
+# In[36]:
 
 
 pdno2
@@ -306,17 +399,33 @@ pdno2
 
 # ## Plot time series
 
-# In[270]:
+# In[236]:
+
+
+plt.figure()
+plt.plot(s['time'],s['no2DU'],'.')
+
+
+# In[132]:
+
+
+plt.figure()
+plt.plot(s['time'],s['no2DU'],'.',label='4STAR')
+plt.plot(s2['time'],s2['no2DU'],'+',label='4STAR pre')
+plt.legend()
+
+
+# In[237]:
 
 
 plt.figure()
 plt.plot(pdno2['datetime'],pdno2['no2_du'],'.',label='Pandora')
 plt.plot(s['time'],s['no2DU'],'.',label='4STAR')
-plt.ylim(0,10)
+plt.ylim(0,1)
 plt.legend()
 
 
-# In[273]:
+# In[43]:
 
 
 plt.figure()
@@ -326,11 +435,140 @@ plt.ylim(0,500)
 plt.legend()
 
 
+# ## Match in time to compare each measurement
+
+# ### Time delta fast version - but buggy?
+
+# In[95]:
+
+
+time_diff = pdno2['datetime'].dt.tz_localize(None).to_numpy()-np.append(s['time'],s['time'][np.zeros((len(pdno2['datetime'])-len(s['time']),1)).astype(int)])
+
+
+# In[126]:
+
+
+time_diff = time_diff.astype(float)/1E9 #convert to seconds
+
+
+# In[130]:
+
+
+imatch = time_diff<600
+
+
+# In[165]:
+
+
+plt.figure()
+plt.plot(pdno2['no2_du'][imatch],s_no2DU[imatch[0:len(s['no2DU'])]],'.')
+
+
+# In[117]:
+
+
+imatch.sum()
+
+
+# ### Match in time, slow loop version
+
+# In[178]:
+
+
+def get_unixtime(dt64):
+    return dt64.astype('datetime64[ms]').astype('float')/1000.0
+
+
+# In[168]:
+
+
+t = s['time'][10000]
+
+
+# In[180]:
+
+
+get_unixtime(t)
+
+
+# In[170]:
+
+
+t0 = pdno2['datetime'].dt.tz_localize(None).to_numpy()
+
+
+# In[179]:
+
+
+get_unixtime(t0[10000])
+
+
+# In[184]:
+
+
+from tqdm import tqdm_notebook as tqdm 
+
+
+# In[199]:
+
+
+np.diff(unix_t[190000:191000:100])
+
+
+# In[205]:
+
+
+time_span = 600 #in seconds
+match_pandora_no2 = []
+match_4star_no2 = []
+
+unix_t0 = get_unixtime(t0)
+unix_t = get_unixtime(s['time'])
+
+pbar = tqdm(total = len(unix_t))
+
+for t in unix_t[::100]:
+    imatch = (unix_t0<=t+time_span) & (unix_t0>=t-time_span)
+    if any(imatch):
+        match_pandora_no2.append(np.nanmean(pdno2['no2_du'][imatch]))
+        match_4star_no2.append(np.nanmean(s_no2DU[(unix_t<=t+time_span) & (unix_t>=t-time_span)]))
+    else:
+        match_pandora_no2.append(np.nan)
+        match_4star_no2.append(np.nan)
+    pbar.update(100)
+match_pandora_no2 = np.array(match_pandora_no2)
+match_4star_no2 = np.array(match_4star_no2)
+
+
+# In[228]:
+
+
+days_since_2020 = (unix_t-get_unixtime(np.datetime64('2020-01-01T00:00:00.0')))/60.0/60.0/24.0
+
+
+# In[234]:
+
+
+plt.figure()
+plt.plot(match_pandora_no2,match_4star_no2,'.',label='averaged 10minute\n'+pu.stats_label(match_pandora_no2,match_4star_no2))
+plt.plot([0,1],[0,1],'--',color='lightgrey',label='1:1')
+pu.plot_lin(match_pandora_no2,match_4star_no2,x_err=match_pandora_no2*0.2,y_err=match_4star_no2*0.2,use_method='york')
+plt.legend()
+plt.scatter(match_pandora_no2,match_4star_no2,s=20,c=days_since_2020[::100],marker='o',zorder=10)
+plt.colorbar(label='Days since 2020-01-01 [day]')
+plt.ylabel('4STAR NO2 [DU]')
+plt.xlabel('Pandora NO2 [DU]')
+plt.title('NASA Ames rooftop comparison of 4STAR and Pandora NO2\nfrom 2020 to 2022')
+plt.ylim(-0.05,1)
+plt.xlim(-0.05,1)
+plt.savefig(fp+'4STAR_pandora_NO2_comparison.png',dpi=600,transparent=True)
+
+
 # ## one to one plot, matching measurement times
 
 # ### Ozone
 
-# In[347]:
+# In[48]:
 
 
 spd = pd.DataFrame(s)
@@ -338,25 +576,31 @@ spd['datetime'] = pd.to_datetime(s['time'],utc=True)
 spd2 = spd.sort_values(by='datetime')
 
 
-# In[320]:
+# In[49]:
 
 
 fullpd = pd.merge_asof(spd2,pdo3,direction='nearest')
 
 
-# In[323]:
+# In[50]:
 
 
 fullpd['o3DU'][fullpd['o3DU']<0.0] = np.nan
 
 
-# In[327]:
+# In[51]:
 
 
-fullpd['o3_du'][fullpd['qa_o3']>10] = np.nan
+fullpd['o3_du'][fullpd['qa_o3']>100] = np.nan
 
 
-# In[329]:
+# In[52]:
+
+
+fullpd['o3_du'] = fullpd['o3_du']/10.0
+
+
+# In[53]:
 
 
 plt.figure()
@@ -527,7 +771,7 @@ plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_O3.png',dpi=600,transparent=T
 
 # ### NO2
 
-# In[348]:
+# In[40]:
 
 
 spd = pd.DataFrame(s)
@@ -535,25 +779,27 @@ spd['datetime'] = pd.to_datetime(s['time'],utc=True)
 spd2 = spd.sort_values(by='datetime')
 
 
-# In[349]:
+# In[41]:
 
 
 fullpdn = pd.merge_asof(spd2,pdno2,direction='nearest')
 
 
-# In[350]:
+# In[52]:
 
 
-fullpdn['no2DU'][fullpdn['no2DU']<0.0] = np.nan
+
+fullpdn['no2DU'][fullpdn['no2DU']<0.02] = np.nan
+fullpdn['no2DU'][fullpdn['no2DU']>0.8] = np.nan
 
 
-# In[352]:
+# In[43]:
 
 
 fullpdn['no2_du'][fullpdn['qa_no2']>10] = np.nan
 
 
-# In[354]:
+# In[44]:
 
 
 plt.figure()
@@ -563,19 +809,13 @@ plt.ylim(0,10)
 plt.legend()
 
 
-# In[355]:
-
-
-import plotting_utils as pu
-
-
-# In[356]:
+# In[54]:
 
 
 fln = np.isfinite(fullpdn['no2_du']) & np.isfinite(fullpdn['no2DU'])
 
 
-# In[359]:
+# In[57]:
 
 
 plt.figure()
@@ -586,13 +826,13 @@ pu.plot_lin(fullpdn['no2_du'],fullpdn['no2DU'])
 plt.legend()
 plt.ylabel('4STAR NO2 [DU]')
 plt.xlabel('Pandora NO2 [DU]')
-plt.ylim(0,10)
-plt.xlim(0,10)
+plt.ylim(0,0.8)
+plt.xlim(0,0.8)
 
-plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
+#plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
 
 
-# In[453]:
+# In[55]:
 
 
 plt.figure()
@@ -603,10 +843,10 @@ pu.plot_lin(fullpdn['no2_du'],fullpdn['no2DU'],x_err=fullpdn['unc_no2_du'],y_err
 plt.legend()
 plt.ylabel('4STAR NO2 [DU]')
 plt.xlabel('Pandora NO2 [DU]')
-plt.ylim(0,10)
-plt.xlim(0,10)
+plt.ylim(0,2)
+plt.xlim(0,2)
 
-plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
+#plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
 
 
 # In[ ]:

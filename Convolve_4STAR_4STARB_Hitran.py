@@ -36,7 +36,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -47,7 +47,7 @@ import os
 import hapi
 
 
-# In[2]:
+# In[3]:
 
 
 from tqdm.notebook import tqdm
@@ -55,7 +55,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[3]:
+# In[4]:
 
 
 name = '4star_data'
@@ -63,7 +63,7 @@ vv = 'v1'
 fp = getpath(name)
 
 
-# In[4]:
+# In[5]:
 
 
 fph = getpath('HITRAN')
@@ -101,7 +101,7 @@ fph = getpath('HITRAN')
 #  - o4_296K_conv_4starb_nir.xs
 # 
 
-# In[5]:
+# In[6]:
 
 
 Loschmidt=2.686763e19                   # molec/cm3*atm
@@ -111,13 +111,13 @@ Loschmidt=2.686763e19                   # molec/cm3*atm
 
 # ## Load the 4STARB wavelength and FWHM
 
-# In[6]:
+# In[7]:
 
 
 s = sio.loadmat(fp+'4STARB_FWHM_combinedlinelamps_20220507.mat')
 
 
-# In[7]:
+# In[8]:
 
 
 s.keys()
@@ -125,7 +125,7 @@ s.keys()
 
 # # Load the HAPI molecules and crosssections
 
-# In[8]:
+# In[9]:
 
 
 wvn_2_wvl = lambda x: 1.0e4 / x
@@ -621,7 +621,7 @@ for k in list(gases.keys()):
 
 # ### load the previously convolved xs from measured files
 
-# In[22]:
+# In[1]:
 
 
 gases = sio.loadmat(fph+'hitran_atm_trace_gases_20220708.mat')
