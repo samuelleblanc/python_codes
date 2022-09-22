@@ -37,12 +37,14 @@
 # Modification History:
 # 
 #     Written: Samuel LeBlanc, Santa Cruz, CA, 2022-09-12
-#     Modified:
+#     Modified:Samuel LeBlanc, Santa Cruz, CA, 2022-09-21
+#              - added new wavelengths and storing of the phase function
+#              
 # 
 
 # # Prepare python environment
 
-# In[161]:
+# In[1]:
 
 
 import numpy as np
@@ -59,28 +61,28 @@ import scipy.interpolate as si
 import netCDF4 as nc
 
 
-# In[7]:
+# In[21]:
 
 
 name = 'sunsat_ORACLES2016'
-vv = 'v1'
+vv = 'v2'
 fp = getpath(name)
 
 
-# In[122]:
+# In[3]:
 
 
 fp_bin = getpath('uvspec_bin')
 
 
-# In[27]:
+# In[4]:
 
 
 fp_rtm0 = getpath('rtm')
 fp_rtm = fp_rtm0 +'TASNPP_mie/'
 
 
-# In[28]:
+# In[5]:
 
 
 if not os.path.exists(fp_rtm): 
@@ -89,22 +91,28 @@ if not os.path.exists(fp_rtm):
 
 # # Load files
 
-# In[8]:
+# In[6]:
 
 
 f = fp + 'data_archival/AEROINV_nc_R0/NC_FORMAT_NETCDF4_CLASSIC/4STAR-aeroinv_P3_2016_R0.nc'
 
 
-# In[9]:
+# In[7]:
 
 
 ae,ae_dict = lu.load_netcdf(f,everything=True)
 
 
-# In[14]:
+# In[8]:
 
 
 len(ae[b'time'])
+
+
+# In[11]:
+
+
+ae_dict[b'scan_tag']
 
 
 # # Run through each retrieval and make input files
@@ -114,7 +122,7 @@ len(ae[b'time'])
 # From the libradtran documentation for mie size distribution file:  
 # >Specify a two column file, r [micron], dn(r)/dr, which describes a size distribution
 
-# In[34]:
+# In[12]:
 
 
 def print_size_dist_file(fname,r,dnr):
@@ -123,19 +131,19 @@ def print_size_dist_file(fname,r,dnr):
             f.write('{:3.10f} {:3.10f}\n'.format(rr,dnr[ir]))
 
 
-# In[20]:
+# In[13]:
 
 
 ae_dict[b'radius']
 
 
-# In[21]:
+# In[14]:
 
 
 ae_dict[b'psd']
 
 
-# In[25]:
+# In[15]:
 
 
 def convert_dvlnr_to_dndr(psd,r):
@@ -146,7 +154,7 @@ def convert_dvlnr_to_dndr(psd,r):
     return Nr
 
 
-# In[37]:
+# In[16]:
 
 
 print_size_dist_file(fp_rtm+'mie_tester.psd',ae[b'radius'],convert_dvlnr_to_dndr(ae[b'psd'][0,:],ae[b'radius']))
@@ -154,40 +162,51 @@ print_size_dist_file(fp_rtm+'mie_tester.psd',ae[b'radius'],convert_dvlnr_to_dndr
 
 # ## Prep function for printing index of refraction
 
-# In[38]:
+# Update from Kerry Meyer's email on Sept 21, 2022.  
+# 
+# > Thanks, Sam, this is helpful. Do you have the extrapolated phase functions also? And I hate to do this, but can the wavelength range be extended in both directions? I’d like to accommodate the VIIRS 2.25µm channel, and use the spectral response functions to compute band-weighted averages for each MODIS and VIIRS channel. So perhaps adding something like 400nm on the short end (which I guess is the exact 4STAR wavelength there) and 2300nm on the long end – that should encompass most of the response function ranges for MODIS and VIIRS.
+# >
+# > I’ll also need your input on how best to QA filter these scans. I see a “QA_level” dataset that I assume should be part of that.
+# >
+# >Kerry
+
+# In[17]:
 
 
 ae_dict[b'n_real']
 
 
-# In[39]:
+# In[18]:
 
 
 ae_dict[b'n_imag']
 
 
-# In[41]:
+# In[19]:
 
 
 ae_dict[b'wavelength']
 
 
-# In[113]:
+# In[31]:
 
 
 def spline_wavelength_extend(val,wavelen,new_wavelen,su=0.0006,k=2):
     # to calculate a new spline fit to the refractive index
-    val_fx = si.CubicSpline(np.append(wavelen,wavelen[-1]+450.0),np.append(val,val[-1]),bc_type='natural',extrapolate=True)
+    val_fx = si.CubicSpline(np.append(wavelen,wavelen[-1]+600.0),np.append(val,val[-1]),bc_type='natural',extrapolate=True)
     return val_fx(new_wavelen)
 
 
-# In[114]:
+# In[32]:
 
 
-wave_out = np.array([470.0, 550.0, 670.0, 860.0, 1240.0, 2100.0])
+if vv == 'v1':
+    wave_out = np.array([470.0, 550.0, 670.0, 860.0, 1240.0, 2100.0])
+elif vv == 'v2':
+    wave_out = np.array([400.0, 470.0, 550.0, 670.0, 860.0, 1240.0, 2100.0, 2300.0])
 
 
-# In[115]:
+# In[33]:
 
 
 fig,ax = plt.subplots(1,1)
@@ -203,7 +222,7 @@ plt.ylabel('Refractive index')
     
 
 
-# In[116]:
+# In[34]:
 
 
 plt.figure()
@@ -218,7 +237,7 @@ plt.ylabel('Refractive index')
     
 
 
-# In[117]:
+# In[35]:
 
 
 def print_refrac_file(fname,wavelength,n_real,n_imag):
@@ -229,7 +248,7 @@ def print_refrac_file(fname,wavelength,n_real,n_imag):
             f.write('{:4.3f} {:3.12f} {:3.12f}\n'.format(w,abs(n_real[iw]),abs(n_imag[iw])))
 
 
-# In[119]:
+# In[36]:
 
 
 itest = 0
@@ -240,20 +259,22 @@ print_refrac_file(fp_rtm+'mie_tester.ref',wave_out,
 
 # ## Mie input file function
 
-# In[120]:
+# In[41]:
 
 
-def mie_input(fname,refrac_file_name,size_dist_file_name,program='MIEV0'):
+def mie_input(fname,refrac_file_name,size_dist_file_name,program='MIEV0',nmom=None):
     #simple mie input file program
      with open(fname,'w') as f:
             f.write('mie_program {}\n'.format(program))
             f.write('refrac file {}\n'.format(refrac_file_name))
             f.write('size_distribution_file {}\n'.format(size_dist_file_name))
+            if nmom:
+                f.write('nmom {}\n'.format(nmom))
             
     
 
 
-# In[121]:
+# In[38]:
 
 
 mie_input(fp_rtm+'mie_tester.inp',fp_rtm+'mie_tester.ref',fp_rtm+'mie_tester.psd')
@@ -261,10 +282,10 @@ mie_input(fp_rtm+'mie_tester.inp',fp_rtm+'mie_tester.ref',fp_rtm+'mie_tester.psd
 
 # # Run through and make input files for scans
 
-# In[126]:
+# In[42]:
 
 
-base = 'mie_ORACLES2016_expansion'
+base = 'mie_ORACLES2016_expansion_{}'.format(vv)
 f_list = fp_rtm+base+'_list.sh'
 with open(f_list,'w') as f:
     for it,tt in list(enumerate(ae[b'time'])):
@@ -273,17 +294,17 @@ with open(f_list,'w') as f:
                          spline_wavelength_extend(ae[b'n_real'][it,:],ae[b'wavelength'],wave_out),
                          spline_wavelength_extend(ae[b'n_imag'][it,:],ae[b'wavelength'],wave_out))
         print_size_dist_file(fp_rtm+basename+'.psd',ae[b'radius'],convert_dvlnr_to_dndr(ae[b'psd'][it,:],ae[b'radius']))
-        mie_input(fp_rtm+basename+'.inp',fp_rtm+basename+'.ref',fp_rtm+basename+'.psd')
+        mie_input(fp_rtm+basename+'.inp',fp_rtm+basename+'.ref',fp_rtm+basename+'.psd',nmom=1500)
         f.write('{bin_path}mie < {inp} > {out}\n'.format(bin_path=fp_bin,inp=fp_rtm+basename+'.inp',out=fp_rtm+basename+'.out'))
 
 
-# In[128]:
+# In[43]:
 
 
 get_ipython().run_line_magic('ls', '$fp_rtm')
 
 
-# In[133]:
+# In[44]:
 
 
 get_ipython().system('parallel --jobs=22 --bar < $f_list')
@@ -291,25 +312,25 @@ get_ipython().system('parallel --jobs=22 --bar < $f_list')
 
 # ## Read the mie output files
 
-# In[134]:
+# In[45]:
 
 
 fname = fp_rtm+basename+'.out'
 
 
-# In[135]:
+# In[46]:
 
 
 outs = np.genfromtxt(fname)
 
 
-# In[141]:
+# In[50]:
 
 
-outs[:,]
+len(outs[0,7:]
 
 
-# In[143]:
+# In[51]:
 
 
 def read_mie_output(fname):
@@ -322,10 +343,12 @@ def read_mie_output(fname):
     d['qext'] = outs[:,3]
     d['ssa'] = outs[:,4]
     d['asym'] = outs[:,5]
+    d['spike'] = outs[:,6]
+    d['pmom'] = outs[:,7:]
     return d
 
 
-# In[144]:
+# In[52]:
 
 
 dats = []
@@ -335,9 +358,21 @@ for it,tt in list(enumerate(ae[b'time'])):
     
 
 
+# In[54]:
+
+
+dats[0]['pmom'].shape
+
+
 # ## Plot out the ssa and asym extrapolations
 
-# In[218]:
+# In[56]:
+
+
+fpt = '/data/sam/TASNPP/ORACLES_aerosol_prop/'
+
+
+# In[57]:
 
 
 plt.figure()
@@ -356,7 +391,7 @@ plt.ylabel('SSA')
 plt.savefig(fpt+'SSA_mie_extrapolation_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[221]:
+# In[58]:
 
 
 plt.figure()
@@ -380,20 +415,26 @@ plt.savefig(fpt+'ASYM_mie_extrapolation_ORACLES2016_{}.png'.format(vv),dpi=600,t
 
 # ### Copy file data and attributes from older one
 
-# In[163]:
+# In[61]:
 
 
 fpt = '/data/sam/TASNPP/ORACLES_aerosol_prop/'
-f_out = fpt + '4STAR-aeroinv_mie_wavelength_expansion_P3_2016_R0.nc'
+f_out = fpt + '4STAR-aeroinv_mie_wavelength_expansion_P3_2016_R1.nc'
 
 
-# In[164]:
+# In[84]:
+
+
+f_out
+
+
+# In[62]:
 
 
 f_in = fp + 'data_archival/AEROINV_nc_R0/NC_FORMAT_NETCDF4_CLASSIC/4STAR-aeroinv_P3_2016_R0.nc'
 
 
-# In[168]:
+# In[63]:
 
 
 toexclude = ['ExcludeVar1', 'ExcludeVar2']
@@ -417,25 +458,38 @@ with nc.Dataset(f_in) as src, nc.Dataset(f_out, "w") as dst:
 
 # ### Update the Dataset with the new calculated ssa/asym
 
-# In[177]:
+# In[64]:
 
 
 fn = nc.Dataset(f_out,'a')
 
 
-# In[178]:
+# In[65]:
 
 
 fn
 
 
-# In[180]:
+# In[67]:
 
 
-fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
+fn.getncattr('REVISION')
 
 
-# In[191]:
+# In[68]:
+
+
+if vv=='v2':
+    fn.setncattr('REVISION',"R1")
+    fn.setncattr('R1',"Same measurement values as R0. Update to include phase function moments of extrapolated values, and expanded wavelengths")
+    fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-09-21: Expanded wavelengths extrapolation and included phase function moments.\nModified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
+    
+else:
+    fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
+    
+
+
+# In[69]:
 
 
 fn.createDimension('Extrap_wavelength',len(dats[0]['wavelength']))
@@ -444,7 +498,7 @@ fn['Extrap_wavelength'].setncatts({'long_name':'Wavelengths from the extrapolate
 fn['Extrap_wavelength'][:] = dats[0]['wavelength'][:]
 
 
-# In[201]:
+# In[78]:
 
 
 extraps = {}
@@ -453,41 +507,66 @@ extraps = {}
 extraps['n_real'] = {'data':np.array([da['n_real'] for da in dats]),
                      'atts':{'long_name':'Real refractive index, extrapolated in wavelength by Mie calculations',
                              'units':'None',
-                             'history':'Built by Samuel LeBlanc on 2022-09-14'}}
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
 extraps['n_imag'] = {'data':np.array([da['n_imag'] for da in dats]),
                      'atts':{'long_name':'Imaginary refractive index, extrapolated in wavelength by Mie calculations',
                              'units':'None',
-                             'history':'Built by Samuel LeBlanc on 2022-09-14'}}
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
 extraps['qext'] = {'data':np.array([da['qext'] for da in dats]),
                      'atts':{'long_name':'extinction efficiency factor, extrapolated in wavelength by Mie calculations',
                              'units':'cm^3/m^3',
-                             'history':'Built by Samuel LeBlanc on 2022-09-14'}}
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
 extraps['ssa'] = {'data':np.array([da['ssa'] for da in dats]),
                      'atts':{'long_name':'Single Scattering Albedo, extrapolated in wavelength by Mie calculations',
                              'units':'None',
-                             'history':'Built by Samuel LeBlanc on 2022-09-14'}}
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
 extraps['asym'] = {'data':np.array([da['asym'] for da in dats]),
                      'atts':{'long_name':'Asymmetry Parameter, extrapolated in wavelength by Mie calculations',
                              'units':'None',
-                             'history':'Built by Samuel LeBlanc on 2022-09-14'}}
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
+extraps['pmom'] = {'data':np.array([da['pmom'] for da in dats]),
+                     'atts':{'long_name':'Phase function Legendre moments (km) for the phase function(p(µ)) reconstruction using: p(µ) = Sum((2m + 1) · km · Pm(µ)) for m=0 to infinity',
+                             'units':'None',
+                             'history':'Built by Samuel LeBlanc on 2022-09-21'}}
 
 
-# In[205]:
+# In[79]:
+
+
+len(dats[0]['pmom'][0,:])
+
+
+# In[80]:
+
+
+if vv=='v2':
+    fn.createDimension('Extrap_nmom',len(dats[0]['pmom'][0,:]))
+    fn.createVariable('Extrap_nmom','int',('Extrap_nmom'))
+    fn['Extrap_nmom'].setncatts({'long_name':'Moment number for phase function moments','units':'None'})
+    fn['Extrap_nmom'][:] = np.arange(0,len(dats[0]['pmom'][0,:]))
+
+
+# In[81]:
 
 
 for k in extraps:
-    fn.createVariable('Extrap_'+k,'float64',('time','Extrap_wavelength'))
-    fn['Extrap_'+k].setncatts(extraps[k]['atts'])
-    fn['Extrap_'+k][:] = extraps[k]['data']
+    if k == 'pmom':
+        fn.createVariable('Extrap_'+k,'float',('time','Extrap_wavelength','Extrap_nmom'))
+        fn['Extrap_'+k].setncatts(extraps[k]['atts'])
+        fn['Extrap_'+k][:] = extraps[k]['data']
+    else:
+        fn.createVariable('Extrap_'+k,'float64',('time','Extrap_wavelength'))
+        fn['Extrap_'+k].setncatts(extraps[k]['atts'])
+        fn['Extrap_'+k][:] = extraps[k]['data']
 
 
-# In[206]:
+# In[82]:
 
 
 fn
 
 
-# In[207]:
+# In[83]:
 
 
 fn.close()
