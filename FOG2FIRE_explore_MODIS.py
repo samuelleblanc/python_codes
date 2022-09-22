@@ -47,7 +47,7 @@
 
 # # Prepare python environment
 
-# In[37]:
+# In[1]:
 
 
 nomap = True
@@ -64,19 +64,20 @@ from datetime import datetime, timedelta
 import os
 if not nomap:
     from mpl_toolkits.basemap import Basemap
-    get_ipython().magic(u'matplotlib notebook')
+    get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[38]:
+# In[188]:
 
 
 name = 'FOG2FIRE'
 vv = 'v3'
 fp = getpath(name)
-yy = '2020'
+yy = '2003'
+test = True
 
 
-# In[116]:
+# In[19]:
 
 
 import argparse
@@ -90,10 +91,14 @@ parser.add_argument('-y','--year',nargs='?',help='year',default='2020')
 parser.add_argument('-m','--modis',nargs='?',help='MYD or MOD for Terra or Aqua',default='MOD')
 
 
-# In[123]:
+# In[28]:
 
 
-in_ = vars(parser.parse_known_args()[0])
+if test:
+    in_ = vars(parser.parse_args(['-f','-y','2004','-m','MYD']))    
+else:
+    in_ = vars(parser.parse_known_args()[0])
+
 run_cloud = in_.get('cloud',False)
 run_fire = in_.get('fires',False)
 run_smap = in_.get('smap',False)
@@ -101,7 +106,7 @@ yy = in_.get('year').strip()
 modis = in_.get('modis').strip()
 
 
-# In[124]:
+# In[29]:
 
 
 print(in_)
@@ -110,7 +115,7 @@ print(in_)
 # Web link to download the MODIS cloud files  
 # https://ladsweb.modaps.eosdis.nasa.gov/search/order/3/MOD06_L2--61/2004-01-01..2004-12-31/D/-125,47,-115,32.5
 
-# In[119]:
+# In[30]:
 
 
 from osgeo import gdal
@@ -122,7 +127,7 @@ else:
 
 # # Plan out the regions
 
-# In[7]:
+# In[11]:
 
 
 if not nomap:
@@ -143,7 +148,7 @@ if not nomap:
     make_map()
 
 
-# In[120]:
+# In[12]:
 
 
 rgs = [[[32.5,-121.5],[35.5,-117.0]],
@@ -159,7 +164,7 @@ lbls = ['Socal Coast','Socal land','Central coast','Central Sierras',
         'Norcal coast','Northern Sierras','Oregon Coast','Oregon mountains']
 
 
-# In[121]:
+# In[13]:
 
 
 regions = {'ocean':[[[32.5,-131],[35.5,-121.5]],[[35.5,-131.0],[38.5,-123.5]], [[38.5,-131.0],[42.0,-125.0]],[[42.0,-131.0],[47.0,-125.0]]],
@@ -266,19 +271,19 @@ if not nomap:
 
 # ## Load the fire files
 
-# In[346]:
+# In[189]:
 
 
 if run_fire:
     print('listdir')
-    lc_all = os.listdir(fp+'MYD14/')
+    lc_all = os.listdir(fp+'MYD14/{}/'.format(yy))
     lc = [o for o in lc_all if 'A'+yy in o]
     lc.sort()
     nfiles = len(lc)
     ifile = 0
 
 
-# In[347]:
+# In[190]:
 
 
 if run_fire:
@@ -288,7 +293,7 @@ if run_fire:
         if not l.endswith('hdf'): continue
         print('loading file: {}/{}, {}'.format(i,nfiles,l))
         try: 
-            fir,fir_dict = lu.load_hdf_sd(fp+'MYD14/'+l,vals=['FP_longitude','FP_latitude','FP_power'],verbose=False)
+            fir,fir_dict = lu.load_hdf_sd(fp+'MYD14/{}/'.format(yy)+l,vals=['FP_longitude','FP_latitude','FP_power'],verbose=False)
         except ValueError: 
             fir = {'FP_latitude':[],'FP_longitude':[],'FP_power':[]}
         tm = datetime.strptime(l[7:19],'%Y%j.%H%M')
@@ -296,7 +301,7 @@ if run_fire:
         time_fires.append(tm)
 
 
-# In[348]:
+# In[191]:
 
 
 if run_fire:
@@ -317,12 +322,13 @@ if run_fire:
 # In[161]:
 
 
-print('listdir')
-lc_all = os.listdir(fp+'SMAP/{}/'.format(yy))
-lc = [o for o in lc_all if (yy in o) and (o.endswith('h5'))]
-lc.sort()
-nfiles = len(lc)
-ifile = 0
+if run_smap:
+    print('listdir')
+    lc_all = os.listdir(fp+'SMAP/{}/'.format(yy))
+    lc = [o for o in lc_all if (yy in o) and (o.endswith('h5'))]
+    lc.sort()
+    nfiles = len(lc)
+    ifile = 0
 
 
 # In[162]:
@@ -354,7 +360,7 @@ if run_cloud:
     time = np.array(time)
 
 
-# In[163]:
+# In[36]:
 
 
 def stats(lon,lat,data,rg):
@@ -445,7 +451,7 @@ if run_cloud:
 
 # ## Define stats for fire
 
-# In[350]:
+# In[192]:
 
 
 if run_fire:
@@ -483,7 +489,7 @@ if run_smap:
 
 # # Prep for saving
 
-# In[166]:
+# In[193]:
 
 
 if run_cloud:
@@ -494,14 +500,13 @@ if run_smap:
     data = {'SM':soil_moist,'time':smaps_time,'regions':regions,'lbls_rg':lbls_rg}
 
 
-# In[167]:
+# In[194]:
 
 
-import write_utils as wu
 data = wu.iterate_dict_unicode(data)
 
 
-# In[354]:
+# In[195]:
 
 
 if run_cloud: fsuff = '{}06'.format(modis)
