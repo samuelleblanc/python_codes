@@ -56,19 +56,19 @@ get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 
 
-# In[20]:
+# In[2]:
 
 
 import pandas as pd
 
 
-# In[2]:
+# In[3]:
 
 
 from scipy.interpolate import UnivariateSpline
 
 
-# In[3]:
+# In[4]:
 
 
 name = 'FOG2FIRE'
@@ -78,7 +78,7 @@ fp = getpath(name)
 
 # # Load files
 
-# In[4]:
+# In[5]:
 
 
 f = os.listdir(fp)
@@ -86,16 +86,16 @@ f.sort()
 f
 
 
-# In[424]:
+# In[6]:
 
 
-years = ['2002','2003','2004','2005','2006','2007','2008','2009',
+years = ['2003','2004','2005','2006','2007','2008','2009',
          '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021']
 
 
 # ## Load the clouds
 
-# In[425]:
+# In[7]:
 
 
 cld = []
@@ -108,7 +108,7 @@ for y in years:
     cld.append(c)
 
 
-# In[426]:
+# In[8]:
 
 
 cld[1].keys()
@@ -116,10 +116,10 @@ cld[1].keys()
 
 # ## Load the fire counts
 
-# In[438]:
+# In[9]:
 
 
-vy = 'v2'
+vy = 'v3'
 fir = []
 for y in years:
     try:
@@ -130,19 +130,19 @@ for y in years:
     fir.append(i)
 
 
-# In[439]:
+# In[10]:
 
 
-fir[1].keys()
+fir[0].keys()
 
 
-# In[440]:
+# In[11]:
 
 
 print(fir[0]['time'][0])
 
 
-# In[441]:
+# In[12]:
 
 
 for ffi in fir:
@@ -186,7 +186,7 @@ cld[1]['CF']['coast']['mean'].shape
 
 # ## Make smoothing and plotting functions
 
-# In[13]:
+# In[16]:
 
 
 def smooth(x,y,w):
@@ -197,19 +197,19 @@ def smooth(x,y,w):
     return fx(x)
 
 
-# In[14]:
+# In[17]:
 
 
 from scipy.signal import savgol_filter
 
 
-# In[15]:
+# In[18]:
 
 
 import statsmodels.api as sm
 
 
-# In[16]:
+# In[19]:
 
 
 def smooth_l(x,y,w):
@@ -220,7 +220,7 @@ def smooth_l(x,y,w):
     return fx[:,0],fx[:,1]
 
 
-# In[17]:
+# In[20]:
 
 
 def non_uniform_savgol(x, y, window, polynom):
@@ -334,7 +334,7 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-# In[18]:
+# In[21]:
 
 
 def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
@@ -384,7 +384,7 @@ def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
     return smoothed
 
 
-# In[19]:
+# In[22]:
 
 
 def smooth_s(x,y,w=25,p=4):
@@ -398,7 +398,7 @@ def smooth_s(x,y,w=25,p=4):
     return x[igood],yp
 
 
-# In[20]:
+# In[23]:
 
 
 def smooth_g(x,y,s=0.1):
@@ -411,7 +411,7 @@ def smooth_g(x,y,s=0.1):
 
 # ## Plot out the CF time series
 
-# In[434]:
+# In[34]:
 
 
 for j in range(4):
@@ -423,7 +423,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[18]:
+# In[35]:
 
 
 cld[i]['lbls_rg']
@@ -431,7 +431,7 @@ cld[i]['lbls_rg']
 
 # ### Compare singular cloud fraction and soil moisture for particular regions
 
-# In[184]:
+# In[36]:
 
 
 plt.figure()
@@ -470,7 +470,7 @@ plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019.png'.format
 years[i]
 
 
-# In[182]:
+# In[37]:
 
 
 sma[i]
@@ -521,7 +521,7 @@ plt.savefig(fp+'Cloud_fraction_vs_soil_moisture_{}_{}_2017_2018_2019_zoom.png'.f
 
 # ### Compare multiple regions cloud fraction and fire counts
 
-# In[19]:
+# In[38]:
 
 
 plt.figure()
@@ -554,7 +554,7 @@ ax.set_title('US West - '+ rg + ' - '+cld[i]['lbls_rg'][rg][j])
 #plt.savefig(fp+'Cloud_fraction_vs_fire_count_{}_{}_2017_2018_2019.png'.format(rg,cld[i]['lbls_rg'][rg][j]),dpi=600,transparent=True)
 
 
-# In[23]:
+# In[39]:
 
 
 for j in range(4):
@@ -600,7 +600,15 @@ for j in range(4):
 
 # ## Get some statistics for fire and cloudiness
 
-# In[87]:
+# In[45]:
+
+
+for i in range(0,19):
+    fir[i]['thresholds'] = {}
+    fir[i]['doy'] = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in fir[i]['time']]
+
+
+# In[44]:
 
 
 #fir_times = [{}] # timing stats that indicate max, above background timing, and threhold limits for each year.
@@ -658,7 +666,7 @@ for i in range(1,19):
         for j,l in enumerate(cld[i]['lbls_rg'][rg]):
             def doy_at(x):
                 try:
-                    i_sub = np.argmin(abs(cld[i]['CF'][rg]['mean'][:,j])-x))
+                    i_sub = np.argmin(abs(cld[i]['CF'][rg]['mean'][:,j])-x)
                     return cld[i]['doy'][i_sub]
                 except:
                     return np.nan
@@ -692,13 +700,13 @@ for i in range(1,19):
 
 # ## CF Histogram for each region
 
-# In[120]:
+# In[42]:
 
 
 txts = ['Oregon','NorCal','Central','SoCal']
 
 
-# In[105]:
+# In[43]:
 
 
 cf = {}
@@ -706,7 +714,7 @@ for u in ['ocean','coast','land']:
     cf[u] = [[],[],[],[]]
 
 
-# In[106]:
+# In[44]:
 
 
 for u in ['ocean','coast','land']:
@@ -717,7 +725,7 @@ for u in ['ocean','coast','land']:
         cf[u][j] = np.hstack(cf[u][j])
 
 
-# In[142]:
+# In[45]:
 
 
 fig,axs = plt.subplots(4,1,sharex=True,figsize=(5,3))
@@ -732,12 +740,12 @@ for j,ax in enumerate(axs):
     else:
         ax.text(0.4,1000,txts[j])
 plt.tight_layout(h_pad=-0.2)
-plt.savefig(fp+'FOG2FIRE_CF_histogram.png',dpi=600,transparent=True)
+plt.savefig(fp+'FOG2FIRE_CF_histogram_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # ## Time series of CF and fire count
 
-# In[204]:
+# In[48]:
 
 
 fig, ax = plt.subplots(4,3,figsize=(9,5.0))
@@ -803,10 +811,10 @@ for j in range(4):
         ax[j,1].set_title('Coast')
         ax[j,2].set_title('Land')
     plt.tight_layout(rect=(0,0,0.98,1),h_pad=-10.0,w_pad=0.0)
-plt.savefig(fp+'FOG2FIRE_cumCF_fire_counts.png',dpi=600,transparent=True)
+plt.savefig(fp+'FOG2FIRE_cumCF_fire_counts_{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[190]:
+# In[49]:
 
 
 for j in range(4):    
@@ -836,13 +844,13 @@ for j in range(4):
                         print('.','....',t,'fir:[35]',doyf[np.where(iff2)[0][0]])
 
 
-# In[284]:
+# In[50]:
 
 
 dy = [int(yy) for yy in years]
 
 
-# In[321]:
+# In[51]:
 
 
 top_fires_doy = np.zeros((len(fir),3,4,10))+np.nan #top 10 fire days
@@ -858,39 +866,39 @@ for i,fi in enumerate(fir):
                     top_fires_num[i,ic,ir,:] = np.flip(fnum[ia[-10:],ir])
 
 
-# In[312]:
+# In[52]:
 
 
 plt.figure()
 plt.plot(dy,top_fires_doy[:,1,3,2],'.')
 
 
-# In[309]:
+# In[53]:
 
 
 any(fi['FP'][c]['num'][:,ir]>0.0)
 
 
-# In[315]:
+# In[54]:
 
 
 dy[4]
 
 
-# In[314]:
+# In[55]:
 
 
 plt.figure()
 plt.plot(fir[4]['doy'],fir[4]['FP']['coast']['num'][:,3],'.')
 
 
-# In[281]:
+# In[56]:
 
 
 top_fires_doy
 
 
-# In[234]:
+# In[57]:
 
 
 from Sp_parameters import deriv, smooth
@@ -898,7 +906,7 @@ import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
 
 
-# In[238]:
+# In[59]:
 
 
 for j in range(4):
@@ -942,18 +950,18 @@ for j in range(4):
     ax[0].set_title('Ocean')
     ax[1].set_title('Coast')
     ax[2].set_title('Land')
-    plt.tight_layout()
+    #plt.tight_layout()
 
 
 # # Build timeseries using pandas
 
-# In[431]:
+# In[60]:
 
 
 cld[1]['lbls_rg']
 
 
-# In[450]:
+# In[61]:
 
 
 i = 17
@@ -979,7 +987,7 @@ for i in range(1,19):
     fir_counts = np.append(fir_counts,fir[i]['FP'][rg]['num'][:,j])
 
 
-# In[451]:
+# In[62]:
 
 
 i = 17
@@ -998,13 +1006,13 @@ for i in range(1,19):
     cloud_cumdevoc = np.append(cloud_cumdev,cld[i]['CF'][rg]['dev'][:,j])
 
 
-# In[452]:
+# In[63]:
 
 
 len(fire_doy),len(fir_counts),len(cloud_cumdev),len(cloud_doy)
 
 
-# In[465]:
+# In[64]:
 
 
 fire = pd.DataFrame(data=fir_counts)
@@ -1013,13 +1021,13 @@ fire['counts'] = fir_counts
 fire.set_index('time', inplace = True)
 
 
-# In[470]:
+# In[65]:
 
 
 del  fire[0]
 
 
-# In[476]:
+# In[66]:
 
 
 cloud = pd.DataFrame(data=cloud_cumdev)
@@ -1029,7 +1037,7 @@ cloud.set_index('timecl', inplace = True)
 del cloud[0]
 
 
-# In[477]:
+# In[67]:
 
 
 cloudoc = pd.DataFrame(data=cloud_cumdevoc)
@@ -1039,20 +1047,20 @@ cloudoc.set_index('timeoc', inplace = True)
 del cloudoc[0]
 
 
-# In[492]:
+# In[68]:
 
 
 df = pd.concat([cloud, cloudoc, fire]).sort_index().interpolate()
 df = df.reindex(df.index)
 
 
-# In[493]:
+# In[69]:
 
 
 df
 
 
-# In[494]:
+# In[70]:
 
 
 df.dropna(inplace=True)
@@ -1060,34 +1068,34 @@ dfd = df.resample('D').mean()
 dfd.interpolate(inplace=True)
 
 
-# In[495]:
+# In[71]:
 
 
 df.plot()
 
 
-# In[496]:
+# In[72]:
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
-# In[148]:
+# In[73]:
 
 
 result_cloud = seasonal_decompose(dfd['cumdev'])
 result_cloud.plot()
 
 
-# In[149]:
+# In[74]:
 
 
 result_fire = seasonal_decompose(dfd['counts'])
 result_fire.plot()
 
 
-# In[154]:
+# In[75]:
 
 
 fig, ax = plt.subplots(figsize = (4,2))
@@ -1097,7 +1105,7 @@ plot_acf(dfd['cumdev'], ax = ax)
 plt.show()
 
 
-# In[156]:
+# In[76]:
 
 
 fig, ax = plt.subplots(figsize = (4,2))
@@ -1109,7 +1117,7 @@ plt.show()
 
 # ## Use DARTS
 
-# In[497]:
+# In[77]:
 
 
 from darts import TimeSeries
@@ -1117,7 +1125,7 @@ import darts.models as dmo
 import darts.metrics as dme
 
 
-# In[498]:
+# In[78]:
 
 
 def plot_backtest(series, forecast, model_name,idx=-144):
@@ -1147,13 +1155,13 @@ def print_metrics(series, forecast, model_name):
     return(df.round(decimals = 2))  
 
 
-# In[499]:
+# In[79]:
 
 
 dfd.keys()
 
 
-# In[500]:
+# In[80]:
 
 
 firs = pd.DataFrame(dfd['counts'])
@@ -1161,7 +1169,7 @@ clds = pd.DataFrame(dfd['cumdev'])
 cldo = pd.DataFrame(dfd['cumdevoc'])
 
 
-# In[501]:
+# In[81]:
 
 
 series_fire = TimeSeries.from_dataframe(firs)
@@ -1172,14 +1180,14 @@ start = pd.Timestamp('010103')
 df_metrics = pd.DataFrame()
 
 
-# In[502]:
+# In[82]:
 
 
 series_cld_tr,_ = series_cld.split_before(0.75)
 series_cldoc_tr,_ = series_cldoc.split_before(0.75)
 
 
-# In[503]:
+# In[83]:
 
 
 series_train,_ = series_fire.split_before(0.75)
@@ -1187,7 +1195,7 @@ nfore = len(_)
 ntrain = len(series_train)
 
 
-# In[207]:
+# In[84]:
 
 
 def eval_model(model, past_covariates=None, future_covariates=None,nfore=1645):
@@ -1259,7 +1267,7 @@ backtest.plot(label='forecast')
 
 # ### Add covariate
 
-# In[504]:
+# In[85]:
 
 
 brnn_wi_cov = dmo.BlockRNNModel(input_chunk_length=30, 
@@ -1267,7 +1275,7 @@ brnn_wi_cov = dmo.BlockRNNModel(input_chunk_length=30,
                              n_rnn_layers=2)
 
 
-# In[506]:
+# In[86]:
 
 
 brnn_wi_cov.fit(series_train, 
@@ -1276,7 +1284,7 @@ brnn_wi_cov.fit(series_train,
                  verbose=True)
 
 
-# In[507]:
+# In[87]:
 
 
 backtest_wi = brnn_wi_cov.historical_forecasts(series=series_fire, retrain=False,
@@ -1284,7 +1292,7 @@ backtest_wi = brnn_wi_cov.historical_forecasts(series=series_fire, retrain=False
                                           forecast_horizon=10,start=0.75)
 
 
-# In[508]:
+# In[88]:
 
 
 plt.figure()
@@ -1293,7 +1301,7 @@ series_fire.plot(label='original fire counts')
 backtest_wi.plot(label='backtest fire counts')
 
 
-# In[509]:
+# In[89]:
 
 
 def get_start_fire(series_fire,threshold_val=5,month_start=6):
@@ -1310,37 +1318,37 @@ def get_start_fire(series_fire,threshold_val=5,month_start=6):
     return fir_start
 
 
-# In[510]:
+# In[90]:
 
 
 fir_start = get_start_fire(series_fire)
 
 
-# In[511]:
+# In[91]:
 
 
 fir_start_for = get_start_fire(backtest_wi)
 
 
-# In[512]:
+# In[92]:
 
 
 fir_start
 
 
-# In[513]:
+# In[93]:
 
 
 fir_start_for
 
 
-# In[514]:
+# In[94]:
 
 
 backtest_wi.values()[backtest_wi.values()<0] = 0.0
 
 
-# In[515]:
+# In[95]:
 
 
 print_metrics(series_fire,backtest_wi,brnn_wi_cov.model_params['model'])
@@ -1348,14 +1356,14 @@ print_metrics(series_fire,backtest_wi,brnn_wi_cov.model_params['model'])
 
 # ### covariates with TCN model
 
-# In[518]:
+# In[96]:
 
 
 tcn_wi_cov = dmo.TCNModel(input_chunk_length=30, 
                              output_chunk_length=10)
 
 
-# In[520]:
+# In[97]:
 
 
 tcn_wi_cov.fit(series_train, 
@@ -1364,7 +1372,7 @@ tcn_wi_cov.fit(series_train,
                  verbose=True)
 
 
-# In[521]:
+# In[98]:
 
 
 backtest_wi_tcn = tcn_wi_cov.historical_forecasts(series=series_fire, retrain=False,
@@ -1372,7 +1380,7 @@ backtest_wi_tcn = tcn_wi_cov.historical_forecasts(series=series_fire, retrain=Fa
                                           forecast_horizon=10,start=0.75)
 
 
-# In[529]:
+# In[100]:
 
 
 plt.figure()
@@ -1382,19 +1390,13 @@ backtest_wi_tcn.plot(label='backtest fire counts')
 plt.title('TCN forecast model')
 
 
-# In[ ]:
-
-
-
-
-
-# In[560]:
+# In[101]:
 
 
 series_fire['counts'].values()
 
 
-# In[563]:
+# In[102]:
 
 
 plt.figure()
@@ -1402,25 +1404,25 @@ plt.hist(series_fire['counts'].values(),bins=50)
 plt.yscale('log')
 
 
-# In[523]:
+# In[103]:
 
 
 fir_start_fortcn = get_start_fire(backtest_wi_tcn)
 
 
-# In[527]:
+# In[104]:
 
 
 fir_start_fortcn
 
 
-# In[528]:
+# In[105]:
 
 
 fir_start
 
 
-# In[526]:
+# In[106]:
 
 
 print_metrics(series_fire,backtest_wi_tcn,'TCN')
@@ -1428,7 +1430,7 @@ print_metrics(series_fire,backtest_wi_tcn,'TCN')
 
 # ## Build binary time series of fire events
 
-# In[599]:
+# In[107]:
 
 
 month_start=6
@@ -1437,25 +1439,25 @@ num_bins,bins_rg = np.histogram(series_fire.values(),bins=200)
 ij = (series_fire.values() > bins_rg[2])[:,0] & (series_fire.time_index.month>=month_start)
 
 
-# In[595]:
+# In[108]:
 
 
 num_bins,bins_rg = np.histogram(series_fire.values(),bins=200)
 
 
-# In[598]:
+# In[109]:
 
 
 bins_rg[2]
 
 
-# In[591]:
+# In[110]:
 
 
 mean_start
 
 
-# In[601]:
+# In[111]:
 
 
 plt.figure()
@@ -1464,7 +1466,7 @@ series_fire.plot()
 plt.plot(series_fire.time_index[ij],np.where(ij)[0]*0+3.0,'x')
 
 
-# In[676]:
+# In[112]:
 
 
 bools = series_fire.values()
@@ -1472,7 +1474,7 @@ bools[ij,0] = 1.0
 bools[~ij,0] = 0.0
 
 
-# In[687]:
+# In[113]:
 
 
 bools_df = pd.DataFrame(data=bools)
@@ -1482,25 +1484,25 @@ bools_df.set_index('time', inplace = True)
 del bools_df[0]
 
 
-# In[688]:
+# In[114]:
 
 
 sfb = TimeSeries.from_dataframe(bools_df)
 
 
-# In[689]:
+# In[115]:
 
 
 sfb.components
 
 
-# In[690]:
+# In[116]:
 
 
 series_fire_bool.stack(sfb)
 
 
-# In[692]:
+# In[117]:
 
 
 plt.figure()
@@ -1509,7 +1511,7 @@ sfb.plot()
 
 # #### Train binary model
 
-# In[695]:
+# In[118]:
 
 
 series_train_bool,_ = sfb.split_before(0.75)
@@ -1517,14 +1519,14 @@ nfore = len(_)
 ntrain = len(series_train_bool)
 
 
-# In[694]:
+# In[119]:
 
 
 tcn_wi_cov2 = dmo.TCNModel(input_chunk_length=40, 
                              output_chunk_length=20)
 
 
-# In[696]:
+# In[120]:
 
 
 tcn_wi_cov2.fit(series_train_bool, 
@@ -1533,7 +1535,7 @@ tcn_wi_cov2.fit(series_train_bool,
                  verbose=True)
 
 
-# In[697]:
+# In[121]:
 
 
 backtest_wi_tcn2 = tcn_wi_cov2.historical_forecasts(series=sfb, retrain=False,
@@ -1541,7 +1543,7 @@ backtest_wi_tcn2 = tcn_wi_cov2.historical_forecasts(series=sfb, retrain=False,
                                           forecast_horizon=20,start=0.5)
 
 
-# In[698]:
+# In[122]:
 
 
 plt.figure()
@@ -1647,8 +1649,154 @@ plt.title('Random Forest binary forecast model')
 a
 
 
+# # Run through manually each time series
+
+# ## Fire counts
+
+# In[53]:
+
+
+import ipywidgets as widgets
+from IPython.display import display
+from mpl_point_clicker import clicker
+
+
+# In[176]:
+
+
+def onclick(event):
+    ix, iy = event.xdata, event.ydata
+    global time
+    time = ix
+    return
+
+
+# In[196]:
+
+
+def plot_fir(i=0,lbl='land'):
+    n = len(fir[i]['regions'][lbl])
+    fig,ax = plt.subplots(n,1,figsize=[8,9])
+    # Call click func
+    #cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    klicker = []
+    for j in range(n):
+        ax[j].plot(fir[i]['doy'],fir[i]['FP'][lbl]['num'][:,j],'.-b')
+        ax[j].set_title(lbl+': '+fir[i]['lbls_rg'][lbl][j])
+        ax[j].axhline(15,color='lightgrey',linestyle='--')    
+        #klicker.append(clicker(ax[j],["start", "peak", "end"], markers=["o", "x", "*"]))
+    plt.show()
+    plt.tight_layout(rect=(0,0,0.9,1))
+
+
+# In[197]:
+
+
+def plotnext(b):
+    #fire_times[dd] = [k.get_positions()[0] for k in klicker] 
+    sl.value = sl.value +1
+    if sl.value > 5:
+        fig.canvas.mpl_disconnect('button_press_event')
+
+def plot_update(b):
+    fig = plot_fir()
+
+
+# In[201]:
+
+
+button1 = widgets.Button(description="Next")
+dd = widgets.Dropdown(options=fir[0]['FP'].keys())
+sl = widgets.IntSlider(value=0,min=0,max=len(fir),step=1)
+#out = widgets.Output()
+
+#buttons = widgets.VBox(children=[button1,button2, dd])
+#all_widgets = widgets.HBox(children=[buttons, out])
+#display(all_widgets)
+#fire_times = {}
+
+
+    
+    
+button1.on_click(plotnext)
+widgets.interact(plot_fir, lbl = dd, i=sl, __output_result=True)
+
+
+
+display(button1)
+#with out:
+#    fig = plot_fir()
+    #fig.show()
+
+
+# ## Filter for fire onset
+
+# In[46]:
+
+
+au = np.where(fir[0]['FP']['coast']['num'][:,0]>20)[0]
+
+
+# In[69]:
+
+
+# prep the arrays
+fire_times = []
+for i in range(len(fir)):
+    fire_times.append({})
+
+
+# In[73]:
+
+
+lbl = 'coast'
+irg = 0 
+
+
+# In[58]:
+
+
+kl = []
+for i,fi in list(enumerate(fir)):
+    plt.figure(figsize=(12,4))
+    plt.plot(fi['time'],fi['FP'][lbl]['num'][:,irg],'.-')
+    plt.axhline(15,linestyle='--',color='lightgrey')
+    kl.append(clicker(plt.gca(),["start", "peak", "end"], markers=["o", "x", "*"]))
+    plt.tight_layout(rect=(0,0,0.95,1))
+    plt.title(lbl)
+
+
+# In[62]:
+
+
+kl[0].get_positions()
+
+
+# In[84]:
+
+
+for i in range(len(fir)):
+    if not lbl in fire_times[i]: 
+        fire_times[i][lbl] = []
+        for j in range(len(fir[i]['FP'][lbl]['num'][0,:])):
+            fire_times[i][lbl].append([])
+    fire_times[i][lbl][irg] = kl[i].get_positions()
+
+
+# In[85]:
+
+
+fire_times
+
+
+# In[86]:
+
+
+fp
+
+
 # In[ ]:
 
 
-
+np.save()
 
