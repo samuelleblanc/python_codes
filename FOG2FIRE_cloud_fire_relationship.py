@@ -62,10 +62,11 @@ import os
 import pandas as pd
 
 
-# In[3]:
+# In[247]:
 
 
 from scipy.interpolate import UnivariateSpline
+from datetime import datetime
 
 
 # In[4]:
@@ -411,7 +412,7 @@ def smooth_g(x,y,s=0.1):
 
 # ## Plot out the CF time series
 
-# In[34]:
+# In[180]:
 
 
 for j in range(4):
@@ -1731,12 +1732,6 @@ display(button1)
 
 # ## Filter for fire onset
 
-# In[46]:
-
-
-au = np.where(fir[0]['FP']['coast']['num'][:,0]>20)[0]
-
-
 # In[69]:
 
 
@@ -1746,33 +1741,27 @@ for i in range(len(fir)):
     fire_times.append({})
 
 
-# In[73]:
+# In[170]:
 
 
-lbl = 'coast'
-irg = 0 
+lbl = 'points'
+irg = 5
 
 
-# In[58]:
+# In[171]:
 
 
 kl = []
 for i,fi in list(enumerate(fir)):
-    plt.figure(figsize=(12,4))
+    plt.figure(figsize=(17,4))
     plt.plot(fi['time'],fi['FP'][lbl]['num'][:,irg],'.-')
-    plt.axhline(15,linestyle='--',color='lightgrey')
+    plt.axhline(10,linestyle='--',color='lightgrey')
     kl.append(clicker(plt.gca(),["start", "peak", "end"], markers=["o", "x", "*"]))
-    plt.tight_layout(rect=(0,0,0.95,1))
+    plt.tight_layout(rect=(0,0,0.96,1))
     plt.title(lbl)
 
 
-# In[62]:
-
-
-kl[0].get_positions()
-
-
-# In[84]:
+# In[172]:
 
 
 for i in range(len(fir)):
@@ -1783,20 +1772,188 @@ for i in range(len(fir)):
     fire_times[i][lbl][irg] = kl[i].get_positions()
 
 
-# In[85]:
+# In[173]:
 
 
-fire_times
+np.save(fp+'fire_times_manual.npy',fire_times,allow_pickle=True)
 
 
-# In[86]:
+# In[117]:
 
 
-fp
+fire_times_from_save = np.load(fp+'fire_times_manual.npy',allow_pickle=True)
+
+
+# In[174]:
+
+
+fire_times[0]
+
+
+# ## Identify the cloud fraction decreases
+
+# In[175]:
+
+
+for c in cld:
+    doy = [t.timetuple().tm_yday+t.hour/24.0+t.minute/3600.0 for t in c['time']]
+    c['doy'] = np.array(doy)
+
+
+# In[176]:
+
+
+cld[0].keys()
+
+
+# In[177]:
+
+
+cld[0]['lbls_rg']['points']
+
+
+# In[179]:
+
+
+cld[0]['CF']['coast'].keys()
+
+
+# In[203]:
+
+
+cl = cld[0]
+rg = 'coast'
+delta_days = int(len(cl['doy'])/cl['doy'].max() *5)
+min_doy = 100.0
+
+plt.figure()
+
+for j in range(4):
+
+    point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['dev'][:-delta_days,j])) if (cl['CF'][rg]['dev'][i:i+delta_days,j]<0).all() & (cl['doy'][i]> min_doy)][0]
+    plt.plot(cl['doy'],cl['CF'][rg]['dev'][:,j],'.')
+    plt.plot(cl['doy'][point_CF_low],cl['CF'][rg]['dev'][point_CF_low,j],'x')
+    
+plt.axhline(0)
+
+
+# In[219]:
+
+
+for cl in cld: #years
+    delta_days = int(len(cl['doy'])/cl['doy'].max() *5)
+    min_doy = 100.0
+    for rg in cl['CF'].keys():
+        cl['CF'][rg]['i_CFlow'] = np.zeros((cl['CF'][rg]['mean'].shape[1]))
+        for j in range(cl['CF'][rg]['mean'].shape[1]):
+            if not 'dev' in  cl['CF'][rg]:
+                cl['CF'][rg]['dev'] = np.zeros_like(cl['CF'][rg]['mean']) 
+                cl['CF'][rg]['dev'][:,j] = np.nancumsum(cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j]))
+            
+            pp = [i for i,c in list(enumerate(cl['CF'][rg]['dev'][:-delta_days,j])) if (cl['CF'][rg]['dev'][i:i+delta_days,j]<0).all() & (cl['doy'][i]> min_doy)]
+            cl['CF'][rg]['i_CFlow'][j] = pp[0] if pp else 0
+            
+
+
+# ## Calculate the time difference between fire start (and peak) and cloud decrease
+
+# In[254]:
+
+
+to_days = lambda x: (x-datetime(1970,1,1)).days
+
+
+# In[253]:
+
+
+to_days(cl['time'][0])-fire_times[0][rg][0]['start'][:,0]
+
+
+# In[348]:
+
+
+# ensure that the points in fire_times are all related
+max_num_fires_in_a_year = 0
+fire_times_sorted = []
+for fi in fire_times:
+    tmp = {}
+    for k in fi:
+        tmp[k] = []
+        for ns in fi[k]:
+            if not ns:
+                tmp[k].append([])
+                continue
+            ist_sort = np.argsort(ns['start'],axis=0)
+            ipk_sort = np.argsort(ns['peak'],axis=0)
+            ind_sort = np.argsort(ns['end'],axis=0)
+                                  
+            tmp[k].append({'start':ns['start'][ist_sort[:,0]],'peak':ns['peak'][ipk_sort[:,0]],'end':ns['end'][ind_sort[:,0]]}) 
+            max_num_fires_in_a_year = max_num_fires_in_a_year if len(ist_sort)<max_num_fires_in_a_year else len(ist_sort)
+    fire_times_sorted.append(tmp)
+    
+
+
+# In[349]:
+
+
+max_num_fires_in_a_year
+
+
+# In[339]:
+
+
+fi[k][0]['start'][:,0]
+
+
+# In[357]:
+
+
+nyears = len(fire_times_sorted)
+diff_CF_start = {}
+diff_CF_peak = {}
+diff_CF_end = {}
+peaks = {}
+
+for i,fi in list(enumerate(fire_times_sorted)):
+    for rg in fi:
+        num_ns = len(fi[rg])
+        if not rg in diff_CF_start:
+            diff_CF_start[rg] =  np.zeros((nyears,num_ns,max_num_fires_in_a_year))-999.0
+            diff_CF_peak[rg] = np.zeros((nyears,num_ns,max_num_fires_in_a_year))-999.0
+            diff_CF_end[rg] = np.zeros((nyears,num_ns,max_num_fires_in_a_year))-999.0
+            peaks[rg] = np.zeros((nyears,num_ns,max_num_fires_in_a_year))-999.0
+        for j,ns in list(enumerate(fi[rg])):
+            if not ns: 
+                continue
+            CF_days = to_days(cld[i]['time'][int(cld[i]['CF'][rg]['i_CFlow'][j])])
+            ns['diff_CF_to_start'] = ns['start'][:,0] - CF_days
+            ns['diff_CF_to_peak'] = ns['peak'][:,0] - CF_days
+            ns['diff_CF_to_end'] = ns['end'][:,0] - CF_days
+            diff_CF_start[rg][i,j,:len(ns['start'][:,0])] = ns['diff_CF_to_start']
+            diff_CF_peak[rg][i,j,:len(ns['peak'][:,0])] = ns['diff_CF_to_peak']
+            diff_CF_end[rg][i,j,:len(ns['end'][:,0])] = ns['diff_CF_to_end']
+            peaks[rg][i,j,:len(ns['peak'][:,0])] = ns['peak'][:,1]
+
+
+# In[364]:
+
+
+for rg in fi:
+    diff_CF_start[rg] = np.ma.array(diff_CF_start[rg],mask=(diff_CF_start[rg]<-800))
+    diff_CF_peak[rg] = np.ma.array(diff_CF_peak[rg],mask=(diff_CF_peak[rg]<-800))
+    diff_CF_end[rg] = np.ma.array(diff_CF_end[rg],mask=(diff_CF_end[rg]<-800))
+    peaks[rg] = np.ma.array(peaks[rg],mask=(peaks[rg]<-800))
+
+
+# In[373]:
+
+
+plt.figure()
+plt.plot(diff_CF_start['coast'][:,0,:].T,peaks['coast'][:,0,:].T,'.')
 
 
 # In[ ]:
 
 
-np.save()
+
 
