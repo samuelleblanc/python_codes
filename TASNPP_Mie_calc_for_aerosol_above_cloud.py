@@ -571,3 +571,104 @@ fn
 
 fn.close()
 
+
+# # Calculate the phase functions
+
+# In[88]:
+
+
+import subprocess
+
+
+# In[101]:
+
+
+base = 'mie_ORACLES2016_expansion_{}'.format(vv)
+f_list = fp_rtm+base+'_list_for_phase.sh'
+with open(f_list,'w') as f:
+    for it,tt in list(enumerate(ae[b'time'])):
+        basename = base+'_{:03.0f}'.format(it)
+        # loop through and copy file to delete first line
+        for i,w in list(enumerate(wave_out)):
+            if i==0:
+                subprocess.call("sed '/^$/d' "+fp_rtm+basename+".out > "+fp_rtm+basename+"_w{:1.0f}.out".format(i),shell=True) # remove empty lines
+            else:
+                subprocess.call("sed '1d' "+fp_rtm+basename+"_w{:1.0f}.out > ".format(i-1)+fp_rtm+basename+"_w{:1.0f}.out".format(i),shell=True)
+            f.write('{bin_path}phase {inp} > {out}\n'.format(bin_path=fp_bin,inp=fp_rtm+basename+'_w{:1.0f}.out'.format(i),out=fp_rtm+basename+'_phase_w{:1.0f}.out'.format(i)))
+
+
+# In[87]:
+
+
+wave_out
+
+
+# In[102]:
+
+
+get_ipython().system('parallel --jobs=22 --bar < $f_list')
+
+
+# ## Read the output phase function files
+
+# In[ ]:
+
+
+ph1 = np.genfromtxt(fp_rtm+basename+'_phase_w{:1.0f}.out'.format(i))
+
+
+# In[122]:
+
+
+phase = np.zeros((len(ae[b'time']),len(wave_out),len(ph1[:,0])))+np.nan
+iphase = np.zeros((len(ae[b'time']),len(wave_out),len(ph1[:,0])))+np.nan
+mu = ph1[:,0]
+scat_angle = np.arccos(mu)*180.0/np.pi
+
+
+# In[123]:
+
+
+base = 'mie_ORACLES2016_expansion_{}'.format(vv)
+for it,tt in list(enumerate(ae[b'time'])):
+    basename = base+'_{:03.0f}'.format(it)
+    for i,w in list(enumerate(wave_out)):
+        ph = np.genfromtxt(fp_rtm+basename+'_phase_w{:1.0f}.out'.format(i))
+        phase[it,i,:] = ph[:,1]
+        iphase[it,i,:] = ph[:,2]
+
+
+# In[125]:
+
+
+phase.shape
+
+
+# In[129]:
+
+
+from mpltools import color
+
+
+# In[131]:
+
+
+for i,w in list(enumerate(wave_out)):
+    plt.figure()
+    color.cycle_cmap(len(ae[b'time']),cmap=plt.cm.viridis,ax=plt.gca())
+    plt.plot(scat_angle,phase[:,i,:].T)
+    plt.xlabel('Scattering Angle [deg]')
+    plt.ylabel('Phase function')
+    plt.yscale('log')
+    plt.title('Wavelength: {:4.1f} nm'.format(w))
+
+    scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.viridis)
+    scalarmap.set_array(range(len(ae[b'time'])))
+    cba = plt.colorbar(scalarmap,label='skyscan number')
+
+
+# In[ ]:
+
+
+
+
