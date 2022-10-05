@@ -61,11 +61,11 @@ import scipy.interpolate as si
 import netCDF4 as nc
 
 
-# In[21]:
+# In[164]:
 
 
 name = 'sunsat_ORACLES2016'
-vv = 'v2'
+vv = 'v3'
 fp = getpath(name)
 
 
@@ -109,10 +109,122 @@ ae,ae_dict = lu.load_netcdf(f,everything=True)
 len(ae[b'time'])
 
 
-# In[11]:
+# In[9]:
 
 
 ae_dict[b'scan_tag']
+
+
+# In[10]:
+
+
+ae[b'scan_tag']
+
+
+# ## Extra meta information
+
+# In[14]:
+
+
+sk_meta = sio.loadmat(fp+'data_processed/starskies/skyscans_ORACLES2016_moredata.mat')
+
+
+# In[16]:
+
+
+sk_meta.keys()
+
+
+# In[18]:
+
+
+sk_meta['skyscans_meta'].shape
+
+
+# In[68]:
+
+
+sk_meta['skyscans_qcflags'].shape
+
+
+# In[55]:
+
+
+sk_meta['skyscan_vars'][0]
+
+
+# In[44]:
+
+
+sk_meta['skyscans_meta'][0,:]
+
+
+# In[47]:
+
+
+sk_meta['skyscans_all'].shape
+
+
+# In[191]:
+
+
+sk_meta['skyscans_all'][0,24]
+
+
+# In[64]:
+
+
+sk_meta['days'] = [dd[0][0] for dd in sk_meta['skyscans_all'][:,0]]
+
+
+# In[66]:
+
+
+sk_meta['filenum'] = [dd[0][0] for dd in sk_meta['skyscans_all'][:,1]]
+
+
+# ## Map the extra meta information to the skyscans in the file
+
+# In[69]:
+
+
+ae[b'scan_tag']
+
+
+# In[87]:
+
+
+from datetime import datetime
+
+
+# In[118]:
+
+
+days = []
+for t in ae[b'time']:
+    x =  datetime.fromtimestamp(datetime(2016,8,31).timestamp()+t)
+    days.append(x.year*10000+x.month*100+x.day)
+
+
+# In[120]:
+
+
+days
+
+
+# In[161]:
+
+
+qc_flags = [4.0]*len(days)
+for i,da in list(enumerate(days)):
+    ig = [(da==dk)&(int(ae[b'scan_tag'][i])==sk_meta['filenum'][j]) for j,dk in enumerate(sk_meta['days'])] 
+    if any(ig): qc_flags[i] = (sk_meta['skyscans_qcflags'][ig][0][0])
+
+
+# In[163]:
+
+
+qc_flags
 
 
 # # Run through each retrieval and make input files
@@ -415,26 +527,26 @@ plt.savefig(fpt+'ASYM_mie_extrapolation_ORACLES2016_{}.png'.format(vv),dpi=600,t
 
 # ### Copy file data and attributes from older one
 
-# In[61]:
+# In[184]:
 
 
 fpt = '/data/sam/TASNPP/ORACLES_aerosol_prop/'
-f_out = fpt + '4STAR-aeroinv_mie_wavelength_expansion_P3_2016_R1.nc'
+f_out = fpt + '4STAR-aeroinv_mie_wavelength_expansion_P3_2016_R2.nc'
 
 
-# In[84]:
+# In[185]:
 
 
 f_out
 
 
-# In[62]:
+# In[186]:
 
 
-f_in = fp + 'data_archival/AEROINV_nc_R0/NC_FORMAT_NETCDF4_CLASSIC/4STAR-aeroinv_P3_2016_R0.nc'
+f_in = fpt +  '4STAR-aeroinv_mie_wavelength_expansion_P3_2016_R1.nc'
 
 
-# In[63]:
+# In[187]:
 
 
 toexclude = ['ExcludeVar1', 'ExcludeVar2']
@@ -458,32 +570,36 @@ with nc.Dataset(f_in) as src, nc.Dataset(f_out, "w") as dst:
 
 # ### Update the Dataset with the new calculated ssa/asym
 
-# In[64]:
+# In[195]:
 
 
 fn = nc.Dataset(f_out,'a')
 
 
-# In[65]:
+# In[196]:
 
 
 fn
 
 
-# In[67]:
+# In[197]:
 
 
 fn.getncattr('REVISION')
 
 
-# In[68]:
+# In[198]:
 
 
 if vv=='v2':
     fn.setncattr('REVISION',"R1")
     fn.setncattr('R1',"Same measurement values as R0. Update to include phase function moments of extrapolated values, and expanded wavelengths")
     fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-09-21: Expanded wavelengths extrapolation and included phase function moments.\nModified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
-    
+elif vv=='v3':
+    fn.setncattr('REVISION',"R2")
+    fn.setncattr('R1',"Same measurement values as R0. Update to include phase function moments of extrapolated values, and expanded wavelengths")
+    fn.setncattr('R2',"Same measurement and expanded phase moments and extrapolated values from R1. Update to include QC flags from Pistone et al.")
+    fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-10-04: Added QC flags from Pistone et al., 2019 .\n Modified By Samuel LeBlanc, 2022-09-21: Expanded wavelengths extrapolation and included phase function moments.\nModified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
 else:
     fn.setncattr('History',"Modified By Samuel LeBlanc, 2022-09-14, to add wavelength-extrapolated SSA and Asymmetry Parameter, using Mie calculations of size distribution and extrapolated index of refraction")
     
@@ -560,13 +676,29 @@ for k in extraps:
         fn['Extrap_'+k][:] = extraps[k]['data']
 
 
-# In[82]:
+# In[199]:
+
+
+if vv=='v3':
+    k = 'QC_flags'
+    extraps = {}
+    extraps['QC_flags'] = {'data':qc_flags,
+                     'atts':{'long_name':'QC of flags, lower is better. From Pistone et al., published on QC values below 1. evaluated on AOD_400>0.2, max scattering angle measured larger than 90, and low mean sky error (below~5)',
+                             'units':'None',
+                             'history':'Built by Pistone et al., and incorporated into file on 2022-10-04'}}
+
+    fn.createVariable('QC_flags','float',('time'))
+    fn['QC_flags'].setncatts(extraps[k]['atts'])
+    fn['QC_flags'][:] = extraps[k]['data']
+
+
+# In[200]:
 
 
 fn
 
 
-# In[83]:
+# In[201]:
 
 
 fn.close()
