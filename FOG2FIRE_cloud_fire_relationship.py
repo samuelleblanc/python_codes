@@ -62,7 +62,7 @@ import os
 import pandas as pd
 
 
-# In[247]:
+# In[3]:
 
 
 from scipy.interpolate import UnivariateSpline
@@ -412,7 +412,7 @@ def smooth_g(x,y,s=0.1):
 
 # ## Plot out the CF time series
 
-# In[180]:
+# In[24]:
 
 
 for j in range(4):
@@ -424,7 +424,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[35]:
+# In[25]:
 
 
 cld[i]['lbls_rg']
@@ -1775,16 +1775,29 @@ for i in range(len(fir)):
 # In[173]:
 
 
-np.save(fp+'fire_times_manual.npy',fire_times,allow_pickle=True)
+np.save(fp+'fire_times_manual_{}.npy'.format(vv),fire_times,allow_pickle=True)
 
 
-# In[117]:
+# In[26]:
 
 
-fire_times_from_save = np.load(fp+'fire_times_manual.npy',allow_pickle=True)
+fire_times_from_save = np.load(fp+'fire_times_manual_{}.npy'.format(vv),allow_pickle=True)
 
 
-# In[174]:
+# In[28]:
+
+
+fire_times_from_save.shape
+
+
+# In[29]:
+
+
+if not 'fire_times' in locals():
+    fire_times = fire_times_from_save
+
+
+# In[30]:
 
 
 fire_times[0]
@@ -1792,7 +1805,7 @@ fire_times[0]
 
 # ## Identify the cloud fraction decreases
 
-# In[175]:
+# In[31]:
 
 
 for c in cld:
@@ -1800,25 +1813,25 @@ for c in cld:
     c['doy'] = np.array(doy)
 
 
-# In[176]:
+# In[32]:
 
 
 cld[0].keys()
 
 
-# In[177]:
+# In[33]:
 
 
 cld[0]['lbls_rg']['points']
 
 
-# In[179]:
+# In[34]:
 
 
 cld[0]['CF']['coast'].keys()
 
 
-# In[203]:
+# In[45]:
 
 
 cl = cld[0]
@@ -1837,39 +1850,125 @@ for j in range(4):
 plt.axhline(0)
 
 
-# In[219]:
+# In[49]:
 
 
 for cl in cld: #years
     delta_days = int(len(cl['doy'])/cl['doy'].max() *5)
     min_doy = 100.0
-    for rg in cl['CF'].keys():
-        cl['CF'][rg]['i_CFlow'] = np.zeros((cl['CF'][rg]['mean'].shape[1]))
-        for j in range(cl['CF'][rg]['mean'].shape[1]):
-            if not 'dev' in  cl['CF'][rg]:
+    for rg in cl['CF'].keys(): #regions
+        if not 'delta' in  cl['CF'][rg]: # ensure the dev - from cumsum is built
+            cl['CF'][rg]['delta'] = np.zeros_like(cl['CF'][rg]['dev'])
+        for j in range(cl['CF'][rg]['mean'].shape[1]): # go through the sub regions
+            cl['CF'][rg]['delta'][:,j] = cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j])
+
+
+# In[59]:
+
+
+cl['CF'][rg]['delta'].shape
+
+
+# In[65]:
+
+
+smooth_g(cl['doy'],cl['CF'][rg]['delta'][:,j])[1].shape
+
+
+# In[107]:
+
+
+cl = cld[0]
+rg = 'coast'
+delta_days = int(len(cl['doy'])/cl['doy'].max() *5)
+ddays = []
+min_doy = 100.0
+
+plt.figure()
+
+cs = ['tab:blue','tab:red','tab:green','tab:orange']
+
+for j in range(4):
+
+    for ddays in (np.arange(5,0,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
+        point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['delta'][:-ddays,j])) if (cl['CF'][rg]['delta'][i:i+ddays,j]<0).all() & (cl['doy'][i]> min_doy)]
+        if any(point_CF_low): 
+            icf = point_CF_low[0]
+            print('doy: {}, icf: {} for j {}'.format(cl['doy'][icf],icf,j))
+            break
+        else:
+            print('not ddays {} for j {}'.format(ddays,j))
+            icf = 0 
+    x,y = smooth_s(cl['doy'],cl['CF'][rg]['delta'][:,j])
+    plt.plot(x,y,'.',c=cs[j])
+    plt.plot(cl['doy'][icf],0,'s',markersize=20,c=cs[j])
+    
+plt.axhline(0)
+
+
+# In[106]:
+
+
+np.arange(5,0,-1)
+
+
+# In[109]:
+
+
+for cl in cld: #years
+    delta_days = int(len(cl['doy'])/cl['doy'].max() *5)
+    min_doy = 100.0
+    for rg in cl['CF'].keys(): #regions
+        cl['CF'][rg]['i_CFlow'] = np.zeros((cl['CF'][rg]['mean'].shape[1])) # make the indice array, full of zeros
+        cl['CF'][rg]['num_days_of_CFlow'] = np.zeros((cl['CF'][rg]['mean'].shape[1])) # make the indice array, full of zeros
+        cl['CF'][rg]['i_CF_dec'] = np.zeros((cl['CF'][rg]['mean'].shape[1]))
+        for j in range(cl['CF'][rg]['mean'].shape[1]): # go through the sub regions
+            if not 'dev' in  cl['CF'][rg]: # ensure the dev - from cumsum is built
                 cl['CF'][rg]['dev'] = np.zeros_like(cl['CF'][rg]['mean']) 
                 cl['CF'][rg]['dev'][:,j] = np.nancumsum(cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j]))
+            for ddays in (np.arange(5,0,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
+                point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['delta'][:-ddays,j])) if (cl['CF'][rg]['delta'][i:i+ddays,j]<0).all() & (cl['doy'][i]> min_doy)]
+                if any(point_CF_low): 
+                    icf = point_CF_low[0]
+                    print('doy: {}, icf: {} for j {}'.format(cl['doy'][icf],icf,j))
+                    break
+                else:
+                    print('not ddays {} for j {}'.format(ddays,j))
+                    icf = 0 
+            cl['CF'][rg]['i_CFlow'][j] = icf
+            cl['CF'][rg]['num_days_of_CFlow'][j] = cl['doy'][ddays]
             
-            pp = [i for i,c in list(enumerate(cl['CF'][rg]['dev'][:-delta_days,j])) if (cl['CF'][rg]['dev'][i:i+delta_days,j]<0).all() & (cl['doy'][i]> min_doy)]
-            cl['CF'][rg]['i_CFlow'][j] = pp[0] if pp else 0
-            
+
+
+# In[36]:
+
+
+cl['CF'][rg]['mean'].shape
+
+
+# In[383]:
+
+
+plt.figure()
+plt.plot(cl['doy'],cl['CF'][rg]['mean'][:,0],'.-')
+plt.axhline(np.nanmean(cl['CF'][rg]['mean'][:,0]))
 
 
 # ## Calculate the time difference between fire start (and peak) and cloud decrease
 
-# In[254]:
+# In[110]:
 
 
 to_days = lambda x: (x-datetime(1970,1,1)).days
 
 
-# In[253]:
+# In[111]:
 
 
 to_days(cl['time'][0])-fire_times[0][rg][0]['start'][:,0]
 
 
-# In[348]:
+# In[112]:
 
 
 # ensure that the points in fire_times are all related
@@ -1893,19 +1992,19 @@ for fi in fire_times:
     
 
 
-# In[349]:
+# In[113]:
 
 
 max_num_fires_in_a_year
 
 
-# In[339]:
+# In[114]:
 
 
 fi[k][0]['start'][:,0]
 
 
-# In[357]:
+# In[127]:
 
 
 nyears = len(fire_times_sorted)
@@ -1933,9 +2032,14 @@ for i,fi in list(enumerate(fire_times_sorted)):
             diff_CF_peak[rg][i,j,:len(ns['peak'][:,0])] = ns['diff_CF_to_peak']
             diff_CF_end[rg][i,j,:len(ns['end'][:,0])] = ns['diff_CF_to_end']
             peaks[rg][i,j,:len(ns['peak'][:,0])] = ns['peak'][:,1]
+            if cld[i]['CF'][rg]['i_CFlow'][j]==0:
+                diff_CF_start[rg][i,j,:len(ns['start'][:,0])] = ns['diff_CF_to_start']*0-999.0
+                diff_CF_peak[rg][i,j,:len(ns['peak'][:,0])] = ns['diff_CF_to_peak']*0-999.0
+                diff_CF_end[rg][i,j,:len(ns['end'][:,0])] = ns['diff_CF_to_end']*0-999.0
+                peaks[rg][i,j,:len(ns['peak'][:,0])] = ns['peak'][:,1]*0-999.0
 
 
-# In[364]:
+# In[128]:
 
 
 for rg in fi:
@@ -1945,15 +2049,82 @@ for rg in fi:
     peaks[rg] = np.ma.array(peaks[rg],mask=(peaks[rg]<-800))
 
 
-# In[373]:
+# In[130]:
+
+
+plt.figure()
+plt.hist(np.array([diff_CF_start['land'][:,0,:].flatten(),diff_CF_start['land'][:,1,:].flatten(),diff_CF_start['land'][:,2,:].flatten(),diff_CF_start['land'][:,3,:].flatten()]).flatten(),bins=50)
+
+
+# In[133]:
+
+
+plt.figure()
+dc = diff_CF_peak['land']
+
+plt.hist(np.array([dc[:,0,:].flatten(),dc[:,1,:].flatten(),dc[:,2,:].flatten(),dc[:,3,:].flatten()]).flatten(),bins=50)
+
+
+# In[132]:
 
 
 plt.figure()
 plt.plot(diff_CF_start['coast'][:,0,:].T,peaks['coast'][:,0,:].T,'.')
+plt.plot(diff_CF_start['coast'][:,1,:].T,peaks['coast'][:,1,:].T,'.')
+plt.plot(diff_CF_start['coast'][:,2,:].T,peaks['coast'][:,2,:].T,'.')
+plt.plot(diff_CF_start['coast'][:,3,:].T,peaks['coast'][:,3,:].T,'.')
 
 
-# In[ ]:
+# ## Plot cloud fraction evolution and fire onset
+
+# In[384]:
 
 
+cl['time'][0]
 
+
+# In[386]:
+
+
+fi[rg][j]['start'][:,0]-to_days(datetime(2003,1,1))
+
+
+# In[131]:
+
+
+cl = cld[0]
+rg = 'coast'
+fi = fire_times_sorted[0]
+
+
+plt.figure()
+
+for j in range(4):
+
+#    point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['dev'][:-delta_days,j])) if (cl['CF'][rg]['dev'][i:i+delta_days,j]<0).all() & (cl['doy'][i]> min_doy)][0]
+    plt.plot(cl['doy'],cl['CF'][rg]['dev'][:,j],'.')
+#    plt.plot(cl['doy'][point_CF_low],cl['CF'][rg]['dev'][point_CF_low,j],'x')
+    plt.scatter(fi[rg][j]['start'][:,0].T-to_days(datetime(2003,1,1)),fi[rg][j]['start'][:,0].T*0.0+10,fi[rg][j]['peak'][:,1]*5.0,marker='s')
+
+plt.axhline(0)
+
+
+# In[410]:
+
+
+cl = cld[0]
+rg = 'coast'
+fi = fire_times_sorted[0]
+
+
+plt.figure()
+
+for j in range(4):
+    x,y = smooth_g(cl['doy'],cl['CF'][rg]['mean'][:,j],s=1.0)
+#    point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['dev'][:-delta_days,j])) if (cl['CF'][rg]['dev'][i:i+delta_days,j]<0).all() & (cl['doy'][i]> min_doy)][0]
+    plt.plot(x,y,'.-')
+#    plt.plot(cl['doy'][point_CF_low],cl['CF'][rg]['dev'][point_CF_low,j],'x')
+    plt.scatter(fi[rg][j]['start'][:,0].T-to_days(datetime(2003,1,1)),fi[rg][j]['start'][:,0].T*0.0+1,fi[rg][j]['peak'][:,1]*5.0,marker='s')
+
+plt.axhline(0)
 
