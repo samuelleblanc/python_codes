@@ -118,6 +118,7 @@ root_folder = in_.get('root_dir','/data/sunsat/')
 verbose = not in_.get('quiet',False)
 dry_run = in_.get('dry_run',True)
 run_matlab = in_.get('run_matlab',False)
+matv19 = False #setting the version of matlab
 
 
 # In[9]:
@@ -176,8 +177,17 @@ if data_raw_found:
         if not daystr0 in daystrss:
             daystrss.append(daystr0)
             if fa_tmp.campaign.find('rooftop') >= 0:
-                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
-                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                try:
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
+            if fa_tmp.campaign.find('MLO') >= 0:
+                try: 
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Mauna_Loa',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
 
 
 # In[66]:
@@ -235,19 +245,25 @@ if run_matlab:
         if not f.instname in ['4STAR','4STARB']: # only for 4STARs for now.
             continue
             
-        mfile = make_temp_mfile(in_directory+'temp.m',filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
+        mfile = make_temp_mfile(in_directory+'temp_{}_{}.m'.format(f.instname,daystr),filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
 
+        if matv19:
+            command_mat = ['matlab','-nodisplay','-batch',"{}".format(Path(mfile).stem)]
+        else:
+            command_mat = ['matlab','-nodisplay','-nosplash','-r',"cd('{}'); {}; quit".format(Path(mfile).parent.absolute().as_posix(),Path(mfile).stem)]
         if verbose: 
-            print( ' '.join(['{}matlab'.format(prefix),'-nodisplay','-batch',"{}".format(Path(mfile).stem)]))
+            print( ' '.join(['{}'.format(prefix)]+command_mat))
         if not dry_run:
             pmfile = Path(mfile)
             os.chdir(str(pmfile.parent))
-            process = subprocess.Popen(['matlab','-nodisplay','-batch',"{}".format(pmfile.stem)],
+            process = subprocess.Popen(command_mat,
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-
             while True:
                 # handle output by direct access to stdout and stderr
-                output = process.stdout.readline()
+                try:
+                    output = process.stdout.readline()
+                except Exception as e:
+                    print(e)
                 if process.poll() is not None:
                     break
                 if output:
@@ -258,8 +274,14 @@ if run_matlab:
                 
             if rc==0:
                 os.remove(mfile)
-
-
+            else:
+                print(process.stderr.readline())
+                print('ERROR with matlab')
+                if not f.newfile.exists():
+                     print(' ***  file {} has not been created'.format(str(f.newfile)))          
+                if not fs.newfile.exists():
+                     print(' ***  file {} has not been created'.format(str(fs.newfile)))
+                     nmats = nmats-1
 # In[68]:
 
 
