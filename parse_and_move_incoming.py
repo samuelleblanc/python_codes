@@ -247,15 +247,16 @@ if run_matlab:
             path=os.getenv('PATH')
             for p in path.split(os.path.pathsep):
                 p=os.path.join(p,pgm)
-                if os.path.exists(p) and os.access(p,os.X_OK):
+                if os.path.exists(p):
                     return p
 
         mat_path = which('matlab')
+        if not mat_path: mat_path = '/usr/local/bin/matlab'
         if verbose: 
             print( ' '.join(['{}{}'.format(prefix,mat_path),'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)]))
         if not dry_run:
             os.chdir(str(pmfile.parent))
-            process = subprocess.Popen([mat_path,'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)],
+            process = subprocess.Popen([mat_path,'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),str(pmfile.stem))],
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
             while True:
