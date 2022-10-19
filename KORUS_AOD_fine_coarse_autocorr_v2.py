@@ -2401,7 +2401,7 @@ z3 = [3000.0, 15000.0]
 
 # ## Alternate calculations (lower mem)
 
-# In[84]:
+# In[34]:
 
 
 min_num = 100 # minimum number of points to be considered valid
@@ -2871,37 +2871,37 @@ hs.savemat(fp+'KORUS_fine_coarse_autocorr_mc_{}.mat'.format(vv),dat_u)
 
 # ### Load the models
 
-# In[77]:
+# In[27]:
 
 
 dat_c = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_mc_{}.mat'.format(vv))
 
 
-# In[78]:
+# In[28]:
 
 
 dat_c.keys()
 
 
-# In[79]:
+# In[29]:
 
 
 autocorr_len_mc, autocorr_mc = dat_c['autocorr_len_mc'],dat_c['autocorr_mc']
 
 
-# In[81]:
+# In[30]:
 
 
 autocorr_mc.keys()
 
 
-# In[82]:
+# In[31]:
 
 
 autocorr_mc['aod0500'].shape
 
 
-# In[90]:
+# In[32]:
 
 
 autocorr_len_mc['aod0500'].shape
@@ -3090,7 +3090,7 @@ corr_ks = np.array(corr_ks)
 
 # ### With the v3/v4 monte carlo based on segments instead of samples
 
-# In[85]:
+# In[35]:
 
 
 autocorr_mm = {}
@@ -3281,7 +3281,7 @@ ax[0].set_yticks([0,0.25,0.5,0.75,1.0])
 ax[0].set_xscale('log')
 
 
-# In[134]:
+# In[13]:
 
 
 e_folding_autocorr = lambda x: corr_ks[np.argmin(abs(x[0]*np.exp(-1.0)-x))]
@@ -3762,19 +3762,19 @@ hs.savemat(fp+'KORUS_fine_coarse_autocorr_dvals_{}.mat'.format(vv),dat_u)
 
 # ### load autocorr and monte carlo calc
 
-# In[148]:
+# In[8]:
 
 
 dat_u = hs.loadmat(fp+'KORUS_fine_coarse_autocorr_dvals_{}.mat'.format(vv))
 
 
-# In[149]:
+# In[9]:
 
 
 dat_u.keys()
 
 
-# In[162]:
+# In[10]:
 
 
 corr_ks = dat_u['corr_ks']
@@ -3782,7 +3782,7 @@ dvals = dat_u['dvals']
 itypes = dat_u['itypes']
 
 
-# In[13]:
+# In[11]:
 
 
 autocorr_mean = dat_u['autocorr_mean']
@@ -3794,44 +3794,44 @@ autocorr_mean = dat_u['autocorr_mean']
 percentile_autocorr(autocorr_mean['AE'][0,0:],0.85)
 
 
-# In[51]:
+# In[15]:
 
 
 j = 0
 jj = 3
 
 
-# In[17]:
+# In[16]:
 
 
 percentile_autocorr(autocorr_mean['MERRA_AE'][j,1:],0.85)
 
 
-# In[18]:
+# In[17]:
 
 
 percentile_autocorr(autocorr_mean['GOCI_AE'][j,jj:],0.85)
 
 
-# In[19]:
+# In[18]:
 
 
 percentile_autocorr(autocorr_mean['situ_ae'][j,jj:],0.85)
 
 
-# In[20]:
+# In[19]:
 
 
 np.mean([25.0,25.0,15.0,1.35])
 
 
-# In[40]:
+# In[20]:
 
 
 percentile_autocorrj = lambda x,p,jj: corr_ks[np.argmin(abs(x[jj]*p-x))+jj]
 
 
-# In[56]:
+# In[21]:
 
 
 np.nanmedian([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.85,jj),
@@ -3840,7 +3840,7 @@ np.nanmedian([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.85,jj),
             percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],0.85,jj)])
 
 
-# In[59]:
+# In[22]:
 
 
 np.nanmean([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.85,jj),
@@ -3849,13 +3849,70 @@ np.nanmean([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.85,jj),
             percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],0.85,jj)])
 
 
-# In[58]:
+# In[23]:
 
 
 np.nanstd([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.85,jj),
             percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:],0.85,jj+3),
             percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:],0.85,jj+3),
             percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],0.85,jj)])
+
+
+# In[24]:
+
+
+np.nanstd([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.9,jj),
+            percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:],0.9,jj+3),
+            percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:],0.9,jj+3),
+            percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],0.9,jj)])
+
+
+# In[25]:
+
+
+np.nanstd([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],0.63,jj),
+            percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:],0.63,jj+3),
+            percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:],0.63,jj+3),
+            percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],0.63,jj)])
+
+
+# In[42]:
+
+
+for dx in [0.63,0.85,0.9]:
+    mdx =  np.nanmean([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:],dx,jj),
+                percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:],dx,jj)])
+    mi_dx =  np.nanmean([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:]-autocorr_dm['aod0500'][j,jj:],dx,jj),
+                percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:]-autocorr_dm['MERRA_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:]-autocorr_dm['GOCI_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:]-autocorr_dm['situ_ext'][j,jj:],dx,jj)])
+    mp_dx =  np.nanmean([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:]+autocorr_dm['aod0500'][j,jj:],dx,jj),
+                percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:]+autocorr_dm['MERRA_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:]+autocorr_dm['GOCI_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:]+autocorr_dm['situ_ext'][j,jj:],dx,jj)])
+    mis_dx =  np.nanstd([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:]-autocorr_dm['aod0500'][j,jj:],dx,jj),
+                percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:]-autocorr_dm['MERRA_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:]-autocorr_dm['GOCI_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:]-autocorr_dm['situ_ext'][j,jj:],dx,jj)])
+    mps_dx =  np.nanstd([percentile_autocorrj(autocorr_mean['aod0500'][j,jj:]+autocorr_dm['aod0500'][j,jj:],dx,jj),
+                percentile_autocorrj(autocorr_mean['MERRA_AOD'][j,jj+3:]+autocorr_dm['MERRA_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['GOCI_AOD'][j,jj+3:]+autocorr_dm['GOCI_AOD'][j,jj+3:],dx,jj+3),
+                percentile_autocorrj(autocorr_mean['situ_ext'][j,jj:]+autocorr_dm['situ_ext'][j,jj:],dx,jj)])
+    print(dx,mdx,mi_dx,mp_dx,mp_dx-mi_dx,mis_dx,mps_dx,mps_dx-mis_dx)
+
+
+# In[39]:
+
+
+autocorr_mean['aod0500'][j,jj:]-autocorr_dm['aod0500'][j,jj:]
+
+
+# In[40]:
+
+
+autocorr_mean['aod0500'][j,jj:]+autocorr_dm['aod0500'][j,jj:]
 
 
 # In[57]:

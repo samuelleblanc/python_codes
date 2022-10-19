@@ -16,12 +16,12 @@ Leinonen, J., Python code for calculating Mie scattering from single- and dual-l
 # In[54]:
 
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
+get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
 import matplotlib 
 matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
 from mpltools import color
-get_ipython().magic(u'matplotlib inline')
+get_ipython().run_line_magic('matplotlib', 'inline')
 import numpy as np
 import scipy
 import IPython

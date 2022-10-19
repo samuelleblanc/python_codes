@@ -189,7 +189,12 @@ if data_raw_found:
                 except:
                     if verbose: print('Problem Downloading the AERONET file')
 
-
+            if fa_tmp.campaign.find('SaSa') >= 0:
+                try: 
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='WFF_X-75_Sci_Obs',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
 # In[66]:
 
 
@@ -247,14 +252,24 @@ if run_matlab:
             
         mfile = make_temp_mfile(in_directory+'temp_{}_{}.m'.format(f.instname,daystr),filelist=filelist,starmat=str(f.newfile),                                starsun=str(fs.newfile),quicklooks=in_directory+str(fq.newfile.name),                                fig_path=str(ff.newpath.parent)+'/', aero_path=str(fa.newpath)+'/',                                gas_path=str(fg.newpath)+'/', sun_path=str(fs.newpath)+'/',incoming_path=in_directory)
 
+        pmfile = Path(mfile)
+        def which(pgm):
+            path=os.getenv('PATH')
+            for p in path.split(os.path.pathsep):
+                p=os.path.join(p,pgm)
+                if os.path.exists(p):
+                    return p
+
+        mat_path = which('matlab')
+        if not mat_path: mat_path = '/usr/local/bin/matlab'
         if matv19:
-            command_mat = ['matlab','-nodisplay','-batch',"{}".format(Path(mfile).stem)]
+            command_mat = [mat_path,'-nodisplay','-batch',"{}".format(str(pmfile.stem))]
         else:
-            command_mat = ['matlab','-nodisplay','-nosplash','-r',"cd('{}'); {}; quit".format(Path(mfile).parent.absolute().as_posix(),Path(mfile).stem)]
-        if verbose: 
+            command_mat = [mat_path,'-nodisplay','-nosplash','-r',"cd('{}'); {}; exit;".format(str(pmfile.parent),str(pmfile.stem))]
+        if verbose:
             print( ' '.join(['{}'.format(prefix)]+command_mat))
+
         if not dry_run:
-            pmfile = Path(mfile)
             os.chdir(str(pmfile.parent))
             process = subprocess.Popen(command_mat,
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -278,7 +293,7 @@ if run_matlab:
                 print(process.stderr.readline())
                 print('ERROR with matlab')
                 if not f.newfile.exists():
-                     print(' ***  file {} has not been created'.format(str(f.newfile)))          
+                     print(' ***  file {} has not been created'.format(str(f.newfile)))
                 if not fs.newfile.exists():
                      print(' ***  file {} has not been created'.format(str(fs.newfile)))
                      nmats = nmats-1

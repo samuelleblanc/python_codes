@@ -90,77 +90,92 @@ fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
 fp
 
 
+# In[6]:
+
+
+v = 'v2'
+
+
 # # Load files
 
 # ## Load the 2016 data
 
+# In[7]:
+
+
+vv_2016 = 'R9'
+
+
+# In[8]:
+
+
+fp6 = fp+'data_other/HSRL/{vv}/'.format(vv=vv_2016)
+
+
 # In[9]:
-
-
-fp6 = fp+'data_other/HSRL/R8/'
-
-
-# In[29]:
 
 
 f6_hsrl = os.listdir(fp6)
 
 
-# In[30]:
+# In[10]:
 
 
+f6_hsrl = [ff for ff in f6_hsrl if (vv_2016 in ff) & ff.endswith('h5') ]
+f6_hsrl.sort()
 f6_hsrl
 
 
-# In[31]:
+# In[11]:
 
 
 hf = hs.h5py.File(fp6+f6_hsrl[0])
 
 
-# In[32]:
+# In[12]:
 
 
 hf.keys()
 
 
-# In[45]:
+# In[13]:
 
 
 hf['DataProducts']['cloud_top_height'].attrs.items()
 
 
-# In[46]:
+# In[14]:
 
 
 hf['DataProducts']['532_ext'].attrs.items()
 
 
-# In[40]:
+# In[15]:
 
 
 cldscr_532 = hf['DataProducts']['532_bsr_cloud_screened']
-
-
-# In[55]:
-
-
 cldscr_532.attrs.items()
 
 
-# In[14]:
+# In[16]:
 
 
 hf['DataProducts'].keys()
 
 
-# In[34]:
+# In[25]:
 
 
 hf
 
 
-# In[8]:
+# In[28]:
+
+
+hf[u'Nav_Data'].keys()
+
+
+# In[17]:
 
 
 s6 = {}
@@ -168,10 +183,10 @@ for i,f in enumerate(f6_hsrl):
     print 'Reading file: '+fp6+f
     hf = hs.h5py.File(fp6+f,'r+')
     h = {}
-    h[u'lat'] = hf['ER2_IMU']['Latitude'].value
-    h[u'lon'] = hf['ER2_IMU']['Longitude'].value
-    h[u'alt'] = hf['ER2_IMU']['gps_alt'].value
-    h[u'time'] = hf['ER2_IMU']['gps_time'].value
+    h[u'lat'] = hf[u'Nav_Data']['Latitude'].value
+    h[u'lon'] = hf[u'Nav_Data']['Longitude'].value
+    h[u'alt'] = hf[u'Nav_Data']['gps_alt'].value
+    h[u'time'] = hf[u'Nav_Data']['gps_time'].value
     h[u'header'] = hf['000_Readme'].value
     h[u'acaod_355'] = hf['DataProducts']['355_AOT_above_cloud'].value
     h[u'acaod_532'] = hf['DataProducts']['532_AOT_above_cloud'].value
@@ -180,22 +195,28 @@ for i,f in enumerate(f6_hsrl):
     h[u'cloud_top_height'] = hf['DataProducts']['cloud_top_height'].value
     h[u'date'] = hf['header']['date'].value[0][0]
     h[u'filename'] = f
+    alt = hf['DataProducts']['Altitude'].value[0,:]
+    bsc_cl = hf['DataProducts']['532_bsc_cloud_screened'].value
+    h[u'aero_bot_height'] = np.array([alt[bks>0.00025][0] if (any(bks) & any(bks>0.00025)) else np.nan for bks in bsc_cl])
+    h[u'aero_bot_height'][h[u'aero_bot_height']<200.0] = np.nan 
+    h[u'aero_bot_height'][h[u'aero_bot_height']>7000.0] = np.nan 
+    h[u'gap_dist'] = h[u'aero_bot_height'] - h[u'cloud_top_height'][:,0]
     s6[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[9]:
+# In[18]:
 
 
 len(s6)
 
 
-# In[14]:
+# In[19]:
 
 
 s6.keys()
 
 
-# In[15]:
+# In[20]:
 
 
 s6['s20160819'].keys()
@@ -203,14 +224,7 @@ s6['s20160819'].keys()
 
 # ### Plot the results
 
-# In[54]:
-
-
-plt.figure()
-plt.plot(hf['DataProducts']['532_ext'][::50,:].T,hf['DataProducts']['Altitude'].value.T,'.')
-
-
-# In[278]:
+# In[34]:
 
 
 for sk in s6.keys():
@@ -227,7 +241,7 @@ for sk in s6.keys():
     axy.set_ylabel('Altitude [m]')
 
 
-# In[204]:
+# In[35]:
 
 
 for sk in s6.keys():
@@ -244,42 +258,96 @@ for sk in s6.keys():
     axy.set_ylabel('Altitude [m]')
 
 
-# In[123]:
+# In[39]:
 
 
 plt.figure()
-plt.plot(s[3]['lon'],s[3]['lat'],'.')
+plt.plot(s6['s20160912']['lon'],s6['s20160912']['lat'],'.')
+
+
+# ### Calculate the aerosol layer bottom and gap
+
+# Using the backscatter coefficient threshold of 0.00025 /km /sr @ 532 nm  
+# 
+# Based on presentation from STM 2019: https://espo.nasa.gov/oracles/system/files/group_files/Tues%201435%20Burton_STM2019_HSRL2_v5_0.pdf
+# 
+# Burthon et al., HSRL-2 Update, NASA Langley HSRL-2 team:Sharon Burton, Rich Ferrare, John Hair, Anthony Cook, David
+# Harper, Marta Fenn, Marian Clayton, Ed Chemyakin, Snorre Stamnes, Chris Hostetler, ORACLES Science Team Meeting, May 14-16, 2019, Rosenstiel School of Marine and Atmospheric Sciences, University of Miami
+
+# ![image.png](attachment:image.png)
+
+# In[194]:
+
+
+alt = hf['DataProducts']['Altitude'].value[0,:]
+bsc_cl = hf['DataProducts']['532_bsc_cloud_screened'].value
+h[u'aero_bot_height'] = np.array([alt[bks>0.00025][0] if (any(bks) & any(bks>0.00025)) else np.nan for bks in bsc_cl])
+
+
+# In[203]:
+
+
+plt.figure()
+for sk in s6.keys():
+    p = plt.plot(s6[sk]['time'],s6[sk]['aero_bot_height'],'.',label=sk)
+    plt.plot(s6[sk]['time'],s6[sk]['cloud_top_height'],'x',c=p[0].get_c())
+plt.title('Aerosol and cloud layer height')
+plt.legend(frameon=False,numpoints=1)
+plt.ylabel('Aerosol bottom [m]')
+plt.xlabel('Time [UTC]')
+
+
+# In[216]:
+
+
+plt.figure()
+for sk in s6.keys():
+    p = plt.plot(s6[sk]['time'],s6[sk]['gap_dist'],'.',label=sk)
+    #plt.plot(s6[sk]['time'],s6[sk]['cloud_top_height'],'x',c=p[0].get_c())
+plt.title('Aerosol and cloud layer height')
+plt.legend(frameon=False,numpoints=1)
+plt.ylabel('Gap distance [m]')
+plt.xlabel('Time [UTC]')
 
 
 # ### Save to a file
 
-# In[16]:
+# In[23]:
 
 
-hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD.mat',s6)
+hs.savemat(fp6+'ORACLES_2016_HSRL{vv}_ACAOD.mat'.format(vv=vv_2016),s6)
+
+
+# In[24]:
+
+
+fp6
 
 
 # ## Load the 2017 data
 
-# In[15]:
+# In[25]:
+
+
+vv_2017 = 'R1'
+
+
+# In[32]:
 
 
 fp7 = fp+'data_other_2017/HSRL/'
 
 
-# In[18]:
+# In[35]:
 
 
 f7_hsrl = os.listdir(fp7)
-
-
-# In[19]:
-
-
+f7_hsrl = [ff for ff in f7_hsrl if ff.endswith('h5') ]
+f7_hsrl.sort()
 f7_hsrl
 
 
-# In[20]:
+# In[36]:
 
 
 s7 = {}
@@ -306,7 +374,24 @@ for i,f in enumerate(f7_hsrl):
         h[u'alt'] = hf['ApplanixIMU']['gps_alt'].value
         h[u'time'] = hf['ApplanixIMU']['gps_time'].value
     h[u'fl'] = h['alt']>5000.0
+    alt = hf['DataProducts']['Altitude'].value[0,:]
+    bsc_cl = hf['DataProducts']['532_bsc_cloud_screened'].value
+    h[u'aero_bot_height'] = np.array([alt[bks>0.00025][0] if (any(bks) & any(bks>0.00025)) else np.nan for bks in bsc_cl])
+    h[u'aero_bot_height'][h[u'aero_bot_height']<200.0] = np.nan 
+    h[u'aero_bot_height'][h[u'aero_bot_height']>7000.0] = np.nan 
+    h[u'gap_dist'] = h[u'aero_bot_height'] - h[u'cloud_top_height'][:,0]
     s7[u's{:08.0f}'.format(h['date'])] = h
+
+
+# In[37]:
+
+
+alt = hf['DataProducts']['Altitude'].value[0,:]
+bsc_cl = hf['DataProducts']['532_bsc_cloud_screened'].value
+h[u'aero_bot_height'] = np.array([alt[bks>0.00025][0] if (any(bks) & any(bks>0.00025)) else np.nan for bks in bsc_cl])
+h[u'aero_bot_height'][h[u'aero_bot_height']<200.0] = np.nan 
+h[u'aero_bot_height'][h[u'aero_bot_height']>7000.0] = np.nan 
+h[u'gap_dist'] = h[u'aero_bot_height'] - h[u'cloud_top_height'][:,0]
 
 
 # In[21]:
@@ -348,30 +433,43 @@ for sk in s7.keys():
 hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD.mat',s7)
 
 
+# In[54]:
+
+
+s7 = hs.loadmat(fp7+'ORACLES_2017_HSRL_ACAOD.mat')
+
+
 # ## Load the 2018 data
 
-# In[14]:
+# In[40]:
+
+
+vv_2018 = 'R2'
+
+
+# In[41]:
 
 
 fp8 = fp+'data_other_2018/HSRL/'
 
 
-# In[25]:
+# In[44]:
 
 
 f8_hsrl = []
 for f8l in os.listdir(fp8):
-    if f8l.endswith('.h5'):
+    if f8l.endswith('.h5') and vv_2018 in f8l:
         f8_hsrl.append(f8l)
+f8_hsrl.sort()
 
 
-# In[26]:
+# In[45]:
 
 
 f8_hsrl
 
 
-# In[27]:
+# In[46]:
 
 
 s8 = {}
@@ -401,13 +499,13 @@ for i,f in enumerate(f8_hsrl):
     s8[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[28]:
+# In[47]:
 
 
 s8.keys()
 
 
-# In[29]:
+# In[48]:
 
 
 s8['s20181005'].keys()
@@ -415,7 +513,7 @@ s8['s20181005'].keys()
 
 # ### Plot the results
 
-# In[289]:
+# In[49]:
 
 
 for sk in s8.keys():
@@ -435,17 +533,17 @@ for sk in s8.keys():
 
 # ### Save the file
 
-# In[30]:
+# In[50]:
 
 
-hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD.mat',s8)
+hs.savemat(fp8+'ORACLES_2018_HSRL{vv}_ACAOD.mat'.format(vv=vv_2018),s8)
 
 
 # # Now combine into single array for easier interpretation
 
 # ## For 2016
 
-# In[31]:
+# In[55]:
 
 
 hr6 = {}
@@ -457,7 +555,7 @@ for n in s6[k6[0]].keys():
         hr6[n] = np.array([])
 
 
-# In[32]:
+# In[56]:
 
 
 for i,d in enumerate(s6.keys()):
@@ -467,13 +565,13 @@ for i,d in enumerate(s6.keys()):
         hr6[n] = np.append(hr6[n],s6[d][n])
 
 
-# In[33]:
+# In[57]:
 
 
 hr6.keys() 
 
 
-# In[34]:
+# In[58]:
 
 
 len(hr6['acaod_355']),len(hr6['date'])
@@ -481,7 +579,7 @@ len(hr6['acaod_355']),len(hr6['date'])
 
 # ## For 2017
 
-# In[35]:
+# In[59]:
 
 
 hr7 = {}
@@ -493,7 +591,7 @@ for n in s7[k7[0]].keys():
         hr7[n] = np.array([])
 
 
-# In[36]:
+# In[60]:
 
 
 for i,d in enumerate(s7.keys()):
@@ -503,13 +601,13 @@ for i,d in enumerate(s7.keys()):
         hr7[n] = np.append(hr7[n],s7[d][n])
 
 
-# In[37]:
+# In[61]:
 
 
 hr7.keys()
 
 
-# In[38]:
+# In[62]:
 
 
 len(hr7['acaod_355']), len(hr7['date'])
@@ -517,7 +615,7 @@ len(hr7['acaod_355']), len(hr7['date'])
 
 # ## For 2018
 
-# In[39]:
+# In[63]:
 
 
 hr8 = {}
@@ -529,7 +627,7 @@ for n in s8[k8[0]].keys():
         hr8[n] = np.array([])
 
 
-# In[40]:
+# In[64]:
 
 
 for i,d in enumerate(s8.keys()):
@@ -538,19 +636,19 @@ for i,d in enumerate(s8.keys()):
         hr8[n] = np.append(hr8[n],s8[d][n])
 
 
-# In[41]:
+# In[65]:
 
 
 hr8.keys()
 
 
-# In[42]:
+# In[66]:
 
 
 len(hr8['acaod_355']),len(hr8['date'])
 
 
-# In[43]:
+# In[67]:
 
 
 hr8['fl']
@@ -558,22 +656,22 @@ hr8['fl']
 
 # ## Now save these new combined arrays
 
-# In[44]:
+# In[69]:
 
 
-hs.savemat(fp6+'ORACLES_2016_HSRL_ACAOD_arr.mat',hr6)
+hs.savemat(fp6+'ORACLES_2016_HSRL{vv}_ACAOD_arr.mat'.format(vv=vv_2016),hr6)
 
 
-# In[45]:
+# In[70]:
 
 
-hs.savemat(fp7+'ORACLES_2017_HSRL_ACAOD_arr.mat',hr7)
+hs.savemat(fp7+'ORACLES_2017_HSRL{vv}_ACAOD_arr.mat'.format(vv=vv_2017),hr7)
 
 
-# In[46]:
+# In[71]:
 
 
-hs.savemat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat',hr8)
+hs.savemat(fp8+'ORACLES_2018_HSRL{vv}_ACAOD_arr.mat'.format(vv=vv_2018),hr8)
 
 
 # ## Alternatively load the saved files
@@ -600,7 +698,7 @@ hr8 = hs.loadmat(fp8+'ORACLES_2018_HSRL_ACAOD_arr.mat')
 
 # ## Plot out some histograms
 
-# In[445]:
+# In[73]:
 
 
 plt.figure()
@@ -635,19 +733,19 @@ plt.grid()
 plt.title('HSRL Above clouds AOD distribution')
 #prelim()
 plt.legend(frameon=False)
-plt.savefig(fp+'plot_all/HSRL_AOD_Above_cloud_normed_histogram_2018_2017_2016.png',dpi=600,transparent=True)
+plt.savefig(fp+'plot_all/HSRL_AOD_Above_cloud_normed_histogram_2018_2017_2016_{}.png'.format(v),dpi=600,transparent=True)
 
 
 # ## Plot out AOD vs. DOY for regional subset (all 3 years)
 
-# In[18]:
+# In[74]:
 
 
 lat1,lat2 = -17.0,-10.0
 lon1,lon2 = 3.5,6.75
 
 
-# In[19]:
+# In[75]:
 
 
 hr6['flq'] =  (hr6['lat']>lat1) & (hr6['lat']<lat2) & (hr6['lon']>lon1) & (hr6['lon']<lon2) & (hr6['acaod_532']<1.5)
@@ -655,7 +753,7 @@ hr7['flq'] = hr7['fl'] & (hr7['lat']>lat1) & (hr7['lat']<lat2) & (hr7['lon']>lon
 hr8['flq'] = hr8['fl'] & (hr8['lat']>lat1) & (hr8['lat']<lat2) & (hr8['lon']>lon1) & (hr8['lon']<lon2) & (hr8['acaod_532']<1.5)
 
 
-# In[20]:
+# In[76]:
 
 
 hr6['ndtime2'] = np.array([datetime(2018,int((d-20160000)/100.0),int(d%100),int(hr6['time'][i]),
@@ -666,7 +764,7 @@ hr8['ndtime2'] = np.array([datetime(2018,int((d-20180000)/100.0),int(d%100),int(
                           int((hr8['time'][i]-float(int(hr8['time'][i])))*60)) for i,d in enumerate(hr8['date'])])
 
 
-# In[21]:
+# In[77]:
 
 
 bin_aod6,bin_doy6,bin_num6 = [],[],[]
@@ -678,7 +776,7 @@ for d in bin_days6:
     bin_num6.append(len(hr6['acaod_532'][hr6['flq']][flh]))
 
 
-# In[22]:
+# In[78]:
 
 
 bin_aod7,bin_doy7,bin_num7 = [],[],[]
@@ -690,7 +788,7 @@ for d in bin_days7:
     bin_num7.append(len(hr7['acaod_532'][hr7['flq']][flh]))
 
 
-# In[23]:
+# In[79]:
 
 
 bin_aod8,bin_doy8,bin_num8 = [],[],[]
@@ -702,7 +800,7 @@ for d in bin_days8:
     bin_num8.append(len(hr8['acaod_532'][hr8['flq']][flh]))
 
 
-# In[463]:
+# In[80]:
 
 
 plt.figure()
@@ -718,11 +816,11 @@ plt.xticks(rotation=90)
 plt.gca().set_xlim([datetime(2018, 7, 30), datetime(2018, 10, 30)])
 plt.legend(frameon=False,numpoints=1,handletextpad=0.2)
 plt.ylabel('AOD_{{532}}')
-plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_monthly.png',
+plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_monthly_{}.png'.format(v),
             transparent=True,dpi=500)
 
 
-# In[464]:
+# In[82]:
 
 
 def mapfig(ax=plt.gca()):
@@ -735,7 +833,7 @@ def mapfig(ax=plt.gca()):
     return m
 
 
-# In[465]:
+# In[83]:
 
 
 fig,ax = plt.subplots(1,1,figsize=(5,5))
@@ -758,7 +856,7 @@ plt.fill_between(xss, yss, yss2,color='gold',alpha=0.7)
 #plt.Polygon(xss,yss,edgecolor='None',color='gold',alpha=0.3)
 
 
-# In[19]:
+# In[87]:
 
 
 def set_box_whisker_color(cl,bp,binned_ndays):
@@ -788,22 +886,22 @@ def set_box_whisker_color(cl,bp,binned_ndays):
     return
 
 
-# In[24]:
+# In[84]:
 
 
 fp
 
 
-# In[26]:
+# In[106]:
 
 
-hs.savemat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears.mat',
+hs.savemat(fp+'data_other/HSRL/ORACLES_binned_HSRL_allyears_{}.mat'.format(v),
            {u'bin_aod6':bin_aod6,u'bin_aod7':bin_aod7,u'bin_aod8':bin_aod8,
             u'bin_doy6':bin_doy6,u'bin_doy7':bin_doy7,u'bin_doy8':bin_doy8,
             u'bin_num6':bin_num6,u'bin_num7':bin_num7,u'bin_num8':bin_num8})
 
 
-# In[469]:
+# In[88]:
 
 
 plt.figure(figsize=(9,3))
@@ -872,19 +970,19 @@ xss2,yss2 = m([lon1,lon1,lon2,lon2,lon1],[lat1,lat1,lat1,lat1,lat1])
 
 plt.fill_between(xss, yss, yss2,color='k',alpha=0.6)
 
-plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_monthly_hist_map.png',
+plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_monthly_hist_map_{}.png'.format(v),
             transparent=True,dpi=500)
 
 
 # ## Set up mapping statistics
 
-# In[20]:
+# In[89]:
 
 
 uniq_cnt = lambda x: len(np.unique(x))
 
 
-# In[21]:
+# In[90]:
 
 
 fl6 = np.isfinite(hr6['acaod_532'])& np.isfinite(hr6['lat'])& np.isfinite(hr6['lon'])
@@ -892,7 +990,7 @@ fl7 = (hr7['fl']) & np.isfinite(hr7['acaod_532'])& np.isfinite(hr7['lat'])& np.i
 fl8 = (hr8['fl']) & np.isfinite(hr8['acaod_532'])& np.isfinite(hr8['lat'])& np.isfinite(hr8['lon'])
 
 
-# In[22]:
+# In[91]:
 
 
 hr6['bin_mean'],xe6,ye6,bn = st.binned_statistic_2d(hr6['lat'][fl6],hr6['lon'][fl6],
@@ -904,7 +1002,7 @@ hr6['bin_nday'],xe6,ye6,bn = st.binned_statistic_2d(hr6['lat'][fl6],hr6['lon'][f
 hr6['bin_nday'] = np.ma.masked_array(hr6['bin_nday'],np.isnan(hr6['bin_nday']))
 
 
-# In[23]:
+# In[92]:
 
 
 hr7['bin_mean'],xe7,ye7,bn = st.binned_statistic_2d(hr7['lat'][fl7],hr7['lon'][fl7],
@@ -915,7 +1013,7 @@ hr7['bin_nday'],xe7,ye7,bn = st.binned_statistic_2d(hr7['lat'][fl7],hr7['lon'][f
 hr7['bin_nday'] = np.ma.masked_array(hr7['bin_nday'],np.isnan(hr7['bin_nday']))
 
 
-# In[24]:
+# In[93]:
 
 
 hr8['bin_mean'],xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl8],hr8['lon'][fl8],
@@ -926,19 +1024,19 @@ hr8['bin_nday'],xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl8],hr8['lon'][f
 hr8['bin_nday'] = np.ma.masked_array(hr8['bin_nday'],np.isnan(hr8['bin_nday']))
 
 
-# In[25]:
+# In[94]:
 
 
 hr7['bin_mean'].sum()
 
 
-# In[26]:
+# In[95]:
 
 
 len(hr7['lat'])
 
 
-# In[27]:
+# In[96]:
 
 
 ia6 = np.where((hr6['bin_nday'].data>0.0))
@@ -948,13 +1046,13 @@ ia8 = np.where((hr8['bin_nday'].data>0.0))
 
 # ## Make map plotting
 
-# In[28]:
+# In[97]:
 
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-# In[29]:
+# In[98]:
 
 
 def mapfig(ax=plt.gca()):
@@ -1080,13 +1178,13 @@ cb.set_label('Mean AOD$_{{532nm}}$')
 plt.tight_layout(rect=[0.02,0,1,1],w_pad=3)
 
 
-plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_3map_stats_R1.png',
+plt.savefig(fp+'plot_all/ORACLESall_HSRL_AOD_3map_stats_R1_{}.png'.format(v),
             transparent=True,dpi=500)
 
 
 # # Now build maps by binning per day
 
-# In[33]:
+# In[99]:
 
 
 days6 = np.unique(hr6['date'])
@@ -1094,7 +1192,7 @@ days7 = np.unique(hr7['date'])
 days8 = np.unique(hr8['date'])
 
 
-# In[37]:
+# In[100]:
 
 
 aod_bins6 = []
@@ -1106,13 +1204,13 @@ for i,d in enumerate(days6):
     aod_bins6.append(ab)
 
 
-# In[35]:
+# In[101]:
 
 
 len(aod_bins)
 
 
-# In[38]:
+# In[102]:
 
 
 aod_bins7 = []
@@ -1124,14 +1222,14 @@ for i,d in enumerate(days7):
     aod_bins7.append(ab)
 
 
-# In[39]:
+# In[105]:
 
 
 aod_bins8 = []
 for i,d in enumerate(days8):
     fl8 = (hr8['fl']) & np.isfinite(hr8['acaod_532'])& np.isfinite(hr8['lat'])& np.isfinite(hr8['lon']) & (hr8['date']==d)
-    ab,xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl7],hr8['lon'][fl7],
-                                    hr8['acaod_532'][fl7],bins=36,range=[[-25,2],[-16,16]])
+    ab,xe8,ye8,bn = st.binned_statistic_2d(hr8['lat'][fl8],hr8['lon'][fl8],
+                                    hr8['acaod_532'][fl8],bins=36,range=[[-25,2],[-16,16]])
     ab = np.ma.masked_array(ab,np.isnan(ab))
     aod_bins8.append(ab)
 

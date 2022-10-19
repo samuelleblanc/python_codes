@@ -3224,12 +3224,6 @@ len(m2s['mean'])
 np.sum(np.isnan(m2s['mean']))
 
 
-# In[79]:
-
-
-m2s['index']
-
-
 # In[80]:
 
 
@@ -3331,10 +3325,4 @@ plt.savefig(fp+'COSR_20180609_AOD_MODIS_4STAR_Truecolor_scatter.pdf',format='pdf
 
 
 fp
-
-
-# In[ ]:
-
-
-
 

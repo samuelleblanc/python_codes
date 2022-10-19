@@ -64,7 +64,7 @@ from write_utils import nearest_neighbor, iterate_dict_unicode
 # In[2]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[3]:
@@ -1988,7 +1988,7 @@ f_list = fp_rtm+'{}_DARE_{}.sh'.format(name,vv)
 # In[173]:
 
 
-get_ipython().system(u' wc -l $f_list')
+get_ipython().system(' wc -l $f_list')
 
 
 # In[174]:
@@ -2000,7 +2000,7 @@ f_listout = f_list+'.out'
 # In[ ]:
 
 
-get_ipython().system(u'parallel --jobs=22 --bar < $f_list #2> $f_listout')
+get_ipython().system('parallel --jobs=22 --bar < $f_list #2> $f_listout')
 
 
 # ### For daily averages
@@ -2014,7 +2014,7 @@ f_list = fp_rtm+'{}_DARE_{}.sh'.format(name,vvh)
 # In[127]:
 
 
-get_ipython().system(u' wc -l $f_list')
+get_ipython().system(' wc -l $f_list')
 
 
 # In[195]:
@@ -2026,7 +2026,7 @@ f_listout = f_list+'.out'
 # In[ ]:
 
 
-get_ipython().system(u'parallel --jobs=22 --bar < $f_list #2> $f_listout')
+get_ipython().system('parallel --jobs=22 --bar < $f_list #2> $f_listout')
 
 
 # ### For the CRE
@@ -2040,7 +2040,7 @@ f_list = fp_rtm+'{}_DARE_CRE_{}.sh'.format(name,vv)
 # In[72]:
 
 
-get_ipython().system(u' wc -l $f_list')
+get_ipython().system(' wc -l $f_list')
 
 
 # In[73]:
@@ -2052,7 +2052,7 @@ f_listout = f_list+'.out'
 # In[74]:
 
 
-get_ipython().system(u'parallel --jobs=7 --bar < $f_list 2> $f_listout')
+get_ipython().system('parallel --jobs=7 --bar < $f_list 2> $f_listout')
 
 
 # ## Read the files

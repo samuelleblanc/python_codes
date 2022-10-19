@@ -593,15 +593,17 @@ def get_angstrom(aod,wvl_in,wvl_out,polynum=4):
 # In[1]:
 
 
-def calc_angs(time,w,aod):
+def calc_angs(time,w,aod,bar_update=True):
     'Program to calculate the angstrom exponent by fitting linearly on the aod'
     import numpy as np
     from linfit import linfit
     from tqdm import tqdm_notebook as tqdm
     ang = np.zeros_like(time)
     if not (np.array(w).shape[0] == aod.shape[0]): raise ValueError('Size of AOD and wavelenght arrays not consistent')
-    pbar = tqdm(total=len(time)+2)
-    pbar.update(1)
+    
+    if bar_update:
+        pbar = tqdm(total=len(time)+2)
+        pbar.update(1)
     for i,t in enumerate(time):
         try:
             c,cm = linfit(np.log10(w),-np.log10(aod[:,i]))
@@ -609,8 +611,8 @@ def calc_angs(time,w,aod):
             ang[i] = c[0] 
         except:
             ang[i] = np.nan
-        pbar.update(1)
-    pbar.update(1)
+        if bar_update: pbar.update(1)
+    if bar_update: pbar.update(1)
     if not any(np.isfinite(ang)):
         raise ValueError('No Angstrom Exponent value returned valid')
     return ang
@@ -618,10 +620,10 @@ def calc_angs(time,w,aod):
 
 # # The Spectral deconvolution algorithm for fine/coarse mode fraction
 
-# In[3]:
+# In[1]:
 
 
-def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=False,bias_corr=True):
+def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=False,bias_corr=True,bar_update=True):
     """
     Purpose:  
         Compute the total, fine and coarse mode aerosol optical depth (AOD), the total and fine mode Angstrom exponents (alpha),
@@ -648,17 +650,20 @@ def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=F
             etauc: (optional, only returned if compute_errors is True) stochastic error of tauc
 
     Keywords:
-        polynum: (optional, defaults to 2) number of polynomials coefficients to use (order of the polynomial) 
+        polynum: (optional, defaults to 2) number of polynomials coefficients to use (order of the polynomial)
+        bar_update: (defaults to True) for enabling output of the progress bar
         
     Dependencies:
         - numpy
         - Sun_utils (this file)
+        - tqdm (for progress bar)
 
     Needed Files:
       - None
 
     Modification History:
         Written: (adpated from original matlab codes) Samuel LeBlanc, Santa Cruz, CA, 2018-03-15
+        Modified: Samuel LeBlanc, Santa Cruz, CA, 2022-06-21, Happy Summer Solstice
     
     ORIGINAL Comments:
     % HISTORY 
@@ -718,7 +723,7 @@ def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=F
     import numpy as np
     from scipy import polyval
     import Sun_utils as su
-    from tqdm import tqdm_notebook as tqdm
+    if bar_update: from tqdm import tqdm_notebook as tqdm
     
     # fix coarse mode Angstrom parameters
     alpha_c = -0.15
@@ -737,8 +742,9 @@ def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=F
     ac = np.rollaxis(an,nn,len(ao.shape))
     n = ac.shape[1]
     
-    pbar = tqdm(total=n+2)
-    pbar.update(1)
+    if bar_update:
+        pbar = tqdm(total=n+2)
+        pbar.update(1)
     
     #Compute the spectral polynomial (ln-ln fit)
     poly = []
@@ -763,7 +769,7 @@ def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=F
                 tf, tc = bias_corr_tauf_tauc(tau[i],eta[i],alpha[i],alphap[i],ref_wvl=ref_wvl,alpha_c=alpha_c,alphap_c=alphap_c)
                 tauf[i] = tf
                 tauc[i] = tc
-        pbar.update(1)
+        if bar_update: pbar.update(1)
 
     tauf = np.array(tauf)
     tauc = np.array(tauc)
@@ -774,7 +780,7 @@ def sda(aod,wvl_in,ref_wvl=0.5,polynum=2,compute_errors=False,physical_forcing=F
     eta = np.array(eta)
     
     out = {'tauf':tauf,'tauc':tauc,'tau':tau,'poly':poly,'alpha':alpha,'alphap':alphap,'eta':eta}
-    pbar.update(1)
+    if bar_update: pbar.update(1)
     
     return out
     

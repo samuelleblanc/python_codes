@@ -471,10 +471,10 @@ def load_emas(datfile):
     return emas,emas_dicts
 
 
-# In[ ]:
+# In[2]:
 
 
-def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
+def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_geo=False):
     """
     Name:
 
@@ -507,6 +507,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
         verbose: if true (default), then everything is printed. if false, nothing is printed
         all_values: if True, then outputs all the values with their original names, (defaults to False), overrides values keyword
         i_subdata: value of the subdataset index
+        get_geo: get each pixel lat/lon from the gdal projections
     
     Dependencies:
 
@@ -534,9 +535,11 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
                         - added all_values keyword
         Modified (v1.4): Samuel LeBlanc, 2021-05-28, Santa Cruz, CA
                         - added the i_subdata keyword
+        Modified (v1.5): Samuel LeBlanc, 2022-03-01, Santa Cruz, CA
+                        - added the get_geo keyword for returning the lat and lon of each pixel
     """
     import numpy as np
-    from osgeo import gdal
+    from osgeo import gdal,osr
     from Sp_parameters import startprogress, progress, endprogress
     from load_utils import load_hdf_h5py
     
@@ -606,7 +609,25 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1):
                 hdf[i][bad_points] = np.nan
             except ValueError:
                 print('*** Can not replace NaN into variable: {}, for the bad points {} ***'.format(i,bad_points))
-                
+        if get_geo:
+            try:
+                xmin, xpixel, _, ymax, _, ypixel = sds.GetGeoTransform()
+                width, height = sds.RasterXSize, sds.RasterYSize
+                x = xmin + (np.arange(0,sds.RasterXSize)+0.5)*xpixel #for center
+                y = ymax + (np.arange(0,sds.RasterYSize)+0.5)*ypixel
+                src_srs=osr.SpatialReference()
+                src_srs.ImportFromWkt(sds.GetProjection())
+                tgt_srs = src_srs.CloneGeogCS()
+                transform = osr.CoordinateTransformation( src_srs, tgt_srs)
+                lon,lat = np.zeros((width,height)),np.zeros((width,height))
+                for ix,xx in enumerate(x):
+                    for iy,yy in enumerate(y):
+                        lon[ix,iy],lat[ix,iy],_ = transform.TransformPoint(xx,yy)
+                hdf['{}_lon'.format(i)] = lon
+                hdf['{}_lat'.format(i)] = lat
+            except Exception as e:
+                print('*problem getting the geolocation for subdata: {}*'.format(i))
+                print(e)
         if verbose:
             progress(float(tuple(i[0] for i in values).index(i))/len(values)*100.)
     if verbose:

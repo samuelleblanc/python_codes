@@ -66,7 +66,7 @@ import Sp_parameters as Sp
 # In[4]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[5]:
@@ -336,7 +336,19 @@ plt.title('KORUS Altitudes')
 
 # ## Build vertical distribution of AOD
 
-# In[27]:
+# In[53]:
+
+
+bins = np.arange(0,10001,10000/30.0)
+
+
+# In[54]:
+
+
+bins
+
+
+# In[55]:
 
 
 bins.shape
@@ -345,6 +357,7 @@ bins.shape
 # In[28]:
 
 
+bins = np.arange(0,10001,10000/30.0)
 pos = np.array([(bins[i]+bins[i+1])/2.0 for i,b in enumerate(bins[:-1])])
 
 
@@ -354,7 +367,13 @@ pos = np.array([(bins[i]+bins[i+1])/2.0 for i,b in enumerate(bins[:-1])])
 len(pos)
 
 
-# In[38]:
+# In[31]:
+
+
+pos
+
+
+# In[58]:
 
 
 plt.figure(figsize=(4,5))
@@ -366,12 +385,17 @@ pu.make_boxplot(arc['AOD0501'][ar['fl']],ar['GPS_Alt'][ar['fl']],
 plt.legend(frameon=False)
 plt.xlim(0,0.8)
 plt.ylim(0,10000)
+plt.yticks([0,2000,4000,6000,8000,10000])
+plt.gca().set_yticklabels([0,2000,4000,6000,8000,10000])
 plt.xlabel('AOD @ 501 nm')
 plt.ylabel('GPS Altitude [m]')
 #plt.title('KORUS-AQ average AOD profile from 4STAR')
 plt.grid()
 plt.tight_layout()
-plt.savefig(fp+'plot\\KORUS_AOD_profile_avg_windowcorr.png',transparent=True,dpi=600)
+plt.savefig(fp+'plot/KORUS_AOD_profile_avg_windowcorr.png',transparent=True,dpi=600)
+plt.savefig(fp+'plot/KORUS_AOD_profile_avg_windowcorr.pdf',transparent=True,dpi=600)
+plt.savefig(fp+'plot/KORUS_AOD_profile_avg_windowcorr.eps',transparent=True,dpi=600)
+plt.savefig(fp+'plot/KORUS_AOD_profile_avg_windowcorr.svg',transparent=True,dpi=600)
 
 
 # In[39]:
