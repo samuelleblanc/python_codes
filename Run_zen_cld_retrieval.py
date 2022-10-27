@@ -115,9 +115,11 @@
 #             - added keyword for subsetting the hires parameters to a smaller range of ref and tau values defined by user
 #     Modified: Samuel LeBlanc, Mountain View, CA, 2017-02-22
 #             - added index_zout keyword for setting a different zout index used for calculating the lut parameters
+#     Modified: Samuel LeBlanc, Santa Cruz, CA, 2022-10-20
+#             - added keyword to handle SASZe files with 'sky', 'nm', and 'time' values
 #             
 
-# In[ ]:
+# In[3]:
 
 
 import argparse
@@ -125,7 +127,7 @@ import argparse
 
 # ## Prepare command line argument parser
 
-# In[39]:
+# In[4]:
 
 
 long_description = """    Run the zenith cloud property retrieval on the supplied 4STAR starzen.mat file
@@ -134,7 +136,7 @@ long_description = """    Run the zenith cloud property retrieval on the supplie
     Outputs pngs of the plots of the retrieved values"""
 
 
-# In[69]:
+# In[5]:
 
 
 parser = argparse.ArgumentParser(description=long_description)
@@ -167,9 +169,10 @@ parser.add_argument('-taurange','--taurange',help='Sets the range of optical dep
                     nargs=2,type=float)
 parser.add_argument('-iz','--index_zout',help='Sets the index of the zout to use for building the lut. Default is 0',
                     type=int)
+parser.add_argument('-sas','--sas',help='if set, will use the SaS-Ze matlab files provided by Connor Flynn',action='store_true')
 
 
-# In[70]:
+# In[2]:
 
 
 in_ = vars(parser.parse_args())
@@ -317,6 +320,7 @@ debug = in_.get('debug',False)
 make_slides = in_.get('makeslides',False)
 refrange = in_.get('refrange')
 taurange = in_.get('taurange')
+use_sas = in_.get('sas',False)
 
 
 # In[ ]:
@@ -359,10 +363,20 @@ except Exception as ei:
     mea = sio.loadmat(fp_starzen)
 
 
-# In[ ]:
+# In[7]:
 
 
-tt = mat2py_time(mea['t'])
+if use_sas:
+    from map_utils import get_sza_azi
+    tt = mat2py_time(mea['time'][0,:])
+    mea['rad'] = mea['sky'].T
+    mea['Lat'] = np.zeros_like(tt)+36.607322 #SGP C1 latitute
+    mea['Lon'] = np.zeros_like(tt)-97.487643 #SGP C1 longitute
+    mea['Alt'] = np.zeros_like(tt)+314.0     #SGP C1 surface Altitute
+    sza_nul,azi_nul = get_sza_azi(mea['Lat'],mea['Lon'],tt,alt=mea['Alt'][0])
+    mea['sza'] = np.array(sza_nul)
+else:
+    tt = mat2py_time(mea['t'])
 mea['utc'] = toutc(tt)
 
 

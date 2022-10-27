@@ -889,7 +889,7 @@ class Sp:
             else: 
                 if self.verbose: print( 'not 1 in ui')
                 sp = s['rad'][iwvls,:]
-            self.iset = np.where(s['rad'][:,0])[0]
+            self.iset = np.where(s['rad'][:,0])[0].astype(int)
         if irrad:
             if self.verbose: print( 'in irrad')
             ui = [i for i in range(s['sp_irrdn'].ndim) if s['sp_irrdn'].shape[i] == len(self.wvl)]
@@ -1415,7 +1415,7 @@ def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
         scalarmap.set_array(lut.ref[lut.ref<30])
         cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
         cba.ax.set_ylabel('liquid $r_{eff}$ [$\\mu$m]')
-        cba.ax.set_yticklabels(np.linspace(lut.ref[0],29,6));
+        cba.ax.set_yticklabels(['{:2.1f}'.format(n) for n in np.linspace(lut.ref[0],29,6)]);
     
     if not forceliq:
         cbar_ax = fig3.add_axes([0.92,0.05,0.02,0.42])
@@ -1423,7 +1423,7 @@ def plot_lut_vs_tau(lut,forceliq=False,forceice=False):
         scalarmap.set_array(lut.ref[lut.ref>3])
         cba = plt.colorbar(scalarmap,ticks=np.linspace(0,1,6),cax=cbar_ax)
         cba.ax.set_ylabel('ice $r_{eff}$ [$\\mu$m]')
-        cba.ax.set_yticklabels(np.linspace(lut.ref[lut.ref>3][0],lut.ref[-1],6));
+        cba.ax.set_yticklabels(['{:2.1f}'.format(n) for n in np.linspace(lut.ref[lut.ref>3][0],lut.ref[-1],6)]);
 
     #liq = mlines.Line2D([], [], color='k', linestyle='-', label='liquid')
     #ice = mlines.Line2D([], [], color='k', linestyle='--', label='ice')

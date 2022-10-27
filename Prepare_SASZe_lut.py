@@ -283,9 +283,3 @@ for s in sza:
 
 f_list.close()
 
-
-# In[ ]:
-
-
-
-

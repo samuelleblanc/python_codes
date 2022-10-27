@@ -74,7 +74,7 @@ fp_rtmdat = getpath('rtm')+'dat/'
 
 # # Setup the variables used for lut
 
-# In[9]:
+# In[31]:
 
 
 # try to read from the saved version file
@@ -118,13 +118,13 @@ except ValueError: # not a json file try old way
         zout = [0.2,1.5,100.0]    
 
 
-# In[10]:
+# In[32]:
 
 
 fp_out = os.path.join(fp_rtm,'output','{vv}_{name}'.format(vv=vv,name=name))
 
 
-# In[11]:
+# In[33]:
 
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
@@ -133,7 +133,7 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   split_wvl=True)
 
 
-# In[12]:
+# In[34]:
 
 
 dat = deep_convert_dict(dat)
@@ -141,13 +141,13 @@ if use_json:
     dat['lut_details'] = deep_convert_dict(d)
 
 
-# In[13]:
+# In[35]:
 
 
 print 'Saving matlab file'
 
 
-# In[14]:
+# In[36]:
 
 
 try:
@@ -161,43 +161,8 @@ except:
     sio.savemat(fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name),dat)
 
 
-# In[15]:
+# In[37]:
 
 
 print('Saved to: '+fp+'{vv}_{name}_lut.mat'.format(vv=vv,name=name))
-
-
-# In[19]:
-
-
-
-dat.keys()
-
-
-# In[20]:
-
-
-dat['rad'].shape
-
-
-# In[25]:
-
-
-import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'notebook')
-
-
-# In[30]:
-
-
-plt.figure()
-for it,t in enumerate(dat['tau']):
-    print(it,t)
-    plt.plot(dat['wvl'],dat['rad'][0,:,0,0,it,0],'.')
-
-
-# In[ ]:
-
-
-
 
