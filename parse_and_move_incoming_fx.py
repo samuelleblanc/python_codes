@@ -123,10 +123,10 @@ def pull_labels(p,datestr,filters={},dirlabel_in=None):
         label = label.strip('_')
     
     if instname == '5STAR':
-        if not p.is_dir():
-            label = label.replace('_RADIOMETERS','')
-            if (len(label.split('_'))>1) & label.split('_')[0].isdigit():
-                label = '_'.join(label.split('_')[1:])
+        if p.is_dir(): label = ''
+        label = label.replace('_RADIOMETERS','')
+        if (len(label.split('_'))>1) & label.split('_')[0].isdigit():
+            label = '_'.join(label.split('_')[1:])
     
     return dirlabel,label,instname
 
