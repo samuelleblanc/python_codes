@@ -1912,7 +1912,7 @@ plt.axhline(0)
 np.arange(5,0,-1)
 
 
-# In[109]:
+# In[141]:
 
 
 for cl in cld: #years
@@ -1926,7 +1926,7 @@ for cl in cld: #years
             if not 'dev' in  cl['CF'][rg]: # ensure the dev - from cumsum is built
                 cl['CF'][rg]['dev'] = np.zeros_like(cl['CF'][rg]['mean']) 
                 cl['CF'][rg]['dev'][:,j] = np.nancumsum(cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j]))
-            for ddays in (np.arange(5,0,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
+            for ddays in (np.arange(3,1,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
                 point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['delta'][:-ddays,j])) if (cl['CF'][rg]['delta'][i:i+ddays,j]<0).all() & (cl['doy'][i]> min_doy)]
                 if any(point_CF_low): 
                     icf = point_CF_low[0]
@@ -1940,7 +1940,7 @@ for cl in cld: #years
             
 
 
-# In[36]:
+# In[135]:
 
 
 cl['CF'][rg]['mean'].shape
@@ -2004,7 +2004,7 @@ max_num_fires_in_a_year
 fi[k][0]['start'][:,0]
 
 
-# In[127]:
+# In[142]:
 
 
 nyears = len(fire_times_sorted)
@@ -2039,7 +2039,7 @@ for i,fi in list(enumerate(fire_times_sorted)):
                 peaks[rg][i,j,:len(ns['peak'][:,0])] = ns['peak'][:,1]*0-999.0
 
 
-# In[128]:
+# In[143]:
 
 
 for rg in fi:
@@ -2049,23 +2049,23 @@ for rg in fi:
     peaks[rg] = np.ma.array(peaks[rg],mask=(peaks[rg]<-800))
 
 
-# In[130]:
+# In[138]:
 
 
 plt.figure()
 plt.hist(np.array([diff_CF_start['land'][:,0,:].flatten(),diff_CF_start['land'][:,1,:].flatten(),diff_CF_start['land'][:,2,:].flatten(),diff_CF_start['land'][:,3,:].flatten()]).flatten(),bins=50)
 
 
-# In[133]:
+# In[146]:
 
 
 plt.figure()
-dc = diff_CF_peak['land']
+dc = diff_CF_start['points']
 
 plt.hist(np.array([dc[:,0,:].flatten(),dc[:,1,:].flatten(),dc[:,2,:].flatten(),dc[:,3,:].flatten()]).flatten(),bins=50)
 
 
-# In[132]:
+# In[140]:
 
 
 plt.figure()
