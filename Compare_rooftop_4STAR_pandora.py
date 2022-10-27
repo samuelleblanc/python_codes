@@ -156,31 +156,31 @@ s['time']
 
 # ### Filter out bad data and back interpolate for easier handling
 
-# In[16]:
+# In[14]:
 
 
 ibad = (s['no2DU']<0.005) | (s['no2DU']>1.0) | (s['no2resiDU']>0.00005)
 
 
-# In[17]:
+# In[15]:
 
 
 s.keys()
 
 
-# In[18]:
+# In[16]:
 
 
 from Sp_parameters import smooth
 
 
-# In[19]:
+# In[17]:
 
 
 s['no2DU'][ibad] = np.nan
 
 
-# In[20]:
+# In[18]:
 
 
 s_no2DU = smooth(s['no2DU'],1,nan=True,old=True)
@@ -1077,6 +1077,130 @@ plt.ylim(0,2)
 plt.xlim(0,2)
 
 #plt.savefig(fp+'Winter_2022/plots/4STAR_to_Pandora_NO2.png',dpi=600,transparent=True)
+
+
+# # Get the darks for each 4STAR file
+
+# In[19]:
+
+
+files
+
+
+# In[20]:
+
+
+daystrs = [fi.split('/')[-1].split('_')[1] for fi in files]
+
+
+# In[55]:
+
+
+darks = []
+for d in daystrs:
+    files_starsun = glob.glob(fp + '/**/data_processed/starsuns/4STAR_{}starsun.mat'.format(d), recursive=True)
+    tmp = hs.loadmat(files_starsun[0],variable_names=['t','dark','w'])
+    tmp['time'] = lu.mat2py_time(tmp['t'])
+    darks.append(tmp)
+
+
+# In[56]:
+
+
+darks[0]
+
+
+# In[60]:
+
+
+darks[0]['dark'].shape
+
+
+# In[58]:
+
+
+i_650 = np.argmin(abs(darks[0]['w']-0.65))
+i_490 = np.argmin(abs(darks[0]['w']-0.46))
+i_460 = np.argmin(abs(darks[0]['w']-0.49))
+
+
+# In[61]:
+
+
+dark_650 = []
+dark_460 = []
+dark_490 = []
+for d in darks:
+    dark_650.append(d['dark'][:,i_650])
+    dark_460.append(d['dark'][:,i_460])
+    dark_490.append(d['dark'][:,i_490])
+    
+
+
+# In[65]:
+
+
+plt.figure()
+gr = plt.cm.autumn_r
+dummy_n = np.arange(0,len(dark_460))*0.0+200.0
+dummy_n[-1] = 205.0
+bp = plt.boxplot(dark_460,vert=True,positions=np.arange(0,len(dark_460)),
+                   showfliers=False,widths=0.3,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(gr,bp,dummy_n,whisker_color='grey')
+grp = plt.cm.winter
+bpp = plt.boxplot(dark_490,vert=True,positions=np.arange(0,len(dark_490))+0.3,
+                   showfliers=False,widths=0.3,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(grp,bpp,dummy_n,whisker_color='grey')
+grp = plt.cm.Blues
+bpb = plt.boxplot(dark_650,vert=True,positions=np.arange(0,len(dark_650))+0.6,
+                   showfliers=False,widths=0.3,showmeans=True,patch_artist=True)
+pu.set_box_whisker_color(grp,bpb,dummy_n,whisker_color='grey')
+plt.gca().set_xticks(np.arange(0,len(dark_650)))
+plt.gca().set_xticklabels(daystrs,rotation=90)
+plt.grid()
+plt.ylabel('Dark counts [#/ms]')
+plt.title('Daily 4STAR darks - Ames roof top measurements')
+plt.legend([bp['boxes'][0],bpp['boxes'][0],bpb['boxes'][0],bp['means'][0],bp['medians'][0],bp['boxes'][0],bp['whiskers'][0]],
+               ['460 nm','490 nm','650 nm','Mean','Median','25% - 75%','min-max'],
+               frameon=True,loc=0,numpoints=1)
+plt.tight_layout(rect=(0,0.05,1,1))
+plt.savefig(fp + '/daily_4STAR_darks_{}.png',dpi=600,transparent=True)
+
+
+# ## Compare darks to NO2
+
+# In[69]:
+
+
+dark_460_TS = np.hstack(dark_460)
+
+
+# In[83]:
+
+
+no2_star_all = []
+no2resi_star_all = []
+for g in gas:
+    no2_star_all.append(gas[g]['no2DU'])
+    no2resi_star_all.append(gas[g]['no2resiDU'])
+no2_star_TS = np.vstack(no2_star_all)
+no2resi_star_TS = np.vstack(no2resi_star_all)
+
+
+# In[93]:
+
+
+plt.figure()
+plt.plot(no2_star_TS,dark_460_TS,'.',c='lightgrey',label='all')
+igood = (no2_star_TS[:,0] > 0.025) & (no2resi_star_TS[:,0]<0.05) & (no2_star_TS[:,0] < 1.5)
+plt.plot(no2_star_TS[igood],dark_460_TS[igood],'.',c='tab:blue',label='good NO2')
+plt.legend(frameon=False)
+plt.xlim([-0.01,1.8])
+plt.ylim([175,1500])
+plt.ylabel('4STAR darks at 460 nm [#/nm]')
+plt.xlabel('4STAR NO2 retrieval [DU]')
+plt.title('4STAR Ames rooftop - Summer 2020 to Spring 2022')
+plt.savefig(fp + '/4STAR_darks_vs_NO2_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # In[ ]:
