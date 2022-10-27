@@ -36,7 +36,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[1]:
 
 
 import numpy as np
@@ -47,7 +47,7 @@ import os
 import hapi
 
 
-# In[3]:
+# In[2]:
 
 
 from tqdm.notebook import tqdm
@@ -55,7 +55,7 @@ import scipy.io as sio
 import pandas as pd
 
 
-# In[4]:
+# In[3]:
 
 
 name = '4star_data'
@@ -63,7 +63,7 @@ vv = 'v1'
 fp = getpath(name)
 
 
-# In[5]:
+# In[9]:
 
 
 fph = getpath('HITRAN')
@@ -101,7 +101,7 @@ fph = getpath('HITRAN')
 #  - o4_296K_conv_4starb_nir.xs
 # 
 
-# In[6]:
+# In[5]:
 
 
 Loschmidt=2.686763e19                   # molec/cm3*atm
@@ -111,13 +111,13 @@ Loschmidt=2.686763e19                   # molec/cm3*atm
 
 # ## Load the 4STARB wavelength and FWHM
 
-# In[7]:
+# In[6]:
 
 
 s = sio.loadmat(fp+'4STARB_FWHM_combinedlinelamps_20220507.mat')
 
 
-# In[8]:
+# In[7]:
 
 
 s.keys()
@@ -125,7 +125,7 @@ s.keys()
 
 # # Load the HAPI molecules and crosssections
 
-# In[9]:
+# In[8]:
 
 
 wvn_2_wvl = lambda x: 1.0e4 / x
@@ -135,7 +135,7 @@ wvl_2_wvn = lambda x: 1.0e4 / x
 #wvn in cm^-1
 
 
-# In[241]:
+# In[10]:
 
 
 hapi.db_begin(fph)
@@ -167,7 +167,7 @@ fo3_293k = 'O3_Serdyuchenko(2014)_293K_213-1100nm(2013 version).txt'
 # in nm
 
 
-# In[10]:
+# In[11]:
 
 
 fo3_223k = 'O3_Serdyuchenko(2014)_223K_213-1100nm(2013 version).txt'
@@ -186,7 +186,7 @@ fo3_293k = 'O3_Serdyuchenko(2014)_293K_213-1100nm(2013 version).txt'
 #!wget https://hitran.org/data/xsec/O3_233.0K-0.0Torr_28901.0-40999.0_118.xsc -P $fph
 
 
-# In[9]:
+# In[12]:
 
 
 # get the NO2 cross sections
@@ -214,6 +214,16 @@ fno2_254 = 'no2_254K.xs'
 # get the cross section from the Max-Planck Mainz spectral library (updated since Bogumil/Mentel with higher by about 7%)
 # http://satellite.mpic.de/spectral_atlas/cross_sections/Organics%20(carbonyls)/Aldehydes(aliphatic)/CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt
 get_ipython().system('wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Organics%20(carbonyls)/Aldehydes(aliphatic)/CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt" -P $fph')
+
+
+# In[41]:
+
+
+#Bro
+# From The MPI-Mainz UV/VIS Spectral Atlas of Gaseous Molecules of Atmospheric Interest
+# S.P. Sander, J. Abbatt, J. R. Barker, J. B. Burkholder, R. R. Friedl, D. M. Golden, R. E. Huie, C. E. Kolb, M. J. Kurylo, G. K. Moortgat, V. L. Orkin and P. H. Wine, "Chemical Kinetics and Photochemical Data for Use in Atmospheric Studies, Evaluation Number 17", JPL Publication 10-6, Jet Propulsion Laboratory, Pasadena, 2011; http://jpldataeval.jpl.nasa.gov/
+get_ipython().system('wget "https://uv-vis-spectral-atlas-mainz.org/uvvis_data/cross_sections/Halogen%20oxides/Br%20oxides/BrO_JPL-2010(2011)_298K_286.5-385.0nm(0.5nm,rec).txt" -P $fph')
+fbro_298 = 'BrO_JPL-2010(2011)_298K_286.5-385.0nm(0.5nm,rec).txt'
 
 
 # In[15]:
@@ -255,7 +265,7 @@ hapi.db_commit()
 
 # # Calculate the absorption coefficients for air with different pressures and temps
 
-# In[11]:
+# In[13]:
 
 
 gases = {'no2_vis_220K':{'SourceTables':'NO2','Diluent':{'air':1.0},'Environment':{'T':220.,'p':0.0286}},
@@ -294,13 +304,13 @@ gases = {'no2_vis_220K':{'SourceTables':'NO2','Diluent':{'air':1.0},'Environment
 
 
 
-# In[12]:
+# In[14]:
 
 
 wvn_2_wvl(28901)
 
 
-# In[13]:
+# In[47]:
 
 
 use_measured_xs = {'no2_vis_220K':{'fname':fno2_220,'skip_header':7},
@@ -310,10 +320,13 @@ use_measured_xs = {'no2_vis_220K':{'fname':fno2_220,'skip_header':7},
                    'o3_vis_293K':{'fname':fo3_293k},
                    'o4_vis_296K':{'fname':'O2-O2_2018b.cia','skip_header':1,'nu':True},
                    'o4_nir_296K':{'fname':'O2-O2_2018b.cia','skip_header':1,'nu':True},
-                   'hcho_vis_293K':{'fname':'CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt'}}
+                   'hcoh_vis_293K':{'fname':'CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt'},
+                   'h2o_vis_1013mbar_273K':{'fname':'H2O_1013mbar273K_vis.xs','skip_header':12},
+                   'h2o_nir_1013mbar_273K':{'fname':'H2O_1013mbar273K_nir.xs','skip_header':12},
+                   'bro_298K':{'fname':fbro_298}}
 
 
-# In[52]:
+# In[43]:
 
 
 for k in list(gases.keys()):
@@ -377,13 +390,13 @@ gases.keys()
 
 # ## Load the xs files for measured spectra
 
-# In[180]:
+# In[16]:
 
 
 wvn_2_wvl(8491.000)
 
 
-# In[18]:
+# In[48]:
 
 
 for k in list(use_measured_xs.keys()):
@@ -415,7 +428,7 @@ for k in list(use_measured_xs.keys()):
 
 # ### Convert to coefficient units [/m]
 
-# In[19]:
+# In[49]:
 
 
 gases['no2_vis_254K']['coef'] = gases['no2_vis_254K']['coef'] * Loschmidt
@@ -428,16 +441,22 @@ gases['o3_vis_293K']['coef'] = gases['o3_vis_293K']['coef'] * Loschmidt
 
 gases['o3_vis_223K']['coef'] = gases['o3_vis_223K']['coef'] * Loschmidt
 
-gases['hcho_vis_293K']['coef'] = gases['hcho_vis_293K']['coef'] * Loschmidt
+gases['hcoh_vis_293K']['coef'] = gases['hcoh_vis_293K']['coef'] * Loschmidt
+
+gases['bro_298K']['coef'] = gases['bro_298K']['coef'] * Loschmidt
 
 gases['o4_nir_296K']['coef'] = gases['o4_nir_296K']['coef'] * Loschmidt * Loschmidt
 
 gases['o4_vis_296K']['coef'] = gases['o4_vis_296K']['coef'] * Loschmidt * Loschmidt
 
+gases['h2o_vis_1013mbar_273K']['coef'] = gases['h2o_vis_1013mbar_273K']['coef'] * Loschmidt
+
+gases['h2o_nir_1013mbar_273K']['coef'] = gases['h2o_nir_1013mbar_273K']['coef'] * Loschmidt
+
 
 # ## Plot the absorption lines
 
-# In[215]:
+# In[50]:
 
 
 for k in list(gases.keys()):
@@ -450,7 +469,7 @@ for k in list(gases.keys()):
 
 # ## Convolve the xs files to 4STARB spectra (in nm)
 
-# In[136]:
+# In[51]:
 
 
 pbar = tqdm(total=(len(s['vis_nm'][0])+len(s['nir_nm'][0]))*len(gases.keys()))
@@ -459,38 +478,39 @@ for k in list(gases.keys()):
         gases[k]['xs'] = np.append(np.zeros_like(s['vis_nm'][0]),np.zeros_like(s['nir_nm'][0]))*np.nan
         print('On gas: '+k)
         for i,v in enumerate(s['vis_nm'][0]): 
-            inm_min = np.argmin(abs(gases[k]['wvl']-v-s['fwhm_nir'][0,i]*6.0))
-            inm_max = np.argmin(abs(gases[k]['wvl']-v+s['fwhm_nir'][0,i]*6.0))
+            inm_min = np.argmin(abs(gases[k]['wvl']-v-s['fwhm_vis'][0,i]*6.0))
+            inm_max = np.argmin(abs(gases[k]['wvl']-v+s['fwhm_vis'][0,i]*6.0))
             slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl']-v,s['fwhm_vis'][0,i])
-            gases[k]['xs'][i] = np.trapz(slit[0,:]*gases[k]['coef'][0,:],gases[k]['wvl'])
+            slit.flatten()
+            gases[k]['xs'][i] = np.trapz(slit.flatten()*gases[k]['coef'].flatten(),gases[k]['wvl'])
             pbar.update(1)
         for i,v in enumerate(s['nir_nm'][0]): 
             slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl']-v,s['fwhm_nir'][0,i])
-            gases[k]['xs'][1044+i] = np.trapz(slit[0,:]*gases[k]['coef'][0,:],gases[k]['wvl'])
+            gases[k]['xs'][1044+i] = np.trapz(slit.flatten()*gases[k]['coef'].flatten(),gases[k]['wvl'])
             pbar.update(1)
     else:
         print('** No to gas: '+k)
         pbar.update(len(s['vis_nm'][0])+len(s['nir_nm'][0]))
 
 
-# In[212]:
+# In[52]:
 
 
 # special for o4
 for k in ['o4_vis_296K','o4_nir_296K']:
     for i,v in enumerate(s['vis_nm'][0]): 
-        inm_min = np.argmin(abs(gases[k]['wvl'][0,:]-v-s['fwhm_vis'][0,i]*5.0))
-        inm_max = np.argmin(abs(gases[k]['wvl'][0,:]-v+s['fwhm_vis'][0,i]*5.0))
-        slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl'][0,inm_min:inm_max]-v,s['fwhm_vis'][0,i])
-        gases[k]['xs'][i] = np.trapz(slit*gases[k]['coef'][0,inm_min:inm_max],gases[k]['wvl'][0,inm_min:inm_max])*-1.0
+        inm_min = np.argmin(abs(gases[k]['wvl'].flatten()-v-s['fwhm_vis'][0,i]*5.0))
+        inm_max = np.argmin(abs(gases[k]['wvl'].flatten()-v+s['fwhm_vis'][0,i]*5.0))
+        slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl'][inm_min:inm_max]-v,s['fwhm_vis'][0,i])
+        gases[k]['xs'][i] = np.trapz(slit*gases[k]['coef'][inm_min:inm_max],gases[k]['wvl'][inm_min:inm_max])*-1.0
     for i,v in enumerate(s['nir_nm'][0]): 
-        inm_min = np.argmin(abs(gases[k]['wvl'][0,:]-v-s['fwhm_nir'][0,i]*5.0))
-        inm_max = np.argmin(abs(gases[k]['wvl'][0,:]-v+s['fwhm_nir'][0,i]*5.0))
-        slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl'][0,inm_min:inm_max]-v,s['fwhm_nir'][0,i])
-        gases[k]['xs'][1044+i] = np.trapz(slit*gases[k]['coef'][0,inm_min:inm_max],gases[k]['wvl'][0,inm_min:inm_max])*-1.0
+        inm_min = np.argmin(abs(gases[k]['wvl'].flatten()-v-s['fwhm_nir'][0,i]*5.0))
+        inm_max = np.argmin(abs(gases[k]['wvl'].flatten()-v+s['fwhm_nir'][0,i]*5.0))
+        slit = hapi.SLIT_GAUSSIAN(gases[k]['wvl'][inm_min:inm_max]-v,s['fwhm_nir'][0,i])
+        gases[k]['xs'][1044+i] = np.trapz(slit*gases[k]['coef'][inm_min:inm_max],gases[k]['wvl'][inm_min:inm_max])*-1.0
 
 
-# In[213]:
+# In[53]:
 
 
 gases_wln = np.append(s['vis_nm'][0],s['nir_nm'][0])
@@ -498,7 +518,7 @@ gases_wln = np.append(s['vis_nm'][0],s['nir_nm'][0])
 
 # ### plot out the convolution and the raw crossections
 
-# In[216]:
+# In[54]:
 
 
 for k in list(gases.keys()):
@@ -747,7 +767,7 @@ cross_section_tosave['wln_notes'][:] = wln_notes
 
 # ### O3
 
-# In[229]:
+# In[39]:
 
 
 k = 'o3_vis_223K'
@@ -1120,6 +1140,84 @@ cross_section_tosave.keys()
 
 
 # # Prepare crossections for retrievals
+
+# ## Save the gxs straight from the convolution
+
+# From the GXS file:
+# 
+# gxs = 
+# 
+#   struct with fields:
+# 
+#        Loschmidt: 2.6868e+19
+#              bro: [1×1 struct]
+#          brocoef: [1556×1 double]
+#           brovis: [1044×2 double]
+#              ch4: [1×1 struct]
+#          ch4coef: [1556×1 double]
+#           ch4nir: [1×1 struct]
+#              co2: [1×1 struct]
+#          co2coef: [1556×1 double]
+#           co2nir: [1×1 struct]
+#           co2vis: [1×1 struct]
+#          h2ocoef: [1556×1 double]
+#             hcoh: [1×1 struct]
+#         hcohcoef: [1556×1 double]
+#          hcohvis: [1044×2 double]
+#            innir: 'O4_CIA_296K_nir.xs'
+#            invis: 'BrO_243K_AIR4star.txt'
+#              nir: [1×1 struct]
+#              no2: [1×1 struct]
+#          no2_220: [1×1 struct]
+#     no2_220Kcoef: [1556×1 double]
+#          no2_298: [1×1 struct]
+#     no2_298Kcoef: [1556×1 double]
+#          no2coef: [1556×1 double]
+#      no2coefdiff: [1556×1 double]
+#           no2vis: [947×2 double]
+#               o2: [1×1 struct]
+#           o2coef: [1556×1 double]
+#            o2nir: [1×1 struct]
+#            o2vis: [1×1 struct]
+#               o3: [1×1 struct]
+#           o3coef: [1556×1 double]
+#            o3vis: [1044×2 double]
+#               o4: [1×1 struct]
+#           o4coef: [1556×1 double]
+#            o4nir: [1×1 struct]
+#            o4vis: [1×1 struct]
+#              vis: [1×1 struct]
+#            water: [1×1 struct]
+#         waternir: [1×1 struct]
+#         watervis: [1×1 struct]
+# 
+
+# In[55]:
+
+
+gases.keys()
+
+
+# In[56]:
+
+
+gxs = {'Loschmidt': 2.6868e+19,
+       'no2_298Kcoef':gases['no2_vis_298K']['xs'],
+       'no2coefdiff':gases['no2_vis_298K']['xs']- gases['no2_vis_220K']['xs'],
+       'o3coef':gases['o3_vis_223K']['xs'],
+       'o4coef':gases['o4_nir_296K']['xs'],
+       'no2coef':gases['no2_vis_254K']['xs'],
+       'h2ocoef':gases['h2o_vis_1013mbar_273K']['xs']+gases['h2o_nir_1013mbar_273K']['xs'],
+       'hcohcoef':gases['hcoh_vis_293K']['xs'],
+       'brocoef':gases['bro_298K']['xs']
+       }
+
+
+# In[57]:
+
+
+sio.savemat(fp+'4STARB_20220830_gxs.mat',gxs)
+
 
 # ## Water vapor at multiple pressures/temps
 
