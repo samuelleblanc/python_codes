@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[1]:
+# In[94]:
 
 
 get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
@@ -26,13 +26,13 @@ from path_utils import getpath
 from plotting_utils import make_boxplot
 
 
-# In[2]:
+# In[95]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[6]:
+# In[96]:
 
 
 fp =getpath('SaSa2022')
@@ -40,25 +40,25 @@ fp =getpath('SaSa2022')
 
 # # load the files
 
-# In[10]:
+# In[143]:
 
 
 days = ['20220630','20220706','20220708','20220711','20220712']
 
 
-# In[11]:
+# In[98]:
 
 
 vv = 'R0'
 
 
-# In[12]:
+# In[99]:
 
 
 vi = ''
 
 
-# In[13]:
+# In[100]:
 
 
 outaod_RA = []
@@ -84,13 +84,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[14]:
+# In[101]:
 
 
 len(outaod_RA)
 
 
-# In[15]:
+# In[102]:
 
 
 len(days)
@@ -98,7 +98,7 @@ len(days)
 
 # ## Check the files for integrity and header info
 
-# In[16]:
+# In[103]:
 
 
 for i,s in enumerate(outaod_head_RA[0]):
@@ -110,13 +110,13 @@ for i,s in enumerate(outaod_head_RA[0]):
 #            print 'no match on RA gas string line {}: {} and RA of num {}:{} '.format(i,s,ir,r[i])
 
 
-# In[18]:
+# In[104]:
 
 
 g[i]
 
 
-# In[19]:
+# In[105]:
 
 
 print 'day:       AOD {vv}     GAS {vv}'.format(vv=vv)
@@ -127,13 +127,13 @@ for i,d in enumerate(days):
         print '{}: missed'.format(d)
 
 
-# In[20]:
+# In[106]:
 
 
 outaod_head_RA[-1]
 
 
-# In[84]:
+# In[107]:
 
 
 outgas_head_RA[0]
@@ -141,31 +141,31 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[21]:
+# In[108]:
 
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[22]:
+# In[109]:
 
 
 nm
 
 
-# In[26]:
+# In[110]:
 
 
 wl = nm[10:-1]
 
 
-# In[27]:
+# In[111]:
 
 
 wl = wl[0:24]
 
 
-# In[28]:
+# In[112]:
 
 
 for a in wl:
@@ -174,7 +174,7 @@ for a in wl:
 
 # # Plot the files
 
-# In[36]:
+# In[113]:
 
 
 for i,d in enumerate(days):
@@ -210,7 +210,7 @@ for i,d in enumerate(days):
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[35]:
+# In[114]:
 
 
 for i,d in enumerate(days):
@@ -240,13 +240,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_high_alt_AOD_{}.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[32]:
+# In[115]:
 
 
 wl[0:16]
 
 
-# In[34]:
+# In[116]:
 
 
 for i,d in enumerate(days):
@@ -277,7 +277,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_high_alt_AOD_{}_vis.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[38]:
+# In[117]:
 
 
 for i,d in enumerate(days):
@@ -310,13 +310,13 @@ for i,d in enumerate(days):
 
 # ## Plot the ACAOD (mid altitude 600-1800 m)
 
-# In[41]:
+# In[118]:
 
 
 nm[4]
 
 
-# In[44]:
+# In[119]:
 
 
 for i,d in enumerate(days):
@@ -350,13 +350,13 @@ for i,d in enumerate(days):
 
 # ## Plot the AOD with the uncertainty
 
-# In[46]:
+# In[120]:
 
 
 nm[34:50]
 
 
-# In[48]:
+# In[121]:
 
 
 for i,d in enumerate(days):
@@ -395,7 +395,7 @@ for i,d in enumerate(days):
 nm[50:]
 
 
-# In[52]:
+# In[122]:
 
 
 for i,d in enumerate(days):
@@ -428,19 +428,19 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_AOD_uncert_{vi}_{}_nir.png'.format(d,vv=vv,vi=vi),dpi=600,transparent=True)
 
 
-# In[53]:
+# In[123]:
 
 
 outaod_RA[i][unc][ii]
 
 
-# In[54]:
+# In[124]:
 
 
 nm[4]
 
 
-# In[55]:
+# In[125]:
 
 
 plt.figure()
@@ -450,19 +450,19 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[58]:
+# In[126]:
 
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[59]:
+# In[127]:
 
 
 wv
 
 
-# In[60]:
+# In[129]:
 
 
 for i,d in enumerate(days):
@@ -498,7 +498,7 @@ for i,d in enumerate(days):
 
 # ## Plot AOD spectra with polyfit
 
-# In[62]:
+# In[128]:
 
 
 for i,d in enumerate(days):
@@ -546,7 +546,7 @@ for i,d in enumerate(days):
 
 # ## Plotting of AOD per altitude and latitude
 
-# In[63]:
+# In[138]:
 
 
 for i,d in enumerate(days):
@@ -571,25 +571,25 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[64]:
+# In[131]:
 
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[65]:
+# In[132]:
 
 
 wls = np.array(wv)/1000.0
 
 
-# In[66]:
+# In[133]:
 
 
 wl[4]
 
 
-# In[69]:
+# In[139]:
 
 
 for i,d in enumerate(days):
@@ -622,7 +622,7 @@ for i,d in enumerate(days):
 
 # ## Plotting of AOD per altitude and Angstrom
 
-# In[70]:
+# In[140]:
 
 
 for i,d in enumerate(days):
@@ -656,7 +656,7 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[71]:
+# In[144]:
 
 
 ar = {}
@@ -664,13 +664,13 @@ for n in nm:
     ar[n] = np.array([])
 
 
-# In[72]:
+# In[145]:
 
 
 ar['days'] = np.array([])
 
 
-# In[73]:
+# In[146]:
 
 
 for i,d in enumerate(days):
@@ -679,13 +679,13 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[74]:
+# In[147]:
 
 
 ar['GPS_Alt'].shape
 
 
-# In[75]:
+# In[148]:
 
 
 ar.keys()
@@ -693,49 +693,49 @@ ar.keys()
 
 # ## filter for low altitudes
 
-# In[76]:
+# In[149]:
 
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[77]:
+# In[150]:
 
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[78]:
+# In[151]:
 
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[79]:
+# In[152]:
 
 
 ar['fl_alt_22'] = (ar['GPS_Alt']<=2200) & (ar['GPS_Alt']>=800)
 
 
-# In[80]:
+# In[153]:
 
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[84]:
+# In[154]:
 
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[85]:
+# In[155]:
 
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
-# In[86]:
+# In[156]:
 
 
 ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
@@ -743,13 +743,13 @@ ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
 
 # ## save to file
 
-# In[87]:
+# In[157]:
 
 
 import hdf5storage as hs
 
 
-# In[88]:
+# In[158]:
 
 
 hs.savemat(fp+'data_archival/AOD_ict_{vv}//all_aod_ict_{vv}_SaSa2022.mat'.format(vv=vv),ar)
@@ -777,7 +777,7 @@ ar = hs.loadmat(fp+'data_archival/AOD_ict_{vv}//all_aod_ict_{vv}_SaSa2022.mat'.f
 from plotting_utils import prelim
 
 
-# In[91]:
+# In[ ]:
 
 
 plt.figure()
@@ -799,4 +799,10 @@ plt.title('AOD distribution cloud filtered for 2022')
 #prelim()
 plt.legend(frameon=False)
 plt.savefig(fp+'plots/AOD_ict_{vv}/SaSa2022_{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 
