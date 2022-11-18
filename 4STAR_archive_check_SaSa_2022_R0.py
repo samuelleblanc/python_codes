@@ -8,7 +8,7 @@
 
 # # Load the defaults and imports
 
-# In[94]:
+# In[1]:
 
 
 get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
@@ -26,13 +26,13 @@ from path_utils import getpath
 from plotting_utils import make_boxplot
 
 
-# In[95]:
+# In[2]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[96]:
+# In[3]:
 
 
 fp =getpath('SaSa2022')
@@ -40,25 +40,25 @@ fp =getpath('SaSa2022')
 
 # # load the files
 
-# In[143]:
+# In[4]:
 
 
 days = ['20220630','20220706','20220708','20220711','20220712']
 
 
-# In[98]:
+# In[5]:
 
 
 vv = 'R0'
 
 
-# In[99]:
+# In[6]:
 
 
 vi = ''
 
 
-# In[100]:
+# In[9]:
 
 
 outaod_RA = []
@@ -67,11 +67,11 @@ outgas_RA = []
 outgas_head_RA = []
 for i,d in enumerate(days):
     try:
-        print 'Doing day: {}'.format(d)
+        print('Doing day: {}'.format(d))
         fname_aod = fp+'data_archival/AOD_ict_{vv}/4STARB-AOD_P3_{}_{vv}.ict'.format(d,vv=vv,vi=vi)
         tt,th = load_ict(fname_aod,return_header=True)
     except:
-        print '*** Problem with day: {} *** Skipping '.format(d)
+        print('*** Problem with day: {} *** Skipping '.format(d))
         days.pop(i)
         continue
     
@@ -84,13 +84,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[101]:
+# In[10]:
 
 
 len(outaod_RA)
 
 
-# In[102]:
+# In[11]:
 
 
 len(days)
@@ -777,7 +777,7 @@ ar = hs.loadmat(fp+'data_archival/AOD_ict_{vv}//all_aod_ict_{vv}_SaSa2022.mat'.f
 from plotting_utils import prelim
 
 
-# In[ ]:
+# In[159]:
 
 
 plt.figure()
@@ -799,6 +799,222 @@ plt.title('AOD distribution cloud filtered for 2022')
 #prelim()
 plt.legend(frameon=False)
 plt.savefig(fp+'plots/AOD_ict_{vv}/SaSa2022_{vv}_AOD_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[166]:
+
+
+plt.figure()
+plt.hist(ar['AOD1040'][ar['fl_QA']],bins=30,range=(0,0.2),alpha=0.5,normed=False,edgecolor='None',color='g',label='all QA data')
+plt.hist(ar['AOD1040'][ar['fl1']],bins=30,range=(0,0.2),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
+#plt.hist(ar['AOD0501'][ar['flr']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='y',label='Routine only')
+#plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='above 1800 m')
+#plt.yscale('log')
+plt.axvline(x=np.nanmean(ar['AOD1040'][ar['fl_QA']]),ls='-',color='g',lw=2.5,label='Mean')
+plt.axvline(x=np.nanmedian(ar['AOD1040'][ar['fl_QA']]),ls='--',color='g',label='Median')
+plt.axvline(x=np.nanmean(ar['AOD1040'][ar['fl1']]),ls='-',color='b',lw=2.5,alpha=0.5)
+plt.axvline(x=np.nanmedian(ar['AOD1040'][ar['fl1']]),ls='--',color='b',alpha=0.5)
+
+#plt.axvline(x=np.nanmean(ar['AOD0501'][ar['flr']]),ls='-',color='y',lw=2.5)
+#plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['flr']]),ls='--',color='darkkhaki')
+
+plt.xlabel('AOD at 1040 nm')
+plt.ylabel('Counts')
+plt.grid()
+plt.title('AOD distribution cloud filtered for 2022')
+#prelim()
+plt.legend(frameon=False)
+plt.savefig(fp+'plots/AOD_ict_{vv}/SaSa2022_{vv}_AOD1040_histogram.png'.format(vv=vv),dpi=600,transparent=True)
+
+
+# In[170]:
+
+
+for swvl in ['0380', '0501','0865','1040','1250','1559']:
+    plt.figure()
+    plt.hist(ar['UNCAOD'+swvl][ar['fl_QA']],bins=30,range=(0,0.025),alpha=0.5,normed=False,edgecolor='None',color='g',label='all QA data')
+    plt.hist(ar['UNCAOD'+swvl][ar['fl1']],bins=30,range=(0,0.025),alpha=0.5,normed=False,edgecolor='None',color='b',label='below 600 m')
+    #plt.hist(ar['AOD0501'][ar['flr']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='y',label='Routine only')
+    #plt.hist(ar['AOD0501'][ar['fl2']],bins=30,range=(0,1.0),alpha=0.5,normed=False,edgecolor='None',color='r',label='above 1800 m')
+    #plt.yscale('log')
+    plt.axvline(x=np.nanmean(ar['UNCAOD'+swvl][ar['fl_QA']]),ls='-',color='g',lw=2.5,label='Mean')
+    plt.axvline(x=np.nanmedian(ar['UNCAOD'+swvl][ar['fl_QA']]),ls='--',color='g',label='Median')
+    plt.axvline(x=np.nanmean(ar['UNCAOD'+swvl][ar['fl1']]),ls='-',color='b',lw=2.5,alpha=0.5)
+    plt.axvline(x=np.nanmedian(ar['UNCAOD'+swvl][ar['fl1']]),ls='--',color='b',alpha=0.5)
+
+    #plt.axvline(x=np.nanmean(ar['AOD0501'][ar['flr']]),ls='-',color='y',lw=2.5)
+    #plt.axvline(x=np.nanmedian(ar['AOD0501'][ar['flr']]),ls='--',color='darkkhaki')
+
+    plt.xlabel('AOD Uncertainty at {} nm'.format(swvl))
+    plt.ylabel('Counts')
+    plt.grid()
+    plt.title('AOD Uncertainty distribution cloud filtered for 2022')
+    #prelim()
+    plt.legend(frameon=False)
+    plt.savefig(fp+'plots/AOD_ict_{vv}/SaSa2022_{vv}_UNCAOD{swvl}_histogram.png'.format(vv=vv,swvl=swvl),dpi=600,transparent=True)
+
+
+# # Load the starsuns for getting the uncertainties distribution
+
+# In[173]:
+
+
+import glob
+fp_sun = getpath('sunsat')
+
+
+# In[175]:
+
+
+files6 = glob.glob(fp_sun+'SaSa_2022/data_processed/starsuns/*starsun.mat'.format(vv))
+f6s = [f for f in files6 if any(xs in f for xs in days)]
+f6s.sort()
+f6s
+
+
+# In[176]:
+
+
+var_names = ['t','tau_aero_noscreening','w','m_aero','tau_aero_err','m_err',
+                                      'tau_aero_err1','tau_aero_err2','tau_aero_err3','tau_aero_err4','tau_aero_err5',
+                                      'tau_aero_err6','tau_aero_err7','tau_aero_err8','tau_aero_err9','tau_aero_err10','tau_aero_err11']
+
+
+# In[177]:
+
+
+sp6 = {}
+for f in f6s:
+    ss = hs.loadmat(f,variable_names=var_names)
+    sp6[f.split('_')[-1][0:8]] = ss
+    print(f.split('_')[-1][0:8])
+
+
+# In[180]:
+
+
+var_names_1d = ['t','m_aero','m_err']
+var_names_wvl = ['tau_aero_err','tau_aero_err1','tau_aero_err2','tau_aero_err3','tau_aero_err4','tau_aero_err5',
+                                      'tau_aero_err6','tau_aero_err7','tau_aero_err8','tau_aero_err9','tau_aero_err10','tau_aero_err11']
+
+
+# In[184]:
+
+
+wvls = [356,380,452,470,501,520,530,532,550,606,620,660,675,706,781,865,1020,1040,1064,1236,1250,1559,1627,1650]
+iwvls = [np.argmin(sp6['20220630']['w']-x/1000.0) for x in wvls]
+
+
+# In[187]:
+
+
+# init
+s6 = {}
+s6['w'] = sp6['20220630']['w']
+for g in var_names_1d: s6[g] = sp6['20220630'][g]
+for g in var_names_wvl: s6[g] = sp6['20220630'][g][:,iwvls]
+# loop through
+for ss in days[1:]:
+    print(ss)
+    for g in var_names_wvl:
+        s6[g] = np.append(s6[g],sp6[ss][g][:,iwvls],axis=0)
+    for g in var_names_1d: s6[g] = np.append(s6[g],sp6[ss][g])
+
+
+# ## plot the uncertainties
+
+# In[225]:
+
+
+i380 = 1
+i452 = 2
+i500 = 4
+
+
+# In[226]:
+
+
+fig,ax = plt.subplots(3,4,figsize=(10,6))
+ax = ax.ravel()
+for i in range(11):
+    print(i)
+    lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+    try:
+        ig = np.isfinite(s6[lbl][:,i500])
+        sss = s6[lbl][ig,i500].astype(float)
+    except IndexError:
+        sss = s6[lbl].astype(float)
+        print('IndexError on {}'.format(i))
+    ax[i].hist(sss,bins=30)
+    ax[i].axvline(np.nanmean(sss),linestyle='-',label='mean={:1.5f}'.format(np.nanmean(sss)))
+    ax[i].axvline(np.nanmedian(sss),linestyle='--',label='median={:1.5f}'.format(np.nanmedian(sss)))
+    ax[i].legend(frameon=False)
+    ax[i].set_title(lbl)
+    ax[i].grid()
+#ax[11].axis('off')
+#plt.tight_layout()
+
+
+# In[213]:
+
+
+fig,ax = plt.subplots(3,4,figsize=(10,6))
+
+
+# In[214]:
+
+
+ax.shape
+
+
+# In[227]:
+
+
+i=0
+lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+ig = np.isfinite(s6[lbl][:,i500])
+sss = s6[lbl][ig,i500].astype(float)
+print(sss.min(),sss.max())
+
+
+# In[224]:
+
+
+s6[lbl][ig,i380]
+
+
+# In[216]:
+
+
+fig,ax = plt.subplots(3,4,figsize=(10,6))
+#ax = ax.ravel()
+
+i=0
+lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+ig = np.isfinite(s6[lbl][:,i380])
+sss = s6[lbl][ig,i380].astype(float)
+ax[0,i].hist(sss,bins=30)
+
+i=1
+lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+ig = np.isfinite(s6[lbl][:,i380])
+sss = s6[lbl][ig,i380].astype(float)
+ax[0,i].hist(sss,bins=30)
+
+i=2
+lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+ig = np.isfinite(s6[lbl][:,i380])
+sss = s6[lbl][ig,i380].astype(float)
+ax[0,i].hist(sss,bins=30)
+
+i=3
+lbl = 'tau_aero_err{:1.0f}'.format(i+1)
+ig = np.isfinite(s6[lbl][:,i380])
+sss = s6[lbl][ig,i380].astype(float)
+ax[0,i].hist(sss,bins=30)
+
+
+
 
 
 # In[ ]:
