@@ -2,7 +2,7 @@ altgraph==0.16.1
 backports.functools-lru-cache==1.6.1
 basemap==1.2.1
 BeautifulSoup==3.2.2
-certifi==2019.11.28
+certifi==2022.12.7
 cftime==1.0.4.2
 chardet==3.0.4
 cycler==0.10.0
