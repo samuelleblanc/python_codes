@@ -52,7 +52,7 @@ import matplotlib.pyplot as plt
 # In[4]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[5]:

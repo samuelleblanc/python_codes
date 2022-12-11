@@ -1,22 +1,26 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[48]:
+
 
 import matplotlib.pyplot as plt
 
 
 # In[1]:
 
-get_ipython().magic(u'matplotlib notebook')
+
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[2]:
+
 
 fp = 'C:\Users\NASA_\Documents\Research\ORACLES\plots\\'
 
 
 # In[58]:
+
 
 def init_packets(name, ip='10.15.1.1',plane='N426NA'):
     """
@@ -62,6 +66,7 @@ def init_packets(name, ip='10.15.1.1',plane='N426NA'):
 
 
 # In[59]:
+
 
 def get_packets(d,start_time=None,end_time=None,verbose=True,ip='10.15.1.1',plane='N426NA'):
     """
@@ -128,6 +133,7 @@ def get_packets(d,start_time=None,end_time=None,verbose=True,ip='10.15.1.1',plan
 
 # In[41]:
 
+
 def startup_packet(name,ip='10.15.1.1',plane='N426NA'):
     'function to run at startup for slowly loading up the data structures, to prohibit overwhelming the data systems'
     from datetime import datetime
@@ -151,6 +157,7 @@ def startup_packet(name,ip='10.15.1.1',plane='N426NA'):
 
 
 # In[145]:
+
 
 def update_packets(d):
     'Function to be used in the threading module to update the data dict with incoming packets'
@@ -185,81 +192,97 @@ def update_packets(d):
 
 # In[82]:
 
+
 import threading
 help(threading.Thread)
 
 
 # In[146]:
 
+
 th = threading.Thread(target=update_packets,args=([s]))
 
 
 # In[ ]:
+
 
 th.run()
 
 
 # In[ ]:
 
+
 s['stop_update']
 
 
 # In[ ]:
+
 
 s['UTC'][-1]
 
 
 # In[20]:
 
+
 iwg = startup_packet('IWG1',ip='10.16.1.1',plane='N439NA')
 
 
 # In[44]:
+
 
 s = startup_packet('4STARB',ip='10.16.1.1',plane='N439NA')
 
 
 # In[50]:
 
+
 s = get_packets(s,ip='10.16.1.1',plane='N439NA')
 
 
 # In[80]:
+
 
 d = get_packets(d)
 
 
 # In[82]:
 
+
 higear = startup_packet('HIGEAR')
 
 
 # In[85]:
+
 
 higear.keys()
 
 
 # In[17]:
 
+
 iwg.keys()
 
 
 # In[46]:
+
 
 s.keys()
 
 
 # In[55]:
 
+
 import threading
 
 
 # In[57]:
 
+
 help(threading)
 
 
 # In[51]:
+
 
 plt.figure()
 po = plt.plot(s['UTC'],s['nm501'],'.')
@@ -267,31 +290,37 @@ po = plt.plot(s['UTC'],s['nm501'],'.')
 
 # In[83]:
 
+
 iwg = startup_packet('IWG1')
 
 
 # In[64]:
+
 
 w = startup_packet('WISPER')
 
 
 # In[65]:
 
+
 w.keys()
 
 
 # In[67]:
+
 
 w = get_packets(w)
 
 
 # In[70]:
 
+
 plt.figure()
 plt.plot(w['pic0_qh2o_cal'],w['air_pres'],'.')
 
 
 # In[75]:
+
 
 plt.figure()
 cb = plt.scatter(w['pic0_qh2o_cal'],w['air_pres'],c=w['UTC'],edgecolor='None')
@@ -302,6 +331,7 @@ b.set_label('UTC [h]')
 
 # In[76]:
 
+
 w = get_packets(w)
 
 
@@ -310,7 +340,9 @@ w = get_packets(w)
 
 
 
+
 # In[79]:
+
 
 plt.figure()
 ps = plt.scatter(w['pic0_delo_cal'][w['pic0_qh2o_cal']>200.0],w['pic0_deld_cal'][w['pic0_qh2o_cal']>200.0],
@@ -321,11 +353,13 @@ b.set_label('Air pressure')
 
 # In[81]:
 
+
 plt.figure()
 plt.plot(d['UTC'],d['aod_500_nm'],'.')
 
 
 # In[84]:
+
 
 plt.figure()
 plt.plot(iwg['latitude'],iwg['gps_msl_alt'],'.')
@@ -338,10 +372,12 @@ plt.savefig(fp+'PRF04_alt_lat.png',dpi=600,transparent=True)
 
 # In[ ]:
 
+
 instruments = ['IWG1','4STAR','HIGEAR','COMA','UND','OZONE','SSFR','HSRL','WISPER','SP2']
 
 
 # In[ ]:
+
 
 data = {}
 for na in instruments:

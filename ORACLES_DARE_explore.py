@@ -66,7 +66,7 @@ import plotting_utils as pu
 # In[3]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[4]:
@@ -81,22 +81,35 @@ fp = getpath(name)
 
 # ## Load DARE calculations
 
-# In[13]:
+# In[5]:
 
 
 s = hs.loadmat(fp+'ORACLES_DARE_{}.mat'.format(vv))
 
 
-# In[14]:
+# In[6]:
 
 
 s.keys()
 
 
-# In[15]:
+# In[7]:
 
 
 s['dare'].shape
+
+
+# In[14]:
+
+
+s['cod'][15520:15540],s['ref'][15520:15540]
+
+
+# In[11]:
+
+
+plt.figure()
+plt.plot(s['cod'],'.')
 
 
 # In[16]:
@@ -2048,7 +2061,6 @@ plt.figure()
 plt.plot(dare_means[:,0],asy_means[:,0],'.')
 plt.figure()
 plt.plot(dare_means[:,0],ref_means[:,0],'.')
-
 
 
 
