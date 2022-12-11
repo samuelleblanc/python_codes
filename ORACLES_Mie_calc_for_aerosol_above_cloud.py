@@ -89,7 +89,7 @@ if not os.path.exists(fp_rtm):
 
 # # Load files
 
-# In[10]:
+# In[6]:
 
 
 f = fp + 'data_processed/starskies/skyscans_Logan_20221116/4STAR-aeroinv4wvl_P3_2016_R0.nc'
@@ -793,6 +793,242 @@ for i,w in list(enumerate(wave_out)):
     scalarmap = plt.cm.ScalarMappable(cmap=plt.cm.viridis)
     scalarmap.set_array(range(len(ae[b'time'])))
     cba = plt.colorbar(scalarmap,label='skyscan number')
+
+
+# # Load the calculated reflectances with/withaero for presentation
+
+# In[6]:
+
+
+import Run_libradtran as rl
+
+
+# In[10]:
+
+
+fo = '/scratch/rtm/input/TASNPP_v1/'
+zout=[0.2,1.5,100.0]
+
+
+# In[14]:
+
+
+aw0 = rl.read_libradtran(fo+'ORACLES_cloud_refl_w0.out',zout=zout)
+aw1 = rl.read_libradtran(fo+'ORACLES_cloud_refl_w1.out',zout=zout)
+nw0 = rl.read_libradtran(fo+'ORACLES_cloud_refl_w0_noaero.out',zout=zout)
+nw1 = rl.read_libradtran(fo+'ORACLES_cloud_refl_w1_noaero.out',zout=zout)
+
+
+# In[17]:
+
+
+aw0.keys()
+
+
+# In[18]:
+
+
+aw0['direct_down'].shape
+
+
+# In[20]:
+
+
+refl_a = np.hstack(aw0['direct_down'],aw1['direct_down'])
+#refl_n = 
+
+
+# In[26]:
+
+
+refl_a = np.vstack([aw0['diffuse_up'],aw1['diffuse_up']])/(np.vstack([aw0['direct_down'],aw1['direct_down']])+np.vstack([aw0['diffuse_down'],aw1['diffuse_down']]))
+refl_n = np.vstack([nw0['diffuse_up'],nw1['diffuse_up']])/(np.vstack([nw0['direct_down'],nw1['direct_down']])+np.vstack([nw0['diffuse_down'],nw1['diffuse_down']]))
+wvls = np.hstack([aw0['wvl'], aw1['wvl']])
+
+
+# In[30]:
+
+
+up_a = np.vstack([aw0['diffuse_up'],aw1['diffuse_up']])
+up_n = np.vstack([nw0['diffuse_up'],nw1['diffuse_up']])
+
+
+# ## plot the reflectances
+
+# In[27]:
+
+
+refl_a.shape
+
+
+# In[49]:
+
+
+plt.figure(figsize=(6,3))
+plt.plot(wvls,refl_a[:,2],label='With Absorbing aerosol')
+plt.plot(wvls,refl_n[:,2],label='No aerosol')
+plt.plot(wvls,refl_n[:,2]-refl_a[:,2],label='Difference (no aero - aero)')
+plt.legend()
+plt.grid()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Reflectances at TOA')
+plt.tight_layout()
+plt.savefig(fo+'ORACLES_cloud_Reflectance_with_without_aero.png',dpi=600,transparent=True)
+
+
+# In[50]:
+
+
+plt.figure(figsize=(6,3))
+plt.plot(wvls,refl_a[:,2],label='With Absorbing aerosol')
+plt.plot(wvls,refl_n[:,2],label='No aerosol')
+plt.plot(wvls,refl_n[:,2]-refl_a[:,2],label='Difference (no aero - aero)')
+plt.legend()
+for x in [470,550,660,860,1240,1630,2100]:
+    plt.axvline(x,color='grey',linestyle='--',lw=3)
+plt.grid()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Reflectances at TOA')
+plt.tight_layout()
+plt.savefig(fo+'ORACLES_cloud_Reflectance_with_without_aero_lines.png',dpi=600,transparent=True)
+
+
+# In[51]:
+
+
+fo
+
+
+# # Load and plot the relative ACAOD spectra
+
+# In[7]:
+
+
+ff = '/data/sam/ORACLES/'
+
+
+# In[8]:
+
+
+a6 = hs.loadmat(ff+'ORACLES2016_4STAR_ACAOD_relative_to_550.mat')
+a7 = hs.loadmat(ff+'ORACLES2017_4STAR_ACAOD_relative_to_550.mat')
+a8 = hs.loadmat(ff+'ORACLES2018_4STAR_ACAOD_relative_to_550.mat')
+
+
+# In[9]:
+
+
+a6.keys()
+
+
+# In[10]:
+
+
+print(a6['details'])
+
+
+# In[11]:
+
+
+wla = [470,550,675,865,1236]
+a6['aod'] = np.vstack([a6['AOD0470_rel']*a6['AOD0550_abs'],a6['AOD0550_abs'],a6['AOD0675_rel']*a6['AOD0550_abs'],a6['AOD0865_rel']*a6['AOD0550_abs'],a6['AOD1236_rel']*a6['AOD0550_abs']])
+a7['aod'] = np.vstack([a7['AOD0470_rel']*a7['AOD0550_abs'],a7['AOD0550_abs'],a7['AOD0675_rel']*a7['AOD0550_abs'],a7['AOD0865_rel']*a7['AOD0550_abs'],a7['AOD1236_rel']*a7['AOD0550_abs']])
+a8['aod'] = np.vstack([a8['AOD0470_rel']*a8['AOD0550_abs'],a8['AOD0550_abs'],a8['AOD0675_rel']*a8['AOD0550_abs'],a8['AOD0865_rel']*a8['AOD0550_abs'],a8['AOD1236_rel']*a8['AOD0550_abs']])
+
+
+# In[12]:
+
+
+a6['aod'].shape
+
+
+# In[71]:
+
+
+plt.figure()
+plt.plot(wla,a6['aod'],'.-',color='grey',lw=0.1)
+plt.ylim(0,1.3)
+
+
+# In[13]:
+
+
+aod6 = np.ma.masked_array(a6['aod'].T,np.isnan(a6['aod'].T))
+aod7 = np.ma.masked_array(a7['aod'].T,np.isnan(a7['aod'].T))
+aod8 = np.ma.masked_array(a8['aod'].T,np.isnan(a8['aod'].T))
+
+
+# In[16]:
+
+
+aod6.shape
+
+
+# In[61]:
+
+
+plt.figure(figsize=(5,3))
+plt.plot(wla,np.nanmean(aod6,axis=0),'o-',label='mean')
+plt.plot(wla,np.nanmedian(a6['aod'].T,axis=0),'+-',label='median')
+plt.plot(wla,np.nanpercentile(a6['aod'].T,75,axis=0),'^:',label='75% percentile')
+plt.plot(wla,np.nanpercentile(a6['aod'].T,25,axis=0),'v:',label='25% percentile')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Above Cloud AOD')
+plt.title('ORACLES 2016')
+plt.tight_layout()
+plt.savefig(ff+'ORACLES_2016_acaod_avg_for_TASNPP.png',dpi=600,transparent=True)
+
+
+# In[67]:
+
+
+plt.figure(figsize=(5,3))
+plt.plot(wla,np.nanmean(a6['aod']/a6['AOD0550_abs'],axis=1),'o-',label='mean')
+plt.plot(wla,np.nanmedian(a6['aod']/a6['AOD0550_abs'],axis=1),'+-',label='median')
+plt.plot(wla,np.nanpercentile(a6['aod']/a6['AOD0550_abs'],75,axis=1),'^:',label='75% percentile')
+plt.plot(wla,np.nanpercentile(a6['aod']/a6['AOD0550_abs'],25,axis=1),'v:',label='25% percentile')
+plt.axhline(1,ls='--',color='grey')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Above Cloud AOD Relative to 550 nm')
+plt.title('ORACLES 2016')
+plt.tight_layout()
+plt.savefig(ff+'ORACLES_2016_acaod_avg_for_TASNPP_rel550.png',dpi=600,transparent=True)
+
+
+# In[80]:
+
+
+qe_wv = [358.80689111129686,  434.3750056895338, 571.5909028841447, 804.2613372576161, 1046.8750739639393, 1233.8067545624858, 1683.2387765330593, 549.7159654690166]
+qe = [0.1507455703364354,  0.12325255219252594, 0.09832245607751045, 0.0640726880950128, 0.047064292802888326, 0.0391425919799973, 0.027027020685372494, 0.10205032909070726]
+
+
+# In[81]:
+
+
+qe_rel = np.array(qe)/np.array(qe[-1])
+isort = np.argsort(qe_wv)
+qe_wv = np.array(qe_wv)[isort]
+qe_rel = qe_rel[isort]
+
+
+# In[82]:
+
+
+plt.figure(figsize=(5,3))
+plt.plot(wla,np.nanmean(a6['aod']/a6['AOD0550_abs'],axis=1),'o-',label='mean')
+plt.plot(wla,np.nanmedian(a6['aod']/a6['AOD0550_abs'],axis=1),'+-',label='median')
+plt.plot(wla,np.nanpercentile(a6['aod']/a6['AOD0550_abs'],75,axis=1),'^:',label='75% percentile')
+plt.plot(wla,np.nanpercentile(a6['aod']/a6['AOD0550_abs'],25,axis=1),'v:',label='25% percentile')
+plt.plot(qe_wv,qe_rel,'-k',label='Relative Qe from Haywood et al., 2000')
+plt.axhline(1,ls='--',color='grey')
+plt.legend()
+plt.xlabel('Wavelength [nm]')
+plt.ylabel('Above Cloud AOD Relative to 550 nm')
+plt.title('ORACLES 2016')
+plt.tight_layout()
+plt.savefig(ff+'ORACLES_2016_acaod_avg_for_TASNPP_rel550_haywood.png',dpi=600,transparent=True)
 
 
 # In[ ]:
