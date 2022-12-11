@@ -602,7 +602,7 @@ def color_box(bp, color):
         
     for elem in elements:
         if len(bp[elem]) > len(colors):
-            [plt.setp(bp[elem][idx], color=colors[idx/2]) for idx in range(len(bp[elem]))]
+            [plt.setp(bp[elem][idx], color=colors[int(idx/2)]) for idx in range(len(bp[elem]))]
         else:
             [plt.setp(bp[elem][idx], color=colors[idx]) for idx in range(len(bp[elem]))]
     return
