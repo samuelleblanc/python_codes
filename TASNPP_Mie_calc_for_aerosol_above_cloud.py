@@ -61,7 +61,7 @@ import scipy.interpolate as si
 import netCDF4 as nc
 
 
-# In[164]:
+# In[2]:
 
 
 name = 'sunsat_ORACLES2016'
@@ -123,61 +123,61 @@ ae[b'scan_tag']
 
 # ## Extra meta information
 
-# In[14]:
+# In[11]:
 
 
 sk_meta = sio.loadmat(fp+'data_processed/starskies/skyscans_ORACLES2016_moredata.mat')
 
 
-# In[16]:
+# In[12]:
 
 
 sk_meta.keys()
 
 
-# In[18]:
+# In[13]:
 
 
 sk_meta['skyscans_meta'].shape
 
 
-# In[68]:
+# In[14]:
 
 
 sk_meta['skyscans_qcflags'].shape
 
 
-# In[55]:
+# In[15]:
 
 
 sk_meta['skyscan_vars'][0]
 
 
-# In[44]:
+# In[16]:
 
 
 sk_meta['skyscans_meta'][0,:]
 
 
-# In[47]:
+# In[17]:
 
 
 sk_meta['skyscans_all'].shape
 
 
-# In[191]:
+# In[18]:
 
 
 sk_meta['skyscans_all'][0,24]
 
 
-# In[64]:
+# In[19]:
 
 
 sk_meta['days'] = [dd[0][0] for dd in sk_meta['skyscans_all'][:,0]]
 
 
-# In[66]:
+# In[20]:
 
 
 sk_meta['filenum'] = [dd[0][0] for dd in sk_meta['skyscans_all'][:,1]]
@@ -185,19 +185,19 @@ sk_meta['filenum'] = [dd[0][0] for dd in sk_meta['skyscans_all'][:,1]]
 
 # ## Map the extra meta information to the skyscans in the file
 
-# In[69]:
+# In[21]:
 
 
 ae[b'scan_tag']
 
 
-# In[87]:
+# In[22]:
 
 
 from datetime import datetime
 
 
-# In[118]:
+# In[23]:
 
 
 days = []
@@ -206,13 +206,13 @@ for t in ae[b'time']:
     days.append(x.year*10000+x.month*100+x.day)
 
 
-# In[120]:
+# In[24]:
 
 
 days
 
 
-# In[161]:
+# In[25]:
 
 
 qc_flags = [4.0]*len(days)
@@ -221,7 +221,7 @@ for i,da in list(enumerate(days)):
     if any(ig): qc_flags[i] = (sk_meta['skyscans_qcflags'][ig][0][0])
 
 
-# In[163]:
+# In[26]:
 
 
 qc_flags
@@ -309,7 +309,7 @@ def spline_wavelength_extend(val,wavelen,new_wavelen,su=0.0006,k=2):
     return val_fx(new_wavelen)
 
 
-# In[32]:
+# In[29]:
 
 
 if vv == 'v1':
@@ -394,10 +394,16 @@ mie_input(fp_rtm+'mie_tester.inp',fp_rtm+'mie_tester.ref',fp_rtm+'mie_tester.psd
 
 # # Run through and make input files for scans
 
+# In[37]:
+
+
+vv2 = 'v2'
+base = 'mie_ORACLES2016_expansion_{}'.format(vv2)
+
+
 # In[42]:
 
 
-base = 'mie_ORACLES2016_expansion_{}'.format(vv)
 f_list = fp_rtm+base+'_list.sh'
 with open(f_list,'w') as f:
     for it,tt in list(enumerate(ae[b'time'])):
@@ -424,7 +430,7 @@ get_ipython().system('parallel --jobs=22 --bar < $f_list')
 
 # ## Read the mie output files
 
-# In[45]:
+# In[33]:
 
 
 fname = fp_rtm+basename+'.out'
@@ -442,7 +448,7 @@ outs = np.genfromtxt(fname)
 len(outs[0,7:]
 
 
-# In[51]:
+# In[35]:
 
 
 def read_mie_output(fname):
@@ -460,7 +466,7 @@ def read_mie_output(fname):
     return d
 
 
-# In[52]:
+# In[38]:
 
 
 dats = []
@@ -470,7 +476,7 @@ for it,tt in list(enumerate(ae[b'time'])):
     
 
 
-# In[54]:
+# In[39]:
 
 
 dats[0]['pmom'].shape
@@ -478,13 +484,15 @@ dats[0]['pmom'].shape
 
 # ## Plot out the ssa and asym extrapolations
 
-# In[56]:
+# In[90]:
 
 
 fpt = '/data/sam/TASNPP/ORACLES_aerosol_prop/'
 
 
-# In[57]:
+# ### SSA
+
+# In[40]:
 
 
 plt.figure()
@@ -501,6 +509,119 @@ plt.title('SSA extrapolation of ORACLES 2016')
 plt.xlabel('Wavelength [nm]')
 plt.ylabel('SSA')
 plt.savefig(fpt+'SSA_mie_extrapolation_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[41]:
+
+
+SSA_mie = np.zeros((len(ae[b'time']),len(wave_out)))
+for it,t in list(enumerate(ae[b'time'])):
+    SSA_mie[it,:] = dats[it]['ssa']
+
+
+# In[62]:
+
+
+import plotting_utils
+from plotting_utils import make_boxplot, color_box
+
+
+# In[71]:
+
+
+def coloring_box(bo,color='tab:blue',alpha=0.2,label='',mean_marker='s'):
+    color_box(bo,color)
+    for n in list(bo.keys()):
+        nul = [plt.setp(bo[n][idx],alpha=alpha)for idx in range(len(bo[n]))]
+    v = [plt.setp(bo['means'][idx],alpha=0.05)for idx in range(len(bo['means']))]
+    mean = [a.get_xdata()[0] for a in bo['means']]
+    pos = [a.get_ydata()[0] for a in bo['means']]
+    plt.plot(mean,pos,mean_marker+'-',zorder=100,color=color,label=label,lw=2.5,alpha=alpha)
+
+
+# In[93]:
+
+
+ssa_wv = np.array([307.1024108277745, 2134.6589491879768, 527.8410280538882, 225.56820561077757, 386.6477371001037, 684.9431657840408, 840.0567886996887, 1036.9317716310875, 1150.2840345309835, 1472.443097509636, 460.22733686383543])
+ssa_hay = np.array([0.9207865168539326, 0.8999999828552931, 0.9056179775280899, 0.9235954884732708, 0.9168539154395628, 0.8960674071579837, 0.8848314435294505, 0.8780898704957427, 0.8758426880568602, 0.8797752637541696, 0.910112342405855])
+issa = np.argsort(ssa_wv)
+ssa_wv = ssa_wv[issa]
+ssa_hay = ssa_hay[issa]
+
+
+# In[108]:
+
+
+wvm = np.array([470,550,660,860,1240,1630,2100])
+asy_mod4 = np.array([0.64,0.6,0.56,0.49,0.48,0.56,0.64]) 
+asy_hay = np.array([0.65,0.61,0.56,0.49,0.51,0.58,0.63])
+ssa_mod4 = np.array([0.88,0.87,0.85,0.80,0.73,0.7,0.7])
+ssa_hay = np.array([0.92,0.91,0.90,0.89,0.87,0.88,0.90])
+qe_mod4 = np.array([0.156,0.127,0.107,0.077,0.052,0.040,0.032])/(1.0-ssa_mod4)
+qe_hay = np.array([0.154,0.123,0.098,0.064,0.038,0.027,0.020])/(1.0-ssa_hay)
+
+
+# In[118]:
+
+
+plt.figure(figsize=(5,3))
+#bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'SSA'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(ae[b'wavelength'],ae[b'SSA'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,ssa_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,ssa_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+#coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 SSA: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend(loc=3)
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.65,0.95)
+plt.ylabel('SSA')
+plt.xlabel('Wavelength [nm]')
+plt.savefig(fpt+'SSA_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[119]:
+
+
+plt.figure(figsize=(5,3))
+
+
+bpa = plt.boxplot(ae[b'SSA'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(ae[b'wavelength'],ae[b'SSA'].T,'--',alpha=0.1,color='tab:orange')
+bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+plt.plot(wvm,ssa_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,ssa_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 SSA: Pistone et al. 2019',alpha=0.5)
+coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+plt.legend(loc=3)
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.65,0.95)
+plt.ylabel('SSA')
+plt.xlabel('Wavelength [nm]')
+plt.savefig(fpt+'SSA_ORACLES2016_with_extrap_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# ### Asym
+
+# In[ ]:
+
+
+
 
 
 # In[58]:
@@ -521,6 +642,118 @@ plt.ylabel('Asymmetry Parameter')
 plt.legend()
     
 plt.savefig(fpt+'ASYM_mie_extrapolation_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[99]:
+
+
+ASY_mie = np.zeros((len(ae[b'time']),len(wave_out)))
+for it,t in list(enumerate(ae[b'time'])):
+    ASY_mie[it,:] = dats[it]['asym']
+
+
+# In[ ]:
+
+
+x = [321.02274278963773, 2246.022697273367, 549.7159654690166, 247.44332509098695, 374.7159199527464, 645.1705026478767, 782.3863998424878, 1046.8750739639393, 1271.5909028841452, 1647.443325090987, 434.3750056895338]
+y = [0.658988746900237, 0.6286516682485517, 0.569101089306092, 0.6865168539325843, 0.6325842696629214, 0.5393258255519224, 0.4960674157303371, 0.4853932412822595, 0.5162921348314607, 0.5786516853932584, 0.610112342405855]
+
+
+# In[105]:
+
+
+asy_wvl = np.array([321.02274278963773, 2246.022697273367, 549.7159654690166, 247.44332509098695, 374.7159199527464, 645.1705026478767, 782.3863998424878, 1046.8750739639393, 1271.5909028841452, 1647.443325090987, 434.3750056895338])
+asy_hay = np.array([0.658988746900237, 0.6286516682485517, 0.569101089306092, 0.6865168539325843, 0.6325842696629214, 0.5393258255519224, 0.4960674157303371, 0.4853932412822595, 0.5162921348314607, 0.5786516853932584, 0.610112342405855])
+iasy = np.argsort(asy_wvl)
+asy_wvl = asy_wvl[iasy]
+asy_hay[iasy] = asy_hay[iasy]
+
+
+# In[120]:
+
+
+plt.figure(figsize=(5,3))
+#bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'g_total'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(ae[b'wavelength'],ae[b'g_total'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,asy_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,asy_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+#coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 ASY: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend()
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.45,0.8)
+plt.ylabel('Asymmetry Parameter')
+plt.xlabel('Wavelength [nm]')
+plt.savefig(fpt+'ASY_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[121]:
+
+
+plt.figure(figsize=(5,3))
+bpm = plt.boxplot(ASY_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(wave_out,ASY_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'g_total'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+plt.plot(ae[b'wavelength'],ae[b'g_total'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,asy_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,asy_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 ASY: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend()
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.45,0.8)
+plt.ylabel('Asymmetry Parameter')
+plt.xlabel('Wavelength [nm]')
+plt.savefig(fpt+'ASY_ORACLES2016_with_extrap_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# ## Plot out the size distribution
+
+# In[ ]:
+
+
+ae[b'radius'],convert_dvlnr_to_dndr(ae[b'psd'][0,:],ae[b'radius'])
+
+
+# In[124]:
+
+
+ae_dict[b'radius']
+
+
+# In[136]:
+
+
+plt.figure(figsize=(3,2))
+plt.plot(ae[b'radius'],ae[b'psd'].T,lw=0.5)
+plt.plot(ae[b'radius'],np.nanmean(ae[b'psd'].T,axis=1),'-k',lw=2.5,label='Mean')
+plt.plot(ae[b'radius'],np.nanmedian(ae[b'psd'].T,axis=1),'--k',lw=2.5,label='Median')
+
+plt.xscale('log')
+plt.xlabel('Radius [micron]')
+plt.ylabel('Size distribution dV/dln(r)')
+plt.legend()
+plt.grid()
+plt.tight_layout()
+plt.savefig(fpt+'PSD_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
 
 
 # ## Save as netcdf
