@@ -721,25 +721,25 @@ for k in list(gases2.keys()):
 #         cross_sections.ch4 = cross_sections.ch4_nir_1013mbar_interp;
 #         cross_sections.h2o = cross_sections.h2o_vis_1013mbar_294K_interp;
 
-# In[222]:
+# In[58]:
 
 
 xs_4starb = sio.loadmat(fp+'cross_sections_4starb.mat')
 
 
-# In[223]:
+# In[59]:
 
 
 xs_4star = sio.loadmat(fp+'cross_sections_uv_vis_swir_all.mat')
 
 
-# In[224]:
+# In[60]:
 
 
 xs_4star.keys()
 
 
-# In[225]:
+# In[61]:
 
 
 xs_4starb.keys()
@@ -767,7 +767,7 @@ cross_section_tosave['wln_notes'][:] = wln_notes
 
 # ### O3
 
-# In[39]:
+# In[62]:
 
 
 k = 'o3_vis_223K'
@@ -809,7 +809,7 @@ cross_section_tosave['o3_notes'][:] = o3_notes
 
 # ### NO2
 
-# In[234]:
+# In[63]:
 
 
 k = 'no2_vis_254K'
@@ -1217,6 +1217,15 @@ gxs = {'Loschmidt': 2.6868e+19,
 
 
 sio.savemat(fp+'4STARB_20220830_gxs.mat',gxs)
+
+
+# ## Verify GXS cross sections
+
+# In[ ]:
+
+
+plt.figure()
+plt.plot(gxs['o3coef'])
 
 
 # ## Water vapor at multiple pressures/temps
