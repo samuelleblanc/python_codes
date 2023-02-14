@@ -589,6 +589,35 @@ plt.xlabel('Wavelength [nm]')
 plt.savefig(fpt+'SSA_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[144]:
+
+
+plt.figure(figsize=(5,3))
+#bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'SSA'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(ae[b'wavelength'],ae[b'SSA'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,ssa_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,ssa_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+#coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 SSA: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend(loc=3)
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.65,0.95)
+plt.ylabel('SSA')
+plt.xlabel('Wavelength [nm]')
+plt.tight_layout()
+plt.savefig(fpt+'SSA_ORACLES2016_{}_nolines.png'.format(vv),dpi=600,transparent=True)
+
+
 # In[119]:
 
 
@@ -614,6 +643,34 @@ plt.ylim(0.65,0.95)
 plt.ylabel('SSA')
 plt.xlabel('Wavelength [nm]')
 plt.savefig(fpt+'SSA_ORACLES2016_with_extrap_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[145]:
+
+
+plt.figure(figsize=(5,3))
+
+
+bpa = plt.boxplot(ae[b'SSA'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(ae[b'wavelength'],ae[b'SSA'].T,'--',alpha=0.1,color='tab:orange')
+bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+plt.plot(wvm,ssa_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,ssa_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 SSA: Pistone et al. 2019',alpha=0.5)
+coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+plt.legend(loc=3)
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.65,0.95)
+plt.ylabel('SSA')
+plt.xlabel('Wavelength [nm]')
+plt.tight_layout()
+plt.savefig(fpt+'SSA_ORACLES2016_with_extrap_{}_nolines.png'.format(vv),dpi=600,transparent=True)
 
 
 # ### Asym
@@ -697,6 +754,35 @@ plt.xlabel('Wavelength [nm]')
 plt.savefig(fpt+'ASY_ORACLES2016_{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[141]:
+
+
+plt.figure(figsize=(5,3))
+#bpm = plt.boxplot(SSA_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,SSA_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'g_total'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(ae[b'wavelength'],ae[b'g_total'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,asy_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,asy_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+#coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 ASY: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend()
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.45,0.8)
+plt.ylabel('Asymmetry Parameter')
+plt.xlabel('Wavelength [nm]')
+plt.tight_layout()
+plt.savefig(fpt+'ASY_ORACLES2016_{}_nolines.png'.format(vv),dpi=600,transparent=True)
+
+
 # In[121]:
 
 
@@ -723,6 +809,35 @@ plt.ylim(0.45,0.8)
 plt.ylabel('Asymmetry Parameter')
 plt.xlabel('Wavelength [nm]')
 plt.savefig(fpt+'ASY_ORACLES2016_with_extrap_{}.png'.format(vv),dpi=600,transparent=True)
+
+
+# In[143]:
+
+
+plt.figure(figsize=(5,3))
+bpm = plt.boxplot(ASY_mie,positions=wave_out,showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(wave_out,ASY_mie.T,':',alpha=0.1,color='tab:blue')
+
+bpa = plt.boxplot(ae[b'g_total'],positions=ae[b'wavelength'],showfliers=False,widths=30,showmeans=True,patch_artist=True)
+#plt.plot(ae[b'wavelength'],ae[b'g_total'].T,'--',alpha=0.1,color='tab:orange')
+
+plt.plot(wvm,asy_hay,'^-',color='grey',label='SAFARI: Haywood et al., 2003')
+plt.plot(wvm,asy_mod4,'v-',color='grey',label='MOD04: Levy et al., 2009')
+
+coloring_box(bpm,'tab:blue',label='Mie extrapolation',alpha=0.5)
+coloring_box(bpa,'tab:orange',label='ORACLES 2016 ASY: Pistone et al. 2019',alpha=0.5)
+
+
+
+plt.legend()
+plt.xlim(350,1300)
+plt.xticks([400,500,550,675,860,995,1240],[400,500,550,675,860,995,1240])
+
+plt.ylim(0.45,0.8)
+plt.ylabel('Asymmetry Parameter')
+plt.xlabel('Wavelength [nm]')
+plt.tight_layout()
+plt.savefig(fpt+'ASY_ORACLES2016_with_extrap_{}_nolines.png'.format(vv),dpi=600,transparent=True)
 
 
 # ## Plot out the size distribution
