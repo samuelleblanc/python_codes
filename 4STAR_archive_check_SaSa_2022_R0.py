@@ -47,19 +47,26 @@ days = ['20220630','20220706','20220708','20220711','20220712','20220712']
 lvs = ['','','','','_L1','_L2']
 
 
-# In[16]:
+# In[4]:
+
+
+days = ['20220711']
+lvs = ['']
+
+
+# In[5]:
 
 
 vv = 'R0'
 
 
-# In[17]:
+# In[6]:
 
 
 vi = ''
 
 
-# In[18]:
+# In[7]:
 
 
 outaod_RA = []
@@ -85,13 +92,13 @@ for i,d in enumerate(days):
     #outgas_head_RA.append(thr)
 
 
-# In[19]:
+# In[8]:
 
 
 len(outaod_RA)
 
 
-# In[20]:
+# In[9]:
 
 
 len(days)
@@ -117,7 +124,7 @@ for i,s in enumerate(outaod_head_RA[0]):
 g[i]
 
 
-# In[25]:
+# In[10]:
 
 
 print('day:       AOD {vv}     GAS {vv}'.format(vv=vv))
@@ -128,13 +135,13 @@ for i,d in enumerate(days):
         print('{}: missed'.format(d))
 
 
-# In[26]:
+# In[11]:
 
 
 outaod_head_RA[-1]
 
 
-# In[107]:
+# In[12]:
 
 
 outgas_head_RA[0]
@@ -142,31 +149,31 @@ outgas_head_RA[0]
 
 # ## Check the variables in header
 
-# In[27]:
+# In[13]:
 
 
 nm = outaod_RA[0].dtype.names
 
 
-# In[28]:
+# In[14]:
 
 
 nm
 
 
-# In[29]:
+# In[15]:
 
 
 wl = nm[10:-1]
 
 
-# In[30]:
+# In[16]:
 
 
 wl = wl[0:24]
 
 
-# In[32]:
+# In[17]:
 
 
 for a in wl:
@@ -175,13 +182,13 @@ for a in wl:
 
 # # Plot the files
 
-# In[44]:
+# In[18]:
 
 
 lvs[1].strip('_')
 
 
-# In[45]:
+# In[19]:
 
 
 for i,d in enumerate(days):
@@ -217,7 +224,7 @@ for i,d in enumerate(days):
 
 # ## Plot the high altitude subset of the data for calibration
 
-# In[46]:
+# In[24]:
 
 
 for i,d in enumerate(days):
@@ -247,13 +254,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_high_alt_AOD_{}{lv}.png'.format(d,vv=vv,vi=vi,lv=lvs[i]),dpi=600,transparent=True)
 
 
-# In[47]:
+# In[25]:
 
 
 wl[0:16]
 
 
-# In[49]:
+# In[26]:
 
 
 for i,d in enumerate(days):
@@ -284,7 +291,7 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_high_alt_AOD_{}{lv}_vis.png'.format(d,vv=vv,vi=vi,lv=lvs[i]),dpi=600,transparent=True)
 
 
-# In[50]:
+# In[31]:
 
 
 for i,d in enumerate(days):
@@ -317,13 +324,13 @@ for i,d in enumerate(days):
 
 # ## Plot the ACAOD (mid altitude 600-1800 m)
 
-# In[51]:
+# In[50]:
 
 
 nm[4]
 
 
-# In[53]:
+# In[51]:
 
 
 for i,d in enumerate(days):
@@ -357,13 +364,13 @@ for i,d in enumerate(days):
 
 # ## Plot the AOD with the uncertainty
 
-# In[54]:
+# In[52]:
 
 
 nm[34:50]
 
 
-# In[57]:
+# In[53]:
 
 
 for i,d in enumerate(days):
@@ -396,13 +403,13 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_AOD_uncert_{vi}_{}{lv}_vis.png'.format(d,vv=vv,vi=vi,lv=lvs[i]),dpi=600,transparent=True)
 
 
-# In[50]:
+# In[54]:
 
 
 nm[50:]
 
 
-# In[58]:
+# In[55]:
 
 
 for i,d in enumerate(days):
@@ -435,19 +442,19 @@ for i,d in enumerate(days):
     plt.savefig(fp+'plots/AOD_ict_{vv}/{vv}_AOD_uncert_{vi}_{}{lv}_nir.png'.format(d,vv=vv,vi=vi,lv=lvs[i]),dpi=600,transparent=True)
 
 
-# In[59]:
+# In[56]:
 
 
 outaod_RA[i][unc][ii]
 
 
-# In[60]:
+# In[57]:
 
 
 nm[4]
 
 
-# In[61]:
+# In[58]:
 
 
 plt.figure()
@@ -457,19 +464,19 @@ plt.plot(outaod_RA[0][nm[0]][ii],outaod_RA[i][unc][ii],'.')
 
 # ## Plot spectral aod figures for high altitude
 
-# In[62]:
+# In[59]:
 
 
 wv = [float(v[3:]) for v in wl]
 
 
-# In[63]:
+# In[60]:
 
 
 wv
 
 
-# In[65]:
+# In[61]:
 
 
 for i,d in enumerate(days):
@@ -505,7 +512,7 @@ for i,d in enumerate(days):
 
 # ## Plot AOD spectra with polyfit
 
-# In[67]:
+# In[62]:
 
 
 for i,d in enumerate(days):
@@ -553,7 +560,7 @@ for i,d in enumerate(days):
 
 # ## Plotting of AOD per altitude and latitude
 
-# In[68]:
+# In[63]:
 
 
 for i,d in enumerate(days):
@@ -578,25 +585,25 @@ for i,d in enumerate(days):
 
 # ## Make plots of angstrom exponent
 
-# In[69]:
+# In[64]:
 
 
 wls = [0.38,0.452,0.501,0.520,0.532,0.55,0.606,0.620,0.675,0.781,0.865,1.02,1.04,1.064,1.236,1.559]
 
 
-# In[70]:
+# In[65]:
 
 
 wls = np.array(wv)/1000.0
 
 
-# In[71]:
+# In[66]:
 
 
 wl[4]
 
 
-# In[72]:
+# In[67]:
 
 
 for i,d in enumerate(days):
@@ -629,7 +636,7 @@ for i,d in enumerate(days):
 
 # ## Plotting of AOD per altitude and Angstrom
 
-# In[73]:
+# In[68]:
 
 
 for i,d in enumerate(days):
@@ -663,7 +670,7 @@ for i,d in enumerate(days):
 
 # # Combine all the data in a single array
 
-# In[74]:
+# In[69]:
 
 
 ar = {}
@@ -671,13 +678,13 @@ for n in nm:
     ar[n] = np.array([])
 
 
-# In[75]:
+# In[70]:
 
 
 ar['days'] = np.array([])
 
 
-# In[76]:
+# In[71]:
 
 
 for i,d in enumerate(days):
@@ -686,13 +693,13 @@ for i,d in enumerate(days):
         ar[n] = np.append(ar[n],outaod_RA[i][n])
 
 
-# In[77]:
+# In[72]:
 
 
 ar['GPS_Alt'].shape
 
 
-# In[78]:
+# In[73]:
 
 
 ar.keys()
@@ -700,49 +707,49 @@ ar.keys()
 
 # ## filter for low altitudes
 
-# In[79]:
+# In[74]:
 
 
 ar['fl_alt'] = (ar['GPS_Alt']>600) & (ar['GPS_Alt']<1800)
 
 
-# In[80]:
+# In[75]:
 
 
 ar['fl_alt_6'] = ar['GPS_Alt']<=600
 
 
-# In[81]:
+# In[76]:
 
 
 ar['fl_alt_18'] = ar['GPS_Alt']>=1800
 
 
-# In[82]:
+# In[77]:
 
 
 ar['fl_alt_22'] = (ar['GPS_Alt']<=2200) & (ar['GPS_Alt']>=800)
 
 
-# In[83]:
+# In[78]:
 
 
 ar['fl_QA'] = ar['qual_flag']==0
 
 
-# In[84]:
+# In[79]:
 
 
 ar['fl1'] = ar['fl_QA']&ar['fl_alt_6']
 
 
-# In[85]:
+# In[80]:
 
 
 ar['fl2'] = ar['fl_QA']&ar['fl_alt_18']
 
 
-# In[86]:
+# In[81]:
 
 
 ar['fl3'] = ar['fl_QA'] & ar['fl_alt_22']
