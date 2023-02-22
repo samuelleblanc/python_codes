@@ -201,6 +201,33 @@ for f in fp_mo:
     mop_dicts.append(mop_dict)
 
 
+# In[166]:
+
+
+len(mops)
+
+
+# In[179]:
+
+
+mop_COday = np.array([m['COday']  for m in mops])
+mop_COnight = np.array([m['COnight']  for m in mops])
+mop_COday.shape, mop_COnight.shape
+
+
+# In[199]:
+
+
+mop_COday[mop_COday == -9999] = np.nan
+mop_COnight[mop_COnight == -9999] = np.nan
+
+
+# In[176]:
+
+
+mop_time = [datetime(int(f.split('-')[1][0:4]),int(f.split('-')[1][4:6]),15)  for f in fp_mo]
+
+
 # In[130]:
 
 
@@ -211,7 +238,7 @@ mop_lon = list(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['Longitude'])
 mop_pre = list(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['Pressure'])
 
 
-# In[80]:
+# In[193]:
 
 
 mop_dict
@@ -298,6 +325,7 @@ def build_pd(data,time,name='mean_trop_NO2'):
     data_pd[name] = data
     data_pd.set_index('time', inplace = True)
     data_pd.dropna(inplace=True)
+    # return how many bad data in here
     dat = data_pd.resample('M').mean()
     dat.interpolate(inplace=True)
     return dat
@@ -330,6 +358,52 @@ gome_rg['China'].keys()
 
 
 gome_rg['China']['mean']['mean_GOME_tropNO2']
+
+
+# ## Subset for MOPITT (pressure level and regions)
+
+# Should change timeline to start at 2002:  
+# 
+# Rebecca bucholtz, et al., 2021, https://doi.org/10.1016/j.rse.2020.112275  
+# 
+
+# In[200]:
+
+
+mop_pre
+
+
+# In[201]:
+
+
+mop_lon = np.array(mop_lon)
+mop_lat = np.array(mop_lat)
+mop_lon.shape, mop_lat.shape, mop_COday.shape
+
+
+# In[208]:
+
+
+mopitt_day_rg = {}
+mopitt_night_rg = {}
+for rg in rgs: 
+    print(rg)
+    ill_lon = np.argmin(np.abs(mop_lon-rgs[rg][0][1]))
+    ill_lat = np.argmin(np.abs(mop_lat-rgs[rg][0][0]))
+    iur_lon = np.argmin(np.abs(mop_lon-rgs[rg][1][1]))
+    iur_lat = np.argmin(np.abs(mop_lat-rgs[rg][1][0]))
+    mopitt_day_rg[rg] = {}
+    mopitt_night_rg[rg] = {}
+    for ip,pr in list(enumerate(mop_pre)):
+        print(pr)
+        mopitt_day_rg[rg]['{:3.0f}'.format(pr)] = multi_stats_pd(mop_COday[:,ill_lon:iur_lon,ill_lat:iur_lat,ip],mop_time,name='MOPITT_dayCO_{:3.0f}'.format(pr))
+        mopitt_night_rg[rg]['{:3.0f}'.format(pr)] = multi_stats_pd(mop_COnight[:,ill_lon:iur_lon,ill_lat:iur_lat,ip],mop_time,name='MOPITT_nightCO_{:3.0f}'.format(pr))
+
+
+# In[203]:
+
+
+mopitt_day_rg['China']
 
 
 # # Plot out data
@@ -369,6 +443,54 @@ for rg in gome_rg:
         result_gome = seasonal_decompose(gome_rg[rg][typ][typ+'_GOME_tropNO2'])
         p = result_gome.plot()
         p.get_axes()[0].set_title(rg+ ': '+typ+'_GOME_tropNO2')
+        p.get_axes()[0].set_ylabel('All')
+
+
+# ## MOPITT CO regions
+
+# In[213]:
+
+
+mop_pre_lbl = ['{:3.0f}'.format(p) for p in mop_pre ]
+
+
+# In[214]:
+
+
+for pr in mop_pre_lbl:
+    for rg in mopitt_day_rg:
+        for typ in ['median']:
+            result_mop = seasonal_decompose(mopitt_day_rg[rg][pr][typ][typ+'_MOPITT_dayCO_'+pr])
+            p = result_mop.plot()
+            p.get_axes()[0].set_title(rg+ ': '+typ+'_MOPITT_dayCO_'+pr)
+            p.get_axes()[0].set_ylabel('All')
+
+
+# In[209]:
+
+
+for rg in mopitt_day_rg:
+    for typ in ['mean', 'median', 'min', 'max', 'std']:
+        result_mop = seasonal_decompose(mopitt_day_rg[rg]['800'][typ][typ+'_MOPITT_dayCO_800'])
+        p = result_mop.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_MOPITT_dayCO_800')
+        p.get_axes()[0].set_ylabel('All')
+
+
+# In[207]:
+
+
+mopitt_day_rg['China']
+
+
+# In[206]:
+
+
+for rg in mopitt_day_rg:
+    for typ in ['mean', 'median', 'min', 'max', 'std']:
+        result_mop = seasonal_decompose(mopitt_day_rg[rg][typ][typ+'_MOPITT_dayCO_800'])
+        p = result_mop.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_MOPITT_dayCO_800')
         p.get_axes()[0].set_ylabel('All')
 
 
