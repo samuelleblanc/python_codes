@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[30]:
+# In[2]:
 
 
 import numpy as np
@@ -56,14 +56,14 @@ import pandas as pd
 from datetime import datetime 
 
 
-# In[50]:
+# In[3]:
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
-# In[6]:
+# In[4]:
 
 
 name = 'ACCDAM'
@@ -244,6 +244,169 @@ mop_pre = list(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['Pressure'])
 mop_dict
 
 
+# ## Load TOMS O3
+
+# In[5]:
+
+
+fp
+
+
+# In[6]:
+
+
+toms_pd = pd.read_excel(fp+'TOMS_O3_L3/TOMS_monthly_trop_O3_L3_v01.xlsx')
+
+
+# In[19]:
+
+
+toms_ar = np.array(toms_pd)
+
+
+# In[25]:
+
+
+toms_ar[0:73,0]
+
+
+# In[56]:
+
+
+start_time = datetime(1978,12,31)
+end_time = datetime(2005,12,15)
+toms_time = pd.date_range(start=start_time,end=end_time,freq='MS') #jan1979_to_dec2005
+
+
+# In[78]:
+
+
+ntime = 27*12
+nlon = 72
+nlat = 12
+toms_O3 = np.zeros((nlat,nlon,ntime)) #lat, lon, time
+for n in range(ntime):
+    toms_O3[:,:,n] = toms_ar[(n*(nlon+2)):(n*(nlon+2))+nlon,1:].T
+
+
+# In[82]:
+
+
+toms_O3[toms_O3>900] = np.nan
+
+
+# In[85]:
+
+
+toms_lat = np.arange(-27.5,27.6,5)
+toms_lon = np.arange(-177.5,177.6,5)
+
+
+# ## Load OMI
+
+# ## Load CEDS NOx
+
+# In[111]:
+
+
+fp
+
+
+# ### Aircraft
+
+# In[112]:
+
+
+ceds_1980,ceds_1980_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_1980_1999.nc',everything=True)
+
+
+# In[113]:
+
+
+ceds_2000,ceds_2000_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_2000_2019.nc',everything=True)
+
+
+# In[126]:
+
+
+ceds_2000_dict[b'Time']
+
+
+# In[114]:
+
+
+ceds_2000[b'CEDS_NOx_aircraft_emission'].shape
+
+
+# In[115]:
+
+
+ceds_2000[b'Lat'].shape, ceds_2000[b'Lon'].shape, ceds_2000[b'Time'].shape
+
+
+# In[116]:
+
+
+ceds_1980[b'Lat'].shape, ceds_1980[b'Lon'].shape, ceds_1980[b'Time'].shape
+
+
+# In[136]:
+
+
+ceds_AC_NOx = np.vstack((ceds_1980[b'CEDS_NOx_aircraft_emission'],ceds_2000[b'CEDS_NOx_aircraft_emission']))
+ceds_time_days = np.hstack((ceds_1980[b'Time'],ceds_2000[b'Time']))
+
+
+# In[123]:
+
+
+ceds_AC_NOx.shape
+
+
+# In[137]:
+
+
+ceds_time = np.array([datetime(1750,1,1)+timedelta(days=int(d)) for d in ceds_time_days])
+
+
+# In[140]:
+
+
+ceds_lon = ceds_2000[b'Lon']
+ceds_lat = ceds_2000[b'Lat']
+
+
+# ### anthropogenic
+
+# In[138]:
+
+
+ceds_1980a,ceds_1980a_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_anthro_monthly_1980_1999.nc',everything=True)
+ceds_2000a,ceds_2000a_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_anthro_monthly_2000_2019.nc',everything=True)
+
+
+# In[139]:
+
+
+ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'CEDS_NOx_anthro_emission']))
+
+
+# ## Load TCR
+
+# In[ ]:
+
+
+
+
+
+# ## Load GFED CO
+
+# In[ ]:
+
+
+
+
+
 # # Set the different regions
 
 # From Matt Johnson on 8 février 2023 11:51  
@@ -282,7 +445,7 @@ mop_dict
 
 # ## Definition of the regions
 
-# In[83]:
+# In[88]:
 
 
 rgs = {'Southeast Asia':[[-12,95],[18,140]],
@@ -293,13 +456,13 @@ rgs = {'Southeast Asia':[[-12,95],[18,140]],
       } #lower left [lat lon], upper right [lat lon]
 
 
-# In[87]:
+# In[89]:
 
 
 rgs['China'][0]
 
 
-# In[144]:
+# In[90]:
 
 
 def multi_stats_pd(data,time,name='trop_NO2',axis=1):
@@ -315,7 +478,7 @@ def multi_stats_pd(data,time,name='trop_NO2',axis=1):
     
 
 
-# In[88]:
+# In[91]:
 
 
 def build_pd(data,time,name='mean_trop_NO2'):
@@ -406,6 +569,45 @@ for rg in rgs:
 mopitt_day_rg['China']
 
 
+# ## Subset for TOMS O3
+
+# In[107]:
+
+
+toms_rg = {}
+for rg in rgs: 
+    if rg == 'Siberia': continue # no TOMS data for Siberia
+    print(rg)
+    
+    ill_lon = np.argmin(np.abs(toms_lon-rgs[rg][0][1]))
+    ill_lat = np.argmin(np.abs(toms_lat-rgs[rg][0][0]))
+    iur_lon = np.argmin(np.abs(toms_lon-rgs[rg][1][1]))
+    iur_lat = np.argmin(np.abs(toms_lat-rgs[rg][1][0]))
+    
+    toms_rg[rg] = multi_stats_pd(toms_O3[ill_lat:iur_lat,ill_lon:iur_lon,:],toms_time,axis=0,name='TOMS_O3')
+    
+
+
+# ## Subset for CEDS NOx
+
+# In[141]:
+
+
+ceds_ac_rg = {}
+ceds_ant_rg = {}
+for rg in rgs: 
+    print(rg)
+    
+    ill_lon = np.argmin(np.abs(ceds_lon-rgs[rg][0][1]))
+    ill_lat = np.argmin(np.abs(ceds_lat-rgs[rg][0][0]))
+    iur_lon = np.argmin(np.abs(ceds_lon-rgs[rg][1][1]))
+    iur_lat = np.argmin(np.abs(ceds_lat-rgs[rg][1][0]))
+    
+    ceds_ac_rg[rg] = multi_stats_pd(ceds_AC_NOx[:,ill_lat:iur_lat,ill_lon:iur_lon],ceds_time,axis=1,name='CEDS_AC_NOx')
+    ceds_ant_rg[rg] = multi_stats_pd(ceds_Ant_NOx[:,ill_lat:iur_lat,ill_lon:iur_lon],ceds_time,axis=1,name='CEDS_Ant_NOx')
+    
+
+
 # # Plot out data
 
 # ## GOME Tropospheric NO2 one location
@@ -491,6 +693,47 @@ for rg in mopitt_day_rg:
         result_mop = seasonal_decompose(mopitt_day_rg[rg][typ][typ+'_MOPITT_dayCO_800'])
         p = result_mop.plot()
         p.get_axes()[0].set_title(rg+ ': '+typ+'_MOPITT_dayCO_800')
+        p.get_axes()[0].set_ylabel('All')
+
+
+# ## TOMS O3 
+
+# In[109]:
+
+
+for rg in toms_rg:
+    for typ in ['mean', 'median', 'std']:
+        result_toms = seasonal_decompose(toms_rg[rg][typ][typ+'_TOMS_O3'])
+        p = result_toms.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_TOMS_O3')
+        p.get_axes()[0].set_ylabel('All')
+
+
+# ## CEDS NOx
+
+# ### Aircraft
+
+# In[142]:
+
+
+for rg in ceds_ac_rg:
+    for typ in ['mean', 'median', 'std']:
+        result_ceds_ac = seasonal_decompose(ceds_ac_rg[rg][typ][typ+'_CEDS_AC_NOx'])
+        p = result_ceds_ac.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_CEDS_AC_NOx')
+        p.get_axes()[0].set_ylabel('All')
+
+
+# ### Anthropogenic
+
+# In[143]:
+
+
+for rg in ceds_ant_rg:
+    for typ in ['mean', 'median', 'std']:
+        result_ceds_ant = seasonal_decompose(ceds_ant_rg[rg][typ][typ+'_CEDS_Ant_NOx'])
+        p = result_ceds_ant.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_CEDS_Ant_NOx')
         p.get_axes()[0].set_ylabel('All')
 
 
