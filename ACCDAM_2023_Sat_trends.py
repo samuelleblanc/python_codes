@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[26]:
 
 
 import numpy as np
@@ -53,17 +53,17 @@ import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 import pandas as pd
-from datetime import datetime 
+from datetime import datetime, timedelta
 
 
-# In[3]:
+# In[2]:
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
-# In[4]:
+# In[3]:
 
 
 name = 'ACCDAM'
@@ -304,13 +304,11 @@ toms_lon = np.arange(-177.5,177.6,5)
 
 # ## Load OMI
 
+# ### ***Load MLS O3
+
+# ### ***Load OMI NO2 L2
+
 # ## Load CEDS NOx
-
-# In[111]:
-
-
-fp
-
 
 # ### Aircraft
 
@@ -393,13 +391,106 @@ ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'C
 
 # ## Load TCR
 
+# In[4]:
+
+
+fp
+
+
+# In[5]:
+
+
+fp_tcrl = os.listdir(fp+'TCR/TCR_2_data/')
+fp_tcr = [f for f in fp_tcrl if '.nc' in f]
+fp_tcr.sort()
+
+
+# In[6]:
+
+
+fp_tcrl
+
+
+# In[17]:
+
+
+tcr_vals = ['_'.join([f.split('_')[1],f.split('_')[3]]) for f in fp_tcrl]
+
+
+# In[15]:
+
+
+tcr_tmp,tcr_tmp_dict = lu.load_netcdf(fp+'TCR/TCR_2_data/'+fp_tcrl[0],everything=True)
+
+
+# In[16]:
+
+
+tcr = {'lat':tcr_tmp[b'lat'],'lon':tcr_tmp[b'lon'],'time':tcr_tmp[b'time']}
+
+
+# In[18]:
+
+
+tcr_vals
+
+
+# In[21]:
+
+
+for i,f in list(enumerate(fp_tcrl)):
+    tcr_tmp,tcr_tmp_dict = lu.load_netcdf(fp+'TCR/TCR_2_data/'+f,everything=True)
+    tcr[tcr_vals[i]] = tcr_tmp[tcr_vals[i].split('_')[0].encode('utf-8')]
+
+
+# In[24]:
+
+
+tcr_tmp_dict[b'time']
+
+
+# In[38]:
+
+
+tcr_time = np.array([datetime(2005+int(m//12),1+int(m%12),15) for m in tcr['time']])
+
+
+# In[63]:
+
+
+# convert the 0 to 360 into a -180 to 180 longitude
+tcr['lon'][tcr['lon']>=180.0] = tcr['lon'][tcr['lon']>=180.0] - 360.0
+
+
+# In[81]:
+
+
+tcr_tmp_dict[b'co']
+
+
 # In[ ]:
 
 
 
 
 
-# ## Load GFED CO
+# In[84]:
+
+
+plt.figure()
+plt.hist(tcr['co_bio'].flatten(),bins=30)
+plt.yscale('log')
+
+
+# In[85]:
+
+
+plt.figure()
+plt.hist(tcr['co_anth'].flatten(),bins=30)
+plt.yscale('log')
+
+
+# ## ***Load GFED CO
 
 # In[ ]:
 
@@ -445,7 +536,7 @@ ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'C
 
 # ## Definition of the regions
 
-# In[88]:
+# In[40]:
 
 
 rgs = {'Southeast Asia':[[-12,95],[18,140]],
@@ -462,7 +553,7 @@ rgs = {'Southeast Asia':[[-12,95],[18,140]],
 rgs['China'][0]
 
 
-# In[90]:
+# In[41]:
 
 
 def multi_stats_pd(data,time,name='trop_NO2',axis=1):
@@ -478,7 +569,7 @@ def multi_stats_pd(data,time,name='trop_NO2',axis=1):
     
 
 
-# In[91]:
+# In[42]:
 
 
 def build_pd(data,time,name='mean_trop_NO2'):
@@ -605,6 +696,58 @@ for rg in rgs:
     
     ceds_ac_rg[rg] = multi_stats_pd(ceds_AC_NOx[:,ill_lat:iur_lat,ill_lon:iur_lon],ceds_time,axis=1,name='CEDS_AC_NOx')
     ceds_ant_rg[rg] = multi_stats_pd(ceds_Ant_NOx[:,ill_lat:iur_lat,ill_lon:iur_lon],ceds_time,axis=1,name='CEDS_Ant_NOx')
+    
+
+
+# ## Subset for TCR NOx/CO
+
+# In[43]:
+
+
+tcr_vals
+
+
+# In[46]:
+
+
+tcr['nox_anth'].shape, tcr['lat'].shape, tcr['lon'].shape, tcr['time'].shape
+
+
+# In[50]:
+
+
+ill_lon, iur_lon, ill_lat, iur_lat
+
+
+# In[51]:
+
+
+tcr[val][:,ill_lat:iur_lat,ill_lon:iur_lon]
+
+
+# In[52]:
+
+
+val
+
+
+# In[65]:
+
+
+tcr_rg = {}
+first = True
+for rg in rgs: 
+    print(rg)
+    
+    ill_lon = np.argmin(np.abs(tcr['lon']-rgs[rg][0][1]))
+    ill_lat = np.argmin(np.abs(tcr['lat']-rgs[rg][0][0]))
+    iur_lon = np.argmin(np.abs(tcr['lon']-rgs[rg][1][1]))
+    iur_lat = np.argmin(np.abs(tcr['lat']-rgs[rg][1][0]))
+    
+    for val in tcr_vals:
+        if first: tcr_rg[val] = {}
+        tcr_rg[val][rg] = multi_stats_pd(tcr[val][:,ill_lat:iur_lat,ill_lon:iur_lon],tcr_time,axis=1,name='TCR'+val)
+    first = False
     
 
 
@@ -735,6 +878,32 @@ for rg in ceds_ant_rg:
         p = result_ceds_ant.plot()
         p.get_axes()[0].set_title(rg+ ': '+typ+'_CEDS_Ant_NOx')
         p.get_axes()[0].set_ylabel('All')
+
+
+# ## TCR
+
+# In[66]:
+
+
+tcr_vals
+
+
+# In[71]:
+
+
+tcr_rg['nox_anth']['Southeast Asia']['mean']
+
+
+# In[74]:
+
+
+for val in tcr_vals:
+    for rg in tcr_rg[val]:
+        for typ in ['mean', 'median', 'std']:
+            result_tcr = seasonal_decompose(tcr_rg[val][rg][typ][typ+'_TCR'+val])
+            p = result_tcr.plot()
+            p.get_axes()[0].set_title(rg+ ': '+typ+'_TCR'+val)
+            p.get_axes()[0].set_ylabel('All')
 
 
 # In[ ]:
