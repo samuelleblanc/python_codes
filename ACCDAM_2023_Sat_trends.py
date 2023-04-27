@@ -894,7 +894,7 @@ tcr_vals
 tcr_rg['nox_anth']['Southeast Asia']['mean']
 
 
-# In[74]:
+# In[ ]:
 
 
 for val in tcr_vals:
@@ -904,6 +904,26 @@ for val in tcr_vals:
             p = result_tcr.plot()
             p.get_axes()[0].set_title(rg+ ': '+typ+'_TCR'+val)
             p.get_axes()[0].set_ylabel('All')
+
+
+# In[ ]:
+
+
+
+
+
+# # Get the time series for the different percentile ranges
+
+# In[86]:
+
+
+pcts = [5.0,33.0,50.0,66.0,95.0]
+
+
+# In[ ]:
+
+
+datp = np.percentile(dat,pcts)
 
 
 # In[ ]:
