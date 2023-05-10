@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[26]:
+# In[1]:
 
 
 import numpy as np
@@ -304,9 +304,163 @@ toms_lon = np.arange(-177.5,177.6,5)
 
 # ## Load OMI
 
-# ### ***Load MLS O3
+# ### Load MLS O3
 
-# ### ***Load OMI NO2 L2
+# In[12]:
+
+
+fp
+fpp_mlso3 = fp+'OMI_MLS_O3_L3/OMI_MLS_O3_L3_ncfiles/'
+
+
+# In[13]:
+
+
+fp_mls_o3 = os.listdir(fpp_mlso3)
+fp_mls_o3 = [f for f in fp_mls_o3 if '.nc' in f]
+fp_mls_o3.sort()
+
+
+# In[10]:
+
+
+fp_mls_o3
+
+
+# In[14]:
+
+
+mlso3_tmp,mlso3_tmp_dict = lu.load_netcdf(fpp_mlso3+fp_mls_o3[0],everything=True)
+
+
+# In[20]:
+
+
+mlso3_tmp[b'tropo3'].shape, mlso3_tmp[b'lon'].shape[0], mlso3_tmp[b'lat'].shape[0]
+
+
+# In[16]:
+
+
+ntime = len(fp_mls_o3)
+
+
+# In[24]:
+
+
+mls_o3 = {'lat':mlso3_tmp[b'lat'],'lon':mlso3_tmp[b'lon'],'time':[],'tropo3':np.zeros((ntime,mlso3_tmp[b'lat'].shape[0],mlso3_tmp[b'lon'].shape[0]))}
+
+
+# In[43]:
+
+
+mls_o3['time'] = []
+for i,f in list(enumerate(fp_mls_o3)):
+    mlso3_tmp,mlso3_tmp_dict = lu.load_netcdf(fpp_mlso3+f,everything=True)
+    monthstr = f.split('_')[2]
+    mls_o3['time'].append(datetime(int(monthstr[0:4]),int(monthstr[4:6]),15))
+    mls_o3['tropo3'][i,:,:] = mlso3_tmp[b'tropo3']
+
+
+# In[44]:
+
+
+mls_o3_time = np.array(mls_o3['time'])
+
+
+# In[51]:
+
+
+mlso3_tmp_dict[b'tropo3']
+
+
+# In[54]:
+
+
+mls_o3['tropo3'] = mls_o3['tropo3']/10.0
+
+
+# ### ** Load OMI NO2 L2
+
+# In[57]:
+
+
+fp
+fpp_mlsno2 = fp+'OMI_NO2/'
+
+
+# In[58]:
+
+
+fp_mls_no2 = os.listdir(fpp_mlsno2)
+fp_mls_no2 = [f for f in fp_mls_no2 if '.mat' in f]
+fp_mls_no2.sort()
+
+
+# In[59]:
+
+
+fp_mls_no2
+
+
+# In[61]:
+
+
+mlsno2_tmp = sio.loadmat(fpp_mlsno2+fp_mls_no2[0])
+
+
+# In[63]:
+
+
+mlsno2_tmp.keys()
+
+
+# In[65]:
+
+
+mlsno2_tmp['NO2_monthly_avg'].shape, mlsno2_tmp['LAT'].shape, mlsno2_tmp['LON'].shape
+
+
+# In[66]:
+
+
+ntime = len(fp_mls_no2)*12
+
+
+# In[72]:
+
+
+mls_no2 = {'lat':mlsno2_tmp['LAT'],'lon':mlsno2_tmp['LON'],'time':[],'no2':np.zeros((ntime,mlsno2_tmp['LAT'].shape[0],mlsno2_tmp['LON'].shape[1]))}
+
+
+# In[74]:
+
+
+mls_no2['time'] = []
+for i,f in list(enumerate(fp_mls_no2)):
+    mlsno2_tmp = sio.loadmat(fpp_mlsno2+f)
+    yearstr = f.split('_')[4]
+    [mls_no2['time'].append(datetime(int(yearstr[0:4]),m,15)) for m in range(1,13)]
+    mls_no2['no2'][i*12:(i+1)*12,:,:] = mlsno2_tmp['NO2_monthly_avg']
+
+
+# In[44]:
+
+
+mls_no2_time = np.array(mls_no2['time'])
+
+
+# In[51]:
+
+
+mlsno2_tmp_dict[b'tropno2']
+
+
+# In[54]:
+
+
+mls_no2['tropno2'] = mls_no2['tropno2']/10.0
+
 
 # ## Load CEDS NOx
 
@@ -536,7 +690,7 @@ plt.yscale('log')
 
 # ## Definition of the regions
 
-# In[40]:
+# In[37]:
 
 
 rgs = {'Southeast Asia':[[-12,95],[18,140]],
@@ -547,13 +701,13 @@ rgs = {'Southeast Asia':[[-12,95],[18,140]],
       } #lower left [lat lon], upper right [lat lon]
 
 
-# In[89]:
+# In[38]:
 
 
 rgs['China'][0]
 
 
-# In[41]:
+# In[39]:
 
 
 def multi_stats_pd(data,time,name='trop_NO2',axis=1):
@@ -569,7 +723,7 @@ def multi_stats_pd(data,time,name='trop_NO2',axis=1):
     
 
 
-# In[42]:
+# In[40]:
 
 
 def build_pd(data,time,name='mean_trop_NO2'):
@@ -676,6 +830,27 @@ for rg in rgs:
     iur_lat = np.argmin(np.abs(toms_lat-rgs[rg][1][0]))
     
     toms_rg[rg] = multi_stats_pd(toms_O3[ill_lat:iur_lat,ill_lon:iur_lon,:],toms_time,axis=0,name='TOMS_O3')
+    
+
+
+# ## Subset for OMI MLS
+
+# ### Ozone
+
+# In[55]:
+
+
+mlso3_rg = {}
+for rg in rgs: 
+    #if rg == 'Siberia': continue # no TOMS data for Siberia
+    print(rg)
+    
+    ill_lon = np.argmin(np.abs(mls_o3['lon']-rgs[rg][0][1]))
+    ill_lat = np.argmin(np.abs(mls_o3['lat']-rgs[rg][0][0]))
+    iur_lon = np.argmin(np.abs(mls_o3['lon']-rgs[rg][1][1]))
+    iur_lat = np.argmin(np.abs(mls_o3['lat']-rgs[rg][1][0]))
+    
+    mlso3_rg[rg] = multi_stats_pd(mls_o3['tropo3'][:,ill_lat:iur_lat,ill_lon:iur_lon],mls_o3_time,axis=1,name='OMI_MLS_O3')
     
 
 
@@ -852,6 +1027,34 @@ for rg in toms_rg:
         p.get_axes()[0].set_ylabel('All')
 
 
+# ## OMI MLS
+
+# ### O3
+
+# In[79]:
+
+
+type(result_mlso3.trend)
+
+
+# In[83]:
+
+
+mlso3_rg['Southeast Asia']['mean']
+
+
+# In[56]:
+
+
+for rg in mlso3_rg:
+    for typ in ['mean', 'median', 'std']:
+        result_mlso3 = seasonal_decompose(mlso3_rg[rg][typ][typ+'_OMI_MLS_O3'])
+        p = result_mlso3.plot()
+        p.get_axes()[0].set_title(rg+ ': '+typ+'_OMI_MLS_O3')
+        p.get_axes()[0].set_ylabel('All')
+        mlso3_rg[rg][typ]['trend'] = p.trend
+
+
 # ## CEDS NOx
 
 # ### Aircraft
@@ -925,6 +1128,151 @@ pcts = [5.0,33.0,50.0,66.0,95.0]
 
 datp = np.percentile(dat,pcts)
 
+
+# In[ ]:
+
+
+
+
+
+# # Make figures of the trends for each points
+
+# ## Load the functions
+
+# In[136]:
+
+
+import cartopy.crs as ccrs
+import statsmodels.api as sm
+import cartopy
+
+
+# In[221]:
+
+
+def trends_and_pval_per_lat_lon(data,lat,lon,time,name='mean_trop_NO2'):
+    "Find the linear trend and its pval for each lat/lon point"
+    nlat = len(lat)
+    nlon = len(lon)
+    
+    # Create an empty array to hold the trend and p-value for each lat and lon point
+    trend = np.empty((nlat, nlon))
+    trend_pval = np.empty((nlat, nlon))
+    for i in range(nlat):
+        for j in range(nlon):
+            # Extract the time series for this lat and lon point
+            ts = build_pd(data[:, i, j],time,name=name)
+            ts.dropna()
+
+            # Perform seasonal decomposition on the time series
+            result = seasonal_decompose(ts[name]) #, model='additive', period=12)
+
+            # Extract the trend component from the decomposition
+            trend_comp = result.trend
+            trend_comp.dropna()
+
+            # Calculate the straight trend using the OLS method
+            fitl = sm.OLS(trend_comp, sm.add_constant(range(len(trend_comp))),missing='drop').fit()
+            trend[i, j] = fitl.params[1]
+
+            # Calculate the p-value for the trend using a t-test
+            trend_pval[i, j] = fitl.pvalues[1]
+
+    return trend,trend_pval
+
+
+# In[233]:
+
+
+def plot_trend_and_pval(trend,trend_pval,lon,lat,name='',cax_name='Trend',figsize=(10,4)):
+    
+    pr = ccrs.PlateCarree()
+    # Set up the plot
+    fig = plt.figure(figsize=figsize)
+    ax = plt.axes(projection=pr)
+
+    # Define the colormap
+    cmap = plt.cm.get_cmap('RdBu_r', 12)
+
+    # Create a filled contour plot of the trend
+    contour_levels = np.arange(-0.025, 0.04, 0.005)
+    contour = ax.contourf(lon, lat, trend, contour_levels,
+                          cmap=cmap, transform=pr, extend='both')
+
+    # Add a colorbar
+    cbar = plt.colorbar(contour, shrink=0.6, pad=0.02)
+    cbar.ax.set_ylabel(cax_name, fontsize=16)
+
+    # Add a land mask
+    ax.add_feature(cartopy.feature.LAND, edgecolor='black', facecolor='None', alpha=0.3,zorder=-100)
+
+    # Add a grid
+    gl = ax.gridlines(color='gray', linestyle='--',draw_labels=True)
+    gl.xlabels_top = False
+    gl.ylabels_right = False
+
+    # Add a '+' symbol for statistically significant trends
+    significant = np.where(trend_pval < 0.05)
+    ax.scatter(lon[significant[1]][0::5], lat[significant[0]][0::5], marker='+', color='k', transform=pr,s=0.5)
+
+    # Add a title
+    plt.title('Trend for '+name, fontsize=18)
+    ax.add_feature(cartopy.feature.COASTLINE)
+    return fig
+
+
+# In[223]:
+
+
+def span_pd_lat_lon(data,time,lat,lon,name='OMI_MLS_O3',axis=1):
+    "build the pandas time series for each point in lat lon"
+    nlat = len(lat)
+    nlon = len(lon)
+    ntime  = len(time)
+    dat = np.empty((ntime,nlat,nlon))
+    for i in range(nlat):
+        for j in range(nlon):
+            dat[:,i,j] = build_pd(data[:,i,j],time,name=name)
+    return dat
+
+
+# ## Plot the GOME NO2
+
+# In[ ]:
+
+
+gome[b'lon']
+gome[b'lat']
+
+gome_rg[rg] = multi_stats_pd(gome[b'TroposNO2'][:,ilat,ilon],gometime,name='GOME_tropNO2')
+
+
+# ##  Plot the OMI MLS
+
+# ### O3
+
+# In[224]:
+
+
+mls_o3_trend,mls_o3_trend_pval = trends_and_pval_per_lat_lon(mls_o3['tropo3'],mls_o3['lat'],mls_o3['lon'],mls_o3_time,name='OMI_MLS_O3')
+
+
+# In[228]:
+
+
+mls_o3_time[0],mls_o3_time[-1]
+
+
+# In[237]:
+
+
+fig = plot_trend_and_pval(mls_o3_trend,mls_o3_trend_pval,mls_o3['lon'],mls_o3['lat'],
+                          name=name+' De-seasonalized [{:%Y/%m}-{:%Y/%m}]'.format(mls_o3_time[0],mls_o3_time[-1]),
+                          cax_name='O3 trend [DU/month]',figsize=(10,4))
+fig.tight_layout()
+
+
+# ### NO2
 
 # In[ ]:
 
