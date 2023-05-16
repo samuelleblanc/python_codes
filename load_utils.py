@@ -474,7 +474,7 @@ def load_emas(datfile):
 # In[2]:
 
 
-def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_geo=False):
+def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=-1,get_geo=False):
     """
     Name:
 
@@ -497,7 +497,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_g
     Output:
 
         hdf_dat dictionary with the names of values saved, with associated dictionary values
-        hdf_dicts : metadate for each of the variables
+        hdf_dicts : metadate for each of the variables (only if get_meta is True)
     
     Keywords: 
 
@@ -506,7 +506,7 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_g
                 example: modis_values=(('cloud_top',57),('phase',53),('cloud_top_temp',58),('ref',66),('tau',72))
         verbose: if true (default), then everything is printed. if false, nothing is printed
         all_values: if True, then outputs all the values with their original names, (defaults to False), overrides values keyword
-        i_subdata: value of the subdataset index
+        i_subdata: value of the subdataset index, if -1, then tries to find it by itself.
         get_geo: get each pixel lat/lon from the gdal projections
     
     Dependencies:
@@ -537,6 +537,8 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_g
                         - added the i_subdata keyword
         Modified (v1.5): Samuel LeBlanc, 2022-03-01, Santa Cruz, CA
                         - added the get_geo keyword for returning the lat and lon of each pixel
+        Modified (v1.6): Samuel LeBlanc, 2022-12-06, Santa Cruz, CA
+                        - added the automated subdata index checking
     """
     import numpy as np
     from osgeo import gdal,osr
@@ -579,8 +581,14 @@ def load_hdf(datfile,values=None,verbose=True,all_values=False,i_subdata=1,get_g
     if verbose:
         startprogress('Running through data values')
     for i,j in values:
+        if i_subdata<0:
+            for isub in range(len(datsub[j])):
+                sds = gdal.Open(datsub[j][isub])
+                if sds: 
+                    i_subdata = isub
+                    break
         sds = gdal.Open(datsub[j][i_subdata])
-        hdf_dicts[i] = sds.GetMetadata()
+        hdf_dicts[i] = sds.GetMetadata()        
         hdf[i] = np.array(sds.ReadAsArray())
         if not hdf[i].any():
             import pdb; pdb.set_trace()

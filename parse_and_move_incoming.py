@@ -118,6 +118,7 @@ root_folder = in_.get('root_dir','/data/sunsat/')
 verbose = not in_.get('quiet',False)
 dry_run = in_.get('dry_run',True)
 run_matlab = in_.get('run_matlab',False)
+matv19 = False #setting the version of matlab
 
 
 # In[9]:
@@ -176,15 +177,24 @@ if data_raw_found:
         if not daystr0 in daystrss:
             daystrss.append(daystr0)
             if fa_tmp.campaign.find('rooftop') >= 0:
-                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
-                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                try:
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
             if fa_tmp.campaign.find('MLO') >= 0:
-                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Mauna_Loa',path=str(fa_tmp.newpath),version=3)
-                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
-            if fa_tmp.campaign.find('SaSa') >= 0:
-                aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='WFF_X-75_Sci_Obs',path=str(fa_tmp.newpath),version=3)
-                if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                try: 
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Mauna_Loa',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
 
+            if fa_tmp.campaign.find('SaSa') >= 0:
+                try: 
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='WFF_X-75_Sci_Obs',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
 # In[66]:
 
 
@@ -247,20 +257,28 @@ if run_matlab:
             path=os.getenv('PATH')
             for p in path.split(os.path.pathsep):
                 p=os.path.join(p,pgm)
-                if os.path.exists(p) and os.access(p,os.X_OK):
+                if os.path.exists(p):
                     return p
 
         mat_path = which('matlab')
-        if verbose: 
-            print( ' '.join(['{}{}'.format(prefix,mat_path),'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)]))
+        if not mat_path: mat_path = '/usr/local/bin/matlab'
+        if matv19:
+            command_mat = [mat_path,'-nodisplay','-batch',"{}".format(str(pmfile.stem))]
+        else:
+            command_mat = [mat_path,'-nodisplay','-nosplash','-r',"cd('{}'); {}; exit;".format(str(pmfile.parent),str(pmfile.stem))]
+        if verbose:
+            print( ' '.join(['{}'.format(prefix)]+command_mat))
+
         if not dry_run:
             os.chdir(str(pmfile.parent))
-            process = subprocess.Popen([mat_path,'-nodisplay','-batch',"cd('{}');{},exit;".format(str(pmfile.parent),pmfile.stem)],
+            process = subprocess.Popen(command_mat,
                                        shell=False, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-
             while True:
                 # handle output by direct access to stdout and stderr
-                output = process.stdout.readline()
+                try:
+                    output = process.stdout.readline()
+                except Exception as e:
+                    print(e)
                 if process.poll() is not None:
                     break
                 if output:
@@ -279,8 +297,6 @@ if run_matlab:
                 if not fs.newfile.exists():
                      print(' ***  file {} has not been created'.format(str(fs.newfile)))
                      nmats = nmats-1
-
-
 # In[68]:
 
 

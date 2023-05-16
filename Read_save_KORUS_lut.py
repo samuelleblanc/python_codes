@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Name:  
@@ -45,6 +45,7 @@
 
 # In[9]:
 
+
 import numpy as np
 import Run_libradtran as RL
 import hdf5storage as hs
@@ -54,10 +55,12 @@ import scipy.io as sio
 
 # In[ ]:
 
+
 name = 'KORUS'
 
 
 # In[5]:
+
 
 if os.sys.platform == 'win32':
     fp = 'C:\\Users\\sleblan2\\Research\\{}\\'.format(name)
@@ -73,10 +76,12 @@ else:
 
 # In[6]:
 
+
 vv = 'v3'
 
 
 # In[ ]:
+
 
 # try to read from the saved version file
 from load_utils import load_from_json, deep_convert_dict
@@ -121,10 +126,12 @@ except ValueError: # not a json file try old way
 
 # In[7]:
 
+
 fp_out = os.path.join(fp_rtm,'output','{vv}_{name}'.format(vv=vv,name=name))
 
 
 # In[ ]:
+
 
 dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
                   phase=['wc','ic'],
@@ -134,6 +141,7 @@ dat = RL.read_lut(fp_out,zout=zout,tau=tau,ref=ref,sza=sza,
 
 # In[ ]:
 
+
 dat = deep_convert_dict(dat)
 if use_json:
     dat['lut_details'] = deep_convert_dict(d)
@@ -141,10 +149,12 @@ if use_json:
 
 # In[ ]:
 
+
 print 'Saving matlab file'
 
 
 # In[10]:
+
 
 try:
     try:

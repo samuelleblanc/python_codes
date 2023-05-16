@@ -48,7 +48,7 @@ import load_utils as lu
 import write_utils as wu
 from path_utils import getpath
 import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 import Run_libradtran as RL
 
@@ -264,13 +264,13 @@ flist = os.path.join(fp_rtm,'input',vv,'{}_list.sh'.format(name))
 # In[687]:
 
 
-get_ipython().system(u'wc -l $flist')
+get_ipython().system('wc -l $flist')
 
 
 # In[681]:
 
 
-get_ipython().system(u'parallel --jobs=22 --bar < $flist #2> $f_listout')
+get_ipython().system('parallel --jobs=22 --bar < $flist #2> $f_listout')
 
 
 # # Read the output files

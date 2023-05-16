@@ -152,7 +152,7 @@ for ffi in fir:
 
 # ## Load the soil moisture
 
-# In[12]:
+# In[13]:
 
 
 sma = []
@@ -187,7 +187,7 @@ cld[1]['CF']['coast']['mean'].shape
 
 # ## Make smoothing and plotting functions
 
-# In[16]:
+# In[14]:
 
 
 def smooth(x,y,w):
@@ -198,19 +198,19 @@ def smooth(x,y,w):
     return fx(x)
 
 
-# In[17]:
+# In[15]:
 
 
 from scipy.signal import savgol_filter
 
 
-# In[18]:
+# In[16]:
 
 
 import statsmodels.api as sm
 
 
-# In[19]:
+# In[17]:
 
 
 def smooth_l(x,y,w):
@@ -221,7 +221,7 @@ def smooth_l(x,y,w):
     return fx[:,0],fx[:,1]
 
 
-# In[20]:
+# In[18]:
 
 
 def non_uniform_savgol(x, y, window, polynom):
@@ -335,7 +335,7 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-# In[21]:
+# In[19]:
 
 
 def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
@@ -385,7 +385,7 @@ def gaussian_sum_smooth(xdata, ydata, xeval, sigma, null_thresh=0.6):
     return smoothed
 
 
-# In[22]:
+# In[20]:
 
 
 def smooth_s(x,y,w=25,p=4):
@@ -399,7 +399,7 @@ def smooth_s(x,y,w=25,p=4):
     return x[igood],yp
 
 
-# In[23]:
+# In[21]:
 
 
 def smooth_g(x,y,s=0.1):
@@ -412,7 +412,7 @@ def smooth_g(x,y,s=0.1):
 
 # ## Plot out the CF time series
 
-# In[24]:
+# In[33]:
 
 
 for j in range(4):
@@ -424,7 +424,7 @@ for j in range(4):
                 cld[i]['CF'][c]['dev'][:,j] = np.nancumsum(cld[i]['CF'][c]['mean'][:,j]-np.nanmean(cld[i]['CF'][c]['mean'][:,j]))
 
 
-# In[25]:
+# In[34]:
 
 
 cld[i]['lbls_rg']
@@ -1778,26 +1778,26 @@ for i in range(len(fir)):
 np.save(fp+'fire_times_manual_{}.npy'.format(vv),fire_times,allow_pickle=True)
 
 
-# In[26]:
+# In[24]:
 
 
-fire_times_from_save = np.load(fp+'fire_times_manual_{}.npy'.format(vv),allow_pickle=True)
+fire_times_from_save = np.load(fp+'fire_times_manual.npy'.format(vv),allow_pickle=True)
 
 
-# In[28]:
+# In[25]:
 
 
 fire_times_from_save.shape
 
 
-# In[29]:
+# In[26]:
 
 
 if not 'fire_times' in locals():
     fire_times = fire_times_from_save
 
 
-# In[30]:
+# In[27]:
 
 
 fire_times[0]
@@ -1805,7 +1805,7 @@ fire_times[0]
 
 # ## Identify the cloud fraction decreases
 
-# In[31]:
+# In[28]:
 
 
 for c in cld:
@@ -1813,25 +1813,25 @@ for c in cld:
     c['doy'] = np.array(doy)
 
 
-# In[32]:
+# In[29]:
 
 
 cld[0].keys()
 
 
-# In[33]:
+# In[30]:
 
 
 cld[0]['lbls_rg']['points']
 
 
-# In[34]:
+# In[31]:
 
 
 cld[0]['CF']['coast'].keys()
 
 
-# In[45]:
+# In[35]:
 
 
 cl = cld[0]
@@ -1850,7 +1850,7 @@ for j in range(4):
 plt.axhline(0)
 
 
-# In[49]:
+# In[36]:
 
 
 for cl in cld: #years
@@ -1863,19 +1863,19 @@ for cl in cld: #years
             cl['CF'][rg]['delta'][:,j] = cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j])
 
 
-# In[59]:
+# In[37]:
 
 
 cl['CF'][rg]['delta'].shape
 
 
-# In[65]:
+# In[38]:
 
 
 smooth_g(cl['doy'],cl['CF'][rg]['delta'][:,j])[1].shape
 
 
-# In[107]:
+# In[39]:
 
 
 cl = cld[0]
@@ -1912,7 +1912,7 @@ plt.axhline(0)
 np.arange(5,0,-1)
 
 
-# In[109]:
+# In[40]:
 
 
 for cl in cld: #years
@@ -1926,7 +1926,7 @@ for cl in cld: #years
             if not 'dev' in  cl['CF'][rg]: # ensure the dev - from cumsum is built
                 cl['CF'][rg]['dev'] = np.zeros_like(cl['CF'][rg]['mean']) 
                 cl['CF'][rg]['dev'][:,j] = np.nancumsum(cl['CF'][rg]['mean'][:,j]-np.nanmean(cl['CF'][rg]['mean'][:,j]))
-            for ddays in (np.arange(5,0,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
+            for ddays in (np.arange(3,1,-1)*len(cl['doy'])/cl['doy'].max()).astype(int):
                 point_CF_low = [i for i,c in list(enumerate(cl['CF'][rg]['delta'][:-ddays,j])) if (cl['CF'][rg]['delta'][i:i+ddays,j]<0).all() & (cl['doy'][i]> min_doy)]
                 if any(point_CF_low): 
                     icf = point_CF_low[0]
@@ -1940,13 +1940,13 @@ for cl in cld: #years
             
 
 
-# In[36]:
+# In[41]:
 
 
 cl['CF'][rg]['mean'].shape
 
 
-# In[383]:
+# In[42]:
 
 
 plt.figure()
@@ -1956,19 +1956,19 @@ plt.axhline(np.nanmean(cl['CF'][rg]['mean'][:,0]))
 
 # ## Calculate the time difference between fire start (and peak) and cloud decrease
 
-# In[110]:
+# In[45]:
 
 
 to_days = lambda x: (x-datetime(1970,1,1)).days
 
 
-# In[111]:
+# In[46]:
 
 
 to_days(cl['time'][0])-fire_times[0][rg][0]['start'][:,0]
 
 
-# In[112]:
+# In[47]:
 
 
 # ensure that the points in fire_times are all related
@@ -1992,19 +1992,19 @@ for fi in fire_times:
     
 
 
-# In[113]:
+# In[48]:
 
 
 max_num_fires_in_a_year
 
 
-# In[114]:
+# In[49]:
 
 
 fi[k][0]['start'][:,0]
 
 
-# In[127]:
+# In[50]:
 
 
 nyears = len(fire_times_sorted)
@@ -2039,7 +2039,13 @@ for i,fi in list(enumerate(fire_times_sorted)):
                 peaks[rg][i,j,:len(ns['peak'][:,0])] = ns['peak'][:,1]*0-999.0
 
 
-# In[128]:
+# In[69]:
+
+
+diff_CF_start_good = {}
+
+
+# In[70]:
 
 
 for rg in fi:
@@ -2047,25 +2053,52 @@ for rg in fi:
     diff_CF_peak[rg] = np.ma.array(diff_CF_peak[rg],mask=(diff_CF_peak[rg]<-800))
     diff_CF_end[rg] = np.ma.array(diff_CF_end[rg],mask=(diff_CF_end[rg]<-800))
     peaks[rg] = np.ma.array(peaks[rg],mask=(peaks[rg]<-800))
+    diff_CF_start_good[rg] = diff_CF_start[rg][np.argmax(peaks[rg],axis=1)]
 
 
-# In[130]:
+# In[74]:
+
+
+rg = 'land'
+diff_CF_start[rg].shape, diff_CF_start_good['land'].shape
+
+
+# In[72]:
+
+
+plt.figure()
+plt.hist(diff_CF_start_good['land'][0,:])
+
+
+# In[52]:
 
 
 plt.figure()
 plt.hist(np.array([diff_CF_start['land'][:,0,:].flatten(),diff_CF_start['land'][:,1,:].flatten(),diff_CF_start['land'][:,2,:].flatten(),diff_CF_start['land'][:,3,:].flatten()]).flatten(),bins=50)
 
 
-# In[133]:
+# In[53]:
 
 
 plt.figure()
-dc = diff_CF_peak['land']
+dc = diff_CF_start['points']
 
 plt.hist(np.array([dc[:,0,:].flatten(),dc[:,1,:].flatten(),dc[:,2,:].flatten(),dc[:,3,:].flatten()]).flatten(),bins=50)
 
 
-# In[132]:
+# In[ ]:
+
+
+
+
+
+# In[56]:
+
+
+peaks['coast'][:,0,:]
+
+
+# In[54]:
 
 
 plt.figure()
