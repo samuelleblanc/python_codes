@@ -83,7 +83,7 @@ from path_utils import getpath
 #fp='C:/Users/sleblan2/Research/ARISE/'
 
 
-# In[8]:
+# In[2]:
 
 
 import matplotlib.cm as cm
@@ -94,13 +94,13 @@ import map_utils as mu
 import h5py
 
 
-# In[15]:
+# In[3]:
 
 
 fp = getpath('ARISE')
 
 
-# In[16]:
+# In[4]:
 
 
 get_ipython().magic(u'matplotlib notebook')
@@ -110,7 +110,7 @@ get_ipython().magic(u'matplotlib notebook')
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[18]:
+# In[5]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.4.hdf'
@@ -118,7 +118,7 @@ fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
 
-# In[19]:
+# In[15]:
 
 
 def plt_amsr(ax='None'):
@@ -137,6 +137,39 @@ def plt_amsr(ax='None'):
     cs = m.contourf(x,y,amsr['ice'],clevels,cmap=plt.cm.gist_earth)
     cbar = m.colorbar(cs)
     cbar.set_label('Ice concentration [\%]')
+    return m
+
+
+# In[50]:
+
+
+parallels = np.arange(0.,90.,5.)
+
+
+# In[86]:
+
+
+def plt_amsr_grn(ax='None'):
+    from mpl_toolkits.basemap import Basemap
+    if not ax:
+        fig = plt.figure()
+    m = Basemap(projection='stere',lat_0=76.5,lon_0=-68.75,
+                llcrnrlon=-110,llcrnrlat=55,
+                urcrnrlon=50,urcrnrlat=65,resolution='l')
+    m.drawcountries()
+    m.fillcontinents(color='grey')
+    #m.drawmeridians(np.linspace(-90,-200,12),labels=[0,0,0,1])
+    #m.drawparallels(np.linspace(53,80,10),labels=[1,0,0,0])
+    m.drawparallels(np.arange(0.,90.,5.),labels=[0,0,0,0])
+    parallels = np.arange(0.,90.,5.)
+    for i in np.arange(len(parallels)):
+        plt.annotate('{:2.0f}$^{{\circ}}$N'.format(parallels[i]),xy=m(-70,parallels[i]),xycoords='data',color='darkred')
+    m.drawmeridians(np.arange(-180.,181.,10.),labels=[1,0,0,1],latmax=90.)
+    x,y = m(amsr['lon'],amsr['lat'])
+    clevels = np.linspace(0,100,21)
+    cs = m.contourf(x,y,amsr['ice'],clevels,cmap=plt.cm.gist_earth)
+    cbar = m.colorbar(cs)
+    cbar.set_label('Ice concentration [%]')
     return m
 
 
@@ -163,14 +196,21 @@ def plt_amsr_cnt(ax='None'):
     return m
 
 
-# In[21]:
+# In[78]:
 
 
 plt.figure()
 m = plt_amsr_cnt()
 
 
-# In[23]:
+# In[87]:
+
+
+m = plt_amsr_grn()
+plt.savefig(fp+'ARCTIC_map.png',transparent=True,dpi=600)
+
+
+# In[79]:
 
 
 m = plt_amsr()
