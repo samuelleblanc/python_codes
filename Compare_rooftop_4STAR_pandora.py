@@ -53,7 +53,7 @@ from path_utils import getpath
 import hdf5storage as hs
 import scipy.io as sio
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'notebook')
+get_ipython().magic(u'matplotlib notebook')
 import os
 import glob
 
@@ -92,7 +92,17 @@ fp = getpath(name)
 # In[5]:
 
 
-files = glob.glob(fp + '/gas_summary_v3/**[!4STARB]*gas_summary*.mat', recursive=True)
+if sys.version_info[0] < 3:
+    import os, fnmatch
+    def find_files(directory, pattern):
+        for root, dirs, files in os.walk(directory):
+            for basename in files:
+                if fnmatch.fnmatch(basename, pattern):
+                    filename = os.path.join(root, basename)
+                    yield filename
+    files = list(find_files(fp+ '/gas_summary_v3/', '*gas_summary*.mat'))
+else:
+    files = glob.glob(fp + '/gas_summary_v3/**[!4STARB]*gas_summary*.mat', recursive=True)
 
 
 # In[6]:

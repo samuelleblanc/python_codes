@@ -42,7 +42,7 @@
 import numpy as np
 from path_utils import getpath
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'notebook')
+get_ipython().magic(u'matplotlib notebook')
 import os
 import hapi
 
@@ -151,15 +151,15 @@ hapi.describeTable('O2')
 
 
 # get the o2-o2 cross sections
-get_ipython().system('wget https://hitran.org/data/CIA/O2-O2_2018b.cia -P $fph')
+get_ipython().system(u'wget https://hitran.org/data/CIA/O2-O2_2018b.cia -P $fph')
 
 
 # In[11]:
 
 
 #get the ozone cross sections
-get_ipython().system('wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Ozone/O3_Serdyuchenko(2014)_223K_213-1100nm(2013%20version).txt" -P $fph')
-get_ipython().system('wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Ozone/O3_Serdyuchenko(2014)_293K_213-1100nm(2013%20version).txt" -P $fph')
+get_ipython().system(u'wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Ozone/O3_Serdyuchenko(2014)_223K_213-1100nm(2013%20version).txt" -P $fph')
+get_ipython().system(u'wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Ozone/O3_Serdyuchenko(2014)_293K_213-1100nm(2013%20version).txt" -P $fph')
     
 fo3_223k = 'O3_Serdyuchenko(2014)_223K_213-1100nm(2013 version).txt'
 fo3_293k = 'O3_Serdyuchenko(2014)_293K_213-1100nm(2013 version).txt'
@@ -213,13 +213,13 @@ fno2_254 = 'no2_254K.xs'
 
 # get the cross section from the Max-Planck Mainz spectral library (updated since Bogumil/Mentel with higher by about 7%)
 # http://satellite.mpic.de/spectral_atlas/cross_sections/Organics%20(carbonyls)/Aldehydes(aliphatic)/CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt
-get_ipython().system('wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Organics%20(carbonyls)/Aldehydes(aliphatic)/CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt" -P $fph')
+get_ipython().system(u'wget "http://joseba.mpch-mainz.mpg.de/spectral_atlas_data/cross_sections/Organics%20(carbonyls)/Aldehydes(aliphatic)/CH2O_ChanceOrphal(2011)_293.15K_300-360nm(rec).txt" -P $fph')
 
 
 # In[15]:
 
 
-get_ipython().system('ls $fph')
+get_ipython().system(u'ls $fph')
 
 
 # In[16]:
@@ -291,6 +291,7 @@ gases = {'no2_vis_220K':{'SourceTables':'NO2','Diluent':{'air':1.0},'Environment
          'ch4_nir_1013mbar':{'SourceTables':'CH4','Diluent':{'air':1.0},'Environment':{'T':293.,'p':0.95}},
          'co2_nir_1013mbar':{'SourceTables':'CO2','Diluent':{'air':1.0},'Environment':{'T':293.,'p':0.95}},
          'o4_nir_296K':{'SourceTables':'O2','Diluent':{'air':1.0},'Environment':{'T':296.,'p':1.0}}}
+
 
 
 

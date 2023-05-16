@@ -413,10 +413,10 @@ from aeronet import get_AERONET_file_v2
 fp
 
 
-# In[150]:
+# In[151]:
 
 
-get_AERONET_file_v2(date=datetime(2022,5,8,23,0,0),site='Mauna_Loa',version=3,path=fp)
+get_AERONET_file_v2(date=datetime(2022,5,9,1,0,0),site='Mauna_Loa',version=3,path=fp)
 
 
 # In[ ]:
