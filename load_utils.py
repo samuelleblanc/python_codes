@@ -360,9 +360,11 @@ def toutc(pydatetime):
     except:
         import numpy as np
         try:
-            return np.array([utc_fx(pydatetime.flatten()[i])+(pydatetime.flatten()[i].day-pydatetime.flatten()[0].day)*24.0                          for i in xrange(pydatetime.size)]) 
+            return np.array([utc_fx(pydatetime.flatten()[i])+(pydatetime.flatten()[i].day-pydatetime.flatten()[0].day)*24.0 \
+                         for i in xrange(pydatetime.size)]) 
         except AttributeError:
-            return np.array([utc_fx(pydatetime[i])+(pydatetime[i].day-pydatetime[0].day)*24.0                          for i in xrange(len(pydatetime))]) 
+            return np.array([utc_fx(pydatetime[i])+(pydatetime[i].day-pydatetime[0].day)*24.0 \
+                         for i in xrange(len(pydatetime))]) 
 
 
 # In[ ]:
