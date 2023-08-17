@@ -188,13 +188,13 @@ gno2.interpolate(inplace=True)
 # ## Load MOPITT
 # Should have 235 files
 
-# In[185]:
+# In[107]:
 
 
 fp
 
 
-# In[186]:
+# In[108]:
 
 
 fp_mol = os.listdir(fp+'MOPITT/')
@@ -202,19 +202,19 @@ fp_mo = [f for f in fp_mol if '.he5' in f]
 fp_mo.sort()
 
 
-# In[187]:
+# In[109]:
 
 
 fp_mo
 
 
-# In[192]:
+# In[110]:
 
 
 mop,mop_dict = lu.load_hdf(fp+'MOPITT/'+fp_mo[0],verbose=True,values=(('COday',20),('COnight',23)))
 
 
-# In[223]:
+# In[111]:
 
 
 f5 = h5py.File(fp+'MOPITT/'+fp_mo[0])
@@ -223,32 +223,32 @@ mop_COnight_tmp = np.array(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['Retrie
 f5.close()
 
 
-# In[225]:
+# In[112]:
 
 
 mop_COday_tmp.shape
 
 
-# In[198]:
+# In[113]:
 
 
 nlon_mop,nlat_mop,npres_mop = mop_COday_tmp.shape
 
 
-# In[197]:
+# In[114]:
 
 
 ntime_moppit = len(fp_mo)
 
 
-# In[229]:
+# In[115]:
 
 
 mop_COday = np.zeros((ntime_moppit,nlon_mop,nlat_mop,npres_mop))+np.nan
 mop_COnight = np.zeros((ntime_moppit,nlon_mop,nlat_mop,npres_mop))+np.nan
 for i,f in list(enumerate(fp_mo)):
     print('Opening file: ', f)
-    f5 = h5py.File(fp+'MOPITT/'+fp_mo[0])
+    f5 = h5py.File(fp+'MOPITT/'+f)
     mop_COday_tmp = np.array(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['RetrievedCOMixingRatioProfileDay'])
     mop_COnight_tmp = np.array(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['RetrievedCOMixingRatioProfileNight'])
     f5.close()
@@ -256,20 +256,20 @@ for i,f in list(enumerate(fp_mo)):
     mop_COnight[i,:,:,:] = mop_COnight_tmp
 
 
-# In[230]:
+# In[116]:
 
 
 mop_COday[mop_COday == -9999] = np.nan
 mop_COnight[mop_COnight == -9999] = np.nan
 
 
-# In[231]:
+# In[117]:
 
 
 mop_time = [datetime(int(f.split('-')[1][0:4]),int(f.split('-')[1][4:6]),15)  for f in fp_mo]
 
 
-# In[232]:
+# In[118]:
 
 
 import h5py
@@ -2009,37 +2009,37 @@ isub[:,0].shape
 
 # Units: ppbv, name: Retrieved CO Mixing Ratio Profile Day
 
-# In[205]:
+# In[119]:
 
 
 mop_pre
 
 
-# In[206]:
+# In[120]:
 
 
 mop_COday.shape, len(mop_lat),len(mop_lon),len(mop_time)
 
 
-# In[207]:
+# In[121]:
 
 
 ip = 0
 
 
-# In[208]:
+# In[122]:
 
 
 mop_COday[:,ip,:,:].shape
 
 
-# In[214]:
+# In[123]:
 
 
 np.nanmean(mop_COday[:,ip,:,:],axis=0).shape
 
 
-# In[237]:
+# In[124]:
 
 
 for ip in range(9):
@@ -2054,24 +2054,40 @@ for ip in range(9):
     plt.savefig(fp+'MOPITT/'+'MOPITT_CO_day_Averaged_{}_v2.png'.format(mop_pre[ip]),dpi=600,transparent=True)
 
 
-# In[244]:
+# In[125]:
 
 
 np.swapaxes(mop_COday[:,:,:,ip],2,1).shape
 
 
-# In[242]:
+# In[126]:
 
 
 len(mop_lat)
 
 
-# In[248]:
+# In[127]:
 
 
 for ip,pre in enumerate(mop_pre):
     trend_and_plot(np.swapaxes(mop_COday[:,:,:,ip],2,1),mop_lat,mop_lon,mop_time,'MOPITT_CO_day_{:3.0f}mb'.format(pre),
                    fp=fp+'MOPITT/',vv=vv,npvals=5,units='ppbv')
+
+
+# ### Redo figures
+
+# In[103]:
+
+
+mop_day_900 = pd.read_pickle(fp+'MOPITT/MOPITT_CO_day_900mb_trend_output.v1.p')
+mop_day_900.keys()
+
+
+
+# In[104]:
+
+
+mop_lat,mop_lon
 
 
 # ### MOPITT CO night
