@@ -57,6 +57,9 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import pickle
+from tqdm.notebook import tqdm 
+import warnings
+import map_utils as mu
 
 
 # In[5]:
@@ -192,6 +195,13 @@ f6_hsrl.sort()
 f6_hsrl
 
 
+# In[127]:
+
+
+hsrl_days6 = [f.split('_')[2] for f in f6_hsrl]
+hsrl_doys6 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in hsrl_days6]
+
+
 # In[59]:
 
 
@@ -290,7 +300,7 @@ for i,f in enumerate(f7_hsrl):
         h[u'lon'] = hf['Nav_Data']['gps_lon'][:]
         h[u'alt'] = hf['Nav_Data']['gps_alt'][:]
         h[u'time'] = hf['Nav_Data']['gps_time'][:]
-    except:
+    except:  
         h[u'lat'] = hf['ApplanixIMU']['gps_lat'][:]
         h[u'lon'] = hf['ApplanixIMU']['gps_lon'][:]
         h[u'alt'] = hf['ApplanixIMU']['gps_alt'][:]
@@ -420,16 +430,131 @@ files_a = os.listdir(fpa)
 files_a.sort()
 
 
-# In[11]:
+# In[83]:
 
 
 len(files_a)
 
 
-# In[ ]:
+# In[97]:
 
 
+doys6 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days6]
+doys7 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days7]
+doys8 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days8]
 
+
+# In[128]:
+
+
+files_a6_p = [val for val in files_a if any(str(x) in val.split('.')[1] for x in doys6) ]
+files_a6_e = [val for val in files_a if any(str(x) in val.split('.')[1] for x in hsrl_doys6) ]
+
+
+# In[129]:
+
+
+files_a6_p.sort()
+files_a6_e.sort()
+
+
+# In[135]:
+
+
+a1, a1_dict = lu.load_hdf(fpa+'/'+files_a6_p[0],values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
+                                                        ('AAOD_2',16),('AAOD2_UNC',17)))
+
+
+# In[136]:
+
+
+a1.keys()
+
+
+# In[139]:
+
+
+a1['AAOD']
+
+
+# In[159]:
+
+
+nx,ny = a1['AAOD'].shape
+nt = len(files_a6_p)
+
+
+# In[167]:
+
+
+f[:37]
+
+
+# In[168]:
+
+
+datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M')
+
+
+# In[179]:
+
+
+warnings.filterwarnings('ignore')
+
+
+# In[180]:
+
+
+aaod = []
+aaod_unc = []
+aaod2 = []
+aaod2_unc = []
+lat = []
+lon = []
+a_time = []
+a_daystr = []
+for f in tqdm(files_a6_p):
+    #print('loading file: {}'.format(f))
+    a1, a1_dict = lu.load_hdf(fpa+'/'+f,values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
+                                                        ('AAOD_2',16),('AAOD2_UNC',17)),verbose=False)
+    aaod.append(a1['AAOD']*float(a1_dict['AAOD']['/geophysical_data/Above_Cloud_AOD#scale_factor']))
+    aaod2.append( a1['AAOD_2']*float(a1_dict['AAOD_2']['/geophysical_data/Above_Cloud_AOD_Secondary#scale_factor']))
+    aaod_unc.append(a1['AAOD_UNC']*float(a1_dict['AAOD_UNC']['/geophysical_data/Above_Cloud_AOD_Uncertainty#scale_factor']))
+    aaod2_unc.append( a1['AAOD2_UNC']*float(a1_dict['AAOD2_UNC']['/geophysical_data/Above_Cloud_AOD_Secondary_Uncertainty#scale_factor']))
+    lat.append(a1['lat'])
+    lon.append(a1['lon'])
+    a_time.append(datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M'))
+    a_daystr.append(a_time[-1].strftime('%Y%m%d'))
+
+
+# In[189]:
+
+
+aaod_e = []
+aaod_e_unc = []
+aaod2_e = []
+aaod2_e_unc = []
+lat_e = []
+lon_e = []
+a_time_e = []
+for f in tqdm(files_a6_e):
+    #print('loading file: {}'.format(f))
+    a1, a1_dict = lu.load_hdf(fpa+'/'+f,values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
+                                                        ('AAOD_2',16),('AAOD2_UNC',17)),verbose=False)
+    aaod_e.append(a1['AAOD']*float(a1_dict['AAOD']['/geophysical_data/Above_Cloud_AOD#scale_factor']))
+    aaod2_e.append( a1['AAOD_2']*float(a1_dict['AAOD_2']['/geophysical_data/Above_Cloud_AOD_Secondary#scale_factor']))
+    aaod_e_unc.append(a1['AAOD_UNC']*float(a1_dict['AAOD_UNC']['/geophysical_data/Above_Cloud_AOD_Uncertainty#scale_factor']))
+    aaod2_e_unc.append( a1['AAOD2_UNC']*float(a1_dict['AAOD2_UNC']['/geophysical_data/Above_Cloud_AOD_Secondary_Uncertainty#scale_factor']))
+    lat_e.append(a1['lat'])
+    lon_e.append(a1['lon'])
+    a_time_e.append(datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M'))
+
+
+# In[203]:
+
+
+a_daystr = [a.strftime('%Y%m%d') for a in a_time]
+a_daystr_e = [a.strftime('%Y%m%d') for a in a_time_e]
 
 
 # ## Load the VIIRS
@@ -458,7 +583,99 @@ len(files_a)
 
 # ### For  4STAR
 
+# In[191]:
+
+
+ar6.keys()
+
+
+# In[204]:
+
+
+ar6['mod_AAOD']=np.zeros_like(ar6['AOD0501'])
+ar6['mod_AAOD2']=np.zeros_like(ar6['AOD0501'])
+ar6['mod_AAOD_UNC']=np.zeros_like(ar6['AOD0501'])
+ar6['mod_AAOD2_UNC']=np.zeros_like(ar6['AOD0501'])
+
+
+# In[222]:
+
+
+help(mu.map_ind)
+
+
+# In[242]:
+
+
+for d in days6:
+    i_daymod = np.where(np.array(a_daystr)==d)[0]
+    i_dayar = np.where(np.array(ar6['daysd'])==d)[0]
+    print(len(iday))
+    for i in i_daymod:
+        if (lat[i].max()>np.nanmin(ar6['Latitude'][i_dayar])) & (lat[i].min()<np.nanmax(ar6['Latitude'][i_dayar])) &\
+         (lon[i].max()>np.nanmin(ar6['Longitude'][i_dayar])) & (lon[i].min()<np.nanmax(ar6['Longitude'][i_dayar])):
+            ind = mu.map_ind(lon[i],lat[i],ar6['Longitude'][i_dayar],ar6['Latitude'][i_dayar])
+            ar6['mod_AAOD'][i_dayar] = aaod[ind]
+            break
+    break
+            
+
+
+# In[243]:
+
+
+i_daymod
+
+
+# In[245]:
+
+
+d
+
+
+# In[232]:
+
+
+lat[0].max()
+
+
+# In[233]:
+
+
+ar6['Latitude'][i_dayar].max()
+
+
+# In[236]:
+
+
+(lat[i].min()>np.nanmin(ar6['Latitude'][i_dayar]))
+
+
+# In[237]:
+
+
+lat[i].min()
+
+
+# In[241]:
+
+
+np.nanmin(ar6['Latitude'][i_dayar]),np.nanmax(ar6['Latitude'][i_dayar]), lat[i].min(), lat[i].max()
+
+
+# In[ ]:
+
+
+
+
+
 # ### For HSRL
+
+# In[ ]:
+
+
+
+
 
 # In[61]:
 
