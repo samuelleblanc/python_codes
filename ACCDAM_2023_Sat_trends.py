@@ -40,7 +40,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -57,14 +57,14 @@ from datetime import datetime, timedelta
 import pickle
 
 
-# In[2]:
+# In[3]:
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 
-# In[3]:
+# In[4]:
 
 
 import cartopy.crs as ccrs
@@ -72,7 +72,7 @@ import statsmodels.api as sm
 import cartopy
 
 
-# In[4]:
+# In[5]:
 
 
 import traceback
@@ -81,7 +81,7 @@ from functools import partial
 from IPython.core.debugger import set_trace
 
 
-# In[5]:
+# In[6]:
 
 
 name = 'ACCDAM'
@@ -111,7 +111,7 @@ fp = getpath(name)
 
 # ## Load GOME Tropos NO2
 
-# In[6]:
+# In[7]:
 
 
 gome,gome_dict = lu.load_netcdf(fp+'GOME_SCIAMACHY_GOME2_NO2_L3/GOME_SCIAMACHY_GOME2ab_TroposNO2_v2.3_041996-092017_temis.nc',everything=True)
@@ -188,13 +188,13 @@ gno2.interpolate(inplace=True)
 # ## Load MOPITT
 # Should have 235 files
 
-# In[107]:
+# In[7]:
 
 
 fp
 
 
-# In[108]:
+# In[8]:
 
 
 fp_mol = os.listdir(fp+'MOPITT/')
@@ -202,7 +202,7 @@ fp_mo = [f for f in fp_mol if '.he5' in f]
 fp_mo.sort()
 
 
-# In[109]:
+# In[9]:
 
 
 fp_mo
@@ -269,7 +269,13 @@ mop_COnight[mop_COnight == -9999] = np.nan
 mop_time = [datetime(int(f.split('-')[1][0:4]),int(f.split('-')[1][4:6]),15)  for f in fp_mo]
 
 
-# In[118]:
+# In[10]:
+
+
+f = fp_mo[-1]
+
+
+# In[11]:
 
 
 import h5py
@@ -282,31 +288,31 @@ f5.close()
 
 # ## Load TOMS O3
 
-# In[6]:
+# In[30]:
 
 
 fp
 
 
-# In[9]:
+# In[31]:
 
 
 toms_pd = pd.read_excel(fp+'TOMS_O3_L3/TOMS_monthly_trop_O3_L3_v01.xlsx')
 
 
-# In[10]:
+# In[32]:
 
 
 toms_ar = np.array(toms_pd)
 
 
-# In[11]:
+# In[33]:
 
 
 toms_ar[0:73,0]
 
 
-# In[12]:
+# In[34]:
 
 
 start_time = datetime(1978,12,31)
@@ -314,7 +320,7 @@ end_time = datetime(2005,12,15)
 toms_time = pd.date_range(start=start_time,end=end_time,freq='MS') #jan1979_to_dec2005
 
 
-# In[13]:
+# In[35]:
 
 
 ntime = 27*12
@@ -325,13 +331,13 @@ for n in range(ntime):
     toms_O3[:,:,n] = toms_ar[(n*(nlon+2)):(n*(nlon+2))+nlon,1:].T
 
 
-# In[14]:
+# In[36]:
 
 
 toms_O3[toms_O3>900] = np.nan
 
 
-# In[15]:
+# In[37]:
 
 
 toms_lat = np.arange(-27.5,27.6,5)
@@ -342,14 +348,14 @@ toms_lon = np.arange(-177.5,177.6,5)
 
 # ### Load MLS O3
 
-# In[6]:
+# In[42]:
 
 
 fp
 fpp_mlso3 = fp+'OMI_MLS_O3_L3/OMI_MLS_O3_L3_ncfiles/'
 
 
-# In[7]:
+# In[43]:
 
 
 fp_mls_o3 = os.listdir(fpp_mlso3)
@@ -357,37 +363,37 @@ fp_mls_o3 = [f for f in fp_mls_o3 if '.nc' in f]
 fp_mls_o3.sort()
 
 
-# In[8]:
+# In[44]:
 
 
 fp_mls_o3
 
 
-# In[9]:
+# In[45]:
 
 
 mlso3_tmp,mlso3_tmp_dict = lu.load_netcdf(fpp_mlso3+fp_mls_o3[0],everything=True)
 
 
-# In[10]:
+# In[46]:
 
 
 mlso3_tmp[b'tropo3'].shape, mlso3_tmp[b'lon'].shape[0], mlso3_tmp[b'lat'].shape[0]
 
 
-# In[11]:
+# In[47]:
 
 
 ntime = len(fp_mls_o3)
 
 
-# In[12]:
+# In[48]:
 
 
 mls_o3 = {'lat':mlso3_tmp[b'lat'],'lon':mlso3_tmp[b'lon'],'time':[],'tropo3':np.zeros((ntime,mlso3_tmp[b'lat'].shape[0],mlso3_tmp[b'lon'].shape[0]))}
 
 
-# In[13]:
+# In[50]:
 
 
 mls_o3['time'] = []
@@ -398,7 +404,7 @@ for i,f in list(enumerate(fp_mls_o3)):
     mls_o3['tropo3'][i,:,:] = mlso3_tmp[b'tropo3']
 
 
-# In[14]:
+# In[51]:
 
 
 mls_o3_time = np.array(mls_o3['time'])
@@ -418,14 +424,14 @@ mls_o3['tropo3'] = mls_o3['tropo3']/10.0
 
 # ### Load OMI NO2 L2
 
-# In[62]:
+# In[59]:
 
 
 fp
 fpp_mlsno2 = fp+'OMI_NO2/'
 
 
-# In[63]:
+# In[60]:
 
 
 fp_mls_no2 = os.listdir(fpp_mlsno2)
@@ -433,37 +439,37 @@ fp_mls_no2 = [f for f in fp_mls_no2 if '.mat' in f]
 fp_mls_no2.sort()
 
 
-# In[64]:
+# In[61]:
 
 
 fp_mls_no2
 
 
-# In[65]:
+# In[62]:
 
 
 mlsno2_tmp = sio.loadmat(fpp_mlsno2+fp_mls_no2[0])
 
 
-# In[66]:
+# In[63]:
 
 
 mlsno2_tmp.keys()
 
 
-# In[67]:
+# In[64]:
 
 
 mlsno2_tmp['NO2_monthly_avg'].shape, mlsno2_tmp['LAT'].shape, mlsno2_tmp['LON'].shape
 
 
-# In[68]:
+# In[65]:
 
 
 ntime = len(fp_mls_no2)*12
 
 
-# In[69]:
+# In[66]:
 
 
 mls_no2 = {'lat':mlsno2_tmp['LAT'],'lon':mlsno2_tmp['LON'],'time':[],'no2':np.zeros((ntime,mlsno2_tmp['LAT'].shape[0],mlsno2_tmp['LON'].shape[1]))}
@@ -527,19 +533,19 @@ def regrid(xin,yin,zin,xskip=1,yskip=1):
 mls_no2['no2'].shape, mls_no2['lat'].shape, mls_no2['lon'].shape
 
 
-# In[81]:
+# In[67]:
 
 
 mls_no2_lat = mls_no2['lat'][:,0]
 
 
-# In[82]:
+# In[68]:
 
 
 mls_no2_lon = mls_no2['lon'][0,:]
 
 
-# In[84]:
+# In[69]:
 
 
 mls_no2_lon.shape
@@ -549,13 +555,13 @@ mls_no2_lon.shape
 
 # ### Aircraft
 
-# In[9]:
+# In[72]:
 
 
 ceds_1980,ceds_1980_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_1980_1999.nc',everything=True)
 
 
-# In[10]:
+# In[73]:
 
 
 ceds_2000,ceds_2000_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_2000_2019.nc',everything=True)
@@ -565,6 +571,12 @@ ceds_2000,ceds_2000_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_200
 
 
 ceds_2000_dict[b'Time']
+
+
+# In[75]:
+
+
+ceds_2000_dict[b'CEDS_NOx_aircraft_emission']
 
 
 # In[12]:
@@ -604,7 +616,7 @@ ceds_AC_NOx.shape
 ceds_time = np.array([datetime(1750,1,1)+timedelta(days=int(d)) for d in ceds_time_days])
 
 
-# In[18]:
+# In[74]:
 
 
 ceds_lon = ceds_2000[b'Lon']
@@ -628,13 +640,13 @@ ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'C
 
 # ## Load TCR
 
-# In[4]:
+# In[11]:
 
 
 fp
 
 
-# In[5]:
+# In[12]:
 
 
 fp_tcrl = os.listdir(fp+'TCR/TCR_2_data/')
@@ -642,37 +654,43 @@ fp_tcr = [f for f in fp_tcrl if '.nc' in f]
 fp_tcr.sort()
 
 
-# In[6]:
+# In[13]:
 
 
 fp_tcrl
 
 
-# In[7]:
+# In[14]:
 
 
 tcr_vals = ['_'.join([f.split('_')[1],f.split('_')[3]]) for f in fp_tcrl]
 
 
-# In[8]:
+# In[15]:
 
 
 tcr_tmp,tcr_tmp_dict = lu.load_netcdf(fp+'TCR/TCR_2_data/'+fp_tcrl[0],everything=True)
 
 
-# In[9]:
+# In[18]:
+
+
+tcr_tmp_dict[b'co']
+
+
+# In[37]:
 
 
 tcr = {'lat':tcr_tmp[b'lat'],'lon':tcr_tmp[b'lon'],'time':tcr_tmp[b'time']}
 
 
-# In[10]:
+# In[32]:
 
 
 tcr_vals
 
 
-# In[11]:
+# In[41]:
 
 
 for i,f in list(enumerate(fp_tcrl)):
@@ -680,19 +698,25 @@ for i,f in list(enumerate(fp_tcrl)):
     tcr[tcr_vals[i]] = tcr_tmp[tcr_vals[i].split('_')[0].encode('utf-8')]
 
 
-# In[12]:
+# In[47]:
+
+
+tcr_tmp_dict[b'nox']
+
+
+# In[34]:
 
 
 tcr_tmp_dict[b'time']
 
 
-# In[13]:
+# In[35]:
 
 
 tcr_time = np.array([datetime(2005+int(m//12),1+int(m%12),15) for m in tcr['time']])
 
 
-# In[14]:
+# In[38]:
 
 
 # convert the 0 to 360 into a -180 to 180 longitude
@@ -717,13 +741,13 @@ plt.yscale('log')
 
 # ## Load GFED CO
 
-# In[94]:
+# In[62]:
 
 
 fp
 
 
-# In[96]:
+# In[63]:
 
 
 fp_gfedl = os.listdir(fp+'GFED/GFED_4.1/')
@@ -731,19 +755,19 @@ fp_gfeds = [f for f in fp_gfedl if '.hdf5' in f]
 fp_gfeds.sort()
 
 
-# In[97]:
+# In[64]:
 
 
 fp_gfeds
 
 
-# In[133]:
+# In[65]:
 
 
 gfed_tmp,gfed_tmp_dict = lu.load_hdf(fp+'GFED/GFED_4.1/'+fp_gfeds[-1],all_values=True)
 
 
-# In[118]:
+# In[66]:
 
 
 nlon = len(gfed_tmp['//lon'][0,:])
@@ -751,7 +775,7 @@ nlat = len(gfed_tmp['//lat'][:,0])
 nyears_gfed = len(fp_gfeds)
 
 
-# In[139]:
+# In[67]:
 
 
 gfed = {'bio_BB':np.zeros((nyears_gfed*12,nlat,nlon))+np.nan,
@@ -765,13 +789,13 @@ gfed = {'bio_BB':np.zeros((nyears_gfed*12,nlat,nlon))+np.nan,
         'lon':gfed_tmp['//lon'][0,:]}
 
 
-# In[140]:
+# In[68]:
 
 
 gfed_tmp_vals = gfed_tmp.keys()
 
 
-# In[141]:
+# In[69]:
 
 
 gfed_vals = {'bio_BB':'//biosphere/{:02.0f}/BB',
@@ -817,14 +841,14 @@ gfed['emi_C'].mean()
 
 # ### Lightning NO2
 
-# In[6]:
+# In[71]:
 
 
 fp
 fpp_gmi_lno = fp+'MERRA2/GMI_LNO_processed/'
 
 
-# In[8]:
+# In[72]:
 
 
 fp_gmi_lno = os.listdir(fpp_gmi_lno)
@@ -832,13 +856,13 @@ fp_gmi_lno = [f for f in fp_gmi_lno if '.nc' in f]
 fp_gmi_lno.sort()
 
 
-# In[9]:
+# In[73]:
 
 
 fp_gmi_lno
 
 
-# In[11]:
+# In[74]:
 
 
 gmi_lno_tmp,gmi_lno_dict_tmp = lu.load_netcdf(fpp_gmi_lno+fp_gmi_lno[0],everything=True)
@@ -862,13 +886,13 @@ gmi_lno_tmp.keys()
 gmi_lno_tmp[b'M2GMI_NO_lightning_emission'].shape, gmi_lno_tmp[b'Lat'].shape, gmi_lno_tmp[b'Lon'].shape
 
 
-# In[15]:
+# In[77]:
 
 
 ntime = len(fp_gmi_lno)*12
 
 
-# In[17]:
+# In[78]:
 
 
 gmi_lno = {'lat':gmi_lno_tmp[b'Lat'],
@@ -1057,7 +1081,7 @@ for i,f in list(enumerate(fp_gmi_o3strat)):
 
 # ## Definition of the regions and functions
 
-# In[22]:
+# In[7]:
 
 
 rgs = {'Southeast Asia':[[-12,95],[18,140]],
@@ -1068,13 +1092,13 @@ rgs = {'Southeast Asia':[[-12,95],[18,140]],
       } #lower left [lat lon], upper right [lat lon]
 
 
-# In[23]:
+# In[8]:
 
 
 rgs['China'][0]
 
 
-# In[24]:
+# In[9]:
 
 
 def multi_stats_pd(data,time,name='trop_NO2',axis=1):
@@ -1090,7 +1114,7 @@ def multi_stats_pd(data,time,name='trop_NO2',axis=1):
     
 
 
-# In[25]:
+# In[10]:
 
 
 def build_pd(data,time,name='mean_trop_NO2'):
@@ -1551,7 +1575,7 @@ gmi_rg.keys()
 
 # ## Load the functions
 
-# In[83]:
+# In[20]:
 
 
 def run_the_seasonal_decomp(data,time,name,nlon,nlat,i):
@@ -1578,7 +1602,7 @@ def run_the_seasonal_decomp(data,time,name,nlon,nlat,i):
     return trend_pval_tmp,trend_tmp
 
 
-# In[84]:
+# In[21]:
 
 
 def trends_and_pval_per_lat_lon(data,lat,lon,time,name='mean_trop_NO2',parallel=False):
@@ -1607,7 +1631,7 @@ def trends_and_pval_per_lat_lon(data,lat,lon,time,name='mean_trop_NO2',parallel=
 
 
 
-# In[85]:
+# In[22]:
 
 
 def trends_and_pval_per_lat_lon_single(data,lat,lon,time,name='mean_trop_NO2'):
@@ -1670,7 +1694,7 @@ def trends_and_pval_per_lat_lon_single(data,lat,lon,time,name='mean_trop_NO2'):
     return trend,trend_pval,trend_rmse
 
 
-# In[86]:
+# In[23]:
 
 
 def convert_monthly_to_decadal_trend(trend,time):
@@ -1685,7 +1709,7 @@ def convert_monthly_to_decadal_trend(trend,time):
     
 
 
-# In[87]:
+# In[24]:
 
 
 def plot_trend_and_pval(trend,trend_pval,lon,lat,name='',cax_name='Trend',figsize=(10,4),
@@ -1732,7 +1756,7 @@ def plot_trend_and_pval(trend,trend_pval,lon,lat,name='',cax_name='Trend',figsiz
     return fig
 
 
-# In[88]:
+# In[25]:
 
 
 def span_pd_lat_lon(data,time,lat,lon,name='OMI_MLS_O3',axis=1):
@@ -1747,7 +1771,7 @@ def span_pd_lat_lon(data,time,lat,lon,name='OMI_MLS_O3',axis=1):
     return dat
 
 
-# In[89]:
+# In[26]:
 
 
 def trend_and_plot(data,lat,lon,time,name,fp=fp,clevels=np.arange(-0.01,0.01,0.0025),vv=vv,units='DU',npvals=10):
@@ -1771,17 +1795,18 @@ def trend_and_plot(data,lat,lon,time,name,fp=fp,clevels=np.arange(-0.01,0.01,0.0
     
 
 
-# In[90]:
+# In[27]:
 
 
-def plot_avg_and_rmse(avg,rmse,trend,lon,lat,name='',cax_name='Average',figsize=(10,4),
-                        clevels=np.arange(-0.025, 0.04, 0.005),vmin=None,vmax=None,ncolors=12,nlevels=12):
+def plot_avg_and_rmse(avg,rmse,trend,lon,lat,name='',cax_name='Average',figsize=(10,8),
+                        clevels=np.arange(-0.025, 0.04, 0.005),vmin=None,vmax=None,ncolors=12,nlevels=12,units='[#/cm^2]'):
     
     pr = ccrs.PlateCarree()
     # Set up the plot
-    fig = plt.figure(figsize=figsize)
-    ax = plt.axes(projection=pr)
-
+    fig, ax = plt.subplots(2,1,figsize=figsize,subplot_kw={'projection': pr})
+    #fig = plt.figure(figsize=figsize)
+    #ax = plt.axes(projection=pr)
+    
     # Define the colormap
     cmap = plt.cm.get_cmap('plasma', ncolors)
     
@@ -1798,32 +1823,110 @@ def plot_avg_and_rmse(avg,rmse,trend,lon,lat,name='',cax_name='Average',figsize=
     
     #contour = ax.contourf(lon, lat, trend, contour_levels,
     #                      cmap=cmap, transform=pr, extend='both')
-    contour = ax.pcolormesh(lon, lat, avg, transform=pr,cmap=cmap,shading='auto',vmin=vmin,vmax=vmax)
+    contour = ax[0].pcolormesh(lon, lat, avg, transform=pr,cmap=cmap,shading='auto',vmin=vmin,vmax=vmax)
 
     # Add a colorbar
     cbar = plt.colorbar(contour, shrink=0.6, pad=0.02)
-    cbar.ax.set_ylabel(cax_name, fontsize=16)
+    cbar.ax.set_ylabel(cax_name + units, fontsize=11)
 
     # Add a land mask
-    ax.add_feature(cartopy.feature.LAND, edgecolor='black', facecolor='None', alpha=0.3,zorder=-100)
+    ax[0].add_feature(cartopy.feature.LAND, edgecolor='black', facecolor='None', alpha=0.3,zorder=-100)
 
     # Add a grid
-    gl = ax.gridlines(color='gray', linestyle='--',draw_labels=True)
+    gl = ax[0].gridlines(color='gray', linestyle='--',draw_labels=True)
     gl.xlabels_top = False
     gl.ylabels_right = False
 
     # Add contour lines where the rmse is greater than the trend
-    isub = trend>rmse
-    rms = np.ma.masked_array(rmse,mask=isub)
-    cl = ax.contourf(lon, lat, rms, 4, hatches=['//','.','..','oo'], colors='none')
-    #cl = ax.contour(lon[isub], lat[isub], rmse[isub], nlevels, color='lightgrey',linewidths=0.5, transform=pr)
-    #ax.clabel(cl, inline=True, fontsize=10)
-    
+    #isub = trend>rmse
+    #rms = np.ma.masked_array(rmse,mask=isub)
+    #cl = ax.contourf(lon, lat, rmse, 4, hatches=['//','.','..','oo'], colors='none')
+    try:
+        cl = ax[1].contourf(lon, lat, rmse, nlevels,linewidths=0.5, transform=pr,cmap=plt.cm.get_cmap('viridis', ncolors))
+    except:
+        if np.ma.is_masked(rmse):
+            vmin_rm = np.percentile(rmse.compressed(),0.5)
+            vmax_rm = np.percentile(rmse.compressed(),99.5)
+        else:
+            vmin_rm = np.percentile(rmse,0.5)
+            vmax_rm = np.percentile(rmse,99.5)
+        cl = ax[1].pcolormesh(lon, lat, rmse, transform=pr,cmap=plt.cm.get_cmap('viridis', ncolors),
+                              shading='auto',vmin=vmin_rm,vmax=vmax_rm)
+    #ax.clabel(cl, cl.levels, inline=True, fontsize=10)
+    try:
+        cbar = plt.colorbar(cl, shrink=0.6, pad=0.02)
+        cbar.ax.set_ylabel('RMSE of linear trend'+units, fontsize=11)
+    except:
+        pass
+    # Add a land mask
+    ax[1].add_feature(cartopy.feature.LAND, edgecolor='black', facecolor='None', alpha=0.3,zorder=-100)
+
+    # Add a grid
+    gl = ax[1].gridlines(color='gray', linestyle='--',draw_labels=True)
+    gl.xlabels_top = False
+    gl.ylabels_right = False
+       
 
     # Add a title
-    plt.title('Averages for '+name, fontsize=18)
-    ax.add_feature(cartopy.feature.COASTLINE)
+    ax[0].set_title(name, fontsize=12)
+    ax[0].add_feature(cartopy.feature.COASTLINE)
+    ax[1].add_feature(cartopy.feature.COASTLINE)
     return fig
+
+
+# In[45]:
+
+
+def plot_avg_vs_trend_rmse(avg,rmse,trend,name='',figsize=(8,6),units='[#/cm^2]'):
+    'creation of figure to plot the trends as a function of averages'
+    fig = plt.figure()
+    plt.plot(avg.flatten(),trend.flatten(),'.k')
+    plt.errorbar(avg.flatten(),trend.flatten(),rmse.flatten(),marker='.',color='grey',linestyle='None',alpha=0.2)
+    plt.plot(avg.flatten(),trend.flatten(),'.k')
+    plt.ylim(np.nanmin(trend.flatten())-0.02*abs(np.nanmin(trend.flatten())),np.nanmax(trend.flatten())+0.02*abs(np.nanmin(trend.flatten())))
+    plt.xlabel('Averages '+name+' vs '+units)
+    plt.ylabel('Deseasoned linear trend '+units)
+    plt.title(name)
+    
+    return fig
+
+
+# In[29]:
+
+
+def load_pickle_plot_savemat(fp,filename,lat,lon,units='#/cm^2'):
+    'function to load the pickles and then plot the avegrages and subsequently save to a mat file'
+    dat = pd.read_pickle(filename)
+    ks = list(dat.keys())
+    nm = [k[:-6] for k in ks if k.endswith('trend')][0]
+    avg = np.nanmean(dat[nm],axis=0)
+    
+    figa = plot_avg_and_rmse(avg,dat[nm+'_trend_rmse'], dat[nm+'_trend'],lon,lat,
+                         name=nm+' De-seasonalized [{:%Y/%m}-{:%Y/%m}]'.format(dat[nm+'_time'][0],dat[nm+'_time'][-1]),
+                         cax_name=nm+'\n'+'averages',units='['+units+']',figsize=(8,6),ncolors=25)
+    figa.tight_layout()
+    figa.savefig(fp+'/'+nm+'_averages_rmse_output.{}.png'.format(vv),dpi=600,transparent=True)
+    print('figure saved to: '+fp+'/'+nm+'_averages_rmse_output.{}.png'.format(vv))
+    
+    try:
+        figb = plot_avg_vs_trend_rmse(avg,dat[nm+'_trend_rmse'], dat[nm+'_trend'],name=nm,units='['+units+']')
+        figb.tight_layout()
+        figb.savefig(fp+'/'+nm+'_trend_vs_avg.{}.png'.format(vv),dpi=600,transparent=True)
+        print('figure saved to: '+fp+'/'+nm+'_trend_vs_avg.{}.png'.format(vv))
+    except:
+        pass
+        
+    new_dat = {'trend':dat[nm+'_trend'],'average':np.ma.filled(avg,np.nan),
+               'lat':np.ma.filled(lat,np.nan),'lon':np.ma.filled(lon,np.nan),
+               'year':[d.year for d in dat[nm+'_time']],'month':[d.month for d in dat[nm+'_time']],
+               'rmse':dat[nm+'_trend_rmse'],'units':units,'label':nm}
+    try:
+        hs.savemat(fp+'/'+nm+'_deseasoned_trends.mat',new_dat)
+        print('saved to: '+fp+'/'+nm+'_deseasoned_trends.mat')
+        return None
+    except:
+        print('** problem saving, returning new data')
+        return new_dat
 
 
 # ### Make multiprocessing
@@ -1938,22 +2041,10 @@ trend_and_plot(gome[b'TroposNO2'],gome[b'lat'],gome[b'lon'],gometime,'GOME_NO2_t
                fp=fp+'GOME_SCIAMACHY_GOME2_NO2_L3/',clevels=np.arange(-0.01,0.01,0.0025),vv=vv)
 
 
-# In[16]:
+# In[15]:
 
 
 gome_dict = pd.read_pickle('/data2/ACCDAM_low_ozone/GOME_SCIAMACHY_GOME2_NO2_L3/GOME_NO2_tropos_trend_output.v1.p')
-
-
-# In[17]:
-
-
-gome_dict.keys()
-
-
-# In[36]:
-
-
-plt.rcParams['text.usetex'] = False
 
 
 # In[37]:
@@ -1968,39 +2059,23 @@ fig.tight_layout()
 fig.savefig(fp+'GOME_NO2_tropos'+'_trend_output.{}.png'.format(vv),dpi=600,transparent=True)
 
 
-# In[31]:
+# In[29]:
 
 
-fig.show()
+fp
 
 
-# In[46]:
+# In[82]:
 
 
-isub = gome_dict['GOME_NO2_tropos_trend_rmse']>gome_dict['GOME_NO2_tropos_trend']
+da = load_pickle_plot_savemat(fp,'/data2/ACCDAM_low_ozone/GOME_SCIAMACHY_GOME2_NO2_L3/GOME_NO2_tropos_trend_output.v1.p',
+                         gome[b'lat'],gome[b'lon'],units='#/cm^2')
 
 
-# In[80]:
+# In[1]:
 
 
-figa = plot_avg_and_rmse(np.nanmean(gome_dict['GOME_NO2_tropos'],axis=0),gome_dict['GOME_NO2_tropos_trend_rmse'],
-                         gome_dict['GOME_NO2_tropos_trend'],gome[b'lon'],gome[b'lat'],
-                         name='GOME_NO2_tropos'+' De-seasonalized [{:%Y/%m}-{:%Y/%m}]'.format(gome_dict['GOME_NO2_tropos_time'][0],gome_dict['GOME_NO2_tropos_time'][-1]),
-                         cax_name='GOME_NO2_tropos\n'+'averages [#/cm^2]',figsize=(10,4),ncolors=25)
-figa.tight_layout()
-figa.savefig(fp+'GOME_NO2_tropos'+'_averages_output.{}.png'.format(vv),dpi=600,transparent=True)
-
-
-# In[75]:
-
-
-gome[b'lon'].shape,gome[b'lat'].shape
-
-
-# In[62]:
-
-
-isub[:,0].shape
+fp
 
 
 # ## Plot the MOPITT
@@ -2074,25 +2149,17 @@ for ip,pre in enumerate(mop_pre):
                    fp=fp+'MOPITT/',vv=vv,npvals=5,units='ppbv')
 
 
-# ### Redo figures
-
-# In[103]:
+# In[22]:
 
 
-mop_day_900 = pd.read_pickle(fp+'MOPITT/MOPITT_CO_day_900mb_trend_output.v1.p')
-mop_day_900.keys()
-
-
-
-# In[104]:
-
-
-mop_lat,mop_lon
+for ip,pre in enumerate(mop_pre):
+    da = load_pickle_plot_savemat(fp,fp+'/MOPITT/MOPITT_CO_day_{:3.0f}mb_trend_output.v1.p'.format(pre),
+                         mop_lat,mop_lon,units='ppbv')
 
 
 # ### MOPITT CO night
 
-# In[250]:
+# In[128]:
 
 
 for ip in range(9):
@@ -2107,7 +2174,7 @@ for ip in range(9):
     plt.savefig(fp+'MOPITT/'+'MOPITT_CO_night_Averaged_{}_v2.png'.format(mop_pre[ip]),dpi=600,transparent=True)
 
 
-# In[249]:
+# In[129]:
 
 
 for ip,pre in enumerate(mop_pre):
@@ -2126,6 +2193,14 @@ mop_night_900.keys()
 
 
 mop_night_900['MOPITT_CO_night_900mb_trend']
+
+
+# In[29]:
+
+
+for ip,pre in enumerate(mop_pre):
+    da = load_pickle_plot_savemat(fp,fp+'/MOPITT/MOPITT_CO_night_{:3.0f}mb_trend_output.v1.p'.format(pre),
+                         mop_lat,mop_lon,units='ppbv')
 
 
 # ## Plot the TOMS O3
@@ -2147,6 +2222,13 @@ toms_time.shape,toms_lat.shape,toms_lon.shape
 
 trend_and_plot(np.moveaxis(toms_O3,2,0),toms_lat,toms_lon,toms_time,'TOMS_O3',
                fp=fp+'TOMS_O3_L3/',clevels=np.arange(-0.01,0.01,0.0025),vv=vv)
+
+
+# In[41]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'/TOMS_O3_L3/TOMS_O3_trend_output.v1.p',
+                         toms_lat,toms_lon,units='DU')
 
 
 # ##  Plot the OMI MLS
@@ -2182,6 +2264,20 @@ fig = plot_trend_and_pval(convert_monthly_to_decadal_trend(mls_o3_trend,mls_o3_t
                           cax_name='O3 trend [DU/decade]',figsize=(10,4),vmin=-4,vmax=4)
 fig.tight_layout()
 fig.savefig(fp+'OMI_MLS_O3_L3/OMI_MLS_O3_trend_v2.png')
+
+
+# In[57]:
+
+
+trend_and_plot(mls_o3['tropo3'],mls_o3['lat'],mls_o3['lon'],mls_o3_time,'OMI_MLS_O3',
+                   fp=fp+'OMI_MLS_O3_L3/',vv=vv,npvals=5,units='DU')
+
+
+# In[58]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'OMI_MLS_O3_L3/OMI_MLS_O3_trend_output.v1.p',
+                         mls_o3['lat'],mls_o3['lon'],units='DU')
 
 
 # ### NO2
@@ -2243,6 +2339,19 @@ fig.tight_layout()
 fig.savefig(fp+'OMI_NO2/MLS_NO2_trend_output.v1.png',dpi=300,transparent=True)
 
 
+# In[70]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'OMI_NO2/MLS_NO2_trend_output.v1.p',
+                         mls_no2_lat,mls_no2_lon,units='DU')
+
+
+# In[71]:
+
+
+fp
+
+
 # ## Plot CEDS NOx
 
 # ### NOx Aircraft emissions
@@ -2298,6 +2407,13 @@ fig.tight_layout()
 fig.savefig(fp+'CEDS/CED_NOx_AC_trend_output.v1.png',dpi=300,transparent=True)
 
 
+# In[76]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'CEDS/CED_NOx_AC_trend_output.v1.p',
+                         ceds_lat,ceds_lon,units='kgCO2 m-2 sec-1')
+
+
 # ### NOx Anthropogenic
 
 # In[41]:
@@ -2351,11 +2467,18 @@ fig.tight_layout()
 fig.savefig(fp+'CEDS/CED_NOx_Ant_trend_output.v1.png',dpi=300,transparent=True)
 
 
+# In[77]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'CEDS/CED_NOx_Ant_trend_output.v1.p',
+                         ceds_lat,ceds_lon,units='kgCO2 m-2 sec-1')
+
+
 # ## Plot TCR
 
 # ### TCR Nox Anth
 
-# In[45]:
+# In[40]:
 
 
 tcr.keys()
@@ -2430,6 +2553,20 @@ fig.tight_layout()
 fig.savefig(fp+'TCR/TCR_EMI_NOx_anth_trend.png',dpi=300,transparent=True)
 
 
+# In[42]:
+
+
+trend_and_plot(tcr['nox_anth'],tcr['lat'],tcr['lon'],tcr_time,'TCR_NOx_Anth',units='kgCO/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[48]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_NOx_Anth_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgN/m2/s')
+
+
 # ### TCR CO Surface
 
 # In[34]:
@@ -2480,6 +2617,20 @@ fig.tight_layout()
 fig.savefig(fp+'TCR/'+'TCR_EMI_CO_SFC_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
 
 
+# In[50]:
+
+
+trend_and_plot(tcr['co_sfc'],tcr['lat'],tcr['lon'],tcr_time,'TCR_EMI_CO_SFC',units='kgCO/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[51]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_EMI_CO_SFC_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgCO/m2/s')
+
+
 # ### TCR co_bio
 
 # In[44]:
@@ -2524,6 +2675,20 @@ fig = plot_trend_and_pval(convert_monthly_to_decadal_trend(tcr_co_bio_trend,tcr_
                           clevels=np.arange(-0.01, 0.01, 0.0025),vmin=-0.2e-9,vmax=0.2e-9)
 fig.tight_layout()
 fig.savefig(fp+'TCR/'+nm+'_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
+
+
+# In[52]:
+
+
+trend_and_plot(tcr['co_bio'],tcr['lat'],tcr['lon'],tcr_time,'TCR_CO_BIO_Burn',units='kgCO/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[53]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_CO_BIO_Burn_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgCO/m2/s')
 
 
 # ### TCR co anth
@@ -2574,6 +2739,20 @@ fig = plot_trend_and_pval(convert_monthly_to_decadal_trend(tcr_co_anth_trend,tcr
                           clevels=np.arange(-0.01, 0.01, 0.0025),vmin=-0.2e-9,vmax=0.2e-9)
 fig.tight_layout()
 fig.savefig(fp+'TCR/'+nm+'_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
+
+
+# In[54]:
+
+
+trend_and_plot(tcr['co_anth'],tcr['lat'],tcr['lon'],tcr_time,'TCR_CO_ANTH',units='kgCO/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[55]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_CO_ANTH_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgCO/m2/s')
 
 
 # ### TCR NOX SFC
@@ -2631,6 +2810,20 @@ fig.tight_layout()
 fig.savefig(fp+'TCR/'+nm+'_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
 
 
+# In[56]:
+
+
+trend_and_plot(tcr['nox_sfc'],tcr['lat'],tcr['lon'],tcr_time,'TCR_NOX_SFC',units='kgN/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[57]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_NOX_SFC_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgN/m2/s')
+
+
 # ### TCR NOX LIGHT
 
 # In[70]:
@@ -2681,6 +2874,20 @@ fig.tight_layout()
 fig.savefig(fp+'TCR/'+nm+'_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
 
 
+# In[58]:
+
+
+trend_and_plot(tcr['nox_light'],tcr['lat'],tcr['lon'],tcr_time,'TCR_NOX_LIGHT',units='kgN/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[59]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_NOX_LIGHT_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgN/m2/s')
+
+
 # ### TCR NOX SOIL
 
 # In[74]:
@@ -2729,6 +2936,20 @@ fig = plot_trend_and_pval(convert_monthly_to_decadal_trend(tcr_nox_soil_trend,tc
                           clevels=np.arange(-0.01, 0.01, 0.0025),vmin=-0.6e-12,vmax=0.6e-12)
 fig.tight_layout()
 fig.savefig(fp+'TCR/'+nm+'_trend_output.{}.png'.format(vv_tcr),dpi=600,transparent=True)
+
+
+# In[60]:
+
+
+trend_and_plot(tcr['nox_soil'],tcr['lat'],tcr['lon'],tcr_time,'TCR_NOX_SOIL',units='kgN/m2/s',
+               fp=fp+'TCR/',clevels=np.arange(-0.01,0.01,0.0025),vv='v3')
+
+
+# In[61]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'TCR/TCR_NOX_SOIL_trend_output.v3.p',
+                         tcr['lat'],tcr['lon'],units='kgN/m2/s')
 
 
 # ## Plot GFED
@@ -2801,6 +3022,13 @@ fig = plot_avg_and_rmse(np.nanmean(gfed['emi_C'],axis=0),gfed_dict['GFED_EMI_C_t
 fig.savefig(fp+'GFED/'+nm+'_averages.{}.png'.format(vv),dpi=600,transparent=True)
 
 
+# In[70]:
+
+
+da = load_pickle_plot_savemat(fp,fp+'GFED/GFED_EMI_C_trend_output.v1.p',
+                          gfed['lat'],gfed['lon'],units='g/kg')
+
+
 # ## Plot GMI / MERRA2
 
 # In[81]:
@@ -2836,6 +3064,14 @@ trend_and_plot(gmi[nm],gmi['lat'],gmi['lon'],gmi['time'],nm,
 for nm in ['O3prod_TROP', 'O3strat_PBL', 'O3strat_TROP']:
     trend_and_plot(gmi[nm],gmi['lat'],gmi['lon'],gmi['time'],nm,
                fp=fp+'MERRA2/',clevels=np.arange(-0.01,0.01,0.0025),vv=vv)
+
+
+# In[80]:
+
+
+for nm in ['no_lightning_emission','O3prod_PBL','O3prod_TROP', 'O3strat_PBL', 'O3strat_TROP']:
+    da = load_pickle_plot_savemat(fp,fp+'MERRA2/'+nm+'_trend_output.v1.p',
+                          gmi['lat'],gmi['lon'],units='mol mol-1 sec-1')
 
 
 # In[ ]:
