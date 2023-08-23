@@ -60,9 +60,10 @@ import pickle
 from tqdm.notebook import tqdm 
 import warnings
 import map_utils as mu
+import plotting_utils as pu
 
 
-# In[5]:
+# In[2]:
 
 
 name = 'ACAERO'
@@ -74,13 +75,13 @@ fp = getpath(name)
 
 # ## Load 4STAR ORACLES
 
-# In[18]:
+# In[3]:
 
 
 fps = getpath('sunsat')
 
 
-# In[34]:
+# In[4]:
 
 
 fpo = getpath('ORACLES')
@@ -88,13 +89,13 @@ fpo = getpath('ORACLES')
 
 # ### 2016
 
-# In[36]:
+# In[5]:
 
 
 ar6 = hs.loadmat(fpo+'/aod_ict/R4/all_aod_ict_R4_2016.mat')
 
 
-# In[37]:
+# In[6]:
 
 
 ar6['flac'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)
@@ -107,13 +108,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # ### 2017
 
-# In[38]:
+# In[7]:
 
 
 ar7 = hs.loadmat(fpo+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
 
 
-# In[39]:
+# In[8]:
 
 
 ar7['flac'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)
@@ -126,13 +127,13 @@ ar7['fl'] = (ar7['qual_flag']==0)
 
 # ### 2018
 
-# In[40]:
+# In[9]:
 
 
 ar8 = hs.loadmat(fpo+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv='R1'))
 
 
-# In[41]:
+# In[10]:
 
 
 ar8['flac'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)  
@@ -145,7 +146,7 @@ ar8['fl'] = (ar8['qual_flag']==0)
 
 # ### Combined and set days
 
-# In[42]:
+# In[11]:
 
 
 days6 = ['20160824','20160825','20160827','20160830','20160831','20160902','20160904','20160906','20160908',
@@ -156,7 +157,7 @@ days8 = ['20180921','20180922','20180924','20180927','20180930','20181002','2018
         '20181015','20181017','20181019','20181021','20181023','20181025','20181026','20181027']
 
 
-# In[43]:
+# In[12]:
 
 
 ar6['daysd'] = [days6[i] for i in ar6['days'].astype(int)]
@@ -164,7 +165,7 @@ ar7['daysd'] = [days7[i] for i in ar7['days'].astype(int)]
 ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 
 
-# In[44]:
+# In[13]:
 
 
 ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
@@ -179,13 +180,13 @@ ar8['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar8['Start_
 
 # ### 2016
 
-# In[45]:
+# In[14]:
 
 
 vv_2016 = 'R9'
 
 
-# In[46]:
+# In[15]:
 
 
 fp6 = fpo+'data_other/HSRL/{vv}/'.format(vv=vv_2016)
@@ -195,14 +196,14 @@ f6_hsrl.sort()
 f6_hsrl
 
 
-# In[127]:
+# In[16]:
 
 
 hsrl_days6 = [f.split('_')[2] for f in f6_hsrl]
 hsrl_doys6 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in hsrl_days6]
 
 
-# In[59]:
+# In[17]:
 
 
 s6 = {}
@@ -231,13 +232,13 @@ for i,f in enumerate(f6_hsrl):
     s6[u's{:08.0f}'.format(h['date'])] = h
 
 
-# In[60]:
+# In[18]:
 
 
 s6.keys()
 
 
-# In[70]:
+# In[19]:
 
 
 # combine into one array
@@ -250,7 +251,7 @@ for n in s6[list(k6)[0]].keys():
         hr6[n] = np.array([])
 
 
-# In[73]:
+# In[20]:
 
 
 for i,d in enumerate(s6.keys()):
@@ -260,7 +261,7 @@ for i,d in enumerate(s6.keys()):
         hr6[n] = np.append(hr6[n],s6[d][n])
 
 
-# In[74]:
+# In[21]:
 
 
 hr6.keys() 
@@ -415,28 +416,34 @@ for i,d in enumerate(s8.keys()):
 hr8.keys()
 
 
+# In[ ]:
+
+
+
+
+
 # ## Load the AQUA
 
-# In[6]:
+# In[22]:
 
 
 fpa = fp+'AQUA'
 
 
-# In[10]:
+# In[23]:
 
 
 files_a = os.listdir(fpa)
 files_a.sort()
 
 
-# In[83]:
+# In[24]:
 
 
 len(files_a)
 
 
-# In[97]:
+# In[25]:
 
 
 doys6 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days6]
@@ -444,65 +451,89 @@ doys7 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days7]
 doys8 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days8]
 
 
-# In[128]:
+# In[26]:
 
 
 files_a6_p = [val for val in files_a if any(str(x) in val.split('.')[1] for x in doys6) ]
 files_a6_e = [val for val in files_a if any(str(x) in val.split('.')[1] for x in hsrl_doys6) ]
 
 
-# In[129]:
+# In[27]:
 
 
 files_a6_p.sort()
 files_a6_e.sort()
 
 
-# In[135]:
+# In[28]:
 
 
 a1, a1_dict = lu.load_hdf(fpa+'/'+files_a6_p[0],values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
                                                         ('AAOD_2',16),('AAOD2_UNC',17)))
 
 
-# In[136]:
+# In[29]:
 
 
 a1.keys()
 
 
-# In[139]:
+# In[30]:
 
 
 a1['AAOD']
 
 
-# In[159]:
+# In[31]:
 
 
 nx,ny = a1['AAOD'].shape
 nt = len(files_a6_p)
 
 
-# In[167]:
+# In[32]:
 
 
 f[:37]
 
 
-# In[168]:
+# In[33]:
 
 
 datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M')
 
 
-# In[179]:
+# In[34]:
+
+
+rad = mu.spherical_dist([a1['lat'][0,0],a1['lon'][0,0]],[a1['lat'][1,0],a1['lon'][1,0]])*1000.0
+
+
+# In[35]:
+
+
+a1['lat'].shape
+
+
+# In[36]:
+
+
+a1_dict['AAOD_2']
+
+
+# In[37]:
+
+
+a1_dict['lat']
+
+
+# In[38]:
 
 
 warnings.filterwarnings('ignore')
 
 
-# In[180]:
+# In[104]:
 
 
 aaod = []
@@ -517,17 +548,17 @@ for f in tqdm(files_a6_p):
     #print('loading file: {}'.format(f))
     a1, a1_dict = lu.load_hdf(fpa+'/'+f,values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
                                                         ('AAOD_2',16),('AAOD2_UNC',17)),verbose=False)
-    aaod.append(a1['AAOD']*float(a1_dict['AAOD']['/geophysical_data/Above_Cloud_AOD#scale_factor']))
-    aaod2.append( a1['AAOD_2']*float(a1_dict['AAOD_2']['/geophysical_data/Above_Cloud_AOD_Secondary#scale_factor']))
-    aaod_unc.append(a1['AAOD_UNC']*float(a1_dict['AAOD_UNC']['/geophysical_data/Above_Cloud_AOD_Uncertainty#scale_factor']))
-    aaod2_unc.append( a1['AAOD2_UNC']*float(a1_dict['AAOD2_UNC']['/geophysical_data/Above_Cloud_AOD_Secondary_Uncertainty#scale_factor']))
-    lat.append(a1['lat'])
-    lon.append(a1['lon'])
+    aaod.append(a1['AAOD'].flatten()*float(a1_dict['AAOD']['/geophysical_data/Above_Cloud_AOD#scale_factor']))
+    aaod2.append( a1['AAOD_2'].flatten()*float(a1_dict['AAOD_2']['/geophysical_data/Above_Cloud_AOD_Secondary#scale_factor']))
+    aaod_unc.append(a1['AAOD_UNC'].flatten()*float(a1_dict['AAOD_UNC']['/geophysical_data/Above_Cloud_AOD_Uncertainty#scale_factor']))
+    aaod2_unc.append( a1['AAOD2_UNC'].flatten()*float(a1_dict['AAOD2_UNC']['/geophysical_data/Above_Cloud_AOD_Secondary_Uncertainty#scale_factor']))
+    lat.append(a1['lat'].flatten())
+    lon.append(a1['lon'].flatten())
     a_time.append(datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M'))
     a_daystr.append(a_time[-1].strftime('%Y%m%d'))
 
 
-# In[189]:
+# In[105]:
 
 
 aaod_e = []
@@ -550,11 +581,65 @@ for f in tqdm(files_a6_e):
     a_time_e.append(datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M'))
 
 
-# In[203]:
+# In[106]:
 
 
-a_daystr = [a.strftime('%Y%m%d') for a in a_time]
-a_daystr_e = [a.strftime('%Y%m%d') for a in a_time_e]
+a_daystr = [[a.strftime('%Y%m%d')]*len(lat[i]) for i,a in enumerate(a_time)]
+a_daystr_e = [[a.strftime('%Y%m%d')]*len(lat_e[i]) for i,a in enumerate(a_time_e)]
+
+
+# In[107]:
+
+
+a_daystr = np.concatenate(a_daystr)
+a_daystr_e = np.concatenate(a_daystr_e)
+
+
+# In[108]:
+
+
+aaod = np.concatenate(aaod)
+aaod2 = np.concatenate(aaod2)
+aaod_unc = np.concatenate(aaod_unc)
+aaod2_unc = np.concatenate(aaod2_unc)
+lat = np.concatenate(lat)
+lon = np.concatenate(lon) 
+
+
+# In[109]:
+
+
+aaod[aaod<-0.1] = np.nan
+aaod2[aaod2<-0.1] = np.nan
+aaod_unc[aaod_unc<-0.1] = np.nan
+aaod2_unc[aaod_unc<-0.1] = np.nan
+
+
+# In[110]:
+
+
+aaod_e = np.concatenate(aaod_e)
+aaod2_e = np.concatenate(aaod2_e)
+aaod_e_unc = np.concatenate(aaod_e_unc)
+aaod2_e_unc = np.concatenate(aaod2_e_unc)
+lat_e = np.concatenate(lat_e)
+lon_e = np.concatenate(lon_e) 
+aaod_e[aaod_e<-0.1] = np.nan
+aaod2_e[aaod2_e<-0.1] = np.nan
+aaod_e_unc[aaod_e_unc<-0.1] = np.nan
+aaod2_e_unc[aaod2_e_unc<-0.1] = np.nan
+
+
+# In[111]:
+
+
+len(aaod_e)
+
+
+# In[112]:
+
+
+len(a_daystr_e)
 
 
 # ## Load the VIIRS
@@ -583,13 +668,13 @@ a_daystr_e = [a.strftime('%Y%m%d') for a in a_time_e]
 
 # ### For  4STAR
 
-# In[191]:
+# In[71]:
 
 
 ar6.keys()
 
 
-# In[204]:
+# In[72]:
 
 
 ar6['mod_AAOD']=np.zeros_like(ar6['AOD0501'])
@@ -598,84 +683,75 @@ ar6['mod_AAOD_UNC']=np.zeros_like(ar6['AOD0501'])
 ar6['mod_AAOD2_UNC']=np.zeros_like(ar6['AOD0501'])
 
 
-# In[222]:
-
-
-help(mu.map_ind)
-
-
-# In[242]:
-
-
-for d in days6:
-    i_daymod = np.where(np.array(a_daystr)==d)[0]
-    i_dayar = np.where(np.array(ar6['daysd'])==d)[0]
-    print(len(iday))
-    for i in i_daymod:
-        if (lat[i].max()>np.nanmin(ar6['Latitude'][i_dayar])) & (lat[i].min()<np.nanmax(ar6['Latitude'][i_dayar])) &\
-         (lon[i].max()>np.nanmin(ar6['Longitude'][i_dayar])) & (lon[i].min()<np.nanmax(ar6['Longitude'][i_dayar])):
-            ind = mu.map_ind(lon[i],lat[i],ar6['Longitude'][i_dayar],ar6['Latitude'][i_dayar])
-            ar6['mod_AAOD'][i_dayar] = aaod[ind]
-            break
-    break
-            
-
-
-# In[243]:
-
-
-i_daymod
-
-
-# In[245]:
-
-
-d
-
-
-# In[232]:
-
-
-lat[0].max()
-
-
-# In[233]:
-
-
-ar6['Latitude'][i_dayar].max()
-
-
-# In[236]:
-
-
-(lat[i].min()>np.nanmin(ar6['Latitude'][i_dayar]))
-
-
-# In[237]:
-
-
-lat[i].min()
-
-
-# In[241]:
-
-
-np.nanmin(ar6['Latitude'][i_dayar]),np.nanmax(ar6['Latitude'][i_dayar]), lat[i].min(), lat[i].max()
-
-
 # In[ ]:
 
 
+for d in tqdm(days6,desc='days'):
+    i_daymod = np.where(np.array(a_daystr)==d)[0]
+    i_dayar = np.where((np.array(ar6['daysd'])==d) & np.isfinite(ar6['Latitude']))[0]
+    print(d,len(i_daymod))
+    for i in tqdm(i_daymod,desc='is'):
+        if (lat[i].max()>np.nanmin(ar6['Latitude'][i_dayar])) & (lat[i].min()<np.nanmax(ar6['Latitude'][i_dayar])) &\
+         (lon[i].max()>np.nanmin(ar6['Longitude'][i_dayar])) & (lon[i].min()<np.nanmax(ar6['Longitude'][i_dayar])):
+            
+            out = mu.stats_within_radius(ar6['Latitude'][i_dayar],ar6['Longitude'][i_dayar],
+                                      lat[i],lon[i],aaod[i],rad,subset=False)
+            ar6['mod_AAOD'][i_dayar] = out['mean']
+            ar6['mod_AAOD2'][i_dayar] = np.array([np.nanmean(aaod2[i].flatten()[io]) for io in out['index']])
+            ar6['mod_AAOD_UNC'][i_dayar] = np.array([np.nanmean(aaod_unc[i].flatten()[io]) for io in out['index']])
+            ar6['mod_AAOD2_UNC'][i_dayar] = np.array([np.nanmean(aaod2_unc[i].flatten()[io]) for io in out['index']])
 
+
+# In[82]:
+
+
+## Save output of colocation
+
+
+# In[84]:
+
+
+dat = {'mod_AAOD':ar6['mod_AAOD'],
+       'mod_AAOD2':ar6['mod_AAOD2'],
+       'mod_AAOD_UNC':ar6['mod_AAOD_UNC'],
+       'mod_AAOD2_UNC':ar6['mod_AAOD2_UNC'],
+       'lat':ar6['Latitude'],
+       'lon':ar6['Longitude'],
+       'daystr':ar6['daysd']}
+np.save(fpo+'mod_ACAERO_match_4star.npy',dat,allow_pickle=True)
+
+
+# In[89]:
+
+
+hs.savemat(fpo+'mod_ACAERO_match_4star.mat',dat)
+
+
+# In[45]:
+
+
+## Load output of colocation
+
+
+# In[40]:
+
+
+dat = np.load(fpo+'mod_ACAERO_match_4star.npy',allow_pickle=True)
+
+
+# In[42]:
+
+
+da = hs.loadmat(fpo+'mod_ACAERO_match_4star.mat')
+
+
+# In[43]:
+
+
+da
 
 
 # ### For HSRL
-
-# In[ ]:
-
-
-
-
 
 # In[61]:
 
@@ -727,6 +803,112 @@ for sk in s8.keys():
     axy.plot(s8[sk]['time'],s8[sk]['alt'],'.',color='lightgrey')
     axy.plot(s8[sk]['time'][s8[sk]['fl']],s8[sk]['alt'][s8[sk]['fl']],'.',color='grey')
     axy.set_ylabel('Altitude [m]')
+
+
+# In[86]:
+
+
+hr6.keys()
+
+
+# In[89]:
+
+
+len(hr6['date'])
+
+
+# In[94]:
+
+
+hr6['daysd'] = ['{:8.0f}'.format(d) for d in hr6['date']]
+
+
+# In[97]:
+
+
+len(a_daystr_e)
+
+
+# In[95]:
+
+
+for d in tqdm(a_daystr_e,desc='days'):
+    i_daymod = np.where(np.array(a_daystr_e)==d)[0]
+    i_dayar = np.where((np.array(hr6['daysd'])==d) & np.isfinite(hr6['lat']))[0]
+    print(d,len(i_daymod))
+    for i in tqdm(i_daymod,desc='is'):
+        if (lat_e[i].max()>np.nanmin(hr6['lat'][i_dayar])) & (lat_e[i].min()<np.nanmax(hr6['lat'][i_dayar])) &\
+         (lon_e[i].max()>np.nanmin(hr6['lon'][i_dayar])) & (lon_e[i].min()<np.nanmax(hr6['lon'][i_dayar])):
+            
+            out = mu.stats_within_radius(hr6['lat'][i_dayar],hr6['lon'][i_dayar],
+                                      lat_e[i],lon_e[i],aaod_e[i],rad,subset=False)
+            hr6['mod_AAOD'][i_dayar] = out['mean']
+            hr6['mod_AAOD2'][i_dayar] = np.array([np.nanmean(aaod2_e[i].flatten()[io]) for io in out['index']])
+            hr6['mod_AAOD_UNC'][i_dayar] = np.array([np.nanmean(aaod_e_unc[i].flatten()[io]) for io in out['index']])
+            hr6['mod_AAOD2_UNC'][i_dayar] = np.array([np.nanmean(aaod2_e_unc[i].flatten()[io]) for io in out['index']])
+
+
+# ## Plot the scatter plots
+
+# ### 4STAR
+
+# In[53]:
+
+
+ar6.keys()
+
+
+# In[44]:
+
+
+fl = (ar6['flag_acaod']==1) & ar6['fl']
+flo = (ar6['flag_acaod']==1) & ar6['fl'] & (da['mod_AAOD']>-0.2) & np.isfinite(da['mod_AAOD']) & np.isfinite(ar6['AOD0550'])
+
+
+# In[58]:
+
+
+plt.figure()
+plt.hist([da['mod_AAOD'][flo],ar6['AOD0550'][flo]],bins=50,label=['MOD ACAERO','4STAR AAOD'])
+plt.legend()
+plt.xlabel('AOD [550 nm]')
+plt.savefig(fpo+'MODACAERO_vs_4STAR_hist.png',dpi=600,transparent=True)
+
+
+# In[80]:
+
+
+ar6.keys()
+
+
+# In[81]:
+
+
+da.keys()
+
+
+# In[47]:
+
+
+fig,ax = plt.subplots(1,1)
+plt.plot(ar6['AOD0550'][flo],da['mod_AAOD'][flo],'.')
+plt.errorbar(ar6['AOD0550'][flo],da['mod_AAOD'][flo],xerr=ar6['UNCAOD0550'][flo],yerr=da['mod_AAOD_UNC'][flo],
+             marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+plt.xlabel('4STAR ACAOD [550 nm]')
+plt.ylabel('MODIS ACAERO (v1) [550m]')
+pu.plot_lin(ar6['AOD0550'][flo],da['mod_AAOD'][flo],
+            x_err=ar6['UNCAOD0550'][flo],y_err=da['mod_AAOD_UNC'][flo],
+            labels=True,shaded_ci=True,ci=95,ax=ax,
+            use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+plt.title('ORACLES 2016 Above Cloud AOD (MODIS with 4STAR abs. vs. 4STAR)')
+plt.legend()
+plt.savefig(fpo+'MODACAERO_vs_4STAR_ORACLES2016.png',dpi=600,transparent=True)
+
+
+# In[61]:
+
+
+fpo
 
 
 # In[ ]:
