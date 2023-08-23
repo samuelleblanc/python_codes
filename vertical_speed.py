@@ -1,49 +1,48 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # Program to check out previous flights from the P3 to calculate various speeds..
 
-# In[4]:
+# In[1]:
 
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
+get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
 import matplotlib 
 #matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import numpy as np
 #import Pysolar.solar as sol
 import datetime
 fp='C:/Users/sleblan2/Research/flight_planning/p3_flights/'
 
 
-# In[7]:
+# In[2]:
 
 
 from path_utils import getpath
 
 
-# In[5]:
+# In[3]:
 
 
 import load_utils as lm
-reload(lm)
 
 
-# In[6]:
+# In[4]:
 
 
 from Sp_parameters import smooth
 
 
-# In[9]:
+# In[5]:
 
 
 fp = getpath('ORACLES')
 fp
 
 
-# # P3 during ORACLES 2018
+# ## P3 during ORACLES 2018
 
 # In[12]:
 
@@ -349,4 +348,92 @@ plt.xlabel('Vertical Speed [m/s]')
 plt.ylabel('Altitude [m]')
 plt.legend(frameon=False)
 plt.savefig(fp+'C130_vert_speed.png',dpi=600,transparent=True)
+
+
+# ## Twin Otter during FASE
+
+# In[6]:
+
+
+fp = getpath('PACE_PAX_DATA')
+
+
+# In[7]:
+
+
+import pandas as pd
+import plotting_utils as pu
+
+
+# In[8]:
+
+
+dat = pd.read_csv(fp+'twinotter/FASE/FASE_Cabin_V5.csv',header=0)
+
+
+# In[9]:
+
+
+dat
+
+
+# In[10]:
+
+
+plt.figure()
+plt.plot(dat['TAS'],dat['Alt_P_m'],'.')
+plt.xlabel('True Airspeed [m/s]')
+plt.ylabel('Altitude [m]')
+plt.title('Twin Otter True Airspeed vs Altitude during FASE (2016-07-18)')
+plt.savefig(fp+'twinotter/TO_TAS_FASE.png',dpi=600,transparent=True)
+
+
+# In[11]:
+
+
+vert_speed = np.diff(smooth(dat['Alt_P_m'],20,old=True))
+fl_up = (vert_speed>0.4) & (vert_speed<10) & (dat['Alt_P_m'][1:]>100.0) & (dat['TAS'][1:]>40.0)
+fl_dn = (vert_speed<-0.4)& (vert_speed>-10)& (dat['Alt_P_m'][1:]>100.0) & (dat['TAS'][1:]>40.0)
+
+
+# In[12]:
+
+
+plt.figure()
+plt.plot(vert_speed,dat['Alt_P_m'][1:],'.',color='grey')
+
+plt.plot(smooth(vert_speed[fl_up],20,old=True),smooth(dat['Alt_P_m'][1:][fl_up],20,old=True),'.',color='g')
+pu.plot_lin(smooth(vert_speed[fl_up],20,old=True),smooth(dat['Alt_P_m'][1:][fl_up],20,old=True),color='b')
+plt.plot(vert_speed[fl_dn],dat['Alt_P_m'][1:][fl_dn],'.',color='r')
+pu.plot_lin(smooth(vert_speed[fl_dn],20,old=True),smooth(dat['Alt_P_m'][1:][fl_dn],20,old=True),color='tab:orange')
+plt.xlim(-8,8)
+plt.grid()
+plt.legend()
+
+plt.xlabel('Vertical speed [m/s]')
+plt.ylabel('Altitude [m]')
+plt.title('Twin Otter Vertical speed vs Altitude during FASE (2016-07-18)')
+plt.savefig(fp+'twinotter/TO_vertspeed_FASE.png',dpi=600,transparent=True)
+
+
+# In[15]:
+
+
+plt.figure()
+plt.plot(dat['TAS'],dat['Alt_P_m'],'.',label='all')
+plt.plot(dat['TAS'][1:][fl_up],dat['Alt_P_m'][1:][fl_up],'.',label='up')
+plt.plot(dat['TAS'][1:][fl_dn],dat['Alt_P_m'][1:][fl_dn],'.',label='dn')
+pu.plot_lin(smooth(dat['TAS'][1:][fl_up],20,old=True),smooth(dat['Alt_P_m'][1:][fl_up],20,old=True),color='orange')
+plt.xlabel('True Airspeed [m/s]')
+plt.ylabel('Altitude [m]')
+plt.title('Twin Otter True Airspeed vs Altitude during FASE (2016-07-18)')
+plt.grid()
+plt.legend()
+plt.savefig(fp+'twinotter/TO_TAS_FASE.png',dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+
 
