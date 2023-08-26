@@ -168,9 +168,9 @@ ar8['daysd'] = [days8[i] for i in ar8['days'].astype(int)]
 # In[13]:
 
 
-ar6['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
+ar6['ndtime2'] = np.array([datetime(2016,int(d[4:6]),int(d[6:8]),int(ar6['Start_UTC'][i]),
                           int((ar6['Start_UTC'][i]-float(int(ar6['Start_UTC'][i])))*60)) for i,d in enumerate(ar6['daysd'])])
-ar7['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar7['Start_UTC'][i]),
+ar7['ndtime2'] = np.array([datetime(2017,int(d[4:6]),int(d[6:8]),int(ar7['Start_UTC'][i]),
                           int((ar7['Start_UTC'][i]-float(int(ar7['Start_UTC'][i])))*60)) for i,d in enumerate(ar7['daysd'])])
 ar8['ndtime2'] = np.array([datetime(2018,int(d[4:6]),int(d[6:8]),int(ar8['Start_UTC'][i]),
                           int((ar8['Start_UTC'][i]-float(int(ar8['Start_UTC'][i])))*60)) for i,d in enumerate(ar8['daysd'])])
@@ -265,6 +265,19 @@ for i,d in enumerate(s6.keys()):
 
 
 hr6.keys() 
+
+
+# In[22]:
+
+
+hr6['date']
+
+
+# In[23]:
+
+
+hr6['ndtime2'] = np.array([datetime(2016,int((d/100-201600)//1),int((d/100-201600)//0.01 % 100),int(hr6['time'][i]),
+                          int((hr6['time'][i]-float(int(hr6['time'][i])))*60)) for i,d in enumerate(hr6['date'])])
 
 
 # ### 2017
@@ -424,26 +437,32 @@ hr8.keys()
 
 # ## Load the AQUA
 
-# In[22]:
+# In[24]:
 
 
 fpa = fp+'AQUA'
 
 
-# In[23]:
+# In[25]:
 
 
 files_a = os.listdir(fpa)
 files_a.sort()
 
 
-# In[24]:
+# In[26]:
 
 
 len(files_a)
 
 
-# In[25]:
+# In[27]:
+
+
+concatenate = False
+
+
+# In[28]:
 
 
 doys6 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days6]
@@ -451,89 +470,77 @@ doys7 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days7]
 doys8 = [datetime.strptime(d,'%Y%m%d').timetuple().tm_yday   for d in days8]
 
 
-# In[26]:
+# In[29]:
 
 
 files_a6_p = [val for val in files_a if any(str(x) in val.split('.')[1] for x in doys6) ]
 files_a6_e = [val for val in files_a if any(str(x) in val.split('.')[1] for x in hsrl_doys6) ]
 
 
-# In[27]:
+# In[30]:
 
 
 files_a6_p.sort()
 files_a6_e.sort()
 
 
-# In[28]:
+# In[31]:
 
 
 a1, a1_dict = lu.load_hdf(fpa+'/'+files_a6_p[0],values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
                                                         ('AAOD_2',16),('AAOD2_UNC',17)))
 
 
-# In[29]:
+# In[32]:
 
 
 a1.keys()
 
 
-# In[30]:
+# In[33]:
 
 
 a1['AAOD']
 
 
-# In[31]:
+# In[34]:
 
 
 nx,ny = a1['AAOD'].shape
 nt = len(files_a6_p)
 
 
-# In[32]:
-
-
-f[:37]
-
-
-# In[33]:
-
-
-datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M')
-
-
-# In[34]:
+# In[37]:
 
 
 rad = mu.spherical_dist([a1['lat'][0,0],a1['lon'][0,0]],[a1['lat'][1,0],a1['lon'][1,0]])*1000.0
 
 
-# In[35]:
+# In[38]:
 
 
 a1['lat'].shape
 
 
-# In[36]:
+# In[39]:
 
 
 a1_dict['AAOD_2']
 
 
-# In[37]:
+# In[41]:
 
 
 a1_dict['lat']
 
 
-# In[38]:
+# In[40]:
 
 
 warnings.filterwarnings('ignore')
 
 
-# In[104]:
+# In[41]:
 
 
 aaod = []
@@ -558,7 +565,17 @@ for f in tqdm(files_a6_p):
     a_daystr.append(a_time[-1].strftime('%Y%m%d'))
 
 
-# In[105]:
+# In[42]:
+
+
+for i in range(len(lat)):
+    aaod[i][aaod[i]<-9.0] = np.nan
+    aaod2[i][aaod2[i]<-9.0] = np.nan
+    aaod_unc[i][aaod_unc[i]<-9.0] = np.nan
+    aaod2_unc[i][aaod_unc[i]<-9.0] = np.nan
+
+
+# In[43]:
 
 
 aaod_e = []
@@ -568,6 +585,7 @@ aaod2_e_unc = []
 lat_e = []
 lon_e = []
 a_time_e = []
+a_daystr_e = []
 for f in tqdm(files_a6_e):
     #print('loading file: {}'.format(f))
     a1, a1_dict = lu.load_hdf(fpa+'/'+f,values=(('lat',0),('lon',1),('AAOD',10),('AAOD_UNC',11),
@@ -579,67 +597,57 @@ for f in tqdm(files_a6_e):
     lat_e.append(a1['lat'])
     lon_e.append(a1['lon'])
     a_time_e.append(datetime.strptime(f[:37],'CLDACAERO_L2_MODIS_Aqua.A%Y%j.%H%M'))
+    a_daystr_e.append(a_time_e[-1].strftime('%Y%m%d'))
 
 
-# In[106]:
+# In[44]:
 
 
-a_daystr = [[a.strftime('%Y%m%d')]*len(lat[i]) for i,a in enumerate(a_time)]
-a_daystr_e = [[a.strftime('%Y%m%d')]*len(lat_e[i]) for i,a in enumerate(a_time_e)]
+for i in range(len(lat_e)):
+    aaod_e[i][aaod_e[i]<-9.0] = np.nan
+    aaod2_e[i][aaod2_e[i]<-9.0] = np.nan
+    aaod_e_unc[i][aaod_e_unc[i]<-9.0] = np.nan
+    aaod2_e_unc[i][aaod_e_unc[i]<-9.0] = np.nan
 
 
-# In[107]:
+# In[43]:
 
 
-a_daystr = np.concatenate(a_daystr)
-a_daystr_e = np.concatenate(a_daystr_e)
+if concatenate:
+    a_daystr = [[a.strftime('%Y%m%d')]*len(lat[i]) for i,a in enumerate(a_time)]
+    a_daystr_e = [[a.strftime('%Y%m%d')]*len(lat_e[i]) for i,a in enumerate(a_time_e)]
+    a_daystr = np.concatenate(a_daystr)
+    a_daystr_e = np.concatenate(a_daystr_e)
 
 
-# In[108]:
+# In[45]:
 
 
-aaod = np.concatenate(aaod)
-aaod2 = np.concatenate(aaod2)
-aaod_unc = np.concatenate(aaod_unc)
-aaod2_unc = np.concatenate(aaod2_unc)
-lat = np.concatenate(lat)
-lon = np.concatenate(lon) 
+if concatenate:
+    aaod = np.concatenate(aaod)
+    aaod2 = np.concatenate(aaod2)
+    aaod_unc = np.concatenate(aaod_unc)
+    aaod2_unc = np.concatenate(aaod2_unc)
+    lat = np.concatenate(lat)
+    lon = np.concatenate(lon) 
 
 
-# In[109]:
+# In[47]:
 
 
-aaod[aaod<-0.1] = np.nan
-aaod2[aaod2<-0.1] = np.nan
-aaod_unc[aaod_unc<-0.1] = np.nan
-aaod2_unc[aaod_unc<-0.1] = np.nan
+if concatenate:
+    aaod_e = np.concatenate(aaod_e)
+    aaod2_e = np.concatenate(aaod2_e)
+    aaod_e_unc = np.concatenate(aaod_e_unc)
+    aaod2_e_unc = np.concatenate(aaod2_e_unc)
+    lat_e = np.concatenate(lat_e)
+    lon_e = np.concatenate(lon_e) 
 
 
-# In[110]:
+# In[47]:
 
 
-aaod_e = np.concatenate(aaod_e)
-aaod2_e = np.concatenate(aaod2_e)
-aaod_e_unc = np.concatenate(aaod_e_unc)
-aaod2_e_unc = np.concatenate(aaod2_e_unc)
-lat_e = np.concatenate(lat_e)
-lon_e = np.concatenate(lon_e) 
-aaod_e[aaod_e<-0.1] = np.nan
-aaod2_e[aaod2_e<-0.1] = np.nan
-aaod_e_unc[aaod_e_unc<-0.1] = np.nan
-aaod2_e_unc[aaod2_e_unc<-0.1] = np.nan
-
-
-# In[111]:
-
-
-len(aaod_e)
-
-
-# In[112]:
-
-
-len(a_daystr_e)
+len(aaod),len(a_daystr),len(aaod_e),len(a_daystr_e)
 
 
 # ## Load the VIIRS
@@ -668,49 +676,70 @@ len(a_daystr_e)
 
 # ### For  4STAR
 
-# In[71]:
+# In[111]:
 
 
 ar6.keys()
 
 
-# In[72]:
+# In[112]:
 
 
-ar6['mod_AAOD']=np.zeros_like(ar6['AOD0501'])
-ar6['mod_AAOD2']=np.zeros_like(ar6['AOD0501'])
-ar6['mod_AAOD_UNC']=np.zeros_like(ar6['AOD0501'])
-ar6['mod_AAOD2_UNC']=np.zeros_like(ar6['AOD0501'])
+ar6['mod_AAOD']=np.zeros_like(ar6['AOD0501'])+np.nan
+ar6['mod_AAOD2']=np.zeros_like(ar6['AOD0501'])+np.nan
+ar6['mod_AAOD_UNC']=np.zeros_like(ar6['AOD0501'])+np.nan
+ar6['mod_AAOD2_UNC']=np.zeros_like(ar6['AOD0501'])+np.nan
 
 
-# In[ ]:
+# In[45]:
 
 
-for d in tqdm(days6,desc='days'):
-    i_daymod = np.where(np.array(a_daystr)==d)[0]
-    i_dayar = np.where((np.array(ar6['daysd'])==d) & np.isfinite(ar6['Latitude']))[0]
-    print(d,len(i_daymod))
-    for i in tqdm(i_daymod,desc='is'):
-        if (lat[i].max()>np.nanmin(ar6['Latitude'][i_dayar])) & (lat[i].min()<np.nanmax(ar6['Latitude'][i_dayar])) &\
-         (lon[i].max()>np.nanmin(ar6['Longitude'][i_dayar])) & (lon[i].min()<np.nanmax(ar6['Longitude'][i_dayar])):
-            
-            out = mu.stats_within_radius(ar6['Latitude'][i_dayar],ar6['Longitude'][i_dayar],
-                                      lat[i],lon[i],aaod[i],rad,subset=False)
-            ar6['mod_AAOD'][i_dayar] = out['mean']
-            ar6['mod_AAOD2'][i_dayar] = np.array([np.nanmean(aaod2[i].flatten()[io]) for io in out['index']])
-            ar6['mod_AAOD_UNC'][i_dayar] = np.array([np.nanmean(aaod_unc[i].flatten()[io]) for io in out['index']])
-            ar6['mod_AAOD2_UNC'][i_dayar] = np.array([np.nanmean(aaod2_unc[i].flatten()[io]) for io in out['index']])
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    print(hstr)
+    ar6['mod_AAOD'+hstr]=np.zeros_like(ar6['AOD0501'])+np.nan
+    ar6['mod_AAOD2'+hstr]=np.zeros_like(ar6['AOD0501'])+np.nan
+    ar6['mod_AAOD_UNC'+hstr]=np.zeros_like(ar6['AOD0501'])+np.nan
+    ar6['mod_AAOD2_UNC'+hstr]=np.zeros_like(ar6['AOD0501'])+np.nan
+    for d in tqdm(days6,desc='days'):
+        i_daymod = np.where(np.array(a_daystr)==d)[0]
+        i_dayar = np.where((np.array(ar6['daysd'])==d) & np.isfinite(ar6['Latitude']) &\
+                           (ar6['qual_flag']==0)&(ar6['flag_acaod']==1))[0]
+        print(d,len(i_daymod))
+        if len(i_dayar)<1: continue
+        for i in tqdm(i_daymod,desc='is'):
+            # filter by time
+            fl_time = (ar6['ndtime2'][i_dayar]>(a_time[i]-timedelta(hours=to))) & (ar6['ndtime2'][i_dayar]<a_time[i]+timedelta(hours=to))
+            if (lat[i].max()>np.nanmin(ar6['Latitude'][i_dayar])) & (lat[i].min()<np.nanmax(ar6['Latitude'][i_dayar])) &\
+             (lon[i].max()>np.nanmin(ar6['Longitude'][i_dayar])) & (lon[i].min()<np.nanmax(ar6['Longitude'][i_dayar])) & any(fl_time):
+
+                out = mu.stats_within_radius(ar6['Latitude'][i_dayar][fl_time],ar6['Longitude'][i_dayar][fl_time],
+                                          lat[i],lon[i],aaod[i],rad/2.0,subset=False)
+                np.put(ar6['mod_AAOD'+hstr],i_dayar[fl_time],out['mean'])
+                aaod2_tmp = np.array([np.nanmean(aaod2[i].flatten()[io]) for io in out['index']])
+                aaod_unc_tmp = np.array([np.nanmean(aaod_unc[i].flatten()[io]) for io in out['index']])
+                aaod2_unc_tmp = np.array([np.nanmean(aaod2_unc[i].flatten()[io]) for io in out['index']])
+                np.put(ar6['mod_AAOD2'+hstr],i_dayar[fl_time],aaod2_tmp)
+                np.put(ar6['mod_AAOD_UNC'+hstr],i_dayar[fl_time],aaod_unc_tmp*out['mean']/100.0)
+                np.put(ar6['mod_AAOD2_UNC'+hstr],i_dayar[fl_time],aaod2_unc_tmp*aaod2_tmp/100.0)
 
 
-# In[82]:
+# In[48]:
+
+
+np.save(fpo+'mod_ACAERO_match_4star.npy',ar6,allow_pickle=True)
+
+
+# In[47]:
+
+
+sio.savemat(fpo+'mod_ACAERO_match_4star.mat',ar6)
+
+
+# In[212]:
 
 
 ## Save output of colocation
-
-
-# In[84]:
-
-
 dat = {'mod_AAOD':ar6['mod_AAOD'],
        'mod_AAOD2':ar6['mod_AAOD2'],
        'mod_AAOD_UNC':ar6['mod_AAOD_UNC'],
@@ -811,6 +840,12 @@ for sk in s8.keys():
 hr6.keys()
 
 
+# In[249]:
+
+
+hr6['date']
+
+
 # In[89]:
 
 
@@ -829,86 +864,286 @@ hr6['daysd'] = ['{:8.0f}'.format(d) for d in hr6['date']]
 len(a_daystr_e)
 
 
-# In[95]:
+# In[55]:
 
 
-for d in tqdm(a_daystr_e,desc='days'):
-    i_daymod = np.where(np.array(a_daystr_e)==d)[0]
-    i_dayar = np.where((np.array(hr6['daysd'])==d) & np.isfinite(hr6['lat']))[0]
-    print(d,len(i_daymod))
-    for i in tqdm(i_daymod,desc='is'):
-        if (lat_e[i].max()>np.nanmin(hr6['lat'][i_dayar])) & (lat_e[i].min()<np.nanmax(hr6['lat'][i_dayar])) &\
-         (lon_e[i].max()>np.nanmin(hr6['lon'][i_dayar])) & (lon_e[i].min()<np.nanmax(hr6['lon'][i_dayar])):
-            
-            out = mu.stats_within_radius(hr6['lat'][i_dayar],hr6['lon'][i_dayar],
-                                      lat_e[i],lon_e[i],aaod_e[i],rad,subset=False)
-            hr6['mod_AAOD'][i_dayar] = out['mean']
-            hr6['mod_AAOD2'][i_dayar] = np.array([np.nanmean(aaod2_e[i].flatten()[io]) for io in out['index']])
-            hr6['mod_AAOD_UNC'][i_dayar] = np.array([np.nanmean(aaod_e_unc[i].flatten()[io]) for io in out['index']])
-            hr6['mod_AAOD2_UNC'][i_dayar] = np.array([np.nanmean(aaod2_e_unc[i].flatten()[io]) for io in out['index']])
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    print(hstr)
+    hr6['mod_AAOD'+hstr]=np.zeros_like(hr6['acaod_532'])+np.nan
+    hr6['mod_AAOD2'+hstr]=np.zeros_like(hr6['acaod_532'])+np.nan
+    hr6['mod_AAOD_UNC'+hstr]=np.zeros_like(hr6['acaod_532'])+np.nan
+    hr6['mod_AAOD2_UNC'+hstr]=np.zeros_like(hr6['acaod_532'])+np.nan
+    for d in tqdm(hsrl_days6,desc='days'):
+        i_daymod = np.where(np.array(a_daystr_e)==d)[0]
+        i_dayar = np.where((np.array(hr6['date'])==float(d)) & np.isfinite(hr6['lat']) &\
+                           np.isfinite(hr6['acaod_532']))[0]
+        print(d,len(i_daymod))
+        if len(i_dayar)<1: continue
+        for i in tqdm(i_daymod,desc='is'):
+            # filter by time
+            fl_time = (hr6['ndtime2'][i_dayar]>(a_time_e[i]-timedelta(hours=to))) &\
+                        (hr6['ndtime2'][i_dayar]<a_time_e[i]+timedelta(hours=to))
+            if (lat_e[i].max()>np.nanmin(hr6['lat'][i_dayar])) & (lat_e[i].min()<np.nanmax(hr6['lat'][i_dayar])) &\
+             (lon_e[i].max()>np.nanmin(hr6['lon'][i_dayar])) & (lon_e[i].min()<np.nanmax(hr6['lon'][i_dayar])) & any(fl_time):
+
+                out = mu.stats_within_radius(hr6['lat'][i_dayar][fl_time],hr6['lon'][i_dayar][fl_time],
+                                          lat_e[i],lon_e[i],aaod_e[i],rad/2.0,subset=False)
+                np.put(hr6['mod_AAOD'+hstr],i_dayar[fl_time],out['mean'])
+                aaod2_tmp = np.array([np.nanmean(aaod2_e[i].flatten()[io]) for io in out['index']])
+                aaod_unc_tmp = np.array([np.nanmean(aaod_e_unc[i].flatten()[io]) for io in out['index']])
+                aaod2_unc_tmp = np.array([np.nanmean(aaod2_e_unc[i].flatten()[io]) for io in out['index']])
+                np.put(hr6['mod_AAOD2'+hstr],i_dayar[fl_time],aaod2_tmp)
+                np.put(hr6['mod_AAOD_UNC'+hstr],i_dayar[fl_time],aaod_unc_tmp*out['mean']/100.0)
+                np.put(hr6['mod_AAOD2_UNC'+hstr],i_dayar[fl_time],aaod2_unc_tmp*aaod2_tmp/100.0)
+                
+
+
+# In[56]:
+
+
+np.save(fpo+'mod_ACAERO_match_HSRL.npy',hr6,allow_pickle=True)
 
 
 # ## Plot the scatter plots
 
 # ### 4STAR
 
-# In[53]:
+# In[50]:
 
 
 ar6.keys()
 
 
-# In[44]:
+# In[51]:
 
 
 fl = (ar6['flag_acaod']==1) & ar6['fl']
-flo = (ar6['flag_acaod']==1) & ar6['fl'] & (da['mod_AAOD']>-0.2) & np.isfinite(da['mod_AAOD']) & np.isfinite(ar6['AOD0550'])
+flo = (ar6['flag_acaod']==1) & ar6['fl'] & (ar6['mod_AAOD']>-0.2) &\
+       np.isfinite(ar6['mod_AAOD']) & np.isfinite(ar6['AOD0550']) & (ar6['AOD0550']>0.02)
 
 
-# In[58]:
+# In[ ]:
 
 
 plt.figure()
-plt.hist([da['mod_AAOD'][flo],ar6['AOD0550'][flo]],bins=50,label=['MOD ACAERO','4STAR AAOD'])
+plt.hist([ar6['mod_AAOD'][flo],ar6['AOD0550'][flo]],bins=50,label=['MOD ACAERO','4STAR AAOD'])
 plt.legend()
 plt.xlabel('AOD [550 nm]')
 plt.savefig(fpo+'MODACAERO_vs_4STAR_hist.png',dpi=600,transparent=True)
 
 
-# In[80]:
+# In[ ]:
+
+
+plt.figure()
+plt.hist([ar6['mod_AAOD'][flo],ar6['mod_AAOD_UNC'][flo]],bins=50,label=['MOD ACAERO','MOD ACAERO Uncertainty'])
+plt.legend()
+plt.xlabel('AOD [550 nm]')
+plt.savefig(fpo+'MODACAERO_vs_Uncertainty_hist.png',dpi=600,transparent=True)
+
+
+# In[ ]:
 
 
 ar6.keys()
 
 
-# In[81]:
-
-
-da.keys()
-
-
-# In[47]:
+# In[ ]:
 
 
 fig,ax = plt.subplots(1,1)
-plt.plot(ar6['AOD0550'][flo],da['mod_AAOD'][flo],'.')
-plt.errorbar(ar6['AOD0550'][flo],da['mod_AAOD'][flo],xerr=ar6['UNCAOD0550'][flo],yerr=da['mod_AAOD_UNC'][flo],
+rbin = np.corrcoef(ar6['AOD0550'][flo],ar6['mod_AAOD'][flo])[0,1]**2.0
+rmse = np.sqrt(np.nanmean((ar6['AOD0550'][flo]-ar6['mod_AAOD'][flo])**2.0))
+num = len(ar6['mod_AAOD'][flo])
+plt.plot(ar6['AOD0550'][flo],ar6['mod_AAOD'][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+plt.errorbar(ar6['AOD0550'][flo],ar6['mod_AAOD'][flo],xerr=ar6['UNCAOD0550'][flo],yerr=ar6['mod_AAOD_UNC'][flo]/100.0*ar6['mod_AAOD'][flo],
              marker='.',color='tab:blue',linestyle='None',alpha=0.2)
 plt.xlabel('4STAR ACAOD [550 nm]')
-plt.ylabel('MODIS ACAERO (v1) [550m]')
-pu.plot_lin(ar6['AOD0550'][flo],da['mod_AAOD'][flo],
-            x_err=ar6['UNCAOD0550'][flo],y_err=da['mod_AAOD_UNC'][flo],
+plt.ylabel('MODIS ACAERO (v1) [550 nm]')
+pu.plot_lin(ar6['AOD0550'][flo],ar6['mod_AAOD'][flo],
+            x_err=ar6['UNCAOD0550'][flo],y_err=ar6['mod_AAOD_UNC'][flo]*ar6['mod_AAOD'][flo],
             labels=True,shaded_ci=True,ci=95,ax=ax,
             use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
-plt.title('ORACLES 2016 Above Cloud AOD (MODIS with 4STAR abs. vs. 4STAR)')
+plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with 4STAR abs. vs. 4STAR) +/- 2h')
 plt.legend()
-plt.savefig(fpo+'MODACAERO_vs_4STAR_ORACLES2016.png',dpi=600,transparent=True)
+plt.xlim(-0.05,0.85)
+plt.ylim(-0.05,0.85)
+plt.savefig(fpo+'MODACAERO_vs_4STAR_ORACLES2016_550nm.png',dpi=600,transparent=True)
 
+
+# In[239]:
+
+
+flo = (ar6['flag_acaod']==1) & ar6['fl'] & (ar6['mod_AAOD2']>-0.2) &\
+       np.isfinite(ar6['mod_AAOD2']) & np.isfinite(ar6['AOD0550']) & (ar6['AOD0550']>0.02)
+
+fig,ax = plt.subplots(1,1)
+rbin = np.corrcoef(ar6['AOD0550'][flo],ar6['mod_AAOD2'][flo])[0,1]**2.0
+rmse = np.sqrt(np.nanmean((ar6['AOD0550'][flo]-ar6['mod_AAOD2'][flo])**2.0))
+num = len(ar6['mod_AAOD2'][flo])
+plt.plot(ar6['AOD0550'][flo],ar6['mod_AAOD2'][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+#plt.errorbar(ar6['AOD0550'][flo],ar6['mod_AAOD2'][flo],xerr=ar6['UNCAOD0550'][flo],yerr=ar6['mod_AAOD_UNC'][flo],
+#             marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+plt.xlabel('4STAR ACAOD [550 nm]')
+plt.ylabel('MODIS ACAERO (v2) [550 nm]')
+pu.plot_lin(ar6['AOD0550'][flo],ar6['mod_AAOD2'][flo],
+            x_err=ar6['UNCAOD0550'][flo],y_err=ar6['mod_AAOD2_UNC'][flo],
+            labels=True,shaded_ci=True,ci=95,ax=ax,
+            use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with MOD04 abs. vs. 4STAR) +/- 2h')
+plt.legend()
+plt.xlim(-0.05,0.85)
+plt.ylim(-0.05,0.85)
+plt.savefig(fpo+'MODACAERO_v2_vs_4STAR_ORACLES2016_550nm.png',dpi=600,transparent=True)
+
+
+# In[ ]:
+
+
+fig,ax = plt.subplots(1,1)
+rbin = np.corrcoef(ar6['AOD0501'][flo],ar6['mod_AAOD'][flo])[0,1]**2.0
+rmse = np.sqrt(np.nanmean((ar6['AOD0501'][flo]-ar6['mod_AAOD'][flo])**2.0))
+num = len(ar6['mod_AAOD'][flo])
+plt.plot(ar6['AOD0501'][flo],ar6['mod_AAOD'][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+plt.errorbar(ar6['AOD0501'][flo],ar6['mod_AAOD'][flo],xerr=ar6['UNCAOD0501'][flo],yerr=ar6['mod_AAOD_UNC'][flo]/100.0*ar6['mod_AAOD'][flo],
+             marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+plt.xlabel('4STAR ACAOD [501 nm]')
+plt.ylabel('MODIS ACAERO (v1) [550 nm]')
+pu.plot_lin(ar6['AOD0501'][flo],ar6['mod_AAOD'][flo],
+            x_err=ar6['UNCAOD0501'][flo],y_err=ar6['mod_AAOD_UNC'][flo]/100.0*ar6['mod_AAOD'][flo],
+            labels=True,shaded_ci=True,ci=95,ax=ax,
+            use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with 4STAR abs. vs. 4STAR) +/- 2h')
+plt.legend()
+plt.xlim(-0.05,0.85)
+plt.ylim(-0.05,0.85)
+plt.savefig(fpo+'MODACAERO_vs_4STAR_ORACLES2016_501nm.png',dpi=600,transparent=True)
+
+
+# In[52]:
+
+
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    
+    flo = (ar6['flag_acaod']==1) & ar6['fl'] & (ar6['mod_AAOD'+hstr]>-0.2) &\
+       np.isfinite(ar6['mod_AAOD'+hstr]) & np.isfinite(ar6['AOD0550']) & (ar6['AOD0550']>0.02)
+
+    fig,ax = plt.subplots(1,1)
+    rbin = np.corrcoef(ar6['AOD0550'][flo],ar6['mod_AAOD'+hstr][flo])[0,1]**2.0
+    rmse = np.sqrt(np.nanmean((ar6['AOD0550'][flo]-ar6['mod_AAOD'+hstr][flo])**2.0))
+    num = len(ar6['mod_AAOD'+hstr][flo])
+    plt.plot(ar6['AOD0550'][flo],ar6['mod_AAOD'+hstr][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+    plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+    plt.errorbar(ar6['AOD0550'][flo],ar6['mod_AAOD'+hstr][flo],xerr=ar6['UNCAOD0550'][flo],yerr=ar6['mod_AAOD_UNC'+hstr][flo],
+                 marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+    plt.xlabel('4STAR ACAOD [550 nm]')
+    plt.ylabel('MODIS ACAERO (v1) [550 nm]')
+    pu.plot_lin(ar6['AOD0550'][flo],ar6['mod_AAOD'+hstr][flo],
+                x_err=ar6['UNCAOD0550'][flo],y_err=ar6['mod_AAOD_UNC'+hstr][flo],
+                labels=True,shaded_ci=True,ci=95,ax=ax,
+                use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+    plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with 4STAR abs. vs. 4STAR) +/- '+hstr)
+    plt.legend()
+    plt.xlim(-0.05,0.85)
+    plt.ylim(-0.05,0.85)
+    plt.savefig(fpo+'MODACAERO_vs_4STAR_ORACLES2016_550nm'+hstr+'.png',dpi=600,transparent=True)
+
+
+# In[54]:
+
+
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    
+    flo = (ar6['flag_acaod']==1) & ar6['fl'] & (ar6['mod_AAOD2'+hstr]>-0.2) &\
+       np.isfinite(ar6['mod_AAOD2'+hstr]) & np.isfinite(ar6['AOD0550']) & (ar6['AOD0550']>0.02) & (ar6['mod_AAOD2_UNC'+hstr]>0.0)
+
+    fig,ax = plt.subplots(1,1)
+    rbin = np.corrcoef(ar6['AOD0550'][flo],ar6['mod_AAOD2'+hstr][flo])[0,1]**2.0
+    rmse = np.sqrt(np.nanmean((ar6['AOD0550'][flo]-ar6['mod_AAOD2'+hstr][flo])**2.0))
+    num = len(ar6['mod_AAOD2'+hstr][flo])
+    plt.plot(ar6['AOD0550'][flo],ar6['mod_AAOD2'+hstr][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+    plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+    plt.errorbar(ar6['AOD0550'][flo],ar6['mod_AAOD2'+hstr][flo],xerr=ar6['UNCAOD0550'][flo],yerr=ar6['mod_AAOD2_UNC'+hstr][flo],
+                 marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+    plt.xlabel('4STAR ACAOD [550 nm]')
+    plt.ylabel('MODIS ACAERO (v2) [550 nm]')
+    pu.plot_lin(ar6['AOD0550'][flo],ar6['mod_AAOD2'+hstr][flo],
+                x_err=ar6['UNCAOD0550'][flo],y_err=ar6['mod_AAOD2_UNC'+hstr][flo],
+                labels=True,shaded_ci=True,ci=95,ax=ax,
+                use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+    plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with MOD04 abs. vs. 4STAR) +/- '+hstr)
+    plt.legend()
+    plt.xlim(-0.05,0.85)
+    plt.ylim(-0.05,0.85)
+    plt.savefig(fpo+'MODACAEROv2_vs_4STAR_ORACLES2016_550nm'+hstr+'.png',dpi=600,transparent=True)
+
+
+# ### HSRL
 
 # In[61]:
 
 
-fpo
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    
+    flo = (hr6['mod_AAOD'+hstr]>-0.2) & (hr6['mod_AAOD_UNC'+hstr] > 0.0) &\
+       np.isfinite(hr6['mod_AAOD'+hstr]) & np.isfinite(hr6['acaod_532']) & (hr6['acaod_532']>0.02)
+
+    fig,ax = plt.subplots(1,1)
+    rbin = np.corrcoef(hr6['acaod_532'][flo],hr6['mod_AAOD'+hstr][flo])[0,1]**2.0
+    rmse = np.sqrt(np.nanmean((hr6['acaod_532'][flo]-hr6['mod_AAOD'+hstr][flo])**2.0))
+    num = len(hr6['mod_AAOD'+hstr][flo])
+    plt.plot(hr6['acaod_532'][flo],hr6['mod_AAOD'+hstr][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+    plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+    plt.errorbar(hr6['acaod_532'][flo],hr6['mod_AAOD'+hstr][flo],xerr=hr6['acaod_532_unc'][flo],yerr=hr6['mod_AAOD_UNC'+hstr][flo],
+                 marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+    plt.xlabel('HSRL ACAOD [532 nm]')
+    plt.ylabel('MODIS ACAERO (v1) [550 nm]')
+    pu.plot_lin(hr6['acaod_532'][flo],hr6['mod_AAOD'+hstr][flo],
+                x_err=hr6['acaod_532_unc'][flo],y_err=hr6['mod_AAOD_UNC'+hstr][flo],
+                labels=True,shaded_ci=True,ci=95,ax=ax,
+                use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+    plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with 4STAR abs. vs. HSRL) +/- '+hstr)
+    plt.legend()
+    plt.xlim(-0.05,0.85)
+    plt.ylim(-0.05,0.85)
+    plt.savefig(fpo+'MODACAERO_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=600,transparent=True)
+
+
+# In[62]:
+
+
+for to in [2.0,1.5,1.0,0.5,0.25]:
+    hstr = '_{:1.2f}h'.format(to)
+    
+    flo = (hr6['mod_AAOD2'+hstr]>-0.2) & (hr6['mod_AAOD_UNC'+hstr]>0.0) &\
+       np.isfinite(hr6['mod_AAOD2'+hstr]) & np.isfinite(hr6['acaod_532']) & (hr6['acaod_532']>0.02)
+
+    fig,ax = plt.subplots(1,1)
+    rbin = np.corrcoef(hr6['acaod_532'][flo],hr6['mod_AAOD2'+hstr][flo])[0,1]**2.0
+    rmse = np.sqrt(np.nanmean((hr6['acaod_532'][flo]-hr6['mod_AAOD2'+hstr][flo])**2.0))
+    num = len(hr6['mod_AAOD2'+hstr][flo])
+    plt.plot(hr6['acaod_532'][flo],hr6['mod_AAOD2'+hstr][flo],'.',label='R$^2$={:1.3f}, RMSE={:1.3f}, N={:3.0f}'.format(rbin,rmse,num))
+    plt.plot([0,1],[0,1],'--',alpha=0.2,color='grey',zorder=-2)
+    plt.errorbar(hr6['acaod_532'][flo],hr6['mod_AAOD'+hstr][flo],xerr=hr6['acaod_532_unc'][flo],yerr=hr6['mod_AAOD_UNC'+hstr][flo],
+                 marker='.',color='tab:blue',linestyle='None',alpha=0.2)
+    plt.xlabel('HSRL ACAOD [532 nm]')
+    plt.ylabel('MODIS ACAERO (v2) [550 nm]')
+    pu.plot_lin(hr6['acaod_532'][flo],hr6['mod_AAOD2'+hstr][flo],
+                x_err=hr6['acaod_532_unc'][flo],y_err=hr6['mod_AAOD2_UNC'+hstr][flo],
+                labels=True,shaded_ci=True,ci=95,ax=ax,
+                use_method='york',lblfmt='2.3f',label_prefix='Bivariate fit: [York et al., 2004]\n')
+    plt.title('ORACLES 2016 Above Cloud AOD\n(MODIS with MOD04 abs. vs. HSRL) +/- '+hstr)
+    plt.legend()
+    plt.xlim(-0.05,0.85)
+    plt.ylim(-0.05,0.85)
+    plt.savefig(fpo+'MODACAEROv2_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=600,transparent=True)
 
 
 # In[ ]:
