@@ -1472,20 +1472,6 @@ for val in ['no_lightning_emission', 'O3prod_PBL', 'O3prod_TROP', 'O3strat_PBL',
     da = rg_plots_and_save(gmi_rg[val],fp+'MERRA2/',nm='GMI'+val)
 
 
-# In[80]:
-
-
-for val in ['no_lightning_emission', 'O3prod_PBL', 'O3prod_TROP', 'O3strat_PBL', 'O3strat_TROP']:
-    for rg in gmi_rg[val]:
-        for typ in ['mean', 'median', 'std']:
-            result_gmi_nol = seasonal_decompose(gmi_rg[val][rg][typ][typ+'_GMI'+val])
-            p = result_gmi_nol.plot()
-            p.get_axes()[0].set_title(rg+ ': '+typ+'_GMI_'+val)
-            p.get_axes()[0].set_ylabel('All')
-            
-            p.savefig(os.path.join(fp,'MERRA2','GMI_Rgs_deseason_'+val+'_'+rg+'_'+typ+'.png'),transparent=True,dpi=600)
-
-
 # In[72]:
 
 
@@ -1967,7 +1953,7 @@ def trend_for_multi_lon(data,lat,lon,time,name='mean_trop_NO2',subn=None):
 data.reshape(len(time),-1).shape
 
 
-# In[140]:
+# In[ ]:
 
 
 trend_and_plot(gome[b'TroposNO2'],gome[b'lat'],gome[b'lon'],gometime,'GOME_NO2_tropos',
@@ -2032,21 +2018,6 @@ for ip,pre in enumerate(mop_pre):
 
 
 # ### MOPITT CO night
-
-# In[128]:
-
-
-for ip in range(9):
-    plt.figure()
-    ctf = plt.contourf(mop_lon,mop_lat,np.nanmean(mop_COnight[:,:,:,ip],axis=0).T,cmap=plt.cm.get_cmap('plasma', 25),shading='nearest')
-
-    plt.title('MOPITT CO night Averaged {} mb'.format(mop_pre[ip]))
-    plt.ylabel('Latitude [deg]')
-    plt.xlabel('Longitude [deg]')
-    plt.colorbar(ctf,label='Retrieved CO Mixing Ratio Profile Night [ppbv]')
-
-    plt.savefig(fp+'MOPITT/'+'MOPITT_CO_night_Averaged_{}_v2.png'.format(mop_pre[ip]),dpi=600,transparent=True)
-
 
 # In[129]:
 
@@ -2122,13 +2093,6 @@ mls_o3_trend,mls_o3_trend_pval,mls_o3_trend_rmse = trends_and_pval_per_lat_lon_s
 mls_o3_time[0],mls_o3_time[-1]
 
 
-# In[39]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(mls_o3_trend,mls_o3_time).flatten(),bins=50)
-
-
 # In[40]:
 
 
@@ -2174,7 +2138,7 @@ mls_no2['no2'].shape
 len(mls_no2['time']),mls_no2['lat'].shape,mls_no2['lon'].shape
 
 
-# In[85]:
+# In[ ]:
 
 
 trend_and_plot(mls_no2['no2'],mls_no2_lat,mls_no2_lon,mls_no2_time,'MLS_NO2',
@@ -2191,14 +2155,6 @@ mls_no2_dict = pd.read_pickle(fp+'OMI_NO2/MLS_NO2_trend_output.v1.p')
 
 
 mls_no2_dict.keys()
-
-
-# In[89]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(mls_no2_dict['MLS_NO2_trend'],mls_no2_dict['MLS_NO2_time']).flatten(),
-         bins=50)
 
 
 # In[ ]:
@@ -2261,14 +2217,6 @@ ceds_ac_dict = pd.read_pickle(fp+'CEDS/CED_NOx_AC_trend_output.v1.p')
 ceds_ac_dict.keys()
 
 
-# In[48]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(ceds_ac_dict['CED_NOx_AC_trend'],ceds_ac_dict['CED_NOx_AC_time']).flatten(),
-         bins=50)
-
-
 # In[51]:
 
 
@@ -2281,7 +2229,7 @@ fig.tight_layout()
 fig.savefig(fp+'CEDS/CED_NOx_AC_trend_output.v1.png',dpi=300,transparent=True)
 
 
-# In[76]:
+# In[ ]:
 
 
 da = load_pickle_plot_savemat(fp,fp+'CEDS/CED_NOx_AC_trend_output.v1.p',
@@ -2319,14 +2267,6 @@ ceds_ant_dict = pd.read_pickle(fp+'CEDS/CED_NOx_Ant_trend_output.v1.p')
 
 
 ceds_ant_dict.keys()
-
-
-# In[55]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(ceds_ant_dict['CED_NOx_Ant_trend'],ceds_ant_dict['CED_NOx_Ant_time']).flatten(),
-         bins=50)
 
 
 # In[58]:
@@ -2408,13 +2348,6 @@ for k in tcr_dict:
 
 # #### Make plot
 
-# In[47]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_noxanth_trend,tcr_time).flatten(),bins=50)
-
-
 # In[50]:
 
 
@@ -2472,13 +2405,6 @@ for k in tcr_dict_cosfc:
     locals()[k] = tcr_dict_cosfc[k]
 
 
-# In[53]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_co_sfc_trend,tcr_time).flatten(),bins=50)
-
-
 # In[55]:
 
 
@@ -2529,13 +2455,6 @@ pickle.dump({'tcr_co_bio_trend':tcr_co_bio_trend,'tcr_co_bio_trend_pval':tcr_co_
 tcr_dict_cosfc = pd.read_pickle(fp+'TCR/'+'TCR_CO_BIO_trend_output.{}.p'.format(vv_tcr))
 for k in tcr_dict_cosfc:
     locals()[k] = tcr_dict_cosfc[k]
-
-
-# In[57]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_co_bio_trend,tcr_time).flatten(),bins=50)
 
 
 # In[59]:
@@ -2596,13 +2515,6 @@ for k in tcr_dict_coanth:
     locals()[k] = tcr_dict_coanth[k]
 
 
-# In[63]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_co_anth_trend,tcr_time).flatten(),bins=50)
-
-
 # In[64]:
 
 
@@ -2658,13 +2570,6 @@ pickle.dump({'tcr_nox_sfc_trend':tcr_nox_sfc_trend,'tcr_nox_sfc_trend_pval':tcr_
 tcr_dict_tmp = pd.read_pickle(fp+'TCR/'+'{}_trend_output.{}.p'.format(nm,vv_tcr))
 for k in tcr_dict_tmp:
     locals()[k] = tcr_dict_tmp[k]
-
-
-# In[67]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_nox_sfc_trend,tcr_time).flatten(),bins=50)
 
 
 # In[137]:
@@ -2729,13 +2634,6 @@ for k in tcr_dict_tmp:
     locals()[k] = tcr_dict_tmp[k]
 
 
-# In[72]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_nox_light_trend,tcr_time).flatten(),bins=50)
-
-
 # In[73]:
 
 
@@ -2791,13 +2689,6 @@ pickle.dump({'tcr_nox_soil_trend':tcr_nox_soil_trend,'tcr_nox_soil_trend_pval':t
 tcr_dict_tmp = pd.read_pickle(fp+'TCR/'+'{}_trend_output.{}.p'.format(nm,vv_tcr))
 for k in tcr_dict_tmp:
     locals()[k] = tcr_dict_tmp[k]
-
-
-# In[76]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(tcr_nox_soil_trend,tcr_time).flatten(),bins=50)
 
 
 # In[77]:
@@ -2859,13 +2750,6 @@ gfed_dict = pd.read_pickle('/data2/ACCDAM_low_ozone/GFED/GFED_EMI_C_trend_output
 
 
 gfed_dict.keys()
-
-
-# In[174]:
-
-
-plt.figure()
-plt.hist(convert_monthly_to_decadal_trend(gfed_dict['GFED_EMI_C_trend'],gfed_dict['GFED_EMI_C_time']).flatten(),bins=100)
 
 
 # In[181]:
