@@ -1086,7 +1086,7 @@ for to in [2.0,1.5,1.0,0.5,0.25]:
 
 # ### HSRL
 
-# In[61]:
+# In[63]:
 
 
 for to in [2.0,1.5,1.0,0.5,0.25]:
@@ -1113,10 +1113,10 @@ for to in [2.0,1.5,1.0,0.5,0.25]:
     plt.legend()
     plt.xlim(-0.05,0.85)
     plt.ylim(-0.05,0.85)
-    plt.savefig(fpo+'MODACAERO_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=600,transparent=True)
+    plt.savefig(fpo+'MODACAERO_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=300,transparent=True)
 
 
-# In[62]:
+# In[64]:
 
 
 for to in [2.0,1.5,1.0,0.5,0.25]:
@@ -1143,7 +1143,7 @@ for to in [2.0,1.5,1.0,0.5,0.25]:
     plt.legend()
     plt.xlim(-0.05,0.85)
     plt.ylim(-0.05,0.85)
-    plt.savefig(fpo+'MODACAEROv2_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=600,transparent=True)
+    plt.savefig(fpo+'MODACAEROv2_vs_HSRL_ORACLES2016_532nm'+hstr+'.png',dpi=300,transparent=True)
 
 
 # In[ ]:
