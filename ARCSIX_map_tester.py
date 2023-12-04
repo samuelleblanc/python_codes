@@ -37,7 +37,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -53,14 +53,14 @@ get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 
 
-# In[2]:
+# In[3]:
 
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 
-# In[3]:
+# In[4]:
 
 
 vv = 'v1'
@@ -72,19 +72,19 @@ name = 'ARCSIX_MSS'
 
 # ## Load OG ARCSIX - RASM-ESRL
 
-# In[4]:
+# In[5]:
 
 
 os.listdir(fp+'old/')
 
 
-# In[5]:
+# In[6]:
 
 
 f_og = fp+'old/ARCSIX_2023-11-15.nc'
 
 
-# In[6]:
+# In[7]:
 
 
 og,og_dict = lu.load_netcdf(f_og,everything=True)
@@ -92,19 +92,19 @@ og,og_dict = lu.load_netcdf(f_og,everything=True)
 
 # ## Load regridded ARCSIX  - RASM-ESRL
 
-# In[7]:
+# In[8]:
 
 
 os.listdir(fp)
 
 
-# In[8]:
+# In[9]:
 
 
 f_re = fp+'RASM_ESRL_ml.fromARCSIX_2023-11-15.nc'
 
 
-# In[9]:
+# In[10]:
 
 
 re,re_dict = lu.load_netcdf(f_re,everything=True)
@@ -114,7 +114,7 @@ re,re_dict = lu.load_netcdf(f_re,everything=True)
 
 # ## Load map defaults
 
-# In[9]:
+# In[11]:
 
 
 def make_map(lower_left=[-100,72],upper_right=[20,73]):
@@ -137,7 +137,7 @@ def make_map(lower_left=[-100,72],upper_right=[20,73]):
     return m,ax
 
 
-# In[10]:
+# In[12]:
 
 
 fig,ax = make_map()
@@ -146,19 +146,19 @@ fig.show()
 
 # ## plots maps
 
-# In[11]:
+# In[13]:
 
 
 og.keys()
 
 
-# In[12]:
+# In[14]:
 
 
 tr = ccrs.PlateCarree()
 
 
-# In[37]:
+# In[15]:
 
 
 fig,ax = make_map()
@@ -167,14 +167,14 @@ plt.title('RASM_ESRL - Cloud liquid water path - 2023-11-15 - original')
 plt.colorbar(cf)
 
 
-# In[14]:
+# In[16]:
 
 
 ilat1, ilon1 = 78.0,13.0
 ilat2, ilon2 = 80.0,30.0
 
 
-# In[15]:
+# In[17]:
 
 
 iarg1 = np.argmin((og[b'alon']-ilon1)**2+(og[b'alat']-ilat1)**2)
@@ -182,13 +182,13 @@ iarg2 = np.argmin((og[b'alon']-ilon2)**2+(og[b'alat']-ilat2)**2)
 og[b'lwp'][0,:,:].flatten()[iarg1],og[b'lwp'][0,:,:].flatten()[iarg2]
 
 
-# In[16]:
+# In[18]:
 
 
 iarg1,iarg2
 
 
-# In[17]:
+# In[19]:
 
 
 og[b'lwp'][0,:,:].flatten()[iarg1],og[b'lwp'][0,:,:].flatten()[iarg2]
@@ -225,13 +225,13 @@ re[b'lwp'][0,:,:].flatten()[iarg1],re[b'lwp'][0,:,:].flatten()[iarg2]
 
 # # Make the lat lon regrid by hand to check status
 
-# In[18]:
+# In[20]:
 
 
 import scipy.interpolate as interp
 
 
-# In[19]:
+# In[21]:
 
 
 def regrid_latlon(data_file,lon_name='lon',lat_name='lat',named_variables=['sic_merged'],debug=False):
@@ -272,14 +272,14 @@ def regrid_latlon(data_file,lon_name='lon',lat_name='lat',named_variables=['sic_
                         print(f"Error gridding variable '{n}': {str(e)}")
 
 
-# In[20]:
+# In[32]:
 
 
 lon_var = og[b'alon'][:]
 lat_var = og[b'alat'][:]
 
 
-# In[21]:
+# In[33]:
 
 
 new_lon = np.linspace(start=np.nanmin(lon_var),stop=np.nanmax(lon_var),num=lon_var.shape[1])
@@ -331,7 +331,7 @@ vars[n].mask = ~np.isfinite(vars[n])
 it = 0
 
 
-# In[28]:
+# In[29]:
 
 
 xmask,ymask = np.where(~vars[n][it,:,:].mask)
@@ -352,13 +352,13 @@ plt.figure()
 plt.hist(new_vars[n][0,:,:].flatten())
 
 
-# In[29]:
+# In[30]:
 
 
 new_lon.shape,new_lat.shape
 
 
-# In[35]:
+# In[31]:
 
 
 iarg1 = np.argmin((xm-ilon1)**2+(ym-ilat1)**2)
@@ -374,13 +374,13 @@ new_vars[n][0,:,:]
 
 # ## Run new regridding
 
-# In[30]:
+# In[28]:
 
 
-from scipy.interpolate import RectSphereBivariateSpline
+from scipy.interpolate import RectSphereBivariateSpline, SmoothSphereBivariateSpline
 
 
-# In[31]:
+# In[ ]:
 
 
 def upscale_field(lons, lats, field, x_scale=2, y_scale=2, is_degrees=True):
@@ -421,16 +421,41 @@ def upscale_field(lons, lats, field, x_scale=2, y_scale=2, is_degrees=True):
 # In[35]:
 
 
-(90-new_lat)/180*np.pi
+vars[n][it,:,:].T.shape
 
 
-# In[40]:
+# In[43]:
 
 
-new_lons2,new_lats2,lwp2 = upscale_field(new_lon,new_lat[::-1],vars[n][it,:,::-1],x_scale=1,y_scale=1)
+lats = (90.0-lat_var[::-1])*np.pi/180.0
+lons = (180+lon_var)*np.pi/180.0
+
+lut = SmoothSphereBivariateSpline(lats.ravel()[:500],lons.ravel()[:500],vars[n][it,:,:].T[::-1,:].ravel()[:500],s=300)
 
 
-# In[41]:
+# In[48]:
+
+
+mesh_new_lat, mesh_new_lon = np.meshgrid((90.0-new_lat)*np.pi/180.0,(180+new_lon)*np.pi/180.0)
+vvn = lut.ev(mesh_new_lat,mesh_new_lon)
+
+
+# In[62]:
+
+
+fig,ax = make_map()
+cf = ax.pcolormesh(new_lon,new_lat,vvn,cmap=plt.cm.summer_r,transform=tr,shading='nearest',vmin=-10,vmax=500)
+plt.title('RASM_ESRL - Cloud liquid water path - 2023-11-15 - SmoothSphereBivariateSpline')
+plt.colorbar(cf)
+
+
+# In[34]:
+
+
+new_lons2,new_lats2,lwp2 = upscale_field(new_lat[::50][::-1],new_lon[::50],vars[n][it,::50,::50].T[::-1,:],x_scale=1,y_scale=1)
+
+
+# In[38]:
 
 
 xm,ym = np.meshgrid(new_lons2,new_lats2)
@@ -439,17 +464,18 @@ iarg2 = np.argmin((xm-ilon2)**2+(ym-ilat2)**2)
 lwp2.flatten()[iarg1],lwp2.flatten()[iarg2]
 
 
-# In[42]:
+# In[39]:
 
 
 new_lon.shape,lwp2.shape
 
 
-# In[44]:
+# In[1]:
 
 
 fig,ax = make_map()
 cf = ax.pcolormesh(new_lons2,new_lats2,lwp2[::-1,:],cmap=plt.cm.summer_r,transform=tr,vmin=-10,vmax=500)
+plt.title('RASM_ESRL - Cloud liquid water path - 2023-11-15 - RectSphereBivariateSpline')
 plt.colorbar(cf)
 
 
