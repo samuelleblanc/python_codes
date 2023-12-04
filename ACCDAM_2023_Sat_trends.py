@@ -378,7 +378,7 @@ fp
 fpp_mlsno2 = fp+'OMI_NO2/'
 
 
-# In[38]:
+# In[7]:
 
 
 fp_mls_no2 = os.listdir(fpp_mlsno2)
@@ -386,72 +386,87 @@ fp_mls_no2 = [f for f in fp_mls_no2 if '.mat' in f]
 fp_mls_no2.sort()
 
 
-# In[39]:
+# In[8]:
 
 
 fp_mls_no2
 
 
-# In[40]:
+# In[33]:
+
+
+fp_mls_no2.pop(-1)
+
+
+# In[34]:
+
+
+fp_mls_no2
+
+
+# In[35]:
 
 
 mlsno2_tmp = sio.loadmat(fpp_mlsno2+fp_mls_no2[0])
 
 
-# In[41]:
+# In[36]:
 
 
 mlsno2_tmp.keys()
 
 
-# In[42]:
+# In[37]:
 
 
 mlsno2_tmp['NO2_monthly_avg'].shape, mlsno2_tmp['LAT'].shape, mlsno2_tmp['LON'].shape
 
 
-# In[43]:
+# In[38]:
 
 
 ntime = len(fp_mls_no2)*12
 
 
-# In[44]:
+# In[39]:
 
 
 mls_no2 = {'lat':mlsno2_tmp['LAT'],'lon':mlsno2_tmp['LON'],'time':[],'no2':np.zeros((ntime,mlsno2_tmp['LAT'].shape[0],mlsno2_tmp['LON'].shape[1]))}
 
 
-# In[45]:
+# In[40]:
 
 
 mls_no2['time'] = []
 for i,f in list(enumerate(fp_mls_no2)):
     mlsno2_tmp = sio.loadmat(fpp_mlsno2+f)
-    yearstr = f.split('_')[4]
+    try: 
+        yearstr = f.split('_')[4]
+    except IndexError:
+        continue
     [mls_no2['time'].append(datetime(int(yearstr[0:4]),m,15)) for m in range(1,13)]
     mls_no2['no2'][i*12:(i+1)*12,:,:] = mlsno2_tmp['NO2_monthly_avg']
 
 
-# In[46]:
+# In[41]:
 
 
 mls_no2_time = np.array(mls_no2['time'])
 
 
-# In[47]:
+# In[42]:
 
 
 mls_no2.keys()
 
 
-# In[48]:
+# In[43]:
 
 
 ## Need to reform the mls_no2 lat and lon into 1d arrays
 
 
-# In[49]:
+# In[44]:
 
 
 def regrid(xin,yin,zin,xskip=1,yskip=1):
@@ -474,25 +489,25 @@ def regrid(xin,yin,zin,xskip=1,yskip=1):
     return zo,xout,yout
 
 
-# In[50]:
+# In[45]:
 
 
 mls_no2['no2'].shape, mls_no2['lat'].shape, mls_no2['lon'].shape
 
 
-# In[51]:
+# In[46]:
 
 
 mls_no2_lat = mls_no2['lat'][:,0]
 
 
-# In[52]:
+# In[47]:
 
 
 mls_no2_lon = mls_no2['lon'][0,:]
 
 
-# In[53]:
+# In[48]:
 
 
 mls_no2_lon.shape
@@ -502,68 +517,68 @@ mls_no2_lon.shape
 
 # ### Aircraft
 
-# In[15]:
+# In[55]:
 
 
 ceds_1980,ceds_1980_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_1980_1999.nc',everything=True)
 
 
-# In[16]:
+# In[56]:
 
 
 ceds_2000,ceds_2000_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_aircraft_monthly_2000_2019.nc',everything=True)
 
 
-# In[17]:
+# In[57]:
 
 
 ceds_2000_dict[b'Time']
 
 
-# In[18]:
+# In[58]:
 
 
 ceds_2000_dict[b'CEDS_NOx_aircraft_emission']
 
 
-# In[19]:
+# In[59]:
 
 
 ceds_2000[b'CEDS_NOx_aircraft_emission'].shape
 
 
-# In[20]:
+# In[60]:
 
 
 ceds_2000[b'Lat'].shape, ceds_2000[b'Lon'].shape, ceds_2000[b'Time'].shape
 
 
-# In[21]:
+# In[61]:
 
 
 ceds_1980[b'Lat'].shape, ceds_1980[b'Lon'].shape, ceds_1980[b'Time'].shape
 
 
-# In[22]:
+# In[62]:
 
 
 ceds_AC_NOx = np.vstack((ceds_1980[b'CEDS_NOx_aircraft_emission'],ceds_2000[b'CEDS_NOx_aircraft_emission']))
 ceds_time_days = np.hstack((ceds_1980[b'Time'],ceds_2000[b'Time']))
 
 
-# In[23]:
+# In[63]:
 
 
 ceds_AC_NOx.shape
 
 
-# In[24]:
+# In[64]:
 
 
 ceds_time = np.array([datetime(1750,1,1)+timedelta(days=int(d)) for d in ceds_time_days])
 
 
-# In[25]:
+# In[65]:
 
 
 ceds_lon = ceds_2000[b'Lon']
@@ -572,14 +587,14 @@ ceds_lat = ceds_2000[b'Lat']
 
 # ### anthropogenic
 
-# In[32]:
+# In[66]:
 
 
 ceds_1980a,ceds_1980a_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_anthro_monthly_1980_1999.nc',everything=True)
 ceds_2000a,ceds_2000a_dict = lu.load_netcdf(fp+'CEDS/CEDS_NOx_anthro_monthly_2000_2019.nc',everything=True)
 
 
-# In[33]:
+# In[67]:
 
 
 ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'CEDS_NOx_anthro_emission']))
@@ -1006,7 +1021,7 @@ for i,f in list(enumerate(fp_gmi_o3strat)):
 
 # ### Definition of the regions and functions
 
-# In[27]:
+# In[25]:
 
 
 rgs = {'Southeast Asia':[[-12,95],[18,140]],
@@ -1017,13 +1032,13 @@ rgs = {'Southeast Asia':[[-12,95],[18,140]],
       } #lower left [lat lon], upper right [lat lon]
 
 
-# In[28]:
+# In[26]:
 
 
 rgs['China'][0]
 
 
-# In[29]:
+# In[27]:
 
 
 def multi_stats_pd(data,time,name='trop_NO2',axis=1):
@@ -1039,7 +1054,7 @@ def multi_stats_pd(data,time,name='trop_NO2',axis=1):
     
 
 
-# In[30]:
+# In[28]:
 
 
 def build_pd(data,time,name='mean_trop_NO2'):
@@ -1167,13 +1182,25 @@ for rg in rgs:
 
 # ### NO2
 
-# In[54]:
+# In[49]:
 
 
 mls_no2['no2'].shape,mls_no2_lat.shape,mls_no2_lon.shape
 
 
-# In[55]:
+# In[50]:
+
+
+mls_no2_time.shape
+
+
+# In[51]:
+
+
+mls_no2['no2'][:,ill_lat:iur_lat,ill_lon:iur_lon].shape
+
+
+# In[52]:
 
 
 mlsno2_rg = {}
@@ -1192,7 +1219,7 @@ for rg in rgs:
 
 # ## Subset for CEDS NOx
 
-# In[34]:
+# In[68]:
 
 
 ceds_ac_rg = {}
@@ -1316,7 +1343,7 @@ for rg in rgs:
 
 # ### Functions for seasonal decompose plots and save
 
-# In[57]:
+# In[53]:
 
 
 def rg_plots_and_save(dat_rg,fp,types=['mean', 'median', 'std'],nm='GOME_tropNO2'):
@@ -1415,7 +1442,7 @@ da = rg_plots_and_save(mlso3_rg,fp+'OMI_MLS_O3_L3/',nm='OMI_MLS_O3')
 
 # ### NO2
 
-# In[58]:
+# In[54]:
 
 
 da = rg_plots_and_save(mlsno2_rg,fp+'OMI_NO2/',nm='OMI_NO2')
@@ -1425,7 +1452,7 @@ da = rg_plots_and_save(mlsno2_rg,fp+'OMI_NO2/',nm='OMI_NO2')
 
 # ### Aircraft
 
-# In[59]:
+# In[69]:
 
 
 da = rg_plots_and_save(ceds_ac_rg,fp+'CEDS/',nm='CEDS_AC_NOx')
@@ -1433,7 +1460,7 @@ da = rg_plots_and_save(ceds_ac_rg,fp+'CEDS/',nm='CEDS_AC_NOx')
 
 # ### Anthropogenic
 
-# In[60]:
+# In[70]:
 
 
 da = rg_plots_and_save(ceds_ant_rg,fp+'CEDS/',nm='CEDS_Ant_NOx')
