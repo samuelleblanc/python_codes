@@ -112,38 +112,38 @@ fp = getpath(name)
 
 # ## Load GOME Tropos NO2
 
-# In[7]:
+# In[86]:
 
 
 gome,gome_dict = lu.load_netcdf(fp+'GOME_SCIAMACHY_GOME2_NO2_L3/GOME_SCIAMACHY_GOME2ab_TroposNO2_v2.3_041996-092017_temis.nc',everything=True)
 
 
-# In[8]:
+# In[87]:
 
 
 for k in gome: 
     print(k,gome[k].shape)
 
 
-# In[9]:
+# In[88]:
 
 
 gome[b'lon']
 
 
-# In[10]:
+# In[89]:
 
 
 gome[b'time']
 
 
-# In[11]:
+# In[90]:
 
 
 gome[b'TroposNO2'].mean()
 
 
-# In[12]:
+# In[91]:
 
 
 gometime = [datetime((t/100.0).astype(int),(((t/100.0)%1)*100.0).astype(int),15) for t in gome[b'time']]
@@ -152,13 +152,13 @@ gometime = [datetime((t/100.0).astype(int),(((t/100.0)%1)*100.0).astype(int),15)
 # ## Load MOPITT
 # Should have 235 files
 
-# In[146]:
+# In[97]:
 
 
 fp
 
 
-# In[147]:
+# In[98]:
 
 
 fp_mol = os.listdir(fp+'MOPITT/')
@@ -166,19 +166,19 @@ fp_mo = [f for f in fp_mol if '.he5' in f]
 fp_mo.sort()
 
 
-# In[149]:
+# In[99]:
 
 
 fp_mo[0:10],len(fp_mo)
 
 
-# In[47]:
+# In[100]:
 
 
 mop,mop_dict = lu.load_hdf(fp+'MOPITT/'+fp_mo[0],verbose=True,values=(('COday',20),('COnight',23)))
 
 
-# In[48]:
+# In[101]:
 
 
 f5 = h5py.File(fp+'MOPITT/'+fp_mo[0])
@@ -187,25 +187,25 @@ mop_COnight_tmp = np.array(f5['HDFEOS']['GRIDS']['MOP03']['Data Fields']['Retrie
 f5.close()
 
 
-# In[49]:
+# In[102]:
 
 
 mop_COday_tmp.shape
 
 
-# In[50]:
+# In[103]:
 
 
 nlon_mop,nlat_mop,npres_mop = mop_COday_tmp.shape
 
 
-# In[51]:
+# In[104]:
 
 
 ntime_moppit = len(fp_mo)
 
 
-# In[52]:
+# In[105]:
 
 
 mop_COday = np.zeros((ntime_moppit,nlon_mop,nlat_mop,npres_mop))+np.nan
@@ -220,26 +220,26 @@ for i,f in list(enumerate(fp_mo)):
     mop_COnight[i,:,:,:] = mop_COnight_tmp
 
 
-# In[53]:
+# In[106]:
 
 
 mop_COday[mop_COday == -9999] = np.nan
 mop_COnight[mop_COnight == -9999] = np.nan
 
 
-# In[54]:
+# In[107]:
 
 
 mop_time = [datetime(int(f.split('-')[1][0:4]),int(f.split('-')[1][4:6]),15)  for f in fp_mo]
 
 
-# In[150]:
+# In[108]:
 
 
 f = fp_mo[-1]
 
 
-# In[151]:
+# In[109]:
 
 
 import h5py
@@ -252,14 +252,14 @@ f5.close()
 
 # ## Load TOMS O3
 
-# In[64]:
+# In[116]:
 
 
 toms_pd = pd.read_excel(fp+'TOMS_O3_L3/TOMS_monthly_trop_O3_L3_v01.xlsx')
 toms_ar = np.array(toms_pd)
 
 
-# In[65]:
+# In[117]:
 
 
 start_time = datetime(1978,12,31)
@@ -267,7 +267,7 @@ end_time = datetime(2005,12,15)
 toms_time = pd.date_range(start=start_time,end=end_time,freq='MS') #jan1979_to_dec2005
 
 
-# In[66]:
+# In[118]:
 
 
 ntime = 27*12
@@ -278,13 +278,13 @@ for n in range(ntime):
     toms_O3[:,:,n] = toms_ar[(n*(nlon+2)):(n*(nlon+2))+nlon,1:].T
 
 
-# In[67]:
+# In[119]:
 
 
 toms_O3[toms_O3>900] = np.nan
 
 
-# In[68]:
+# In[120]:
 
 
 toms_lat = np.arange(-27.5,27.6,5)
@@ -295,14 +295,14 @@ toms_lon = np.arange(-177.5,177.6,5)
 
 # ### Load MLS O3
 
-# In[71]:
+# In[123]:
 
 
 fp
 fpp_mlso3 = fp+'OMI_MLS_O3_L3/OMI_MLS_O3_L3_ncfiles/'
 
 
-# In[72]:
+# In[124]:
 
 
 fp_mls_o3 = os.listdir(fpp_mlso3)
@@ -310,37 +310,37 @@ fp_mls_o3 = [f for f in fp_mls_o3 if '.nc' in f]
 fp_mls_o3.sort()
 
 
-# In[76]:
+# In[125]:
 
 
 len(fp_mls_o3), fp_mls_o3[0:10]
 
 
-# In[77]:
+# In[126]:
 
 
 mlso3_tmp,mlso3_tmp_dict = lu.load_netcdf(fpp_mlso3+fp_mls_o3[0],everything=True)
 
 
-# In[78]:
+# In[127]:
 
 
 mlso3_tmp[b'tropo3'].shape, mlso3_tmp[b'lon'].shape[0], mlso3_tmp[b'lat'].shape[0]
 
 
-# In[79]:
+# In[128]:
 
 
 ntime = len(fp_mls_o3)
 
 
-# In[80]:
+# In[129]:
 
 
 mls_o3 = {'lat':mlso3_tmp[b'lat'],'lon':mlso3_tmp[b'lon'],'time':[],'tropo3':np.zeros((ntime,mlso3_tmp[b'lat'].shape[0],mlso3_tmp[b'lon'].shape[0]))}
 
 
-# In[82]:
+# In[130]:
 
 
 mls_o3['time'] = []
@@ -351,19 +351,19 @@ for i,f in list(enumerate(fp_mls_o3)):
     mls_o3['tropo3'][i,:,:] = mlso3_tmp[b'tropo3']
 
 
-# In[83]:
+# In[131]:
 
 
 mls_o3_time = np.array(mls_o3['time'])
 
 
-# In[84]:
+# In[132]:
 
 
 mlso3_tmp_dict[b'tropo3']
 
 
-# In[85]:
+# In[133]:
 
 
 mls_o3['tropo3'] = mls_o3['tropo3']/10.0
@@ -371,14 +371,14 @@ mls_o3['tropo3'] = mls_o3['tropo3']/10.0
 
 # ### Load OMI NO2 L2
 
-# In[6]:
+# In[134]:
 
 
 fp
 fpp_mlsno2 = fp+'OMI_NO2/'
 
 
-# In[7]:
+# In[135]:
 
 
 fp_mls_no2 = os.listdir(fpp_mlsno2)
@@ -386,55 +386,55 @@ fp_mls_no2 = [f for f in fp_mls_no2 if '.mat' in f]
 fp_mls_no2.sort()
 
 
-# In[8]:
+# In[136]:
 
 
 fp_mls_no2
 
 
-# In[33]:
+# In[137]:
 
 
 fp_mls_no2.pop(-1)
 
 
-# In[34]:
+# In[138]:
 
 
 fp_mls_no2
 
 
-# In[35]:
+# In[139]:
 
 
 mlsno2_tmp = sio.loadmat(fpp_mlsno2+fp_mls_no2[0])
 
 
-# In[36]:
+# In[140]:
 
 
 mlsno2_tmp.keys()
 
 
-# In[37]:
+# In[141]:
 
 
 mlsno2_tmp['NO2_monthly_avg'].shape, mlsno2_tmp['LAT'].shape, mlsno2_tmp['LON'].shape
 
 
-# In[38]:
+# In[142]:
 
 
 ntime = len(fp_mls_no2)*12
 
 
-# In[39]:
+# In[143]:
 
 
 mls_no2 = {'lat':mlsno2_tmp['LAT'],'lon':mlsno2_tmp['LON'],'time':[],'no2':np.zeros((ntime,mlsno2_tmp['LAT'].shape[0],mlsno2_tmp['LON'].shape[1]))}
 
 
-# In[40]:
+# In[144]:
 
 
 mls_no2['time'] = []
@@ -448,25 +448,25 @@ for i,f in list(enumerate(fp_mls_no2)):
     mls_no2['no2'][i*12:(i+1)*12,:,:] = mlsno2_tmp['NO2_monthly_avg']
 
 
-# In[41]:
+# In[145]:
 
 
 mls_no2_time = np.array(mls_no2['time'])
 
 
-# In[42]:
+# In[146]:
 
 
 mls_no2.keys()
 
 
-# In[43]:
+# In[147]:
 
 
 ## Need to reform the mls_no2 lat and lon into 1d arrays
 
 
-# In[44]:
+# In[148]:
 
 
 def regrid(xin,yin,zin,xskip=1,yskip=1):
@@ -489,25 +489,25 @@ def regrid(xin,yin,zin,xskip=1,yskip=1):
     return zo,xout,yout
 
 
-# In[45]:
+# In[149]:
 
 
 mls_no2['no2'].shape, mls_no2['lat'].shape, mls_no2['lon'].shape
 
 
-# In[46]:
+# In[150]:
 
 
 mls_no2_lat = mls_no2['lat'][:,0]
 
 
-# In[47]:
+# In[151]:
 
 
 mls_no2_lon = mls_no2['lon'][0,:]
 
 
-# In[48]:
+# In[152]:
 
 
 mls_no2_lon.shape
@@ -602,7 +602,7 @@ ceds_Ant_NOx = np.vstack((ceds_1980a[b'CEDS_NOx_anthro_emission'],ceds_2000a[b'C
 
 # ## Load TCR
 
-# In[61]:
+# In[160]:
 
 
 fp_tcrl = os.listdir(fp+'TCR/TCR_2_data/')
@@ -610,43 +610,43 @@ fp_tcr = [f for f in fp_tcrl if '.nc' in f]
 fp_tcr.sort()
 
 
-# In[62]:
+# In[161]:
 
 
 fp_tcrl
 
 
-# In[63]:
+# In[162]:
 
 
 tcr_vals = ['_'.join([f.split('_')[1],f.split('_')[3]]) for f in fp_tcrl]
 
 
-# In[64]:
+# In[163]:
 
 
 tcr_tmp,tcr_tmp_dict = lu.load_netcdf(fp+'TCR/TCR_2_data/'+fp_tcrl[0],everything=True)
 
 
-# In[65]:
+# In[164]:
 
 
 tcr_tmp_dict[b'co']
 
 
-# In[66]:
+# In[165]:
 
 
 tcr = {'lat':tcr_tmp[b'lat'],'lon':tcr_tmp[b'lon'],'time':tcr_tmp[b'time']}
 
 
-# In[67]:
+# In[166]:
 
 
 tcr_vals
 
 
-# In[68]:
+# In[167]:
 
 
 for i,f in list(enumerate(fp_tcrl)):
@@ -654,25 +654,25 @@ for i,f in list(enumerate(fp_tcrl)):
     tcr[tcr_vals[i]] = tcr_tmp[tcr_vals[i].split('_')[0].encode('utf-8')]
 
 
-# In[69]:
+# In[168]:
 
 
 tcr_tmp_dict[b'nox']
 
 
-# In[70]:
+# In[169]:
 
 
 tcr_tmp_dict[b'time']
 
 
-# In[71]:
+# In[170]:
 
 
 tcr_time = np.array([datetime(2005+int(m//12),1+int(m%12),15) for m in tcr['time']])
 
 
-# In[72]:
+# In[171]:
 
 
 # convert the 0 to 360 into a -180 to 180 longitude
@@ -681,13 +681,13 @@ tcr['lon'][tcr['lon']>=180.0] = tcr['lon'][tcr['lon']>=180.0] - 360.0
 
 # ## Load GFED CO
 
-# In[112]:
+# In[177]:
 
 
 fp
 
 
-# In[113]:
+# In[178]:
 
 
 fp_gfedl = os.listdir(fp+'GFED/GFED_4.1/')
@@ -695,19 +695,19 @@ fp_gfeds = [f for f in fp_gfedl if '.hdf5' in f]
 fp_gfeds.sort()
 
 
-# In[114]:
+# In[179]:
 
 
 fp_gfeds
 
 
-# In[115]:
+# In[180]:
 
 
 gfed_tmp,gfed_tmp_dict = lu.load_hdf(fp+'GFED/GFED_4.1/'+fp_gfeds[-1],all_values=True)
 
 
-# In[116]:
+# In[181]:
 
 
 nlon = len(gfed_tmp['//lon'][0,:])
@@ -715,7 +715,7 @@ nlat = len(gfed_tmp['//lat'][:,0])
 nyears_gfed = len(fp_gfeds)
 
 
-# In[117]:
+# In[182]:
 
 
 gfed = {'bio_BB':np.zeros((nyears_gfed*12,nlat,nlon))+np.nan,
@@ -729,13 +729,13 @@ gfed = {'bio_BB':np.zeros((nyears_gfed*12,nlat,nlon))+np.nan,
         'lon':gfed_tmp['//lon'][0,:]}
 
 
-# In[118]:
+# In[183]:
 
 
 gfed_tmp_vals = gfed_tmp.keys()
 
 
-# In[119]:
+# In[184]:
 
 
 gfed_vals = {'bio_BB':'//biosphere/{:02.0f}/BB',
@@ -747,13 +747,13 @@ gfed_vals = {'bio_BB':'//biosphere/{:02.0f}/BB',
              'emi_DM':'//emissions/{:02.0f}/DM'}
 
 
-# In[120]:
+# In[185]:
 
 
 gfed['time'] = []
 
 
-# In[121]:
+# In[186]:
 
 
 for i,f in list(enumerate(fp_gfeds)):
@@ -765,13 +765,13 @@ for i,f in list(enumerate(fp_gfeds)):
             gfed[k][j-1+i*12,:,:] = gfed_tmp.get(gfed_vals[k].format(j),np.zeros((nlat,nlon)))
 
 
-# In[124]:
+# In[187]:
 
 
 gfed.keys()
 
 
-# In[125]:
+# In[188]:
 
 
 gfed['emi_C'].mean()
@@ -781,14 +781,14 @@ gfed['emi_C'].mean()
 
 # ### Lightning NO2
 
-# In[78]:
+# In[192]:
 
 
 fp
 fpp_gmi_lno = fp+'MERRA2/GMI_LNO_processed/'
 
 
-# In[79]:
+# In[193]:
 
 
 fp_gmi_lno = os.listdir(fpp_gmi_lno)
@@ -796,43 +796,43 @@ fp_gmi_lno = [f for f in fp_gmi_lno if '.nc' in f]
 fp_gmi_lno.sort()
 
 
-# In[80]:
+# In[194]:
 
 
 fp_gmi_lno
 
 
-# In[81]:
+# In[195]:
 
 
 gmi_lno_tmp,gmi_lno_dict_tmp = lu.load_netcdf(fpp_gmi_lno+fp_gmi_lno[0],everything=True)
 
 
-# In[82]:
+# In[196]:
 
 
 gmi_lno_dict_tmp
 
 
-# In[83]:
+# In[197]:
 
 
 gmi_lno_tmp.keys()
 
 
-# In[84]:
+# In[198]:
 
 
 gmi_lno_tmp[b'M2GMI_NO_lightning_emission'].shape, gmi_lno_tmp[b'Lat'].shape, gmi_lno_tmp[b'Lon'].shape
 
 
-# In[85]:
+# In[199]:
 
 
 ntime = len(fp_gmi_lno)*12
 
 
-# In[86]:
+# In[200]:
 
 
 gmi_lno = {'lat':gmi_lno_tmp[b'Lat'],
@@ -841,7 +841,7 @@ gmi_lno = {'lat':gmi_lno_tmp[b'Lat'],
            'no_lightning_emission':np.zeros((ntime,gmi_lno_tmp[b'Lat'].shape[0],gmi_lno_tmp[b'Lon'].shape[0]))}
 
 
-# In[87]:
+# In[201]:
 
 
 gmi_lno['time'] = []
@@ -852,13 +852,13 @@ for i,f in list(enumerate(fp_gmi_lno)):
     gmi_lno['no_lightning_emission'][i*12:(i+1)*12,:,:] = gmi_lno_tmp[b'M2GMI_NO_lightning_emission']
 
 
-# In[88]:
+# In[202]:
 
 
 gmi_lno_time = np.array(gmi_lno['time'])
 
 
-# In[89]:
+# In[203]:
 
 
 gmi_lno.keys()
@@ -866,13 +866,13 @@ gmi_lno.keys()
 
 # ### GMI O3 production
 
-# In[90]:
+# In[204]:
 
 
 fpp_gmi_o3prod = fp+'MERRA2/GMI_O3_prod_processed/'
 
 
-# In[91]:
+# In[205]:
 
 
 fp_gmi_o3prod = os.listdir(fpp_gmi_o3prod)
@@ -880,50 +880,50 @@ fp_gmi_o3prod = [f for f in fp_gmi_o3prod if '.nc' in f]
 fp_gmi_o3prod.sort()
 
 
-# In[92]:
+# In[206]:
 
 
 fp_gmi_o3prod
 
 
-# In[93]:
+# In[207]:
 
 
 gmi_o3prod_tmp,gmi_o3prod_dict_tmp = lu.load_netcdf(fpp_gmi_o3prod+fp_gmi_o3prod[0],everything=True)
 
 
-# In[94]:
+# In[208]:
 
 
 gmi_o3prod_dict_tmp
 
 
-# In[95]:
+# In[209]:
 
 
 gmi_o3prod_tmp[b'Time'].shape,gmi_o3prod_tmp[b'M2GMI_O3_net_prod_PBL'].shape
 
 
-# In[96]:
+# In[210]:
 
 
 gmi = gmi_lno
 
 
-# In[97]:
+# In[211]:
 
 
 gmi.keys()
 
 
-# In[98]:
+# In[212]:
 
 
 gmi['O3prod_PBL'] = np.zeros((ntime,gmi_o3prod_tmp[b'Lat'].shape[0],gmi_o3prod_tmp[b'Lon'].shape[0]))
 gmi['O3prod_TROP'] = np.zeros((ntime,gmi_o3prod_tmp[b'Lat'].shape[0],gmi_o3prod_tmp[b'Lon'].shape[0]))
 
 
-# In[99]:
+# In[213]:
 
 
 for i,f in list(enumerate(fp_gmi_o3prod)):
@@ -934,13 +934,13 @@ for i,f in list(enumerate(fp_gmi_o3prod)):
 
 # ### GMI Stratospheric O3
 
-# In[100]:
+# In[214]:
 
 
 fpp_gmi_o3strat = fp+'MERRA2/GMI_StratO3_processed/'
 
 
-# In[101]:
+# In[215]:
 
 
 fp_gmi_o3strat = os.listdir(fpp_gmi_o3strat)
@@ -949,32 +949,32 @@ fp_gmi_o3strat.sort()
 fp_gmi_o3strat
 
 
-# In[102]:
+# In[216]:
 
 
 gmi_o3strat_tmp,gmi_o3strat_dict_tmp = lu.load_netcdf(fpp_gmi_o3strat+fp_gmi_o3strat[0],everything=True)
 
 
-# In[103]:
+# In[217]:
 
 
 gmi_o3strat_dict_tmp
 
 
-# In[104]:
+# In[218]:
 
 
 gmi_o3strat_tmp[b'Time'].shape,gmi_o3strat_tmp[b'M2GMI_Strat_O3_conc_PBL'].shape
 
 
-# In[105]:
+# In[219]:
 
 
 gmi['O3strat_PBL'] = np.zeros((ntime,gmi_o3strat_tmp[b'Lat'].shape[0],gmi_o3strat_tmp[b'Lon'].shape[0]))
 gmi['O3strat_TROP'] = np.zeros((ntime,gmi_o3strat_tmp[b'Lat'].shape[0],gmi_o3strat_tmp[b'Lon'].shape[0]))
 
 
-# In[106]:
+# In[220]:
 
 
 for i,f in list(enumerate(fp_gmi_o3strat)):
@@ -1072,7 +1072,7 @@ def build_pd(data,time,name='mean_trop_NO2'):
 
 # ## Subset for GOME NO2
 
-# In[17]:
+# In[92]:
 
 
 gome_rg = {}
@@ -1087,13 +1087,13 @@ for rg in rgs:
     
 
 
-# In[18]:
+# In[93]:
 
 
 gome_rg['China'].keys()
 
 
-# In[19]:
+# In[94]:
 
 
 gome_rg['China']['mean']['mean_GOME_tropNO2']
@@ -1106,13 +1106,13 @@ gome_rg['China']['mean']['mean_GOME_tropNO2']
 # Rebecca bucholtz, et al., 2021, https://doi.org/10.1016/j.rse.2020.112275  
 # 
 
-# In[57]:
+# In[110]:
 
 
 mop_pre
 
 
-# In[58]:
+# In[111]:
 
 
 mop_lon = np.array(mop_lon)
@@ -1120,7 +1120,7 @@ mop_lat = np.array(mop_lat)
 mop_lon.shape, mop_lat.shape, mop_COday.shape
 
 
-# In[61]:
+# In[112]:
 
 
 mopitt_day_rg = {}
@@ -1142,7 +1142,7 @@ for ip,pr in list(enumerate(mop_pre)):
 
 # ## Subset for TOMS O3
 
-# In[69]:
+# In[121]:
 
 
 toms_rg = {}
@@ -1163,7 +1163,7 @@ for rg in rgs:
 
 # ### Ozone
 
-# In[86]:
+# In[153]:
 
 
 mlso3_rg = {}
@@ -1182,25 +1182,25 @@ for rg in rgs:
 
 # ### NO2
 
-# In[49]:
+# In[154]:
 
 
 mls_no2['no2'].shape,mls_no2_lat.shape,mls_no2_lon.shape
 
 
-# In[50]:
+# In[155]:
 
 
 mls_no2_time.shape
 
 
-# In[51]:
+# In[156]:
 
 
 mls_no2['no2'][:,ill_lat:iur_lat,ill_lon:iur_lon].shape
 
 
-# In[52]:
+# In[157]:
 
 
 mlsno2_rg = {}
@@ -1239,19 +1239,19 @@ for rg in rgs:
 
 # ## Subset for TCR NOx/CO
 
-# In[73]:
+# In[172]:
 
 
 tcr_vals
 
 
-# In[74]:
+# In[173]:
 
 
 tcr['nox_anth'].shape, tcr['lat'].shape, tcr['lon'].shape, tcr['time'].shape
 
 
-# In[75]:
+# In[174]:
 
 
 tcr_rg = {}
@@ -1273,13 +1273,13 @@ for rg in rgs:
 
 # ## Subset for GFED C emissions
 
-# In[126]:
+# In[189]:
 
 
 gfed.keys()
 
 
-# In[127]:
+# In[190]:
 
 
 gfed_rg = {}
@@ -1304,19 +1304,19 @@ for rg in rgs:
 
 # ## Subset for GMI
 
-# In[107]:
+# In[221]:
 
 
 gmi.keys()
 
 
-# In[108]:
+# In[222]:
 
 
 gmi['no_lightning_emission'].shape
 
 
-# In[109]:
+# In[223]:
 
 
 gmi_rg = {}
@@ -1343,7 +1343,7 @@ for rg in rgs:
 
 # ### Functions for seasonal decompose plots and save
 
-# In[53]:
+# In[83]:
 
 
 def rg_plots_and_save(dat_rg,fp,types=['mean', 'median', 'std'],nm='GOME_tropNO2'):
@@ -1376,7 +1376,11 @@ def rg_plots_and_save(dat_rg,fp,types=['mean', 'median', 'std'],nm='GOME_tropNO2
     dat_save['month'] = [d.month for d in dat_save['time']]
     
     try:
-        sio.savemat(fp+'/'+nm+'_seasonal.mat',dat_save)
+        out = {}
+        for k, v in dat_save.items():
+            out[k.replace(' ','_')] = v
+        
+        sio.savemat(fp+'/'+nm+'_seasonal.mat',out)
         print('Saved to :'+fp+'/'+nm+'_seasonal.mat')
         return None
     except:
@@ -1388,13 +1392,13 @@ def rg_plots_and_save(dat_rg,fp,types=['mean', 'median', 'std'],nm='GOME_tropNO2
 
 # ## GOME NO2 regions
 
-# In[22]:
+# In[95]:
 
 
 fp
 
 
-# In[43]:
+# In[96]:
 
 
 da = rg_plots_and_save(gome_rg,fp+'GOME_SCIAMACHY_GOME2_NO2_L3/',types=['mean', 'median', 'std'],nm='GOME_tropNO2')
@@ -1402,20 +1406,20 @@ da = rg_plots_and_save(gome_rg,fp+'GOME_SCIAMACHY_GOME2_NO2_L3/',types=['mean', 
 
 # ## MOPITT CO regions
 
-# In[60]:
+# In[113]:
 
 
 mop_pre_lbl = ['{:3.0f}'.format(p) for p in mop_pre ]
 
 
-# In[62]:
+# In[114]:
 
 
 for pr in mop_pre_lbl:
     da = rg_plots_and_save(mopitt_day_rg[pr],fp+'MOPITT/',nm='MOPITT_dayCO_'+pr)
 
 
-# In[63]:
+# In[115]:
 
 
 for pr in mop_pre_lbl:
@@ -1424,7 +1428,7 @@ for pr in mop_pre_lbl:
 
 # ## TOMS O3 
 
-# In[70]:
+# In[122]:
 
 
 da = rg_plots_and_save(toms_rg,fp+'TOMS_O3_L3/',nm='TOMS_O3')
@@ -1434,7 +1438,7 @@ da = rg_plots_and_save(toms_rg,fp+'TOMS_O3_L3/',nm='TOMS_O3')
 
 # ### O3
 
-# In[87]:
+# In[158]:
 
 
 da = rg_plots_and_save(mlso3_rg,fp+'OMI_MLS_O3_L3/',nm='OMI_MLS_O3')
@@ -1442,7 +1446,7 @@ da = rg_plots_and_save(mlso3_rg,fp+'OMI_MLS_O3_L3/',nm='OMI_MLS_O3')
 
 # ### NO2
 
-# In[54]:
+# In[159]:
 
 
 da = rg_plots_and_save(mlsno2_rg,fp+'OMI_NO2/',nm='OMI_NO2')
@@ -1452,7 +1456,7 @@ da = rg_plots_and_save(mlsno2_rg,fp+'OMI_NO2/',nm='OMI_NO2')
 
 # ### Aircraft
 
-# In[69]:
+# In[84]:
 
 
 da = rg_plots_and_save(ceds_ac_rg,fp+'CEDS/',nm='CEDS_AC_NOx')
@@ -1460,7 +1464,7 @@ da = rg_plots_and_save(ceds_ac_rg,fp+'CEDS/',nm='CEDS_AC_NOx')
 
 # ### Anthropogenic
 
-# In[70]:
+# In[85]:
 
 
 da = rg_plots_and_save(ceds_ant_rg,fp+'CEDS/',nm='CEDS_Ant_NOx')
@@ -1468,13 +1472,13 @@ da = rg_plots_and_save(ceds_ant_rg,fp+'CEDS/',nm='CEDS_Ant_NOx')
 
 # ## TCR
 
-# In[76]:
+# In[175]:
 
 
 tcr_vals
 
 
-# In[77]:
+# In[176]:
 
 
 for val in tcr_vals:
@@ -1483,7 +1487,7 @@ for val in tcr_vals:
 
 # ## GFED
 
-# In[129]:
+# In[191]:
 
 
 for val in ['bio_BB', 'bio_NPP', 'bio_Rh', 'burn_fraction', 'burn_source','emi_C','emi_DM']:
@@ -1492,7 +1496,7 @@ for val in ['bio_BB', 'bio_NPP', 'bio_Rh', 'burn_fraction', 'burn_source','emi_C
 
 # ## GMI
 
-# In[111]:
+# In[224]:
 
 
 for val in ['no_lightning_emission', 'O3prod_PBL', 'O3prod_TROP', 'O3strat_PBL', 'O3strat_TROP']:
