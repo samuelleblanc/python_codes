@@ -188,7 +188,12 @@ def tau_rayleigh(wavelength,pressure,date=None,latitude=45.0,declination=None,at
             
     # following is ported from rayleigh.m code written by Beat S. 1995?
     #Bucholz(95) Table 5 constants
-    Coeff_model_atmo = np.array([[0.00652965,0.00868094],                        [0.00651949,0.00866735],                        [0.00653602,0.00868941],                        [0.00648153,0.00861695],                        [0.00649997,0.00864145],                        [0.00650362,0.00864627]])
+    Coeff_model_atmo = np.array([[0.00652965,0.00868094],\
+                        [0.00651949,0.00866735],\
+                        [0.00653602,0.00868941],\
+                        [0.00648153,0.00861695],\
+                        [0.00649997,0.00864145],\
+                        [0.00650362,0.00864627]])
 
     A = Coeff_model_atmo[atm_id+1,0]
     B = 3.55212
@@ -941,8 +946,10 @@ def bias_corr_tauf_tauc(tau,eta,alpha,alphap,ref_wvl=0.5,alpha_c=0.15,alphap_c=0
     alphap_bias_correction = 0.65*np.exp(-(eta - 0.78)**2.0/(2*0.18**2.0))
 
     alphap_bias_corrected = alphap + alphap_bias_correction
-    t_bias_corrected =          alpha_offset - (alphap_bias_corrected - alphap_c)/alpha_offset
-    alpha_f_bias_corrected =          ((t_bias_corrected + b_star) + np.sqrt((t_bias_corrected + b_star)**2.0 + 4.*(1 - a)*c_star) )/(2.*(1 - a)) + alpha_c
+    t_bias_corrected = \
+         alpha_offset - (alphap_bias_corrected - alphap_c)/alpha_offset
+    alpha_f_bias_corrected = \
+         ((t_bias_corrected + b_star) + np.sqrt((t_bias_corrected + b_star)**2.0 + 4.*(1 - a)*c_star) )/(2.*(1 - a)) + alpha_c
     eta_bias_corrected = alpha_offset/(alpha_f_bias_corrected - alpha_c)
     tau_f_bias_corrected = eta_bias_corrected*tau
     tau_c_bias_corrected = tau - tau_f_bias_corrected

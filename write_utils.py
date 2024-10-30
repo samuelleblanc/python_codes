@@ -126,7 +126,8 @@ def write_ict(header_dict,data_dict,filepath,data_id,loc_id,date,rev,order=[],de
     loc_id = loc_id.replace('_','-')
     if file_comment:
         file_comment = '_'+file_comment.replace(' ','-').replace('_','-')
-    fname = filepath+'{data_id}_{loc_id}_{date}_{rev}{file_comment}.ict'.format(            data_id=data_id,loc_id=loc_id,date=date,rev=rev,file_comment=file_comment)
+    fname = filepath+'{data_id}_{loc_id}_{date}_{rev}{file_comment}.ict'.format(\
+            data_id=data_id,loc_id=loc_id,date=date,rev=rev,file_comment=file_comment)
     #f = open(fname,'w')
     
     # set the default dict values
@@ -503,7 +504,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.ylabel('Values')
         plt.title('{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
         print('plotting the togethers')
-        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
+        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together.png'.format(\
+                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
         
     if plot_together2:
         fig = plt.figure()
@@ -515,7 +517,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.ylabel('Values')
         plt.title('{data_id}_{loc_id}_{date}_{rev}.ict'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev))
         print('plotting the togethers 2')
-        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together2.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
+        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_together2.png'.format(\
+                data_id=data_id,loc_id=loc_id,date=date,rev=rev),dpi=600,transparent=True)
         
     for n in ll:
         fig = plt.figure()
@@ -525,7 +528,8 @@ def make_plots_ict(data_dict,filepath,data_id,loc_id,date,rev,plot_together=[],p
         plt.ylabel('{n} [{unit}]'.format(n=n,unit=data_dict[n].get('unit')))
         plt.title('{data_id}_{loc_id}_{date}_{rev} for {n}'.format(data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n))
         print('plotting {}'.format(n))
-        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_{n}.png'.format(                data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n),dpi=600,transparent=True)
+        fig.savefig(filepath+'{data_id}_{loc_id}_{date}_{rev}_{n}.png'.format(\
+                data_id=data_id,loc_id=loc_id,date=date,rev=rev,n=n),dpi=600,transparent=True)
 
 
 # In[1]:
