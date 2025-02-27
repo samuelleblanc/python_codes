@@ -33,7 +33,7 @@
 
 # # Prepare python environment
 
-# In[11]:
+# In[1]:
 
 
 import sys
@@ -58,13 +58,13 @@ from hyperion import test, testmemory, hyperion, hyperion2isofit
 
 # ## set the paths
 
-# In[12]:
+# In[2]:
 
 
 from path_utils import getpath
 
 
-# In[13]:
+# In[4]:
 
 
 figdir = getpath('hyperion_fig')
@@ -72,19 +72,19 @@ figprefix = os.path.join(figdir, '{}')
 figexts = ('png', 'eps', )
 
 
-# In[14]:
+# In[5]:
 
 
 from isofit.utils import apply_oe
 
 
-# In[15]:
+# In[6]:
 
 
 apply_oe
 
 
-# In[17]:
+# In[63]:
 
 
 import importlib
@@ -94,9 +94,39 @@ importlib.reload(hyperion2isofit)
 # In[ ]:
 
 
-scene = 'EO1H0440342016184110KF'#'EO1H0100612008087110KF'#'EO1H0090582008189110P0' # 'EO1H0440342016184110KF' # 'EO1H0010742008014110K0' # 'EO1H0440342016184110KF'
+scene = r'EO1H0440342016184110KF'#'EO1H0100612008087110KF'#'EO1H0090582008189110P0' # 'EO1H0440342016184110KF' # 'EO1H0010742008014110K0' # 'EO1H0440342016184110KF'
 paths = hyperion2isofit.readHyperionL2(scene)
+
+
+# In[ ]:
+
+
+if key=='rfl':
+    ok = 90 # band
+    sa = np.flip((p-m)[..., ok])
+    x = np.arange(sa.shape[1])
+    xscale = 'linear'
+    xlabel = 'Sample #'
+elif key in ('subs_rfl', 'subs_h2o'):
+    x = paths['wp'][idx[-1][:lwp]]
+    xscale = 'log'
+    xlabel = 'Wavelength (um)'
+    sa = np.flip((p-m).squeeze()[:, idxf[-1]])
+clim = np.percentile(sa, [32.1/2,100-32.1/2])
+plt.figure()
+plt.pcolormesh(x, np.flip(np.arange(sa.shape[0])), sa, vmin=clim[0], vmax=clim[-1])
+plt.xscale(xscale)
+plt.xlabel(xlabel)
+plt.ylabel('Line #')
+plt.colorbar()
+plt.show()
+
+
+# In[66]:
+
+
 # a file in my directory
+
 key = 'subs_rfl'
 mine = paths[key] 
 # the counterpart in PT's directory
