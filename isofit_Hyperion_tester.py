@@ -98,6 +98,84 @@ scene = r'EO1H0440342016184110KF'#'EO1H0100612008087110KF'#'EO1H0090582008189110
 paths = hyperion2isofit.readHyperionL2(scene)
 
 
+# # Test out the make hyp L2
+
+# In[135]:
+
+
+import importlib; importlib.reload(hyperion2isofit)
+
+
+# In[ ]:
+
+
+exit_code = hyperion2isofit.MakeHypL2(scene)
+
+
+# In[ ]:
+
+
+exit_code
+
+
+# In[122]:
+
+
+paths = {'L1R':'/data2/SBG/Hyperion_data/EO1H0440342016184110KF.L1R','radiance':'/data2/SBG/Hyperion_data/EO1H0440342016184110KFradiance.hdr'}
+
+
+# In[125]:
+
+
+from spectral.io import envi
+from isofit.core.common import envi_header
+
+
+# In[130]:
+
+
+radiance_dataset = envi.open(envi_header(paths['radiance'][:-4]))
+
+
+# In[131]:
+
+
+radiance_dataset.metadata.keys()
+
+
+# In[70]:
+
+
+paths['L1R'].replace('L1R','AUX')
+
+
+# In[73]:
+
+
+file = paths['L1R']
+dataset = netCDF4.Dataset(file)
+
+
+# In[80]:
+
+
+if 'EO1H0440342016184110KF.L1R' in dataset.variables: print('a')
+
+
+# In[83]:
+
+
+os.path.split(paths['L1R'])
+
+
+# In[78]:
+
+
+dataset['EO1H0440342016184110KF.L1R']
+
+
+# # Old comparison 
+
 # In[ ]:
 
 
