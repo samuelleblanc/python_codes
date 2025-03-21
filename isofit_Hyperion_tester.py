@@ -33,7 +33,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 import sys
@@ -56,9 +56,16 @@ from scipy.io import loadmat
 from hyperion import test, testmemory, hyperion, hyperion2isofit
 
 
+# In[9]:
+
+
+from spectral.io import envi
+from isofit.core.common import envi_header
+
+
 # ## set the paths
 
-# In[2]:
+# In[3]:
 
 
 from path_utils import getpath
@@ -84,14 +91,14 @@ from isofit.utils import apply_oe
 apply_oe
 
 
-# In[63]:
+# In[7]:
 
 
 import importlib
 importlib.reload(hyperion2isofit)
 
 
-# In[ ]:
+# In[8]:
 
 
 scene = r'EO1H0440342016184110KF'#'EO1H0100612008087110KF'#'EO1H0090582008189110P0' # 'EO1H0440342016184110KF' # 'EO1H0010742008014110K0' # 'EO1H0440342016184110KF'
@@ -106,13 +113,13 @@ paths = hyperion2isofit.readHyperionL2(scene)
 import importlib; importlib.reload(hyperion2isofit)
 
 
-# In[ ]:
+# In[140]:
 
 
 exit_code = hyperion2isofit.MakeHypL2(scene)
 
 
-# In[ ]:
+# In[141]:
 
 
 exit_code
@@ -122,13 +129,6 @@ exit_code
 
 
 paths = {'L1R':'/data2/SBG/Hyperion_data/EO1H0440342016184110KF.L1R','radiance':'/data2/SBG/Hyperion_data/EO1H0440342016184110KFradiance.hdr'}
-
-
-# In[125]:
-
-
-from spectral.io import envi
-from isofit.core.common import envi_header
 
 
 # In[130]:
@@ -143,35 +143,132 @@ radiance_dataset = envi.open(envi_header(paths['radiance'][:-4]))
 radiance_dataset.metadata.keys()
 
 
-# In[70]:
+# # Plot out the output data from this run
+
+# In[10]:
 
 
-paths['L1R'].replace('L1R','AUX')
+paths
 
 
-# In[73]:
+# ## Use plotting from test modules
+
+# In[13]:
 
 
-file = paths['L1R']
-dataset = netCDF4.Dataset(file)
+scenes = [scene]
 
 
-# In[80]:
+# In[14]:
 
 
-if 'EO1H0440342016184110KF.L1R' in dataset.variables: print('a')
+titles = [datetime.strftime(datetime.strptime(scene[10:17], '%Y%j'), '%B %d, %Y')+' '+scene[:22] for scene in scenes]
 
 
-# In[83]:
+# In[17]:
 
 
-os.path.split(paths['L1R'])
+key, ylabel, figsuffix = ('rfl', 'Surface Reflectance', 'Reflectance')
+sws=(('VNIR', (27, 20, 9)), ('SWIR', (90, 130, 170)))
 
 
-# In[78]:
+# In[18]:
 
 
-dataset['EO1H0440342016184110KF.L1R']
+arrss = []; ilocss = []; titles = []
+for scene in scenes:
+    paths = hyperion2isofit.readHyperionL2(scene)
+    ilocss.append(test.indicesofinterest(scene))
+    arrss.append([envi.open(paths[key])[:,:,:],])
+    td = paths['attrs']['Target_Description'] if 'Target_Description' in paths['attrs'] else '' 
+    titles.append(td[:td.rfind('[')-1])
+    #if key=='rfl_10nm_cover_class':
+    #    classnames = ['algae','coral','mud/sand','seagrass']
+    #    legendstrs = ['{}, n = {}'.format(classnames[u], np.sum(arrss[0][0]==u)) for u in range(4)]
+
+
+# In[19]:
+
+
+if key in ('rfl', 'radiance'):
+    with test.makecollage(arrss, paths['wp'], test.sws, ilocss, figprefix.format(scenes[0]), figsuffix, ylabel, ylims=[], labels_maps=titles, labels_spectra=[], autofit=True) as mc:
+        # for ax in mc.axss:
+        #     ax.set_ylim(0,1.2)
+        plt.gcf().patch.set_facecolor('white')
+
+
+# ## Load some images 
+
+# In[21]:
+
+
+paths['rfl']
+
+
+# In[24]:
+
+
+p = envi.open(paths['rfl'])
+
+
+# In[28]:
+
+
+lwp = len(paths['wp'])
+idx = np.append(np.isfinite(paths['wp']),[True]*(p.shape[-1]-lwp)).astype(bool)
+idxf = np.append(np.isfinite(paths['wp']),[False]*(p.shape[-1]-lwp)).astype(bool)
+idx = (slice(None), slice(None), idx)
+idxf = (slice(None), slice(None), idxf)
+
+
+# In[31]:
+
+
+p.shape
+
+
+# In[32]:
+
+
+test.sws
+
+
+# In[36]:
+
+
+test.sws[0][1]
+
+
+# In[40]:
+
+
+get_ipython().run_line_magic('matplotlib', 'widget')
+
+
+# In[43]:
+
+
+np.nanmin(p[:,:,test.sws[0][1]]),np.nanmean(p[:,:,test.sws[0][1]]),np.nanmedian(p[:,:,test.sws[0][1]]),np.nanmax(p[:,:,test.sws[0][1]]) 
+
+
+# In[50]:
+
+
+import matplotlib
+
+
+# In[51]:
+
+
+matplotlib.scale.get_scale_names()
+
+
+# In[57]:
+
+
+fig,ax = plt.subplots(1)
+ax.imshow(p[:,:,test.sws[0][1][0]],norm='log') #,vmin=0.000000000000000000001,vmax=0.0001,norm='log')
+#plt.colorbar()
 
 
 # # Old comparison 
