@@ -34,7 +34,10 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
     import numpy as np
     from BeautifulSoup import BeautifulSoup
     from StringIO import StringIO
-    from urllib import urlopen
+    try:
+        from urllib import urlopen
+    except ImportError:
+        from urllib.request import urlopen
     from datetime import datetime
     from load_utils import recarray_to_dict
     import pandas as pd
@@ -63,9 +66,9 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
         daystr = dd
     else:
         if daystr > dd:
-	    daystr = dd
-	    import warnings
-	    warnings.warn("Date set to future, using today's date")
+            daystr = dd
+            import warnings
+            warnings.warn("Date set to future, using today's date")
     if not daystr2: 
         daystr2 = daystr
   
@@ -78,20 +81,20 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
     url = url.format(urlnm=url_name,yyyy=daystr[0:4],mm=int(daystr[5:7]),dd=int(daystr[8:10]),lev=lev,avg=avg,lat1=safe_list_get(lat_range,0,None),
                     lat2=safe_list_get(lat_range,1,None),lon1=safe_list_get(lon_range,0,None),lon2=safe_list_get(lon_range,1,None),
                     yyyy2=daystr2[0:4],mm2=int(daystr2[5:7]),dd2=int(daystr2[8:10]))
-    print 'Getting file from internet: at aeronet.gsfc.nasa.gov'
-    print url
+    print('Getting file from internet: at aeronet.gsfc.nasa.gov')
+    print(url)
     try:
         htm = urlopen(url)
         html = htm.read()
         soup = BeautifulSoup(html)
     except:
-        print 'failed to communicate with AERONET internet site - returning nothing'
+        print('failed to communicate with AERONET internet site - returning nothing')
         return False
     lines = []
     for ibr,br in enumerate(soup.findAll('br')):
         nt = br.nextSibling
         if (version=='3') & (ibr<3):
-            print nt
+            print(nt)
             continue
         if len(lines)==0:
             if 'Number_of_Wavelengths' in nt:
@@ -107,11 +110,11 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
         try:
             dat = np.genfromtxt(s,delimiter=',',names=True,dtype=None)
         except IndexError:
-            print 'Failed to read the returned html file'
+            print('Failed to read the returned html file')
             #return s
             return False
         except ValueError:
-            print 'Failed to format the html file, returning the strings'
+            print('Failed to format the html file, returning the strings')
             return s
         fields_to_ignore = ['AERONET_Site_Name','Principal_Investigator','PI_Email','Dateddmmyy']
         for label in dat.dtype.names:
@@ -183,7 +186,10 @@ def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None,version=2):
        Modified: Samuel LeBlanc, 2021-04-19, Santa Cruz, CA
                  added support for v3
     """
-    from urllib import urlopen
+    try:
+        from urllib import urlopen
+    except ImportError:
+        from urllib.request import urlopen
     from bs4 import BeautifulSoup
     from datetime import datetime
     import os
