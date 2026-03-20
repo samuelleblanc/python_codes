@@ -33,7 +33,7 @@
 
 # # Prepare python environment
 
-# In[2]:
+# In[7]:
 
 
 import sys
@@ -56,7 +56,7 @@ from scipy.io import loadmat
 from hyperion import test, testmemory, hyperion, hyperion2isofit
 
 
-# In[9]:
+# In[8]:
 
 
 from spectral.io import envi
@@ -65,13 +65,13 @@ from isofit.core.common import envi_header
 
 # ## set the paths
 
-# In[3]:
+# In[9]:
 
 
 from path_utils import getpath
 
 
-# In[4]:
+# In[10]:
 
 
 figdir = getpath('hyperion_fig')
@@ -79,53 +79,72 @@ figprefix = os.path.join(figdir, '{}')
 figexts = ('png', 'eps', )
 
 
-# In[5]:
+# In[11]:
 
 
 from isofit.utils import apply_oe
 
 
-# In[6]:
+# In[12]:
 
 
 apply_oe
 
 
-# In[7]:
+# In[13]:
 
 
 import importlib
 importlib.reload(hyperion2isofit)
 
 
-# In[8]:
+# In[14]:
 
 
 scene = r'EO1H0440342016184110KF'#'EO1H0100612008087110KF'#'EO1H0090582008189110P0' # 'EO1H0440342016184110KF' # 'EO1H0010742008014110K0' # 'EO1H0440342016184110KF'
+scene = r'EO1H0400332013093110K7'
 paths = hyperion2isofit.readHyperionL2(scene)
 
 
 # # Test out the make hyp L2
 
-# In[135]:
+# In[32]:
 
 
 import importlib; importlib.reload(hyperion2isofit)
 
 
-# In[140]:
+# In[41]:
+
+
+import importlib; importlib.reload(apply_oe)
+
+
+# In[42]:
+
+
+help(apply_oe)
+
+
+# In[45]:
+
+
+apply_oe.ray.shutdown()
+
+
+# In[ ]:
 
 
 exit_code = hyperion2isofit.MakeHypL2(scene)
 
 
-# In[141]:
+# In[47]:
 
 
 exit_code
 
 
-# In[122]:
+# In[ ]:
 
 
 paths = {'L1R':'/data2/SBG/Hyperion_data/EO1H0440342016184110KF.L1R','radiance':'/data2/SBG/Hyperion_data/EO1H0440342016184110KFradiance.hdr'}
@@ -145,7 +164,7 @@ radiance_dataset.metadata.keys()
 
 # # Plot out the output data from this run
 
-# In[10]:
+# In[48]:
 
 
 paths
@@ -153,26 +172,26 @@ paths
 
 # ## Use plotting from test modules
 
-# In[13]:
+# In[49]:
 
 
 scenes = [scene]
 
 
-# In[14]:
+# In[50]:
 
 
 titles = [datetime.strftime(datetime.strptime(scene[10:17], '%Y%j'), '%B %d, %Y')+' '+scene[:22] for scene in scenes]
 
 
-# In[17]:
+# In[51]:
 
 
 key, ylabel, figsuffix = ('rfl', 'Surface Reflectance', 'Reflectance')
 sws=(('VNIR', (27, 20, 9)), ('SWIR', (90, 130, 170)))
 
 
-# In[18]:
+# In[52]:
 
 
 arrss = []; ilocss = []; titles = []
@@ -187,7 +206,7 @@ for scene in scenes:
     #    legendstrs = ['{}, n = {}'.format(classnames[u], np.sum(arrss[0][0]==u)) for u in range(4)]
 
 
-# In[19]:
+# In[53]:
 
 
 if key in ('rfl', 'radiance'):
@@ -199,19 +218,19 @@ if key in ('rfl', 'radiance'):
 
 # ## Load some images 
 
-# In[21]:
+# In[54]:
 
 
 paths['rfl']
 
 
-# In[24]:
+# In[55]:
 
 
 p = envi.open(paths['rfl'])
 
 
-# In[28]:
+# In[56]:
 
 
 lwp = len(paths['wp'])
@@ -221,54 +240,84 @@ idx = (slice(None), slice(None), idx)
 idxf = (slice(None), slice(None), idxf)
 
 
-# In[31]:
+# In[57]:
 
 
 p.shape
 
 
-# In[32]:
+# In[58]:
 
 
 test.sws
 
 
-# In[36]:
+# In[59]:
 
 
 test.sws[0][1]
 
 
-# In[40]:
+# In[60]:
 
 
 get_ipython().run_line_magic('matplotlib', 'widget')
 
 
-# In[43]:
+# In[61]:
 
 
 np.nanmin(p[:,:,test.sws[0][1]]),np.nanmean(p[:,:,test.sws[0][1]]),np.nanmedian(p[:,:,test.sws[0][1]]),np.nanmax(p[:,:,test.sws[0][1]]) 
 
 
-# In[50]:
+# In[62]:
 
 
 import matplotlib
 
 
-# In[51]:
+# In[63]:
 
 
 matplotlib.scale.get_scale_names()
 
 
-# In[57]:
+# In[64]:
 
 
 fig,ax = plt.subplots(1)
 ax.imshow(p[:,:,test.sws[0][1][0]],norm='log') #,vmin=0.000000000000000000001,vmax=0.0001,norm='log')
 #plt.colorbar()
+
+
+# In[65]:
+
+
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
+
+# In[66]:
+
+
+test.sws[0][1]
+
+
+# In[67]:
+
+
+p_na = np.array(p[:,:,test.sws[0][1]])
+p_na[p_na<0] = np.nan
+
+
+# In[68]:
+
+
+fig = plt.figure()
+ax = plt.axes(projection=ccrs.PlateCarree())
+ax.pcolormesh(paths['lonlat'][0,:,:],paths['lonlat'][1,:,:],p_na,vmin=0,vmax=0.000000000001)
+ax.add_feature(cfeature.COASTLINE, edgecolor='grey')
+gl = ax.gridlines(draw_labels=True)
 
 
 # # Old comparison 
