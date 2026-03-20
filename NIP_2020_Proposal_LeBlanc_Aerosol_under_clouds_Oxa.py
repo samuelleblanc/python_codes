@@ -48,7 +48,7 @@ import hdf5storage as hs
 import scipy.io as sio
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import os
 
 
@@ -151,7 +151,9 @@ nx,ny = cld_mask.shape
 alts_depol, time_depol = [],[]
 for i in xrange(nx):
     for j in xrange (ny):
-        if (da['//Data_Products/depol_532nm_prfl'][i,j] > 0.1) &           (da['//Data_Products/bsc_532nm_prfl'][i,j]>0.0001) &           (da['//Nav_Data/Altitudes'][i] > 7500.0):
+        if (da['//Data_Products/depol_532nm_prfl'][i,j] > 0.1) &\
+           (da['//Data_Products/bsc_532nm_prfl'][i,j]>0.0001) &\
+           (da['//Nav_Data/Altitudes'][i] > 7500.0):
             alts_depol.append(da['//Nav_Data/Altitudes'][i])
             time_depol.append(da['//Nav_Data/Midtime'][0,j])
 time_depol = np.array(time_depol)

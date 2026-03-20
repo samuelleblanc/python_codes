@@ -1967,7 +1967,8 @@ merraint = {'aod':mei[8]['tau'],'isotime':mei[8]['isotime'],'lat':mei[8]['latitu
 for k in ['aod','aod_dust','aod_bc','aod_sulf','aod_sea','aod_oc']:
     merraint[k] = np.array([np.cumsum(merraint[k][i,:]) for i in xrange(len(merraint[k][:,0]))])
 for v in [0,1,2]:
-    merraint['aod_spectra'][v,:,:] =       np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
+    merraint['aod_spectra'][v,:,:] = \
+      np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
 
 
 # In[290]:
@@ -2765,7 +2766,8 @@ merraint = {'aod':mei[8]['tau'],'isotime':mei[8]['isotime'],'lat':mei[8]['latitu
 for k in ['aod','aod_dust','aod_bc','aod_sulf','aod_sea','aod_oc']:
     merraint[k] = np.array([np.cumsum(merraint[k][i,:]) for i in xrange(len(merraint[k][:,0]))])
 for v in [0,1,2]:
-    merraint['aod_spectra'][v,:,:] =       np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
+    merraint['aod_spectra'][v,:,:] = \
+      np.array([np.cumsum(merraint['aod_spectra'][v,i,:]) for i in xrange(len(merraint['aod_spectra'][v,:,0]))])
 
 
 # In[146]:
@@ -3952,7 +3954,8 @@ for j in [0,1,2,3,4]:
 
 
 for j in [0,1,2,3,4]:
-    print legend_list[j], percentile_autocorrv2(autocorr_mm['MERRA_AOD'][j,:],0.85),percentile_autocorrv2(autocorr_mm['aod0500'][j,:],0.85)
+    print legend_list[j], percentile_autocorrv2(autocorr_mm['MERRA_AOD'][j,:],0.85),\
+percentile_autocorrv2(autocorr_mm['aod0500'][j,:],0.85)
 
 
 # In[215]:
@@ -4291,13 +4294,16 @@ plt.savefig(fp+'plot/KORUS_autocorr_percentile_speciated_AOD_withAODavgs_{}.png'
 # In[300]:
 
 
-np.array(mean_vals['MERRA_AOD_bc'])+np.array(mean_vals['MERRA_AOD_oc'])+np.array(mean_vals['MERRA_AOD_sulf']),np.array(mean_vals['MERRA_AOD_bc'])+np.array(mean_vals['MERRA_AOD_oc'])+np.array(mean_vals['MERRA_AOD_sulf'])          -np.array(mean_vals['aod_fine'])
+np.array(mean_vals['MERRA_AOD_bc'])+np.array(mean_vals['MERRA_AOD_oc'])+np.array(mean_vals['MERRA_AOD_sulf']),\
+np.array(mean_vals['MERRA_AOD_bc'])+np.array(mean_vals['MERRA_AOD_oc'])+np.array(mean_vals['MERRA_AOD_sulf'])\
+          -np.array(mean_vals['aod_fine'])
 
 
 # In[301]:
 
 
-np.array(mean_vals['MERRA_AOD_dust'])+np.array(mean_vals['MERRA_AOD_sea']),np.array(mean_vals['MERRA_AOD_dust'])+np.array(mean_vals['MERRA_AOD_sea'])-np.array(mean_vals['aod_coarse'])
+np.array(mean_vals['MERRA_AOD_dust'])+np.array(mean_vals['MERRA_AOD_sea']),\
+np.array(mean_vals['MERRA_AOD_dust'])+np.array(mean_vals['MERRA_AOD_sea'])-np.array(mean_vals['aod_coarse'])
 
 
 # In[197]:
@@ -6041,7 +6047,8 @@ ar['fl_QA_angs'] = ar['fl'] & (ar['AOD0501']>0.05)
 # In[218]:
 
 
-ar['fl_QA_angs_seoul'] = ar['fl'] & (ar['AOD0501']>0.05) & (ar['Latitude']<37.75) &                        (ar['Latitude']>36.9) & (ar['Longitude']<127.30) & (ar['Longitude']>126.60)
+ar['fl_QA_angs_seoul'] = ar['fl'] & (ar['AOD0501']>0.05) & (ar['Latitude']<37.75) &\
+                        (ar['Latitude']>36.9) & (ar['Longitude']<127.30) & (ar['Longitude']>126.60)
 
 
 # In[219]:
@@ -6758,7 +6765,6 @@ autocor_c.shape
 # In[222]:
 
 
-
 #set up a easy plotting function
 def make_map(ax=plt.gca()):
     m = Basemap(projection='stere',lon_0=128,lat_0=36.0,
@@ -6900,7 +6906,8 @@ ae = np.array(ae)
 # In[280]:
 
 
-np.nanmean(ae[met1_aodl]),np.nanmean(ae[met1_aodh]),np.nanmean(ae[met1_aod]),np.nanmedian(ae[met1_aodl]),np.nanmedian(ae[met1_aodh]),np.nanmedian(ae[met1_aod]) 
+np.nanmean(ae[met1_aodl]),np.nanmean(ae[met1_aodh]),np.nanmean(ae[met1_aod]),\
+np.nanmedian(ae[met1_aodl]),np.nanmedian(ae[met1_aodh]),np.nanmedian(ae[met1_aod]) 
 
 
 # ## Plot the AOD spectra by met
@@ -7298,7 +7305,8 @@ plt.savefig(fp+'plot/KORUS_AOD_wvl_by_alt_{}_rev.svg'.format(vv),dpi=600,transpa
 # In[93]:
 
 
-len(arsn[fls['fl_0.5']])/17.0, len(arsn[fls['fl_0.5_1']])/17.0,len(arsn[fls['fl_1_2']])/17.0,len(arsn[fls['fl_2_8']])/17.0,len(arsn[fls['fl_8']])/17.0
+len(arsn[fls['fl_0.5']])/17.0, len(arsn[fls['fl_0.5_1']])/17.0,len(arsn[fls['fl_1_2']])/17.0,\
+len(arsn[fls['fl_2_8']])/17.0,len(arsn[fls['fl_8']])/17.0
 
 
 # In[137]:
@@ -7433,6 +7441,7 @@ axy.legend(frameon=True)
 axy.set_xlabel('Number of level legs',color='tab:orange')
 
 
+
 # # Spatial maps and time traces
 
 # In[215]:
@@ -7446,31 +7455,39 @@ def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
     stat = {}
     if not len(fl)>0: fl = np.isfinite(x)
         
-    stat['mean'],stat['xm'],stat['ym'],stat['bin'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanmean)
+    stat['mean'],stat['xm'],stat['ym'],stat['bin'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanmean)
     stat['mean'] = np.ma.masked_array(stat['mean'],np.isnan(stat['mean']))
     
-    stat['median'],stat['xe'],stat['ye'],stat['bine'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanmedian)
+    stat['median'],stat['xe'],stat['ye'],stat['bine'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanmedian)
     stat['median'] = np.ma.masked_array(stat['median'],np.isnan(stat['median']))
 
-    stat['std'],stat['xs'],stat['ys'],stat['bins'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanstd)
+    stat['std'],stat['xs'],stat['ys'],stat['bins'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanstd)
     stat['std'] = np.ma.masked_array(stat['std'],np.isnan(stat['std']))
     
-    stat['cnt'],stat['xn'],stat['yn'],stat['binn'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='count')
+    stat['cnt'],stat['xn'],stat['yn'],stat['binn'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='count')
     stat['cnt'] = np.ma.masked_array(stat['cnt'],np.isnan(stat['cnt']))
 
     if len(days)>0:
         uniq_cnt = lambda x: len(np.unique(x))
-        stat['dcnt'],stat['xd'],stat['yd'],stat['bind'] =           st.binned_statistic_2d(lat[fl],lon[fl],days[fl],bins=bins,range=rg,statistic=uniq_cnt)
+        stat['dcnt'],stat['xd'],stat['yd'],stat['bind'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],days[fl],bins=bins,range=rg,statistic=uniq_cnt)
         stat['dcnt'] = np.ma.masked_array(stat['dcnt'],np.isnan(stat['dcnt']))
     else:
         stat['dcnt'] = stat['cnt']*0.0
     
     if verbose:
-        print 'Mean values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanmean(stat['mean']),np.nanmean(stat['median']),np.nanmean(stat['std']),
+        print 'Mean values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanmean(stat['mean']),np.nanmean(stat['median']),np.nanmean(stat['std']),
                     np.nanmean(stat['cnt']),np.nanmean(stat['dcnt']))
-        print 'Median values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanmedian(stat['mean']),np.nanmedian(stat['median']),np.nanmedian(stat['std']),
+        print 'Median values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanmedian(stat['mean']),np.nanmedian(stat['median']),np.nanmedian(stat['std']),
                     np.nanmedian(stat['cnt']),np.nanmedian(stat['dcnt']))
-        print 'STD values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanstd(stat['mean']),np.nanstd(stat['median']),np.nanstd(stat['std']),
+        print 'STD values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanstd(stat['mean']),np.nanstd(stat['median']),np.nanstd(stat['std']),
                     np.nanstd(stat['cnt']),np.nanstd(stat['dcnt']))
     return stat
 

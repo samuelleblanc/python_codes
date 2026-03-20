@@ -11,7 +11,7 @@
 # In[1]:
 
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
+get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
 import matplotlib 
 import os
 matplotlib.rc_file(os.path.join(os.getcwd(),'file.rc'))
@@ -29,7 +29,7 @@ from plotting_utils import make_boxplot
 # In[2]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # In[3]:

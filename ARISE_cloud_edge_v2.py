@@ -62,7 +62,7 @@
 # In[1]:
 
 
-get_ipython().magic(u'config InlineBackend.rc = {}')
+get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
 import matplotlib 
 #matplotlib.rc_file('C:\\Users\\sleblan2\\Research\\python_codes\\file.rc')
 import matplotlib.pyplot as plt
@@ -83,7 +83,7 @@ from path_utils import getpath
 #fp='C:/Users/sleblan2/Research/ARISE/'
 
 
-# In[2]:
+# In[8]:
 
 
 import matplotlib.cm as cm
@@ -94,23 +94,23 @@ import map_utils as mu
 import h5py
 
 
-# In[3]:
+# In[15]:
 
 
 fp = getpath('ARISE')
 
 
-# In[4]:
+# In[16]:
 
 
-get_ipython().magic(u'matplotlib notebook')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
 # # Load varous data
 
 # ## Get the AMSR data for 2014-09-19
 
-# In[5]:
+# In[18]:
 
 
 famsr = fp+'AMSRE/asi-AMSR2-n6250-20140919-v5.4.hdf'
@@ -118,7 +118,7 @@ fll = fp+'AMSRE/LongitudeLatitudeGrid-n6250-Arctic.hdf'
 amsr = lm.load_amsr(famsr,fll)
 
 
-# In[15]:
+# In[19]:
 
 
 def plt_amsr(ax='None'):
@@ -137,39 +137,6 @@ def plt_amsr(ax='None'):
     cs = m.contourf(x,y,amsr['ice'],clevels,cmap=plt.cm.gist_earth)
     cbar = m.colorbar(cs)
     cbar.set_label('Ice concentration [\%]')
-    return m
-
-
-# In[50]:
-
-
-parallels = np.arange(0.,90.,5.)
-
-
-# In[86]:
-
-
-def plt_amsr_grn(ax='None'):
-    from mpl_toolkits.basemap import Basemap
-    if not ax:
-        fig = plt.figure()
-    m = Basemap(projection='stere',lat_0=76.5,lon_0=-68.75,
-                llcrnrlon=-110,llcrnrlat=55,
-                urcrnrlon=50,urcrnrlat=65,resolution='l')
-    m.drawcountries()
-    m.fillcontinents(color='grey')
-    #m.drawmeridians(np.linspace(-90,-200,12),labels=[0,0,0,1])
-    #m.drawparallels(np.linspace(53,80,10),labels=[1,0,0,0])
-    m.drawparallels(np.arange(0.,90.,5.),labels=[0,0,0,0])
-    parallels = np.arange(0.,90.,5.)
-    for i in np.arange(len(parallels)):
-        plt.annotate('{:2.0f}$^{{\circ}}$N'.format(parallels[i]),xy=m(-70,parallels[i]),xycoords='data',color='darkred')
-    m.drawmeridians(np.arange(-180.,181.,10.),labels=[1,0,0,1],latmax=90.)
-    x,y = m(amsr['lon'],amsr['lat'])
-    clevels = np.linspace(0,100,21)
-    cs = m.contourf(x,y,amsr['ice'],clevels,cmap=plt.cm.gist_earth)
-    cbar = m.colorbar(cs)
-    cbar.set_label('Ice concentration [%]')
     return m
 
 
@@ -196,21 +163,14 @@ def plt_amsr_cnt(ax='None'):
     return m
 
 
-# In[78]:
+# In[21]:
 
 
 plt.figure()
 m = plt_amsr_cnt()
 
 
-# In[87]:
-
-
-m = plt_amsr_grn()
-plt.savefig(fp+'ARCTIC_map.png',transparent=True,dpi=600)
-
-
-# In[79]:
+# In[23]:
 
 
 m = plt_amsr()
@@ -637,7 +597,8 @@ def calc_ref(nd,diameter):
     if not any(ndi):
         re = np.NaN
     else:
-        re = np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**3.0*nda)/             np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**2.0*nda)
+        re = np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**3.0*nda)/ \
+            np.trapz(qext(diameter[ndi]/2.0,*popt)*(diameter[ndi]/2.0)**2.0*nda)
     return re
 
 
@@ -1262,7 +1223,8 @@ nnir = np.nanmean(sps.norm[:,i_nir],axis=1)
 rt_wat1['delta'] = abs(nvis-nnir)
 rt_wat1['fl_match'] = rt_wat1['delta']<0.06
 
-print rt_wat1['delta'].shape,rt_wat1['delta'][rt_wat1['fl_match']].shape,    float(rt_wat1['delta'][rt_wat1['fl_match']].shape[0])/ float(rt_wat1['delta'].shape[0])*100.0
+print rt_wat1['delta'].shape,rt_wat1['delta'][rt_wat1['fl_match']].shape,\
+    float(rt_wat1['delta'][rt_wat1['fl_match']].shape[0])/ float(rt_wat1['delta'].shape[0])*100.0
 
 rt_wat2['delta'] = abs(nvis-nnir)
 rt_wat2['fl_match'] = rt_wat2['delta']<0.06
@@ -1289,7 +1251,8 @@ rt_ice_top['fl_alt'] = rt_ice_top['alt']<1200.0
 # In[75]:
 
 
-print rt_wat1['fl_alt'].shape,rt_wat1['alt'][rt_wat1['fl_alt']].shape,    float(rt_wat1['alt'][rt_wat1['fl_alt']].shape[0])/ float(rt_wat1['alt'].shape[0])*100.0
+print rt_wat1['fl_alt'].shape,rt_wat1['alt'][rt_wat1['fl_alt']].shape,\
+    float(rt_wat1['alt'][rt_wat1['fl_alt']].shape[0])/ float(rt_wat1['alt'].shape[0])*100.0
 
 
 # ### filter out high Ki squared residuals
@@ -1320,7 +1283,8 @@ rt_ice_top['fl_ki'] = rt_ice_top['ki']<ki_limit
 # In[78]:
 
 
-print rt_wat1['fl_ki'].shape,rt_wat1['ki'][rt_wat1['fl_ki']].shape,    float(rt_wat1['ki'][rt_wat1['fl_ki']].shape[0])/ float(rt_wat1['ki'].shape[0])*100.0
+print rt_wat1['fl_ki'].shape,rt_wat1['ki'][rt_wat1['fl_ki']].shape,\
+    float(rt_wat1['ki'][rt_wat1['fl_ki']].shape[0])/ float(rt_wat1['ki'].shape[0])*100.0
 
 
 # ### Filer out railed values (cod =60 and ref =24)
@@ -1361,9 +1325,12 @@ print 'rt_wat1, ref', float(rt_wat1['ref'][rt_wat1['fl_ref']].shape[0])/float(le
 
 rt_wat1['fl'] = rt_wat1['fl_match'] & rt_wat1['fl_alt'][:,0] & rt_wat1['fl_ki'] & rt_wat1['fl_tau'] & rt_wat1['fl_ref']
 rt_wat2['fl'] = rt_wat2['fl_match'] & rt_wat2['fl_alt'][:,0] & rt_wat2['fl_ki'] & rt_wat2['fl_tau'] & rt_wat2['fl_ref']
-rt_ice_low['fl'] = rt_ice_low['fl_match'] & rt_ice_low['fl_alt'][:,0] & rt_ice_low['fl_ki'] & rt_ice_low['fl_tau'] & rt_ice_low['fl_ref']
-rt_ice_mid['fl'] = rt_ice_mid['fl_match'] & rt_ice_mid['fl_alt'][:,0] & rt_ice_mid['fl_ki'] & rt_ice_mid['fl_tau'] & rt_ice_mid['fl_ref']
-rt_ice_top['fl'] = rt_ice_top['fl_match'] & rt_ice_top['fl_alt'][:,0] & rt_ice_top['fl_ki'] & rt_ice_top['fl_tau'] & rt_ice_top['fl_ref']
+rt_ice_low['fl'] = rt_ice_low['fl_match'] & rt_ice_low['fl_alt'][:,0] & rt_ice_low['fl_ki'] \
+& rt_ice_low['fl_tau'] & rt_ice_low['fl_ref']
+rt_ice_mid['fl'] = rt_ice_mid['fl_match'] & rt_ice_mid['fl_alt'][:,0] & rt_ice_mid['fl_ki'] \
+& rt_ice_mid['fl_tau'] & rt_ice_mid['fl_ref']
+rt_ice_top['fl'] = rt_ice_top['fl_match'] & rt_ice_top['fl_alt'][:,0] & rt_ice_top['fl_ki'] \
+& rt_ice_top['fl_tau'] & rt_ice_top['fl_ref']
 
 
 # In[83]:

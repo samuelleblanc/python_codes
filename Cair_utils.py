@@ -60,13 +60,15 @@ def read_Cair(filein):
             
         def dparse_utc(x):
             return datetime(*time.strptime(str2,'%m/%d/%Y %H:%M:%S.%f %p')[0:6],tzinfo=pytz.timezone('UTC'))
-        c1 = np.genfromtxt(filein,skip_header=0,dtype='object',names=True,delimiter=',',                           converters={'DateTime':dparse,'DateTimeUTC':dparse_utc})
+        c1 = np.genfromtxt(filein,skip_header=0,dtype='object',names=True,delimiter=',',\
+                           converters={'DateTime':dparse,'DateTimeUTC':dparse_utc})
     except:
         print 'trying parser'
         def parse_utc(x):
             return parser.parse(x+' UTC')
 
-        c1 = np.genfromtxt(filein,skip_header=0,dtype='object',names=True,delimiter=',',                           converters={'DateTime':parser.parse,'DateTimeUTC':parse_utc})
+        c1 = np.genfromtxt(filein,skip_header=0,dtype='object',names=True,delimiter=',',\
+                           converters={'DateTime':parser.parse,'DateTimeUTC':parse_utc})
     print 'toutc'
     #co['utc'] = toutc(c1['DateTimeUTC'])
     co['DateTime'] = c1['DateTime']
