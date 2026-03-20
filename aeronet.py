@@ -66,11 +66,11 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
         daystr = dd
     else:
         if daystr > dd:
-            daystr = dd
-            import warnings
-            warnings.warn("Date set to future, using today's date")
+	        daystr = dd
+	        import warnings
+	        warnings.warn("Date set to future, using today's date")
     if not daystr2: 
-        daystr2 = daystr
+        daystr4 = daystr
   
     url = 'http://aeronet.gsfc.nasa.gov/cgi-bin/{urlnm}?year={yyyy}&month={mm:02.0f}&day={dd:02.0f}&year2={yyyy2}'+\
           '&month2={mm2:02.0f}&day2={dd2:02.0f}&{lev}=1&AVG={avg}'
