@@ -1,43 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Intro
-# 
-# Name:  
-# 
-#     NURTURE_HALO_RH_sonde
-# 
-# Purpose:  
-# 
-#     Compare the Tropopause heights derived from drop sondes to the tropopause derived from the RH / H20 Mass mixing Ration
-# 
-# Input:
-# 
-#     none at command line
-# 
-# Output:
-# 
-#     plots
-# 
-# Keywords:
-# 
-#     none
-# 
-# Dependencies:
-# 
-#     - numpy
-#     - Pyephem
-#     - pandas
-# 
-# Needed Files:
-# 
-#   - HALO hdf5
-#   - AVAPS drop sonde netcdf
-# 
-# Modification History:
-# 
-#     Written: Samuel LeBlanc, Goose Bay, Labrador, Canada, 2026-02-12
-#     Modified: 
+# v
 
 # # Load the required modules and prepare the paths
 
@@ -111,7 +75,13 @@ rf = 'RF10'
 
 # ## Load the HALO file
 
-# In[13]:
+# In[20]:
+
+
+import hdf5storage as hs
+
+
+# In[23]:
 
 
 halo = hp.File(fp_fl+'NURTURE-HALO_G3_20260207_RA_L1.h5')
