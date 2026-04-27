@@ -40,7 +40,7 @@
 
 # # Load the required modules
 
-# In[170]:
+# In[684]:
 
 
 import matplotlib 
@@ -55,6 +55,8 @@ import spectral
 import spectral.io.envi as envi
 import json
 import pandas as pd
+from sklearn.decomposition import PCA
+import cartopy.crs as ccrs
 
 
 # In[5]:
@@ -105,7 +107,7 @@ def plot_lon_lats(lons,lats,ax=plt.gca(),color='orange'):
               fmt=lambda x: f"{abs(x):.2f}{'N' if x >= 0 else 'S'}")
 
 
-# In[10]:
+# In[509]:
 
 
 def select_pixels(rgb_array,verbose=False):
@@ -122,20 +124,20 @@ def select_pixels(rgb_array,verbose=False):
     
     # 2. Calculate Intensity (Brightness) for each pixel
     # Simple average of R, G, B channels
-    intensity = np.mean(pixels, axis=1)
+    intensity = np.nanmean(pixels, axis=1)
     
     # --- 5th and 95th Percentile Brightness ---
-    dim_val = np.percentile(intensity, 5)
-    bright_val = np.percentile(intensity, 95)
+    dim_val = np.nanpercentile(intensity, 5)
+    bright_val = np.nanpercentile(intensity, 95)
     
     # Find the index of the pixel closest to these values
-    idx_dim = np.abs(intensity - dim_val).argmin()
-    idx_bright = np.abs(intensity - bright_val).argmin()
+    idx_dim = np.nanargmin(np.abs(intensity - dim_val))
+    idx_bright = np.nanargmin(np.abs(intensity - bright_val))
     
     # --- The "Greenest" Pixel ---
     # Defined as max(Green - Red) + (Green - Blue)
     greeness = (pixels[:, 1] - pixels[:, 0]) + (pixels[:, 1] - pixels[:, 2])
-    idx_green = np.argmax(greeness)
+    idx_green = np.nanargmax(greeness)
     
     # --- 2 Random Pixels ---
     idx_random = np.random.choice(len(pixels), 2, replace=False)
@@ -200,7 +202,7 @@ def load_rad_cal_net(fname,path,date):
     
 
 
-# In[12]:
+# In[463]:
 
 
 def plot_squares_on_select(coords,colors=['red', 'blue', 'green', 'teal', 'yellow'],square_size=20,ax=plt.gca(),labels=[]):
@@ -322,16 +324,175 @@ def load_aeronet(a_name,date,cache_path='~/aeronet_cache',verbose=True):
     return nearest_aod, wvls, pwv
 
 
+# In[590]:
+
+
+def get_pretty_ticks(data):
+    if any(data==0):
+        data[data==0] = np.nan
+    d_min, d_max = np.nanmin(data), np.nanmax(data)
+    # Generate 3 values across the range, then round to 1 decimal
+    raw_ticks = np.linspace(d_min, d_max, 5)[1:-1] # 5 points, drop ends to stay inside
+    return np.round(raw_ticks, 1)
+
+
+# In[601]:
+
+
+def plot_pca_line(val, lat_vals,lon_vals, pca, mode='lat', color='white',ax=None):
+    # 1. Create a dense set of points along the line
+    # If it's a Lat line, Lon varies; if it's a Lon line, Lat varies
+    num_points = 20
+    if mode == 'lat':
+        ind = np.nanargmin(abs(lat_vals-val))
+        loni_start = ind-200 if ind>200 else 0
+        loni_end = ind+200 if ind+200<len(lon_vals)-1 else len(lon_vals)-1
+        lons = np.linspace(np.nanmin(lon_vals[loni_start:loni_end]), np.nanmax(lon_vals[loni_start:loni_end]), num_points)
+        lats = np.full(num_points, val)
+        direction = 'N' if val>0 else 'S'
+            
+    else:
+        lons = np.full(num_points, val)
+        ind = np.nanargmin(abs(lon_vals-val))
+        lati_start = ind-2000 if ind>2000 else 0
+        lati_end = ind+2000 if ind+2000<len(lat_vals)-1 else len(lat_vals)-1
+        lats = np.linspace(np.nanmin(lat_vals[lati_start:lati_end]), np.nanmax(lat_vals[lati_start:lati_end]), num_points)
+        #lats = np.linspace(np.nanmin(lat_vals), np.nanmax(lat_vals), num_points)
+        direction = 'E' if val>0 else 'W'
+    
+    # 2. Transform this new line into PCA space
+    line_coords = np.column_stack([lons, lats])
+    line_pca = pca.transform(line_coords)
+
+    ax.plot(line_pca[:, 0], line_pca[:, 1], color=color, alpha=0.7, lw=0.5, ls='--')
+    
+    ax.text(line_pca[int(num_points/2), 0], line_pca[int(num_points/2), 1], f"{val:.1f} °{direction}", 
+                  color=color, fontsize=8, fontweight='bold')
+    #print(line_coords,line_pca,line_pca[int(num_points/2), 0], line_pca[int(num_points/2), 1])
+    #import ipdb; ipdb.set_trace()
+
+
+# In[696]:
+
+
+def compute_rotated_pole(lats, lons):
+    """Compute rotated pole via brute-force angle sweep to minimize tilt."""
+    n = len(lats)
+    mid = n // 2
+    lat0, lon0 = np.radians(lats[mid]), np.radians(lons[mid])
+    i1, i2 = max(mid - n // 10, 0), min(mid + n // 10, n - 1)
+    lat1, lon1 = np.radians(lats[i1]), np.radians(lons[i1])
+    lat2, lon2 = np.radians(lats[i2]), np.radians(lons[i2])
+    bearing = np.arctan2(np.sin(lon2-lon1)*np.cos(lat2), np.cos(lat1)*np.sin(lat2) - np.sin(lat1)*np.cos(lat2)*np.cos(lon2-lon1))
+
+    best_pole, best_score = None, np.inf
+    for az in bearing + np.linspace(-np.pi, np.pi, 360):
+        plat = np.arcsin(np.sin(lat0)*np.cos(np.pi/2) + np.cos(lat0)*np.sin(np.pi/2)*np.cos(az))
+        plon = lon0 + np.arctan2(np.sin(az)*np.sin(np.pi/2)*np.cos(lat0), np.cos(np.pi/2) - np.sin(lat0)*np.sin(plat))
+        trial = ccrs.RotatedPole(pole_longitude=np.degrees(plon), pole_latitude=np.degrees(plat))
+        pts = trial.transform_points(ccrs.PlateCarree(), lons.astype(float), lats.astype(float))
+        dx, dy = np.abs(pts[-1,0]-pts[0,0]), np.abs(pts[-1,1]-pts[0,1])
+        score = dx / (dy + 1e-12)
+        if score < best_score: best_pole, best_score = (np.degrees(plat), np.degrees(plon)), score
+
+    # rescale so aspect ratio ~1 in rotated space
+    trial = ccrs.RotatedPole(pole_longitude=best_pole[1], pole_latitude=best_pole[0])
+    pts = trial.transform_points(ccrs.PlateCarree(), lons.astype(float), lats.astype(float))
+    xspan, yspan = pts[:,0].ptp(), pts[:,1].ptp()
+    return best_pole, (xspan / yspan if yspan > 0 else 1.0)
+
+
+# In[685]:
+
+
+def transform_coords(lons, lats, rotated_crs, geo_crs=ccrs.PlateCarree()):
+    """Transform geographic coords into rotated projection space (x, y in meters)."""
+    pts = rotated_crs.transform_points(geo_crs, np.asarray(lons, dtype=float), np.asarray(lats, dtype=float))
+    return pts[:, 0], pts[:, 1]
+
+
+# In[686]:
+
+
+def get_pretty_ticks(data):
+    d = np.where(data == 0, np.nan, data)
+    return np.round(np.linspace(np.nanmin(d), np.nanmax(d), 5)[1:-1], 1)
+
+
+# In[706]:
+
+
+def plot_gridline(val, lats, lons, rotated_crs, mode='lon', color='cyan', ax=None, npts=300):
+    """Draw a gridline clipped to data extent with a text label."""
+    if mode == 'lon':
+        ll = np.linspace(np.nanmin(lats), np.nanmax(lats), npts)
+        lx, ly = np.full(npts, val), ll
+        label = f'{val:.1f}°{"W" if val < 0 else "E"}'
+    else:
+        ll = np.linspace(np.nanmin(lons), np.nanmax(lons), npts)
+        lx, ly = ll, np.full(npts, val)
+        label = f'{val:.1f}°{"S" if val < 0 else "N"}'
+    x, y = transform_coords(lx, ly, rotated_crs)
+    xlim, ylim = ax.get_xlim(), ax.get_ylim()
+    keep = (x >= xlim[0]) & (x <= xlim[1]) & (y >= ylim[0]) & (y <= ylim[1])
+    if not keep.any(): return
+    ax.plot(x[keep], y[keep], color=color, linewidth=0.6, alpha=0.7)
+    # label at midpoint of visible segment, rotated to follow the line
+    idx = np.where(keep)[0]
+    mid = idx[len(idx)//2]
+    dx, dy = x[min(mid+1,len(x)-1)] - x[max(mid-1,0)], y[min(mid+1,len(y)-1)] - y[max(mid-1,0)]
+    angle = np.degrees(np.arctan2(dy, dx))
+    ax.text(x[mid], y[mid], label, color=color, fontsize=6, ha='center', va='bottom', rotation=angle, rotation_mode='anchor', 
+            bbox=dict(facecolor='black', alpha=0.4, pad=0.5, edgecolor='none'))
+
+
+# In[711]:
+
+
+def overlay_geography(ax, rot_crs, rx, ry):
+    """Overlay coastlines, country borders, and US states. Fails gracefully."""
+    import cartopy.feature as cfeature
+    from shapely.geometry import MultiLineString, MultiPolygon
+    geo = ccrs.PlateCarree()
+    inv = geo.transform_points(rot_crs, np.array([rx.min(), rx.max()]), np.array([ry.min(), ry.max()]))
+    lon_min, lon_max = inv[:,0].min() - 1, inv[:,0].max() + 1
+    lat_min, lat_max = inv[:,1].min() - 1, inv[:,1].max() + 1
+
+    for feat, kwargs in [
+        (cfeature.COASTLINE, dict(color='white', linewidth=0.8)),
+        (cfeature.BORDERS, dict(color='white', linewidth=0.5, linestyle=':')),
+        (cfeature.STATES, dict(color='gray', linewidth=0.3, linestyle='--')),
+    ]:
+        try:
+            for geom in feat.geometries():
+                b = geom.bounds
+                if b[2] < lon_min or b[0] > lon_max or b[3] < lat_min or b[1] > lat_max: continue
+                lines = []
+                if hasattr(geom, 'exterior'):
+                    lines.append(np.array(geom.exterior.coords))
+                elif isinstance(geom, (MultiLineString, MultiPolygon)):
+                    for part in geom.geoms:
+                        lines.append(np.array(part.exterior.coords) if hasattr(part, 'exterior') else np.array(part.coords))
+                else:
+                    lines.append(np.array(geom.coords))
+                for coords in lines:
+                    tx, ty = transform_coords(coords[:,0], coords[:,1], rot_crs)
+                    ax.plot(tx, ty, **kwargs)
+        except Exception as e:
+            print(f"Warning: could not overlay {feat}: {e}")
+            continue
+
+
 # # Define a class for combining all these plotting utils
 
-# In[367]:
+# In[708]:
 
 
 class make_hyperion_plots():   
     def __init__(self,scene):
         self.paths = hyperion2isofit.readHyperionL2(scene)
         paths = self.paths
-        self.i_rgb = (22,11,5) 
+        self.i_rgb = (20,10,4) 
         self.scene = scene
         self.date = datetime.strptime(self.paths['attrs']['Scene_Star'][:17],'%Y:%j:%H:%M:%S')
         if not 'working_directory_move' in paths:
@@ -353,6 +514,14 @@ class make_hyperion_plots():
     def rad2rfl(self,rad):
         return np.pi*rad/self.solar_irr*np.cos(self.sza*np.pi/180.0)
 
+    def make_masked_rfl(self,img):
+        'function to make a flag for bad reflectance output'
+        img_rgb = img.read_bands(self.i_rgb).astype(float)
+        bad_pixel_mask = (img_rgb < 0).any(axis=2)
+        img_rgb[bad_pixel_mask] = np.nan
+
+        return img_rgb
+
     def plot_in_out_reflectance(self):
         i_rgb = self.i_rgb
         img = spectral.open_image(self.paths['rfl'])
@@ -367,9 +536,10 @@ class make_hyperion_plots():
         
         # convert radiance to reflectance
         rfl_in = self.rad2rfl(img_in.load())
+        masked_img_rgb = self.make_masked_rfl(img)
         
         view = axd['I'].imshow(norm_rgb(rfl_in[:,:,i_rgb],rgb_max=1.0),aspect=0.2)#,ax=axd['I']
-        viewo = axd['O'].imshow(norm_rgb(img.read_bands(i_rgb),rgb_max=1.0),aspect=0.2)#,ax=axd['I'])
+        viewo = axd['O'].imshow(norm_rgb(masked_img_rgb,rgb_max=1.0),aspect=0.2)#,ax=axd['I'])
         axd['I'].set_xlim(1,img.shape[1])
         axd['O'].set_xlim(1,img.shape[1])
         
@@ -381,7 +551,7 @@ class make_hyperion_plots():
         except:
             print('-- Error adding coast, ignoring **')
         
-        coords,labels = select_pixels(img.read_bands(i_rgb))
+        coords,labels = select_pixels(masked_img_rgb)
         colors = ['red', 'blue', 'green', 'teal', 'yellow']
 
         #radcalnet checks
@@ -445,12 +615,12 @@ class make_hyperion_plots():
         lon_fmt = lambda x: f"{abs(x):.2f}{'E' if x >= 0 else 'W'}"
         lat_fmt = lambda x: f"{abs(x):.2f}{'N' if x >= 0 else 'S'}"
 
-        fig.suptitle(f'{self.scene} - {start:%Y/%m/%d - %H:%M:%S} to {stop:%H:%M:%S} (SZA:{np.nanmean(self.sza):2.0f}°) at {lon_fmt(mlon)},{lat_fmt(mlat)}')
+        fig.suptitle(f'{self.scene} - {start:%Y/%m/%d - %H:%M:%S} to {stop:%H:%M:%S} (SZA:{np.nanmean(self.sza):2.0f}°)'+
+                     ' at {lon_fmt(mlon)},{lat_fmt(mlat)}')
         return fig     
 
 
-
-# In[427]:
+# In[753]:
 
 
 def load_AOD(self):
@@ -491,50 +661,75 @@ def plot_AOD(self):
     subs_loc = envi.open(paths['subs_loc'])[:,:,:]
     
     layout = [['A','P',  'AOD'], ['A','P',  'PWV']]
-    fig, axd = plt.subplot_mosaic(layout, figsize=(9, 6), gridspec_kw={'width_ratios': [1, 1, 2]})
+    fig, axd = plt.subplot_mosaic(layout, figsize=(9, 6), gridspec_kw={'width_ratios': [1, 1, 4]})
 
-    axd['A'].set_title('AOD')
-    axd['P'].set_title('Precipitable Water Vapor [cm]')
-    axd['AOD'].set_title('AOD')
-    axd['PWV'].set_title('Precipitable Water Vapor [cm]')
+    axd['A'].set_title('AOD'); axd['P'].set_title('PWV')
+    axd['AOD'].set_title('AOD - Aerosol Optical Depth'); axd['PWV'].set_title('PWV - Precipitable Water Vapor [cm]')
 
-    if any(subs_loc[:,0,0]==0):
-        subs_loc[subs_loc[:,0,0]==0,0,0] = np.nan
-    if any(subs_loc[:,0,1]==0):
-        subs_loc[subs_loc[:,0,1]==0,0,1] = np.nan
-        
-    viewa = axd['A'].scatter(subs_loc[:,:,0], subs_loc[:,:,1], 4, aods, vmin=0, vmax=2)
-    viewp = axd['P'].scatter(subs_loc[:,:,0], subs_loc[:,:,1], 4, pwvs, vmin=0, vmax=2)
+    if any(subs_loc[:,0,0]==0): subs_loc[subs_loc[:,0,0]==0,0,0] = np.nan
+    if any(subs_loc[:,0,1]==0): subs_loc[subs_loc[:,0,1]==0,0,1] = np.nan
 
-   # cbara = plt.colorbar(ax=axd['A'])
-   # cbara.ax.set_ylabel('AOD')
-   # cbarp = plt.colorbar(ax=axd['P'])
-   # cbarp.ax.set_ylabel('PWV [cm]')
+    lons_raw, lats_raw = subs_loc[:, 0, 0], subs_loc[:, 0, 1]
+    mask = ~(np.isnan(lons_raw) | np.isnan(lats_raw))
+
+    (pole_lat, pole_lon), aspect = compute_rotated_pole(lats_raw[mask], lons_raw[mask])
+    rot_crs = ccrs.RotatedPole(pole_longitude=pole_lon, pole_latitude=pole_lat)
+    rx, ry = transform_coords(lons_raw[mask], lats_raw[mask], rot_crs)
+
+    #coords_aligned, mask, pca = self.realign_coords(subs_loc)
+    vmax = 0.2 if aods[mask].max() >= 0.2 else 0.4
+    viewa = axd['A'].scatter(rx, ry, 4, aods[mask], vmin=0, vmax=vmax, cmap='plasma')
+    viewp = axd['P'].scatter(rx, ry, 4, pwvs[mask], vmin=0, vmax=2)
+
+    # lock axis limits to data extent + small pad before drawing gridlines
+    pad_x, pad_y = 0.02 * rx.ptp(), 0.02 * ry.ptp()
+    for a in [axd['A'], axd['P']]:
+        a.set_xlim(rx.min()-pad_x, rx.max()+pad_x); a.set_ylim(ry.min()-pad_y, ry.max()+pad_y)
+        overlay_geography(a, rot_crs, rx, ry)
+
+    axd['P'].set_yticks([]); axd['P'].set_xticks([]); axd['A'].set_yticks([]); axd['A'].set_xticks([])
+    axd['P'].set_xlabel('cross track'); axd['A'].set_ylabel('along track')
     
-   # viewa = axd['A'].imshow(aods,aspect=0.2)#,ax=axd['I']
-   # viewp = axd['P'].imshow(pwvs,aspect=0.2)#,ax=axd['I']
-   # axd['P'].set_xlim(1,pwvs.shape[1])
-   # plot_lon_lats(self.paths['lonlat'][0],self.paths['lonlat'][1],ax=axd['A'])
-   # plot_lon_lats(self.paths['lonlat'][0],self.paths['lonlat'][1],ax=axd['P'])
-    colors = ['red', 'blue', 'green', 'teal', 'yellow']
-    for i,name in enumerate(a_names):
-        axd['A'].plot(a_latlons[i][1],a_latlons[i][0],'s',color=colors[i],label=a)
-        axd['P'].plot(a_latlons[i][1],a_latlons[i][0],'s',color=colors[i],label=a)
-        
-    #plot_squares_on_select(a_coords,labels=a_names,ax=axd['A'],colors=colors)
-    #plot_squares_on_select(a_coords,labels=a_names,ax=axd['P'],colors=colors)
+    cbara, cbarp = plt.colorbar(viewa,ax=axd['A'],extend='max'), plt.colorbar(viewp,ax=axd['P'],extend='max')
 
+    #plot some lat/lon contours
+    lon_levels, lat_levels = get_pretty_ticks(lons_raw), get_pretty_ticks(lats_raw)
+    for lon in lon_levels:
+        for a in [axd['A'], axd['P']]: plot_gridline(lon, lats_raw, lons_raw, rot_crs, mode='lon', color='cyan', ax=a)
+    for lat in lat_levels:
+        for a in [axd['A'], axd['P']]: plot_gridline(lat, lats_raw, lons_raw, rot_crs, mode='lat', color='yellow', ax=a)
+
+    colors = ['red', 'blue', 'green', 'teal', 'yellow']
+    #latlon_transformed = pca.transform(np.array([[a[1],a[0]] for a in a_latlons]))
+    ax, ay = transform_coords(np.array([ll[1] for ll in a_latlons]), np.array([ll[0] for ll in a_latlons]), rot_crs)
+    for i,name in enumerate(a_names):
+        axd['A'].plot(ax[i], ay[i], 's', color=colors[i])
+        axd['A'].text(ax[i], ay[i], name, color=colors[i])
+
+    #import ipdb; ipdb.set_trace()
+    self.make_subplot_AOD_PWV(a_names,a_coords,a_wlvs,a_aods,a_pwvs,aods,pwvs,axd,colors)
+        
+    fig.tight_layout()
+    plt.subplots_adjust(top=0.92) 
+    start = datetime.strptime(self.paths['attrs']['Scene_Star'][:17],'%Y:%j:%H:%M:%S')
+    stop = datetime.strptime(self.paths['attrs']['Scene_Stop'][:17],'%Y:%j:%H:%M:%S')
+    mlon,mlat = np.nanmean(self.paths['lonlat'][0]),np.nanmean(self.paths['lonlat'][1])
+    lon_fmt,lat_fmt = lambda x: f"{abs(x):.2f}{'E' if x >= 0 else 'W'}", lambda x: f"{abs(x):.2f}{'N' if x >= 0 else 'S'}"
+
+    fig.suptitle(f'{self.scene} - {start:%Y/%m/%d - %H:%M:%S} to {stop:%H:%M:%S} (SZA:{np.nanmean(self.sza):2.0f}°) at {lon_fmt(mlon)},{lat_fmt(mlat)}')
+    return fig
+
+def make_subplot_AOD_PWV(self,a_names,a_coords,a_wlvs,a_aods,a_pwvs,aods,pwvs,axd,colors):
+    'Plot the spectra plots for AOD and the PWV'
     for i, (name, y) in enumerate(zip(a_names, a_coords)):      
         try:
             aod_val = aods[y]
             pwv_val = pwvs[y]
         except:
             import traceback, sys; traceback.print_exception(*sys.exc_info())
-            import ipdb; ipdb.set_trace()
-        
-        axd['AOD'].plot(a_wlvs[i], a_aods[i],'x-', color=colors[i], linewidth=2,alpha=0.5,label='AERONET: '+a_names[i])
+        afl = np.isfinite(a_aods[i])
+        axd['AOD'].plot(np.array(a_wlvs[i])[afl], np.array(a_aods[i])[afl],'x-', color=colors[i], linewidth=2,alpha=0.5,label='AERONET: '+a_names[i])
         axd['AOD'].plot([550], aod_val[0],'o', color=colors[i],label='Isofit')
-
         axd['PWV'].scatter(a_pwvs[i], pwv_val[0],color=colors[i], alpha=0.5,label='AERONET: '+a_names[i])
         
         dict_compare = {'time':self.date.isoformat(),'site':a_names[i],'wvl':a_wlvs[i],'aeronet_AOD':a_aods[i],
@@ -543,34 +738,26 @@ def plot_AOD(self):
 
     
     axd['AOD'].legend(frameon=False,prop={'size': 7}, labelspacing=0.1, handletextpad=0.3, handlelength=1.0)
-    axd['AOD'].set_title(f"AOD comparisons", color=colors[i], fontsize=10, loc='left')
-    axd['AOD'].set_ylim(-0.1,1.1)
-    axd['AOD'].set_yticks([0.0,0.2,0.4,0.6,0.8,1.0])
+    #axd['AOD'].set_title(f"AOD comparisons", color=colors[i], fontsize=10, loc='left')
+    if aod_val[0]<0.2:
+        axd['AOD'].set_ylim(-0.02,0.2); axd['AOD'].set_yticks([0.0,0.05,0.1,0.15,0.2])
+    elif aod_val[0]<0.6:
+        axd['AOD'].set_ylim(-0.02,0.6); axd['AOD'].set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6])
+    else:
+        axd['AOD'].set_ylim(-0.02,1.0); axd['AOD'].set_yticks([0.0,0.2,0.4,0.6,0.8,1.0])
     axd['AOD'].grid(True, alpha=0.2)
-    axd['AOD'].set_xlabel("Wavelength [nm]")
-    axd['AOD'].tick_params(labelbottom=True)
-    axd['AOD'].set_xticks([500,750,1000,1250,1500,1750,2000,2250])
+    axd['AOD'].set_xlabel("Wavelength [nm]");  axd['AOD'].tick_params(labelbottom=True)
+    axd['AOD'].set_xlim(340,1050); axd['AOD'].set_xticks([350,450,500,650,750,850,1000])
 
 
     axd['PWV'].plot([0,1,2],[0,1,2],':k')
     axd['PWV'].grid(True,alpha=0.2)
-    axd['PWV'].set_xlabel("AERONET PWV [cm]")
-    axd['PWV'].set_ylabel("Isofit PWV [cm]")
+    axd['PWV'].set_xlabel("AERONET PWV [cm]"); axd['PWV'].set_ylabel("Isofit PWV [cm]")
     axd['PWV'].legend(frameon=False,prop={'size': 7}, labelspacing=0.1, handletextpad=0.3, handlelength=1.0)
-    axd['PWV'].set_title(f"PWV comparisons", color=colors[i], fontsize=10, loc='left')
     
-    fig.tight_layout()
-    plt.subplots_adjust(top=0.92) 
-    start = datetime.strptime(self.paths['attrs']['Scene_Star'][:17],'%Y:%j:%H:%M:%S')
-    stop = datetime.strptime(self.paths['attrs']['Scene_Stop'][:17],'%Y:%j:%H:%M:%S')
-    mlon,mlat = np.nanmean(self.paths['lonlat'][0]),np.nanmean(self.paths['lonlat'][1])
-    lon_fmt = lambda x: f"{abs(x):.2f}{'E' if x >= 0 else 'W'}"
-    lat_fmt = lambda x: f"{abs(x):.2f}{'N' if x >= 0 else 'S'}"
-
-    fig.suptitle(f'{self.scene} - {start:%Y/%m/%d - %H:%M:%S} to {stop:%H:%M:%S} (SZA:{np.nanmean(self.sza):2.0f}°) at {lon_fmt(mlon)},{lat_fmt(mlat)}')
-    return fig
 
 make_hyperion_plots.load_AOD = load_AOD
+make_hyperion_plots.make_subplot_AOD_PWV = make_subplot_AOD_PWV
 make_hyperion_plots.plot_AOD = plot_AOD
 
 
@@ -931,7 +1118,7 @@ if __name__ == "__main__":
     fig = hyp_plot.plot_in_out_reflectance()
 
 
-# In[303]:
+# In[519]:
 
 
 if __name__ == "__main__":
@@ -942,7 +1129,7 @@ if __name__ == "__main__":
     print(hyp_plot.wl[hyp_plot.i_rgb[0]],hyp_plot.wl[hyp_plot.i_rgb[1]],hyp_plot.wl[hyp_plot.i_rgb[2]])
 
 
-# In[428]:
+# In[755]:
 
 
 if __name__ == "__main__":
@@ -952,6 +1139,19 @@ if __name__ == "__main__":
     figa = hyp_plot.plot_AOD()
     figa_name = scene1+'_AOD_PWV.png'
 
+
+# In[745]:
+
+
+if __name__ == "__main__":
+    scene1 = 'EO1H0890822006354110PX'
+    hyp_plot = make_hyperion_plots(scene1)
+    hyp_plot.prep_reflectance_calcs()
+    figa = hyp_plot.plot_AOD()
+    figa_name = scene1+'_AOD_PWV.png'
+
+
+# # end
 
 # In[ ]:
 
