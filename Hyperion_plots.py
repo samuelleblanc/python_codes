@@ -59,10 +59,10 @@ from sklearn.decomposition import PCA
 import cartopy.crs as ccrs
 
 
-# In[5]:
+# In[765]:
 
 
-from hyperion_isofitv3 import test, hyperion, hyperion2isofit
+from hyperion_isofitv3 import hyperion, hyperion2isofit
 
 
 # In[6]:
@@ -272,10 +272,10 @@ def check_if_aeronet(min_lat,max_lat,min_lon,max_lon,date,fp):
     return aeronet_name,info
 
 
-# In[376]:
+# In[761]:
 
 
-def load_aeronet(a_name,date,cache_path='~/aeronet_cache',verbose=True):
+def load_aeronet_online(a_name,date,cache_path='~/aeronet_cache',verbose=True):
     'simple function to load an aeronet aod from internet with cache'
     import requests_cache
     import urllib3
@@ -302,11 +302,51 @@ def load_aeronet(a_name,date,cache_path='~/aeronet_cache',verbose=True):
     if bad:
         if verbose: print('..AOD not found')
         return None, None, None
+    return StringIO(response.text)
 
-    #now read and pull out nearest aod spectra
+
+# In[762]:
+
+
+def load_aeronet(a_name,date,cache_path='~/aeronet_cache',data_path='/nobackup/sleblan2/hyperion/AOD/AOD20/ALL_POINTS/',verbose=True,online=False):
+    'wrapper function for aeronet AOD loading'
+    if online:
+        f = load_aeronet_online(a_name,date,cache_path=cache_path,verbose=verbose)
+    else:
+        f = load_aeronet_offline(a_name,date,data_path=data_path,verbose=verbose)
+
+    return pull_out_from_aeronet(f,date,verbose=verbose)
+    
+
+
+# In[775]:
+
+
+def load_aeronet_offline(a_name,date,data_path='/nobackup/sleblan2/hyperion/AOD/AOD20/ALL_POINTS/',verbose=True):
+    'Offline aeronet loader for AOD lev 2.0 and PWV'
+    file_list = os.listdir(data_path)
+    matching_files = [f for f in file_list if a_name in f]
+    if len(matching_files) == 0:
+        raise FileNotFoundError(f"No file found for site: {a_name}")
+    elif len(matching_files) > 1:
+        # If multiple matches, try exact match between date prefix and .lev extension
+        exact_matches = [f for f in matching_files 
+                         if f.split('_', 2)[-1].replace('.lev20', '') == a_name]
+        if len(exact_matches) == 1:
+            matching_files = exact_matches
+        else:
+            print(f"Warning: Multiple files matched for '{a_name}', using first match.")
+    return os.path.join(data_path,matching_files[0])
+
+
+# In[776]:
+
+
+def pull_out_from_aeronet(f,date,verbose=True):
+    'only the reading parameters from the files'
     if verbose: print('... reading aeronet')
-    df = pd.read_csv(StringIO(response.text), skiprows=5,na_values=['-999.0', '-999'])
-                     #parse_dates={'datetime': [1, 2]}, index_col='datetime')
+    df = pd.read_csv(f, skiprows=6,na_values=['-999.0', '-999'])
+    
     if verbose: print('.... converting to datetime')
     df['datetime'] = pd.to_datetime(df['Date(dd:mm:yyyy)'] + ' ' + df['Time(hh:mm:ss)'], format='%d:%m:%Y %H:%M:%S')
     df.set_index('datetime', inplace=True)
@@ -398,7 +438,7 @@ def compute_rotated_pole(lats, lons):
     # rescale so aspect ratio ~1 in rotated space
     trial = ccrs.RotatedPole(pole_longitude=best_pole[1], pole_latitude=best_pole[0])
     pts = trial.transform_points(ccrs.PlateCarree(), lons.astype(float), lats.astype(float))
-    xspan, yspan = pts[:,0].ptp(), pts[:,1].ptp()
+    xspan, yspan = pts[:,0].max()-pts[:,0].min(), pts[:,1].max()-pts[:,1].min()
     return best_pole, (xspan / yspan if yspan > 0 else 1.0)
 
 
@@ -523,6 +563,7 @@ class make_hyperion_plots():
         return img_rgb
 
     def plot_in_out_reflectance(self):
+        paths = self.paths
         i_rgb = self.i_rgb
         img = spectral.open_image(self.paths['rfl'])
         img_in = spectral.open_image(self.paths['radiance'])
@@ -547,7 +588,7 @@ class make_hyperion_plots():
         plot_lon_lats(self.paths['lonlat'][0],self.paths['lonlat'][1],ax=axd['O'])
         
         try:
-            add_coast(paths['lonlat'][0],paths['lonlat'][1],ax=axd['I'],xlen=img.shape[1],ylen=img.shape[0])
+            add_coast(self.paths['lonlat'][0],self.paths['lonlat'][1],ax=axd['I'],xlen=img.shape[1],ylen=img.shape[0])
         except:
             print('-- Error adding coast, ignoring **')
         
@@ -620,7 +661,7 @@ class make_hyperion_plots():
         return fig     
 
 
-# In[753]:
+# In[774]:
 
 
 def load_AOD(self):
@@ -630,11 +671,13 @@ def load_AOD(self):
                                               self.paths['lonlat'][0].min(),self.paths['lonlat'][0].max(),self.date,fp)
     if a_names:
         a_aods,a_wvls,a_pwvs,a_latlons,a_coords = [],[],[],[],[]
-        subs_loc = envi.open(paths['subs_loc'])[:,:,:]
+        if not 'subs_loc' in self.paths:
+            self.paths['subs_loc'] = self.paths['rfl'].replace('rfl','subs_loc').replace('output','input')
+        subs_loc = envi.open(self.paths['subs_loc'])[:,:,:]
         subs_lon = subs_loc[:,0,0]
         subs_lat = subs_loc[:,0,1]
         for i,a in enumerate(a_names):
-            aod,wvl,pwv = load_aeronet(a[0],date)
+            aod,wvl,pwv = load_aeronet(a[0],self.date)
             if aod is None: 
                 continue
             a_aods.append(aod)
@@ -654,11 +697,15 @@ def plot_AOD(self):
         print('** No AOD **')
         return None
         
+    if not 'subs_state' in self.paths:
+            self.paths['subs_state'] = self.paths['rfl'].replace('rfl','subs_state')
     substate = envi.open(self.paths['subs_state'])
     aods = substate[:,0,-2]
     pwvs = substate[:,0,-1]
 
-    subs_loc = envi.open(paths['subs_loc'])[:,:,:]
+    if not 'subs_loc' in self.paths:
+        self.paths['subs_loc'] = self.paths['rfl'].replace('rfl','subs_loc').replace('output','input')
+    subs_loc = envi.open(self.paths['subs_loc'])[:,:,:]
     
     layout = [['A','P',  'AOD'], ['A','P',  'PWV']]
     fig, axd = plt.subplot_mosaic(layout, figsize=(9, 6), gridspec_kw={'width_ratios': [1, 1, 4]})
@@ -682,7 +729,7 @@ def plot_AOD(self):
     viewp = axd['P'].scatter(rx, ry, 4, pwvs[mask], vmin=0, vmax=2)
 
     # lock axis limits to data extent + small pad before drawing gridlines
-    pad_x, pad_y = 0.02 * rx.ptp(), 0.02 * ry.ptp()
+    pad_x, pad_y = 0.02 * (rx.max()-rx.min()), 0.02 * (ry.max()-ry.min())
     for a in [axd['A'], axd['P']]:
         a.set_xlim(rx.min()-pad_x, rx.max()+pad_x); a.set_ylim(ry.min()-pad_y, ry.max()+pad_y)
         overlay_geography(a, rot_crs, rx, ry)
@@ -849,7 +896,7 @@ def main_figs_looper(in_paths='.'):
     print('!Done!')
 
 
-# In[203]:
+# In[756]:
 
 
 if __name__ == "__main__":
