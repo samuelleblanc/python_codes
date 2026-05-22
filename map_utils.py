@@ -7,11 +7,11 @@
 def __init__():
     """
        Collection of codes to run some typical map utilities
-       
+
            - spherical_dist: codes to calculate the distance from a certain lat lon points
            - map_ind: find the indices of the closest point 
            - radius_m2deg: return the radius of a circle defined by meters to lat lon degrees, 
-           
+
         details are in the info of each module
     """
     pass
@@ -79,7 +79,7 @@ def map_ind(mod_lon,mod_lat,meas_lon,meas_lat,meas_good=None,verbose=False):
     except ValueError:
         if not meas_good.any():
             meas_good = np.where(meas_lon)
-        
+
     imodis = np.logical_and(np.logical_and(mod_lon>min(meas_lon[meas_good])-0.02 , mod_lon<max(meas_lon[meas_good])+0.02),
                             np.logical_and(mod_lat>min(meas_lat[meas_good])-0.02 , mod_lat<max(meas_lat[meas_good])+0.02))
     wimodis = np.where(imodis)
@@ -126,9 +126,9 @@ def radius_m2deg(center_lon,center_lat,radius):
       center_lat
     with a radius defined in meters by:
       radius
-      
+
     Dependencies:
-        
+
         - geopy library
     """
     from geopy import Point
@@ -241,11 +241,11 @@ def shoot(lon, lat, azimuth, maxdist=None):
     glon1 = lon * np.pi / 180.
     s = maxdist / 1.852
     faz = azimuth * np.pi / 180.
- 
+
     EPS= 0.00000000005
     if ((np.abs(np.cos(glat1))<EPS) and not (np.abs(np.sin(faz))<EPS)):
         warnings.warn("Only N-S courses are meaningful, starting at a pole!")
- 
+
     a=6378.13/1.852
     f=1/298.257223563
     r = 1 - f
@@ -256,7 +256,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
         b=0.
     else:
         b=2. * np.arctan2 (tu, cf)
- 
+
     cu = 1. / np.sqrt(1 + tu * tu)
     su = tu * cu
     sa = cu * sf
@@ -270,7 +270,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
     y = tu
     c = y + 1
     while (np.abs (y - c) > EPS):
- 
+
         sy = np.sin(y)
         cy = np.cos(y)
         cz = np.cos(b + y)
@@ -280,7 +280,7 @@ def shoot(lon, lat, azimuth, maxdist=None):
         y = e + e - 1.
         y = (((sy * sy * 4. - 3.) * y * cz * d / 6. + x) *
               d / 4. - cz) * sy * d + tu
- 
+
     b = cu * cy * cf - su * sy
     c = r * np.sqrt(sa * sa + b * b)
     d = su * cy + cu * sy * cf
@@ -290,13 +290,13 @@ def shoot(lon, lat, azimuth, maxdist=None):
     c = ((-3. * c2a + 4.) * f + 4.) * c2a * f / 16.
     d = ((e * cy * c + cz) * sy * c + y) * sa
     glon2 = ((glon1 + x - (1. - c) * d * f + np.pi) % (2*np.pi)) - np.pi    
- 
+
     baz = (np.arctan2(sa, b) + np.pi) % (2 * np.pi)
- 
+
     glon2 *= 180./np.pi
     glat2 *= 180./np.pi
     baz *= 180./np.pi
- 
+
     return (glon2, glat2, baz)
 
 
@@ -312,23 +312,23 @@ def great(m, startlon, startlat, azimuth,*args, **kwargs):
     glat1 = startlat
     glon2 = glon1
     glat2 = glat1
- 
+
     step = 50
- 
+
     glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     if azimuth-180 >= 0:
         while glon2 <= startlon:
             line = m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
             azimuth = baz + 180.
             glat1, glon1 = (glat2, glon2)
- 
+
             glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     elif azimuth-180 < 0:
         while glon2 >= startlon:
             line = m.drawgreatcircle(glon1, glat1, glon2, glat2,del_s=50,**kwargs)
             azimuth = baz + 180.
             glat1, glon1 = (glat2, glon2)
- 
+
             glon2, glat2, baz = shoot(glon1, glat1, azimuth, step)
     return line
 
@@ -437,5 +437,97 @@ def WithinArea(xpoint,ypoint,xpoly,ypoly):
 # In[ ]:
 
 
+def ict_to_kml(ict_file, interval_seconds=60):
+    """
+    Converts an ICARTT .ict file into a KML file with:
+    - Flight path line
+    - Altitude-color-coded placemarks at regular intervals
+    - Time displayed in HH:MM:SS UTC format
 
+    Parameters:
+        ict_file (str): Path to the .ict file
+        interval_seconds (int): Time interval (in seconds) between placemarks
+    """
+    import pandas as pd
+    import simplekml
+    from datetime import timedelta
+    import os
+
+    # --- Determine header length from first line ---
+    with open(ict_file, 'r') as f:
+        skip_header_lines = int(f.readline().split(',')[0])
+
+    # --- Read the data ---
+    df = pd.read_csv(ict_file, skiprows=skip_header_lines-1)
+    df.columns = df.columns.str.strip()
+
+    # Keep necessary columns
+    if 'GPS_Altitude' in df:
+        df = df[['Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude']].copy()
+        do_alt = True
+    else:
+        try:
+            df = df[['Time_Start', 'Latitude', 'Longitude']].copy()
+        except KeyError:
+            df.rename(columns={'lat':'Latitude','lon':'Longitude'},inplace=True)
+            df.rename(index={'lat':'Latitude','lon':'Longitude'},inplace=True)
+            df = df[['Time_Start', 'Latitude', 'Longitude']].copy()
+
+        do_alt = False
+    df = df.applymap(lambda x: str(x).replace(',', '')).astype(float)
+    df = df.replace(-9999, pd.NA).dropna()
+
+    # --- Add time formatting ---
+    df['Time_HMS'] = df['Time_Start'].apply(lambda s: str(timedelta(seconds=int(s))))
+    base_time = df['Time_Start'].iloc[0]
+    placemark_rows = df[df['Time_Start'].sub(base_time) % interval_seconds < 1e-3]
+
+    # --- Altitude to color map ---
+    def altitude_color(alt, min_alt, max_alt):
+        ratio = (alt - min_alt) / (max_alt - min_alt) if max_alt > min_alt else 0.5
+        r = int(255 * (1 - ratio))
+        g = 0
+        b = int(255 * ratio)
+        return simplekml.Color.rgb(r, g, b, 255)
+
+    if do_alt:
+        min_alt = df['GPS_Altitude'].min()
+        max_alt = df['GPS_Altitude'].max()
+
+    # --- Create KML ---
+    kml = simplekml.Kml()
+
+    # Flight path line
+    linestring = kml.newlinestring(name="Flight Path")
+    if do_alt:
+        linestring.coords = list(zip(df['Longitude'], df['Latitude'], df['GPS_Altitude']))
+    else:
+        linestring.coords = list(zip(df['Longitude'], df['Latitude']))
+    linestring.altitudemode = simplekml.AltitudeMode.absolute
+    linestring.style.linestyle.color = simplekml.Color.blue
+    linestring.style.linestyle.width = 2
+
+    # Placemarks
+    for _, row in placemark_rows.iterrows():
+        t_label = row['Time_HMS']
+        lat = row['Latitude']
+        lon = row['Longitude']
+
+        if do_alt: 
+            alt = row['GPS_Altitude']
+            color = altitude_color(alt, min_alt, max_alt)
+            pnt = kml.newpoint(name=f"{t_label} - {alt:.0f} m", coords=[(lon, lat, alt)])
+            pnt.style.iconstyle.color = color
+        else:
+            pnt = kml.newpoint(name=f"{t_label}", coords=[(lon, lat)])
+            pnt.style.iconstyle.color = simplekml.Color.rgb(0, 254, 0, 255)
+        pnt.altitudemode = simplekml.AltitudeMode.absolute
+        pnt.style.labelstyle.scale = 1.1
+        pnt.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
+
+    # --- Output path ---
+
+    output_kml = os.path.splitext(ict_file.replace('MetNav',''))[0] + ".kml"
+    kml.save(output_kml)
+    print(f"KML saved to: {output_kml}")
 
