@@ -176,6 +176,17 @@ if data_raw_found:
         if not dry_run: fa_tmp.newpath.mkdir(parents=True,exist_ok=True)
         if not daystr0 in daystrss:
             daystrss.append(daystr0)
+            try:
+                for campaign_sub in list(filters.get('AERONET',{}).keys()):
+                    if fa_tmp.campaign.find(campaign_sub) >= 0:
+                        try:
+                            aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site=filters['AERONET'][campaign_sub],path=str(fa_tmp.newpath),version=3)
+                            if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                        except:
+                            if verbose: print('Problem Downloading the AERONET file for: '+filters['AERONET'][campaign_sub])
+
+            except Exception as err:
+                print(err.__traceback__)
             if fa_tmp.campaign.find('rooftop') >= 0:
                 try:
                     aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='NASA_Ames',path=str(fa_tmp.newpath),version=3)
@@ -192,6 +203,18 @@ if data_raw_found:
             if fa_tmp.campaign.find('SaSa') >= 0:
                 try: 
                     aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='WFF_X-75_Sci_Obs',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
+            if fa_tmp.campaign.find('TMF') >= 0:
+                try:
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='TABLE_MOUNTAIN_CA',path=str(fa_tmp.newpath),version=3)
+                    if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
+                except:
+                    if verbose: print('Problem Downloading the AERONET file')
+            if fa_tmp.campaign.find('AirSHARP') >= 0:
+                try:
+                    aeronet_file = get_AERONET_file_v2(date=fa_tmp.fdate,site='Marina_Airport_CA',path=str(fa_tmp.newpath),version=3)
                     if verbose: print('Downloaded AERONET file: {}'.format(aeronet_file))
                 except:
                     if verbose: print('Problem Downloading the AERONET file')
@@ -282,13 +305,14 @@ if run_matlab:
                 if process.poll() is not None:
                     break
                 if output:
-                    if verbose: print(output.strip())
+                    if verbose: print(output.strip().decode())
             rc = process.poll()
             if verbose: print(rc)
             nmats = nmats + 1
                 
             if rc==0:
-                os.remove(mfile)
+                if verbose: print('mfile:' + mfile +' created' )
+            #    os.remove(mfile)
             else:
                 print(process.stderr.readline())
                 print('ERROR with matlab')

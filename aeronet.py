@@ -34,7 +34,10 @@ def get_aeronet(daystr=None,lat_range=[],lon_range=[],lev='LEV10',avg=True,dayst
     import numpy as np
     from BeautifulSoup import BeautifulSoup
     from StringIO import StringIO
-    from urllib import urlopen
+    try:
+        from urllib import urlopen
+    except ImportError:
+        from urllib.request import urlopen
     from datetime import datetime
     from load_utils import recarray_to_dict
     import pandas as pd
@@ -183,7 +186,10 @@ def get_AERONET_file_v2(date=None,site='NASA_Ames',path=None,version=2):
        Modified: Samuel LeBlanc, 2021-04-19, Santa Cruz, CA
                  added support for v3
     """
-    from urllib.request import urlopen
+    try:
+        from urllib import urlopen
+    except ImportError:
+        from urllib.request import urlopen
     from bs4 import BeautifulSoup
     from datetime import datetime
     import os

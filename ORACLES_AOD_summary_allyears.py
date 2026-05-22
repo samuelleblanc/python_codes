@@ -43,7 +43,7 @@
 
 # # Prepare python environment
 
-# In[1]:
+# In[2]:
 
 
 get_ipython().run_line_magic('config', 'InlineBackend.rc = {}')
@@ -67,7 +67,7 @@ import matplotlib.dates as mdates
 from mpl_toolkits.basemap import Basemap
 
 
-# In[2]:
+# In[3]:
 
 
 import scipy.stats as st
@@ -75,20 +75,20 @@ from mpl_toolkits.basemap import Basemap
 import pandas as pd
 
 
-# In[3]:
+# In[4]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
 
 
-# In[4]:
+# In[5]:
 
 
 fp =getpath('ORACLES')#'C:/Userds/sleblan2/Research/ORACLES/'
 fp
 
 
-# In[5]:
+# In[6]:
 
 
 vv = 'v2'
@@ -98,13 +98,13 @@ vv = 'v2'
 
 # ## Load the 2016 data
 
-# In[6]:
+# In[7]:
 
 
 ar6 = hs.loadmat(fp+'/aod_ict/R4/all_aod_ict_R4_2016.mat')
 
 
-# In[7]:
+# In[8]:
 
 
 ar6['flac'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)
@@ -112,7 +112,7 @@ ar6['flacr'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&(ar6['fl_routine'])
 ar6['flaco'] = (ar6['qual_flag']==0)&(ar6['flag_acaod']==1)&~(ar6['fl_routine'])
 
 
-# In[8]:
+# In[9]:
 
 
 ar6['flr'] = (ar6['qual_flag']==0) & (ar6['fl_routine'])
@@ -122,13 +122,13 @@ ar6['fl'] = (ar6['qual_flag']==0)
 
 # ## Load the 2017 data
 
-# In[9]:
+# In[10]:
 
 
 ar7 = hs.loadmat(fp+'/aod_ict_2017/R1/all_aod_ict_R1_2017.mat')
 
 
-# In[10]:
+# In[11]:
 
 
 ar7['flac'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)
@@ -136,7 +136,7 @@ ar7['flacr'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&(ar7['fl_routine'])
 ar7['flaco'] = (ar7['qual_flag']==0)&(ar7['flag_acaod']==1)&~(ar7['fl_routine'])
 
 
-# In[11]:
+# In[12]:
 
 
 ar7['flr'] = (ar7['qual_flag']==0) & (ar7['fl_routine'])
@@ -146,13 +146,13 @@ ar7['fl'] = (ar7['qual_flag']==0)
 
 # ## Load the 2018 data
 
-# In[12]:
+# In[13]:
 
 
 ar8 = hs.loadmat(fp+'/aod_ict_2018/{vv}/all_aod_ict_{vv}_2018.mat'.format(vv='R1'))
 
 
-# In[13]:
+# In[14]:
 
 
 ar8['flac'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)  
@@ -160,7 +160,7 @@ ar8['flacr'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&(ar8['fl_routine']
 ar8['flaco'] = (ar8['qual_flag']==0) & (ar8['flag_acaod']==1)&~(ar8['fl_routine']) 
 
 
-# In[14]:
+# In[15]:
 
 
 ar8['flr'] = (ar8['qual_flag']==0) & (ar8['fl_routine'])
@@ -2184,32 +2184,32 @@ plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_monthly_hist_map_with_HSRL.png',
 
 # # Plot wavelength AOD spectra
 
-# In[35]:
+# In[18]:
 
 
-kar6 = ar6.keys()
+kar6 = list(ar6.keys())
 kar6.sort()
 
 
-# In[36]:
+# In[19]:
 
 
 nn = [i for i in kar6  if i[0]=='A']
 
 
-# In[37]:
+# In[20]:
 
 
 nn[0:24]
 
 
-# In[38]:
+# In[21]:
 
 
 nn.pop(13)
 
 
-# In[39]:
+# In[22]:
 
 
 ar6['aods'] = np.array([ar6[i] for i in nn[0:23]]).T
@@ -2217,7 +2217,7 @@ ar7['aods'] = np.array([ar7[i] for i in nn[0:23]]).T
 ar8['aods'] = np.array([ar8[i] for i in nn[0:23]]).T
 
 
-# In[40]:
+# In[23]:
 
 
 ar6['meanaod'] = np.nanmean(ar6['aods'][ar6['flac'],:],axis=0)
@@ -2225,7 +2225,7 @@ ar6['medianaod'] = np.nanmedian(ar6['aods'][ar6['flac'],:],axis=0)
 ar6['stdaod'] = np.nanstd(ar6['aods'][ar6['flac'],:],axis=0)
 
 
-# In[41]:
+# In[24]:
 
 
 ar7['meanaod'] = np.nanmean(ar7['aods'][ar7['flac'],:],axis=0)
@@ -2233,7 +2233,7 @@ ar7['medianaod'] = np.nanmedian(ar7['aods'][ar7['flac'],:],axis=0)
 ar7['stdaod'] = np.nanstd(ar7['aods'][ar7['flac'],:],axis=0)
 
 
-# In[42]:
+# In[25]:
 
 
 ar8['meanaod'] = np.nanmean(ar8['aods'][ar8['flac'],:],axis=0)
@@ -2241,7 +2241,7 @@ ar8['medianaod'] = np.nanmedian(ar8['aods'][ar8['flac'],:],axis=0)
 ar8['stdaod'] = np.nanstd(ar8['aods'][ar8['flac'],:],axis=0)
 
 
-# In[43]:
+# In[26]:
 
 
 ar6['meanAE'] = np.nanmean(ar6['AOD_angstrom_470_865'][ar6['flac']])
@@ -2252,14 +2252,14 @@ ar7['stdAE'] = np.nanstd(ar7['AOD_angstrom_470_865'][ar7['flac']])
 ar8['stdAE'] = np.nanstd(ar8['AOD_angstrom_470_865'][ar8['flac']])
 
 
-# In[44]:
+# In[27]:
 
 
 wvls = [355.0,380.0,452.0,470.0,501.0,520.0,530.0,532.0,550.0,606.0,620.0,660.0,675.0,
         781.0,865.0,1020.0,1040.0,1064.0,1236.0,1250.0,1559.0,1627.0,1650.0,]
 
 
-# In[66]:
+# In[29]:
 
 
 plt.figure()
@@ -2291,8 +2291,50 @@ plt.xlim(350,1700)
 plt.ylim(0.04,0.8)
 #prelim()
 plt.title('ORACLES ACAOD average spectra')
-plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_spectr_R1.png',
-            transparent=True,dpi=500)
+#plt.savefig(fp+'plot_all/ORACLESall_4STAR_AOD_spectr_R1.png',
+#            transparent=True,dpi=500)
+
+
+# ## Save the mean ACAOD for each year
+
+# In[30]:
+
+
+yearly_means = {'ACAOD_2016_Mean':ar6['meanaod'],'ACAOD_2017_Mean':ar7['meanaod'],'ACAOD_2018_Mean':ar8['meanaod'],
+               'ACAOD_2016_STD':ar6['stdaod'],'ACAOD_2017_STD':ar7['stdaod'],'ACAOD_2018_STD':ar8['stdaod'],
+                'ACAOD_2016_Median':ar6['medianaod'],'ACAOD_2017_Median':ar7['medianaod'],'ACAOD_2018_Median':ar8['medianaod'],
+                'AE(470_865)_2016_Mean':ar6['meanAE'],'AE(470_865)_2017_Mean':ar7['meanAE'],'AE(470_865)_2018_Mean':ar8['meanAE'],
+                'AE(470_865)_2016_STD':ar6['stdAE'],'AE(470_865)_2017_STD':ar7['stdAE'],'AE(470_865)_2018_STD':ar8['stdAE'],
+                'Wavelength_nm':wvls}
+
+
+# In[31]:
+
+
+yearly_means
+
+
+# In[32]:
+
+
+import json
+
+
+# In[36]:
+
+
+# Serializing json
+class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+    
+json_object = json.dumps(yearly_means, indent=4,cls=NumpyArrayEncoder)
+ 
+# Writing to sample.json
+with open(fp+"ORACLES_AOD_allyears.json", "w") as outfile:
+    outfile.write(json_object)
 
 
 # # Plot mean AOD maps
@@ -3482,7 +3524,9 @@ plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_vs_AOD_points.png',
 # In[85]:
 
 
-np.corrcoef(gap6['daod'],gap6['dalt'])[0,1]**2,np.corrcoef(gap7['daod'],gap7['dalt'])[0,1]**2,np.corrcoef(gap8['daod'],gap8['dalt'])[0,1]**2
+np.corrcoef(gap6['daod'],gap6['dalt'])[0,1]**2,\
+np.corrcoef(gap7['daod'],gap7['dalt'])[0,1]**2,\
+np.corrcoef(gap8['daod'],gap8['dalt'])[0,1]**2
 
 
 # In[76]:
@@ -3509,7 +3553,9 @@ plt.savefig(fp+'plot_all/ORACLESall_Gap_extent_all_vs_Angstrom_points.png',
 # In[84]:
 
 
-np.corrcoef(gap6['dang'],gap6['dalt'])[0,1]**2,np.corrcoef(gap7['dang'],gap7['dalt'])[0,1]**2,np.corrcoef(gap8['dang'],gap8['dalt'])[0,1]**2
+np.corrcoef(gap6['dang'],gap6['dalt'])[0,1]**2,\
+np.corrcoef(gap7['dang'],gap7['dalt'])[0,1]**2,\
+np.corrcoef(gap8['dang'],gap8['dalt'])[0,1]**2
 
 
 # ## Build AOD distributions vs. gap extent
