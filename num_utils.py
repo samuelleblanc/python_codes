@@ -41,7 +41,7 @@
 def __init__():
     """
        Collection of codes to do common tasks in numerical analysis of various data
-           
+
         details are in the info of each module
     """
     import numpy as np
@@ -69,10 +69,10 @@ def running_std(x,n):
 def get_segments(index,vals_dict,nsep=150,set_nan=True):
     'Function to seperate continuous segments (within a distance of nsep) based on a prior index'
     disc_flacaod_long = np.where(np.diff(index,1)>nsep)[0]
-    
+
     discontinuity_istart_long =  index[np.append(0,disc_flacaod_long[:-1]+1)]
     discontinuity_iend_long =  index[disc_flacaod_long]
-    
+
     kv = vals_dict.keys()
     d = {k:[] for k in kv}
     for i,start in enumerate(discontinuity_istart_long): # loop through discontinuities 
@@ -81,13 +81,13 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
             try:
                 d[k].append(vals_dict[k][start:discontinuity_iend_long[i]])
             except:
-                print start, discontinuity_iend_long[i]
+                print(start, discontinuity_iend_long[i])
                 continue
                 #d[k].append([np.nan])
-    
+
     for k in kv:
         d[k] = np.array(d[k])
-        
+
     return d
 
 
@@ -97,10 +97,10 @@ def get_segments(index,vals_dict,nsep=150,set_nan=True):
 def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=True):
     'Function to seperate continuous segments (within a distance in doys of tsep) based on a prior index (default for 5 seconds in doy)'
     disc_flacaod_long = np.where(np.diff(doys[index],1)>tsep)[0]
-    
+
     discontinuity_istart_long =  index[np.append(0,disc_flacaod_long[:-1]+1)]
     discontinuity_iend_long =  index[disc_flacaod_long]
-    
+
     kv = vals_dict.keys()
     d = {k:[] for k in kv}
     for i,start in enumerate(discontinuity_istart_long): # loop through discontinuities 
@@ -109,13 +109,13 @@ def get_segments_by_time(index,doys,vals_dict,tsep=5.0/24.0/60.0/60.0,set_nan=Tr
             try:
                 d[k].append(vals_dict[k][start:discontinuity_iend_long[i]])
             except:
-                print start, discontinuity_iend_long[i]
+                print(start, discontinuity_iend_long[i])
                 continue
                 #d[k].append([np.nan])
-    
+
     for k in kv:
         d[k] = np.array(d[k])
-        
+
     return d
 
 
@@ -218,8 +218,8 @@ def interp_dist(d,dist=0.12,verbose=False):
     d['cdist_n'],d['aod_n'] = [],[]
     for i,cd in enumerate(d['cumdist']):
         if verbose:
-            print i, cd.min(),cd.max(), np.nanmin(cd),np.nanmax(cd)
-            if not np.isfinite(cd.min()): print cd
+            print(i, cd.min(),cd.max(), np.nanmin(cd),np.nanmax(cd))
+            if not np.isfinite(cd.min()): print(cd)
         d['cdist_n'].append(np.arange(cd.min(),cd.max(),dist))
         try:
             fcd = interpolate.interp1d(cd,d['aod0500'][i])
@@ -239,7 +239,7 @@ def make_bined_alt(x,alt,days,fl,n=70,rg=None):
     else:
         dz = np.nanmax(alt[fl])/n
         rg = [0.0,np.nanmax(alt[fl])]
-    print np.nanmax(alt[fl]),dz
+    print(np.nanmax(alt[fl]),dz)
     for i in xrange(n):
         flaa = (alt[fl]>=(i*dz)+rg[0]) & (alt[fl]<((i+1.0)*dz)+rg[0])
         binned_ang.append(x[fl][flaa])
@@ -281,52 +281,45 @@ def interp_dist_fmf(d,dist=0.12):
 # In[ ]:
 
 
-def make_binned(x,alt,fl,bn,flb):
-    'Function to create binned data for a set range, usually for altitude'
-    
-    binned_ang,binned_alt,binned_num = [],[],[]
-    for i,b in enumerate(bn[:-1]):
-        flaa = (alt[flb]>=b) & (alt[flb]<bn[i+1])
-        binned_ang.append(x[:,flb][flaa])
-        binned_alt.append(np.mean([b,bn[i+1]]))
-        binned_num.append(len(x[fl][:,flaa]))
-    return binned_ang,binned_alt,binned_num,binned_ndays
-
-
-# In[ ]:
-
-
 def stats_2d(lat,lon,x,fl=[],bins=26,rg=[[-25,-8],[0,16]],days=[],verbose=True):
     "Combined Statistics function to get the mean, median, number, ndays, and std from a 2d dataset"    
     stat = {}
     if not len(fl)>0: fl = np.isfinite(x)
-        
-    stat['mean'],stat['xm'],stat['ym'],stat['bin'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='mean')
+
+    stat['mean'],stat['xm'],stat['ym'],stat['bin'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='mean')
     stat['mean'] = np.ma.masked_array(stat['mean'],np.isnan(stat['mean']))
-    
-    stat['median'],stat['xe'],stat['ye'],stat['bine'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='median')
+
+    stat['median'],stat['xe'],stat['ye'],stat['bine'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='median')
     stat['median'] = np.ma.masked_array(stat['median'],np.isnan(stat['median']))
 
-    stat['std'],stat['xs'],stat['ys'],stat['bins'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanstd)
+    stat['std'],stat['xs'],stat['ys'],stat['bins'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic=np.nanstd)
     stat['std'] = np.ma.masked_array(stat['std'],np.isnan(stat['std']))
-    
-    stat['cnt'],stat['xn'],stat['yn'],stat['binn'] =           st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='count')
+
+    stat['cnt'],stat['xn'],stat['yn'],stat['binn'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],x[fl],bins=bins,range=rg,statistic='count')
     stat['cnt'] = np.ma.masked_array(stat['cnt'],np.isnan(stat['cnt']))
 
     if len(days)>0:
         uniq_cnt = lambda x: len(np.unique(x))
-        stat['dcnt'],stat['xd'],stat['yd'],stat['bind'] =           st.binned_statistic_2d(lat[fl],lon[fl],days[fl],bins=bins,range=rg,statistic=uniq_cnt)
+        stat['dcnt'],stat['xd'],stat['yd'],stat['bind'] = \
+          st.binned_statistic_2d(lat[fl],lon[fl],days[fl],bins=bins,range=rg,statistic=uniq_cnt)
         stat['dcnt'] = np.ma.masked_array(stat['dcnt'],np.isnan(stat['dcnt']))
     else:
         stat['dcnt'] = stat['cnt']*0.0
-    
+
     if verbose:
-        print 'Mean values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanmean(stat['mean']),np.nanmean(stat['median']),np.nanmean(stat['std']),
-                    np.nanmean(stat['cnt']),np.nanmean(stat['dcnt']))
-        print 'Median values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanmedian(stat['mean']),np.nanmedian(stat['median']),np.nanmedian(stat['std']),
-                    np.nanmedian(stat['cnt']),np.nanmedian(stat['dcnt']))
-        print 'STD values: mean={}, median={}, std={}, num={}, day={}'.format(                    np.nanstd(stat['mean']),np.nanstd(stat['median']),np.nanstd(stat['std']),
-                    np.nanstd(stat['cnt']),np.nanstd(stat['dcnt']))
+        print('Mean values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanmean(stat['mean']),np.nanmean(stat['median']),np.nanmean(stat['std']),
+                    np.nanmean(stat['cnt']),np.nanmean(stat['dcnt'])))
+        print('Median values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanmedian(stat['mean']),np.nanmedian(stat['median']),np.nanmedian(stat['std']),
+                    np.nanmedian(stat['cnt']),np.nanmedian(stat['dcnt'])))
+        print('STD values: mean={}, median={}, std={}, num={}, day={}'.format(\
+                    np.nanstd(stat['mean']),np.nanstd(stat['median']),np.nanstd(stat['std']),
+                    np.nanstd(stat['cnt']),np.nanstd(stat['dcnt'])))
     return stat
 
 
