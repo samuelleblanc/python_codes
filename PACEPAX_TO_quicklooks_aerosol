@@ -1,0 +1,464 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "20e88aab-5ecf-46eb-8602-d76cef2879ef",
+   "metadata": {},
+   "source": [
+    "# Intro\n",
+    "Purpose:\n",
+    "\n",
+    "    Make some plots of the PACE-PAX aerosol from the Twin Otter (TO)\n",
+    "\n",
+    "Input:\n",
+    "\n",
+    "    None\n",
+    "\n",
+    "Output:\n",
+    "\n",
+    "    Figure and save files\n",
+    "\n",
+    "Keywords:\n",
+    "\n",
+    "    none\n",
+    "\n",
+    "Dependencies:\n",
+    "  - load_utils.py\n",
+    "  - matplotlib\n",
+    "  - numpy\n",
+    "  - write_utils\n",
+    "  - path_utils\n",
+    "\n",
+    "Needed Files:\n",
+    "  - NA\n",
+    "  - ...\n",
+    "\n",
+    "Modification History:\n",
+    "\n",
+    "    Written: Samuel LeBlanc, Santa Cruz, CA, 2025-07-29\n",
+    "    Modified:"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "293a725d-ab0d-4160-85a7-fd705c6dfe8b",
+   "metadata": {},
+   "source": [
+    "# Prepare python environment"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "4bdaec01-ec58-4c52-874b-6b62b947fb8a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "#import Sp_parameters as Sp\n",
+    "import load_utils as lu\n",
+    "import write_utils as wu\n",
+    "from path_utils import getpath\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib notebook\n",
+    "import os\n",
+    "import pandas as pd\n",
+    "from datetime import datetime"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "a4670b67-5615-4806-890e-42c2f829e6c8",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Return path named:  PACEPAX_TO C:\\Users\\sleblan2\\OneDrive - NASA\\PACE-PAX_personal\\data\\TO\\\n"
+     ]
+    }
+   ],
+   "source": [
+    "name = 'PACEPAX_TO'\n",
+    "vv = 'v0'\n",
+    "fp = getpath(name)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5f55683c-77d6-479a-833b-8c47b0495159",
+   "metadata": {},
+   "source": [
+    "# Load files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "36123d96-d227-4509-a41c-87c2cb685805",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240903_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240904_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240906_R0_L1.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240906_R0_L2.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240907_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240908_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240912_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240913_R0_L1.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240913_R0_L2.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240919_R0_L1.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240919_R0_L2.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240920_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240922_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240923_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240924_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240926_R0.ict',\n",
+       " 'PACEPAX-LARGE-MICROPHYSICAL_CIRPAS-TO_20240927_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240829_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240904_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240906_R0_L1.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240906_R0_L2.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240907_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240908_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240912_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240913_R0_L1.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240913_R0_L2.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240919_R0_L1.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240919_R0_L2.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240920_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240922_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240923_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240924_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240926_R0.ict',\n",
+       " 'PACEPAX-MetNav_CIRPAS-TO_20240927_R0.ict']"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "f = os.listdir(fp)\n",
+    "f.sort()\n",
+    "f"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 60,
+   "id": "e7acae15-879f-4c9e-ba79-7e1e8039a7d4",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "doing : 20240829\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240904\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240906_L1\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240906_L2\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240907\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240908\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240912\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240913_L1\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240913_L2\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240919_L1\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240919_L2\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240920\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240922\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240923\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240924\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240926\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n",
+      "doing : 20240927\n",
+      "('Time_Start', 'Latitude', 'Longitude', 'GPS_Altitude', 'Pressure_Altitude', 'Radar_Altitude', 'Pitch_Angle', 'Roll_Angle', 'True_Heading', 'True_Air_Speed', 'East_Vel_Aircraft', 'North_Vel_Aircraft', 'Up_Vel_Aircraft', 'Press_Ambient', 'Temp_Ambient', 'Temp_DewPoint', 'Relative_Humidity_Ambient', 'Potential_Temp', 'Equivalent_Potential_Temp', 'Virtual_Potential_Temp', 'Virtual_Temp', 'Wind_Speed', 'Wind_Direction', 'Vert_WindSpeed', 'H2OMR', 'SPHum', 'PSA_PVM', 'LWC_PVM', 'Re_PVM', 'IRT_Nad', 'SPNT', 'SPND', 'UF_CPC_3025', 'PCASP', 'CASF_DNCN', 'CASF_Vol', 'CIP_DNCN', 'CIP_Vol', 'LWC_Wire')\n"
+     ]
+    }
+   ],
+   "source": [
+    "metnav = {}\n",
+    "for fn in f:\n",
+    "    if (fn.endswith('.ict') & ('MetNav' in fn)): \n",
+    "        daystr = fn.split('_')[2] \n",
+    "        if len(fn.split('_'))>4: daystr = daystr +'_'+ fn.split('_')[4].split('.')[0]\n",
+    "        print('doing : '+daystr)\n",
+    "\n",
+    "        metnav[daystr] = lu.load_ict(os.path.join(fp,fn))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 84,
+   "id": "41449cf4-b74f-4b18-9336-0dd39ec20131",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "doing : 20240903\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240904\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240906_L1\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240906_L2\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240907\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240908\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240912\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240913_L1\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240913_L2\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240919_L1\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240919_L2\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240920\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240922\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240923\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240924\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240926\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n",
+      "doing : 20240927\n",
+      "('Time_Mid', 'IntegN_100to1000nm_UHSAS', 'IntegS_100to1000nm_UHSAS', 'IntegV_100to1000nm_UHSAS', 'IntegN_gt1000nm_APS', 'IntegS_gt1000nm_APS', 'IntegV_gt1000nm_APS', 'stdPT')\n"
+     ]
+    }
+   ],
+   "source": [
+    "aer = {}\n",
+    "for fn in f:\n",
+    "    if (fn.endswith('.ict') & ('MICROPHYSICAL' in fn)): \n",
+    "        daystr = fn.split('_')[2] \n",
+    "        if len(fn.split('_'))>4: daystr = daystr +'_'+ fn.split('_')[4].split('.')[0]\n",
+    "        print('doing : '+daystr)\n",
+    "\n",
+    "        aer[daystr] = lu.load_ict(os.path.join(fp,fn))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2f8d6cbf-909c-4b20-a642-5f301c2e99cd",
+   "metadata": {},
+   "source": [
+    "# Plot out the different values"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fe527c38-745a-44d1-8c96-eaded5b2e3bc",
+   "metadata": {},
+   "source": [
+    "## Interpolate the alt, lat, lon to the aerosol values"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "id": "b68f93a0-c587-44b9-8b67-4383d055960d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from scipy.interpolate import interp1d\n",
+    "def inter(xold,yold,xnew):\n",
+    "    igood = np.isfinite(xold) & np.isfinite(yold)\n",
+    "    fx = interp1d(xold[igood],yold[igood],fill_value=\"extrapolate\")\n",
+    "    return fx(xnew)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "id": "370bcc09-427f-42ea-947d-7dc9f5e87b9e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy.lib.recfunctions as rfn"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 89,
+   "id": "b7e8b5f1-f235-4ac9-bd02-7cb993ff35b3",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "20240904\n",
+      "20240906_L1\n",
+      "20240906_L2\n",
+      "20240907\n",
+      "20240908\n",
+      "20240912\n",
+      "20240913_L1\n",
+      "20240913_L2\n",
+      "20240919_L1\n",
+      "20240919_L2\n",
+      "20240920\n",
+      "20240922\n",
+      "20240923\n",
+      "20240924\n",
+      "20240926\n",
+      "20240927\n"
+     ]
+    }
+   ],
+   "source": [
+    "aern = {}\n",
+    "for k in list(aer.keys()):\n",
+    "    if not k in metnav: continue\n",
+    "    print(k)\n",
+    "    aern[k] = {}\n",
+    "    for ko in ['Latitude', 'Longitude', 'GPS_Altitude']:\n",
+    "        aern[k][ko] = inter(metnav[k]['Time_Start'],metnav[k][ko],aer[k]['Time_Mid'].data)\n",
+    "        #aer[k] = rfn.append_fields(aer[k],ko,inter(metnav[k]['Time_Start'],metnav[k][ko],aer[k]['Time_Mid'].data),dtypes='<f8')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0c798fa8-45b4-42b3-a078-92d1cf4c90ff",
+   "metadata": {},
+   "source": [
+    "## plot the aerosol number per alt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 88,
+   "id": "ad8e1525-67e7-48fc-8f9f-b7d7753c215a",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([(66790., 340.77, 39.33, 1.64, 3.8 , 48.48, 32.23, 1.078),\n",
+       "       (66791., 321.44, 39.17, 1.79, 3.81, 42.08, 27.76, 1.078),\n",
+       "       (66792., 398.3 , 46.64, 1.91, 2.24, 17.79,  5.55, 1.078), ...,\n",
+       "       (79304., 290.94, 42.49, 2.04, 0.36,  2.03,  0.6 , 1.066),\n",
+       "       (79305., 269.33, 38.61, 1.71, 1.22,  8.93,  2.59, 1.066),\n",
+       "       (79306., 298.67, 47.02, 2.45, 1.01,  6.56,  1.9 , 1.068)],\n",
+       "      shape=(12517,), dtype=[('Time_Mid', '<f8'), ('IntegN_100to1000nm_UHSAS', '<f8'), ('IntegS_100to1000nm_UHSAS', '<f8'), ('IntegV_100to1000nm_UHSAS', '<f8'), ('IntegN_gt1000nm_APS', '<f8'), ('IntegS_gt1000nm_APS', '<f8'), ('IntegV_gt1000nm_APS', '<f8'), ('stdPT', '<f8')])"
+      ]
+     },
+     "execution_count": 88,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "aer[k]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 95,
+   "id": "2b865b8c-d3dd-4e6d-b5bf-44707b3a9fff",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ValueError",
+     "evalue": "masked_array(data=[69049.0, 69050.0, 69051.0, ..., 82585.0, 82586.0,\n                   82587.0],\n             mask=[False, False, False, ..., False, False, False],\n       fill_value=1e+20) is not a valid value for color: supported inputs are (r, g, b) and (r, g, b, a) 0-1 float tuples; '#rrggbb', '#rrggbbaa', '#rgb', '#rgba' strings; named color strings; string reprs of 0-1 floats for grayscale values; 'C0', 'C1', ... strings for colors of the color cycle; and pairs combining one of the above with an alpha value",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mValueError\u001b[39m                                Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[95]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mfor\u001b[39;00m k \u001b[38;5;129;01min\u001b[39;00m \u001b[38;5;28mlist\u001b[39m(aern.keys()):\n\u001b[32m      2\u001b[39m     plt.figure()\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m     \u001b[43mplt\u001b[49m\u001b[43m.\u001b[49m\u001b[43mplot\u001b[49m\u001b[43m(\u001b[49m\u001b[43maer\u001b[49m\u001b[43m[\u001b[49m\u001b[43mk\u001b[49m\u001b[43m]\u001b[49m\u001b[43m[\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43mIntegN_100to1000nm_UHSAS\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\u001b[43maern\u001b[49m\u001b[43m[\u001b[49m\u001b[43mk\u001b[49m\u001b[43m]\u001b[49m\u001b[43m[\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43mGPS_Altitude\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43m.\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43mcolor\u001b[49m\u001b[43m=\u001b[49m\u001b[43maer\u001b[49m\u001b[43m[\u001b[49m\u001b[43mk\u001b[49m\u001b[43m]\u001b[49m\u001b[43m[\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43mTime_Mid\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m      4\u001b[39m     plt.xlabel(\u001b[33m'\u001b[39m\u001b[33mUHSAS aerosol #\u001b[39m\u001b[33m'\u001b[39m)\n\u001b[32m      5\u001b[39m     plt.ylabel(\u001b[33m'\u001b[39m\u001b[33mGPS Altitude [m]\u001b[39m\u001b[33m'\u001b[39m)\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\pyplot.py:3838\u001b[39m, in \u001b[36mplot\u001b[39m\u001b[34m(scalex, scaley, data, *args, **kwargs)\u001b[39m\n\u001b[32m   3830\u001b[39m \u001b[38;5;129m@_copy_docstring_and_deprecators\u001b[39m(Axes.plot)\n\u001b[32m   3831\u001b[39m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34mplot\u001b[39m(\n\u001b[32m   3832\u001b[39m     *args: \u001b[38;5;28mfloat\u001b[39m | ArrayLike | \u001b[38;5;28mstr\u001b[39m,\n\u001b[32m   (...)\u001b[39m\u001b[32m   3836\u001b[39m     **kwargs,\n\u001b[32m   3837\u001b[39m ) -> \u001b[38;5;28mlist\u001b[39m[Line2D]:\n\u001b[32m-> \u001b[39m\u001b[32m3838\u001b[39m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[43mgca\u001b[49m\u001b[43m(\u001b[49m\u001b[43m)\u001b[49m\u001b[43m.\u001b[49m\u001b[43mplot\u001b[49m\u001b[43m(\u001b[49m\n\u001b[32m   3839\u001b[39m \u001b[43m        \u001b[49m\u001b[43m*\u001b[49m\u001b[43margs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   3840\u001b[39m \u001b[43m        \u001b[49m\u001b[43mscalex\u001b[49m\u001b[43m=\u001b[49m\u001b[43mscalex\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   3841\u001b[39m \u001b[43m        \u001b[49m\u001b[43mscaley\u001b[49m\u001b[43m=\u001b[49m\u001b[43mscaley\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   3842\u001b[39m \u001b[43m        \u001b[49m\u001b[43m*\u001b[49m\u001b[43m*\u001b[49m\u001b[43m(\u001b[49m\u001b[43m{\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mdata\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m:\u001b[49m\u001b[43m \u001b[49m\u001b[43mdata\u001b[49m\u001b[43m}\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mif\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43mdata\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;129;43;01mis\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[38;5;129;43;01mnot\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[38;5;28;43;01melse\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43m{\u001b[49m\u001b[43m}\u001b[49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   3843\u001b[39m \u001b[43m        \u001b[49m\u001b[43m*\u001b[49m\u001b[43m*\u001b[49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   3844\u001b[39m \u001b[43m    \u001b[49m\u001b[43m)\u001b[49m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\axes\\_axes.py:1777\u001b[39m, in \u001b[36mAxes.plot\u001b[39m\u001b[34m(self, scalex, scaley, data, *args, **kwargs)\u001b[39m\n\u001b[32m   1534\u001b[39m \u001b[38;5;250m\u001b[39m\u001b[33;03m\"\"\"\u001b[39;00m\n\u001b[32m   1535\u001b[39m \u001b[33;03mPlot y versus x as lines and/or markers.\u001b[39;00m\n\u001b[32m   1536\u001b[39m \n\u001b[32m   (...)\u001b[39m\u001b[32m   1774\u001b[39m \u001b[33;03m(``'green'``) or hex strings (``'#008000'``).\u001b[39;00m\n\u001b[32m   1775\u001b[39m \u001b[33;03m\"\"\"\u001b[39;00m\n\u001b[32m   1776\u001b[39m kwargs = cbook.normalize_kwargs(kwargs, mlines.Line2D)\n\u001b[32m-> \u001b[39m\u001b[32m1777\u001b[39m lines = [*\u001b[38;5;28mself\u001b[39m._get_lines(\u001b[38;5;28mself\u001b[39m, *args, data=data, **kwargs)]\n\u001b[32m   1778\u001b[39m \u001b[38;5;28;01mfor\u001b[39;00m line \u001b[38;5;129;01min\u001b[39;00m lines:\n\u001b[32m   1779\u001b[39m     \u001b[38;5;28mself\u001b[39m.add_line(line)\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\axes\\_base.py:297\u001b[39m, in \u001b[36m_process_plot_var_args.__call__\u001b[39m\u001b[34m(self, axes, data, return_kwargs, *args, **kwargs)\u001b[39m\n\u001b[32m    295\u001b[39m     this += args[\u001b[32m0\u001b[39m],\n\u001b[32m    296\u001b[39m     args = args[\u001b[32m1\u001b[39m:]\n\u001b[32m--> \u001b[39m\u001b[32m297\u001b[39m \u001b[38;5;28;01myield from\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43m_plot_args\u001b[49m\u001b[43m(\u001b[49m\n\u001b[32m    298\u001b[39m \u001b[43m    \u001b[49m\u001b[43maxes\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mthis\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mambiguous_fmt_datakey\u001b[49m\u001b[43m=\u001b[49m\u001b[43mambiguous_fmt_datakey\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    299\u001b[39m \u001b[43m    \u001b[49m\u001b[43mreturn_kwargs\u001b[49m\u001b[43m=\u001b[49m\u001b[43mreturn_kwargs\u001b[49m\n\u001b[32m    300\u001b[39m \u001b[43m\u001b[49m\u001b[43m)\u001b[49m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\axes\\_base.py:546\u001b[39m, in \u001b[36m_process_plot_var_args._plot_args\u001b[39m\u001b[34m(self, axes, tup, kwargs, return_kwargs, ambiguous_fmt_datakey)\u001b[39m\n\u001b[32m    544\u001b[39m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28mlist\u001b[39m(result)\n\u001b[32m    545\u001b[39m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[32m--> \u001b[39m\u001b[32m546\u001b[39m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[43m[\u001b[49m\u001b[43ml\u001b[49m\u001b[43m[\u001b[49m\u001b[32;43m0\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mfor\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43ml\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;129;43;01min\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43mresult\u001b[49m\u001b[43m]\u001b[49m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\axes\\_base.py:539\u001b[39m, in \u001b[36m<genexpr>\u001b[39m\u001b[34m(.0)\u001b[39m\n\u001b[32m    534\u001b[39m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[32m    535\u001b[39m     \u001b[38;5;28;01mraise\u001b[39;00m \u001b[38;5;167;01mValueError\u001b[39;00m(\n\u001b[32m    536\u001b[39m         \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mlabel must be scalar or have the same length as the input \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    537\u001b[39m         \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mdata, but found \u001b[39m\u001b[38;5;132;01m{\u001b[39;00m\u001b[38;5;28mlen\u001b[39m(label)\u001b[38;5;132;01m}\u001b[39;00m\u001b[33m for \u001b[39m\u001b[38;5;132;01m{\u001b[39;00mn_datasets\u001b[38;5;132;01m}\u001b[39;00m\u001b[33m datasets.\u001b[39m\u001b[33m\"\u001b[39m)\n\u001b[32m--> \u001b[39m\u001b[32m539\u001b[39m result = (\u001b[43mmake_artist\u001b[49m\u001b[43m(\u001b[49m\u001b[43maxes\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mx\u001b[49m\u001b[43m[\u001b[49m\u001b[43m:\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mj\u001b[49m\u001b[43m \u001b[49m\u001b[43m%\u001b[49m\u001b[43m \u001b[49m\u001b[43mncx\u001b[49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43my\u001b[49m\u001b[43m[\u001b[49m\u001b[43m:\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mj\u001b[49m\u001b[43m \u001b[49m\u001b[43m%\u001b[49m\u001b[43m \u001b[49m\u001b[43mncy\u001b[49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mkw\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    540\u001b[39m \u001b[43m                      \u001b[49m\u001b[43m{\u001b[49m\u001b[43m*\u001b[49m\u001b[43m*\u001b[49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43mlabel\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m:\u001b[49m\u001b[43m \u001b[49m\u001b[43mlabel\u001b[49m\u001b[43m}\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    541\u001b[39m           \u001b[38;5;28;01mfor\u001b[39;00m j, label \u001b[38;5;129;01min\u001b[39;00m \u001b[38;5;28menumerate\u001b[39m(labels))\n\u001b[32m    543\u001b[39m \u001b[38;5;28;01mif\u001b[39;00m return_kwargs:\n\u001b[32m    544\u001b[39m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28mlist\u001b[39m(result)\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\axes\\_base.py:338\u001b[39m, in \u001b[36m_process_plot_var_args._make_line\u001b[39m\u001b[34m(self, axes, x, y, kw, kwargs)\u001b[39m\n\u001b[32m    336\u001b[39m kw = {**kw, **kwargs}  \u001b[38;5;66;03m# Don't modify the original kw.\u001b[39;00m\n\u001b[32m    337\u001b[39m \u001b[38;5;28mself\u001b[39m._setdefaults(\u001b[38;5;28mself\u001b[39m._getdefaults(kw), kw)\n\u001b[32m--> \u001b[39m\u001b[32m338\u001b[39m seg = \u001b[43mmlines\u001b[49m\u001b[43m.\u001b[49m\u001b[43mLine2D\u001b[49m\u001b[43m(\u001b[49m\u001b[43mx\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43my\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43m*\u001b[49m\u001b[43m*\u001b[49m\u001b[43mkw\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    339\u001b[39m \u001b[38;5;28;01mreturn\u001b[39;00m seg, kw\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\lines.py:390\u001b[39m, in \u001b[36mLine2D.__init__\u001b[39m\u001b[34m(self, xdata, ydata, linewidth, linestyle, color, gapcolor, marker, markersize, markeredgewidth, markeredgecolor, markerfacecolor, markerfacecoloralt, fillstyle, antialiased, dash_capstyle, solid_capstyle, dash_joinstyle, solid_joinstyle, pickradius, drawstyle, markevery, **kwargs)\u001b[39m\n\u001b[32m    387\u001b[39m \u001b[38;5;28mself\u001b[39m.set_drawstyle(drawstyle)\n\u001b[32m    389\u001b[39m \u001b[38;5;28mself\u001b[39m._color = \u001b[38;5;28;01mNone\u001b[39;00m\n\u001b[32m--> \u001b[39m\u001b[32m390\u001b[39m \u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43mset_color\u001b[49m\u001b[43m(\u001b[49m\u001b[43mcolor\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    391\u001b[39m \u001b[38;5;28;01mif\u001b[39;00m marker \u001b[38;5;129;01mis\u001b[39;00m \u001b[38;5;28;01mNone\u001b[39;00m:\n\u001b[32m    392\u001b[39m     marker = \u001b[33m'\u001b[39m\u001b[33mnone\u001b[39m\u001b[33m'\u001b[39m  \u001b[38;5;66;03m# Default.\u001b[39;00m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\lines.py:1081\u001b[39m, in \u001b[36mLine2D.set_color\u001b[39m\u001b[34m(self, color)\u001b[39m\n\u001b[32m   1073\u001b[39m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34mset_color\u001b[39m(\u001b[38;5;28mself\u001b[39m, color):\n\u001b[32m   1074\u001b[39m \u001b[38;5;250m    \u001b[39m\u001b[33;03m\"\"\"\u001b[39;00m\n\u001b[32m   1075\u001b[39m \u001b[33;03m    Set the color of the line.\u001b[39;00m\n\u001b[32m   1076\u001b[39m \n\u001b[32m   (...)\u001b[39m\u001b[32m   1079\u001b[39m \u001b[33;03m    color : :mpltype:`color`\u001b[39;00m\n\u001b[32m   1080\u001b[39m \u001b[33;03m    \"\"\"\u001b[39;00m\n\u001b[32m-> \u001b[39m\u001b[32m1081\u001b[39m     \u001b[43mmcolors\u001b[49m\u001b[43m.\u001b[49m\u001b[43m_check_color_like\u001b[49m\u001b[43m(\u001b[49m\u001b[43mcolor\u001b[49m\u001b[43m=\u001b[49m\u001b[43mcolor\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m   1082\u001b[39m     \u001b[38;5;28mself\u001b[39m._color = color\n\u001b[32m   1083\u001b[39m     \u001b[38;5;28mself\u001b[39m.stale = \u001b[38;5;28;01mTrue\u001b[39;00m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~\\miniforge3\\envs\\jupyterlab\\Lib\\site-packages\\matplotlib\\colors.py:249\u001b[39m, in \u001b[36m_check_color_like\u001b[39m\u001b[34m(**kwargs)\u001b[39m\n\u001b[32m    247\u001b[39m \u001b[38;5;28;01mfor\u001b[39;00m k, v \u001b[38;5;129;01min\u001b[39;00m kwargs.items():\n\u001b[32m    248\u001b[39m     \u001b[38;5;28;01mif\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m is_color_like(v):\n\u001b[32m--> \u001b[39m\u001b[32m249\u001b[39m         \u001b[38;5;28;01mraise\u001b[39;00m \u001b[38;5;167;01mValueError\u001b[39;00m(\n\u001b[32m    250\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[38;5;132;01m{\u001b[39;00mv\u001b[38;5;132;01m!r}\u001b[39;00m\u001b[33m is not a valid value for \u001b[39m\u001b[38;5;132;01m{\u001b[39;00mk\u001b[38;5;132;01m}\u001b[39;00m\u001b[33m: supported inputs are \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    251\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33m(r, g, b) and (r, g, b, a) 0-1 float tuples; \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    252\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33m'\u001b[39m\u001b[33m#rrggbb\u001b[39m\u001b[33m'\u001b[39m\u001b[33m, \u001b[39m\u001b[33m'\u001b[39m\u001b[33m#rrggbbaa\u001b[39m\u001b[33m'\u001b[39m\u001b[33m, \u001b[39m\u001b[33m'\u001b[39m\u001b[33m#rgb\u001b[39m\u001b[33m'\u001b[39m\u001b[33m, \u001b[39m\u001b[33m'\u001b[39m\u001b[33m#rgba\u001b[39m\u001b[33m'\u001b[39m\u001b[33m strings; \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    253\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mnamed color strings; \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    254\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mstring reprs of 0-1 floats for grayscale values; \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    255\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33m'\u001b[39m\u001b[33mC0\u001b[39m\u001b[33m'\u001b[39m\u001b[33m, \u001b[39m\u001b[33m'\u001b[39m\u001b[33mC1\u001b[39m\u001b[33m'\u001b[39m\u001b[33m, ... strings for colors of the color cycle; \u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m    256\u001b[39m             \u001b[33mf\u001b[39m\u001b[33m\"\u001b[39m\u001b[33mand pairs combining one of the above with an alpha value\u001b[39m\u001b[33m\"\u001b[39m)\n",
+      "\u001b[31mValueError\u001b[39m: masked_array(data=[69049.0, 69050.0, 69051.0, ..., 82585.0, 82586.0,\n                   82587.0],\n             mask=[False, False, False, ..., False, False, False],\n       fill_value=1e+20) is not a valid value for color: supported inputs are (r, g, b) and (r, g, b, a) 0-1 float tuples; '#rrggbb', '#rrggbbaa', '#rgb', '#rgba' strings; named color strings; string reprs of 0-1 floats for grayscale values; 'C0', 'C1', ... strings for colors of the color cycle; and pairs combining one of the above with an alpha value"
+     ]
+    },
+    {
+     "data": {
+      "image/png": "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",
+      "text/plain": [
+       "<Figure size 640x480 with 1 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "for k in list(aern.keys()):\n",
+    "    plt.figure()\n",
+    "    plt.plot(aer[k]['IntegN_100to1000nm_UHSAS'],aern[k]['GPS_Altitude'],'.',color=aer[k]['Time_Mid'])\n",
+    "    plt.xlabel('UHSAS aerosol #')\n",
+    "    plt.ylabel('GPS Altitude [m]')\n",
+    "    plt.title('TO Aerosol for:'+k)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "61740220-9b76-4925-82ac-daf633b2338c",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
