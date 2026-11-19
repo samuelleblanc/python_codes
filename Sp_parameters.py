@@ -111,10 +111,16 @@ def deriv(y,x):
     if len(x) < 3:
         print('*** Not enough points ***')
         return
-    d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) -            y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) +            y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
-    d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) +             y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) -             y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
+    d[0] = y[0]*((x[0]-x[1])+(x[0]-x[2]))/((x[0]-x[1])*(x[0]-x[2])) - \
+           y[1]*(x[0]-x[2])/((x[0]-x[1])*(x[1]-x[2])) + \
+           y[2]*(x[0]-x[1])/((x[0]-x[2])*(x[1]-x[2]))
+    d[-1] = - y[-3]*(x[-2]-x[-1])/((x[-3]-x[-2])*(x[-3]-x[-1])) + \
+            y[-2]*(x[-3]-x[-1])/((x[-3]-x[-2])*(x[-2]-x[-1])) - \
+            y[-1]*((x[-3]-x[-1])+(x[-2]-x[-1]))/((x[-3]-x[-1])*(x[-2]-x[-1]))
     for i in xrange(1,len(x)-1):
-        d[i] = y[i-1]*(x[i]-x[i+1])/((x[i-1]-x[i])*(x[i-1]-x[i+1])) +                y[i]*(1.0/(x[i]-x[i+1]) - 1.0/(x[i-1]-x[i])) -                y[i+1]*(x[i-1]-x[i])/((x[i-1]-x[i+1])*(x[i]-x[i+1]))
+        d[i] = y[i-1]*(x[i]-x[i+1])/((x[i-1]-x[i])*(x[i-1]-x[i+1])) + \
+               y[i]*(1.0/(x[i]-x[i+1]) - 1.0/(x[i-1]-x[i])) - \
+               y[i+1]*(x[i-1]-x[i])/((x[i-1]-x[i+1])*(x[i]-x[i+1]))
     return d
         
 def nanmasked(x):
@@ -1228,7 +1234,7 @@ def plot_zen_cld_retrieval(meas):
     ax[3].set_xlabel('UTC [Hours]')
     plt.tight_layout()
     
-    return fig
+    return fig,ax
 
 
 # In[ ]:
@@ -1285,7 +1291,7 @@ def plot_map_cld_retrieval(meas):
     return fig
 
 
-# In[ ]:
+# In[2]:
 
 
 def plot_hist_cld_retrieval(meas):
@@ -1317,24 +1323,67 @@ def plot_hist_cld_retrieval(meas):
     
     fig = plt.figure()
     plt.subplot(1,3,1)
-    n,bins,p = plt.hist(meas.tau_m,30,histtype='stepfilled', normed=True,alpha=0.7,color='b')
+    n,bins,p = plt.hist(meas.tau_m,30,histtype='stepfilled', alpha=0.7,color='b')
     plt.axvline(np.nanmean(meas.tau_m),label='Mean',color='b',lw=2)
     plt.axvline(np.median(meas.tau_m),linestyle='--',label='Median',color='b',lw=2)
     plt.xlabel('$\\tau$')
     plt.legend(frameon=False)
     
     plt.subplot(1,3,2)
-    n,bins,p = plt.hist(meas.ref_m,30,histtype='stepfilled', normed=True,alpha=0.7,color='g')
+    n,bins,p = plt.hist(meas.ref_m,30,histtype='stepfilled', alpha=0.7,color='g')
     plt.axvline(np.nanmean(meas.ref_m),color='g',lw=2)
     plt.axvline(np.median(meas.ref_m),color='g',linestyle='--',lw=2)
     plt.xlabel('R$_{ef}$ [$\\mu$m]')
     
     plt.subplot(1,3,3)
-    n,bins,p = plt.hist(meas.phase_m,bins=[-1.0,0.0001,1.0],histtype='stepfilled', normed=True,alpha=0.7,color='k')
+    n,bins,p = plt.hist(meas.phase_m,bins=[-1.0,0.0001,1.0],histtype='stepfilled', alpha=0.7,color='k')
     plt.ylim([0,1.1])
     plt.xlim([-1.1,1.1])
     plt.xticks([-0.5,0.5],['Liquid','Ice'],rotation='vertical')
     plt.tight_layout()
+
+    import matplotlib.gridspec as gridspec
+    
+    # 1. Grab the 4 existing axes from the figure
+    ax1, ax2, ax3, ax4 = fig.axes
+    
+    # 2. Define a new 3-row GridSpec with custom height ratios
+    gs = gridspec.GridSpec(3, 1, figure=fig, height_ratios=[2, 2, 1.2], hspace=0.12)
+    
+    # 3. Reposition the top two axes
+    ax1.set_subplotspec(gs[0])
+    ax2.set_subplotspec(gs[1])
+    
+    #ax1.set_ylim(0,10)
+    #ax2.set_ylim(5,50)
+    ax1.grid(visible=True)
+    ax2.grid(visible=True)
+    
+    # 4. Stack ax3 and ax4 into the exact same 3rd GridSpec slot
+    ax3.set_subplotspec(gs[2])
+    ax4.set_subplotspec(gs[2])
+    
+    # 5. Turn ax4 into a "right-axis" overlay on top of ax3
+    ax4.patch.set_visible(False)  # Make ax4 background transparent so ax3 shows through
+    ax4.yaxis.tick_right()  # Move y-ticks to the right
+    ax4.yaxis.set_label_position('right')  # Move y-label to the right
+    ax4.spines['right'].set_visible(True)  # Ensure right spine is drawn
+    ax4.spines['left'].set_visible(False)  # Hide left spine so it doesn't clash with ax3
+    ax4.spines['top'].set_visible(False)
+    ax4.spines['bottom'].set_visible(False)
+    ax3.xaxis.set_visible(False)  # Hide duplicate x-axis ticks/labels on ax4
+    ax4.xaxis.set_visible(True) 
+    
+    # 6. Optional: Clean up x-tick labels on ax1 and ax2 if sharing x-axis
+    ax1.tick_params(labelbottom=False)
+    ax2.tick_params(labelbottom=False)
+    
+    #ax1.set_title(f'{datestr} - cloud zenith retrievals from P-3B')
+    ax4.yaxis.label.set_color('tab:blue')
+    ax4.tick_params(axis='y', labelcolor='tab:blue')
+    ax4.set_ylim(0,1)
+    fig.subplots_adjust(right=0.88)
+    fig.canvas.draw_idle()
     
     return fig
 

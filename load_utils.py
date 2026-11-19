@@ -185,7 +185,7 @@ def load_ict(fname,return_header=False,make_nan=True):
             if factor[i-1]!=float(1):
                 data[name] = data[name]*factor[i-1]
             if make_nan:
-                data[name][data[name]==missing[i-1]]=np.NaN
+                data[name][data[name]==missing[i-1]]=np.nan
     if return_header:
         return data, header
     else:
@@ -842,7 +842,7 @@ def load_hdf_h5py(datfile,values=None,verbose=True,all_values=False):
         sds = dat[i]
         hdf_dicts[i] = dict(sds.attrs)
         try:
-            hdf[i] = np.array(dat[i].value)
+            hdf[i] = np.array(dat[i][()])
         except TypeError:
             import pdb; pdb.set_trace()
         try:
